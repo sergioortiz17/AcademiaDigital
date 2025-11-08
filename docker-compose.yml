@@ -1,0 +1,58 @@
+networks:
+  app_network: 
+    driver: bridge
+
+services:
+  db:
+    container_name: database
+    image: postgres:12.0-alpine
+    env_file: ./backend/.env.postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app_network 
+
+  backend:
+    container_name: django_backend
+    build:
+      context: ./backend
+    volumes:
+      - static:/app/static
+      - media:/app/media
+    env_file:
+      - ./.env 
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+    environment:
+      - FRONTEND_IP=${FRONTEND_IP}  
+      - DJANGO_ALLOWED_HOSTS=*      
+
+  frontend:
+    container_name: react_frontend
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+    environment:
+      - REACT_APP_API_URL=http://django_backend:8000/api/  
+
+volumes:
+  postgres_data:
+  static:
+  media:

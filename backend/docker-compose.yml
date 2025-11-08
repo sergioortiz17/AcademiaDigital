@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+
+  db:
+    container_name: database
+    image: postgres:12.0-alpine
+    env_file: ./.env.postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+volumes:
+  postgres_data:
+  static:
+  media:

@@ -1,0 +1,12 @@
+[
+  {
+    "model": "api_user.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$320000$WFb7OiRuivNQM6Q7SLvxVZ$7Hr/8evajDZzjloDrMGmAHcE/Mz0eklc6HidJRr3bNU=",
+      "username": "admin",
+      "email": "test@admin.com",
+      "date": "2023-04-03T21:08:51.837Z"
+    }
+  }
+]
