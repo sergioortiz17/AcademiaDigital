@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="255px" height="129px" viewBox="0 0 255 129" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>academiadigital-logo</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="academiadigital-logo">
+            <!-- Icono libro + digital -->
+            <path d="M40,40 L40,80 L60,80 L60,60 L80,60 L80,40 L40,40 Z" fill="#004D71"/>
+            <path d="M50,45 L50,75 L70,75 L70,65 L60,65 L60,45 L50,45 Z" fill="#00C0C7"/>
+            <path d="M65,50 L65,55 L75,55 L75,50 L65,50 Z" fill="#FFFFFF"/>
+            <path d="M65,60 L65,65 L75,65 L75,60 L65,60 Z" fill="#FFFFFF"/>
+            <path d="M65,70 L65,75 L75,75 L75,70 L65,70 Z" fill="#FFFFFF"/>
+            
+            <!-- Texto -->
+            <text x="100" y="55" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#004D71">Academia</text>
+            <text x="100" y="80" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#00C0C7">Digital</text>
+        </g>
+    </g>
+</svg>
