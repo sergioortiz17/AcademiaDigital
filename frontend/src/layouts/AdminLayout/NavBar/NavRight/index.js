@@ -146,7 +146,7 @@ const NavRight = () => {
                 <ListGroup.Item as="li" bsPrefix=" ">
                     <Dropdown>
                         <Dropdown.Toggle as={Link} variant="link" to="#" id="dropdown-language" style={{ padding: '0.5rem' }}>
-                            <span style={{ fontSize: '1.2rem' }}>🌐</span>
+                        <i className="feather icon-globe" />
                         </Dropdown.Toggle>
                         <Dropdown.Menu alignRight>
                             <Dropdown.Item onClick={() => changeLanguage('es')} active={i18n.language === 'es'}>
