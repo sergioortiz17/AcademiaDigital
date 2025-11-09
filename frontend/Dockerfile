@@ -3,8 +3,11 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install --frozen-lockfile
+# Copiar package.json primero para cachear las dependencias
+COPY package.json ./
+
+# Instalar dependencias (sin --frozen-lockfile para permitir nuevas dependencias)
+RUN npm install
 
 COPY . .
 
