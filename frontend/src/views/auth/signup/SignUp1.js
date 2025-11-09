@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, Row, Col } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 
-import RegisterForm from '../../../../features/auth/presentation/components/RegisterForm';
+import RegisterForm from '../../../features/auth/presentation/components/RegisterForm';
 import Breadcrumb from '../../../layouts/AdminLayout/Breadcrumb';
 
 const SignUp1 = () => {

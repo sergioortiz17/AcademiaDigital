@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom';
 
 import Breadcrumb from '../../../layouts/AdminLayout/Breadcrumb';
 
-import LoginForm from '../../../../features/auth/presentation/components/LoginForm';
+import LoginForm from '../../../features/auth/presentation/components/LoginForm';
 
 const Signin1 = () => {
     const { t } = useTranslation();

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_SERVER } from '../../config/constant';
+import { API_SERVER } from '../../../config/constant';
 
 class ApiClient {
     constructor(baseURL = API_SERVER) {
