@@ -137,34 +137,27 @@ const NavRight = () => {
                     className="d-flex align-items-center"
                     >
                     <i className="feather icon-globe" style={{ fontSize: "1.2rem" }} />
-                    <i className="feather icon-chevron-down ms-1" />
+                    {/* ❌ sin caret manual, Bootstrap lo agrega solo */}
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu align="end">
                     <Dropdown.Item
                         onClick={() => changeLanguage("es")}
-                        active={i18n.language === "es"}
-                        style={{
-                        color: i18n.language === "es" ? "#1e90ff" : "inherit", // 👈 azul igual al de header.userMenu
-                        fontWeight: i18n.language === "es" ? "bold" : "normal",
-                        }}
+                        className={i18n.language === "es" ? "active-lang" : ""}
                     >
-                        🇪🇸 {i18n.language === "es" && "✓ "}Español
+                        🇪🇸 Español
                     </Dropdown.Item>
 
                     <Dropdown.Item
                         onClick={() => changeLanguage("en")}
-                        active={i18n.language === "en"}
-                        style={{
-                        color: i18n.language === "en" ? "#1e90ff" : "inherit",
-                        fontWeight: i18n.language === "en" ? "bold" : "normal",
-                        }}
+                        className={i18n.language === "en" ? "active-lang" : ""}
                     >
-                        🇺🇸 {i18n.language === "en" && "✓ "}English
+                        🇺🇸 English
                     </Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
                 </ListGroup.Item>
+
 
 
 
