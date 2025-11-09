@@ -21,23 +21,23 @@ const NavLeft = () => {
                 <ListGroup.Item as="li" bsPrefix=" " className={navItemClass.join(' ')}>
                     <Dropdown alignRight={dropdownRightAlign}>
                         <Dropdown.Toggle variant={'link'} id="dropdown-basic">
-                            Dropdown
+                            Administracion
                         </Dropdown.Toggle>
                         <ul>
                             <Dropdown.Menu>
                                 <li>
                                     <Link to="#" className="dropdown-item">
-                                        Action
+                                        Agregar Estudiante
                                     </Link>
                                 </li>
                                 <li>
                                     <Link to="#" className="dropdown-item">
-                                        Another action
+                                        Agregar Profesor
                                     </Link>
                                 </li>
                                 <li>
                                     <Link to="#" className="dropdown-item">
-                                        Something else here
+                                        Listado de Usuarios
                                     </Link>
                                 </li>
                             </Dropdown.Menu>

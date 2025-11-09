@@ -65,3 +65,8 @@
   align-items: center; /* centra bandera y texto verticalmente */
   gap: 0.5rem;         /* espacio entre bandera y texto */
 }
+
+.lang-menu.dropdown-menu-end {
+  right: 0 !important;
+  left: auto !important;
+}
