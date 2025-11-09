@@ -126,21 +126,48 @@ const NavRight = () => {
                         </Dropdown.Toggle>
                     </Dropdown>
                 </ListGroup.Item>
+
+
                 <ListGroup.Item as="li" bsPrefix=" ">
-                    <Dropdown>
-                        <Dropdown.Toggle as={Link} variant="link" to="#" id="dropdown-language" style={{ padding: '0.5rem' }}>
-                        <i className="feather icon-globe" />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu alignRight>
-                            <Dropdown.Item onClick={() => changeLanguage('es')} active={i18n.language === 'es'}>
-                                🇪🇸 {i18n.language === 'es' && '✓ '}Español
-                            </Dropdown.Item>
-                            <Dropdown.Item onClick={() => changeLanguage('en')} active={i18n.language === 'en'}>
-                                🇺🇸 {i18n.language === 'en' && '✓ '}English
-                            </Dropdown.Item>
-                        </Dropdown.Menu>
-                    </Dropdown>
+                <Dropdown align="end">
+                    <Dropdown.Toggle
+                    variant="link"
+                    id="dropdown-language"
+                    style={{ padding: "0.5rem" }}
+                    className="d-flex align-items-center"
+                    >
+                    <i className="feather icon-globe" style={{ fontSize: "1.2rem" }} />
+                    <i className="feather icon-chevron-down ms-1" />
+                    </Dropdown.Toggle>
+
+                    <Dropdown.Menu align="end">
+                    <Dropdown.Item
+                        onClick={() => changeLanguage("es")}
+                        active={i18n.language === "es"}
+                        style={{
+                        color: i18n.language === "es" ? "#1e90ff" : "inherit", // 👈 azul igual al de header.userMenu
+                        fontWeight: i18n.language === "es" ? "bold" : "normal",
+                        }}
+                    >
+                        🇪🇸 {i18n.language === "es" && "✓ "}Español
+                    </Dropdown.Item>
+
+                    <Dropdown.Item
+                        onClick={() => changeLanguage("en")}
+                        active={i18n.language === "en"}
+                        style={{
+                        color: i18n.language === "en" ? "#1e90ff" : "inherit",
+                        fontWeight: i18n.language === "en" ? "bold" : "normal",
+                        }}
+                    >
+                        🇺🇸 {i18n.language === "en" && "✓ "}English
+                    </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
                 </ListGroup.Item>
+
+
+
                 <ListGroup.Item as="li" bsPrefix=" ">
                     <Dropdown className="drp-user">
                         <Dropdown.Toggle as={Link} variant="link" to="#" id="dropdown-basic">
