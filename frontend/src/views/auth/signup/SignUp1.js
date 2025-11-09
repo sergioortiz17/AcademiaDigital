@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, Row, Col } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 
@@ -6,6 +7,8 @@ import RestRegister from './RestRegister';
 import Breadcrumb from '../../../layouts/AdminLayout/Breadcrumb';
 
 const SignUp1 = () => {
+    const { t } = useTranslation();
+    
     return (
         <React.Fragment>
             <Breadcrumb />
@@ -21,7 +24,7 @@ const SignUp1 = () => {
                         <Row className="align-items-center">
                             <Col>
                                 <Card.Body className="text-center">
-                                    <h4 className="mb-4">Academia Digital</h4>
+                                    <h4 className="mb-4">{t('auth.appName')}</h4>
 
                                     <div className="mb-4">
                                         <i className="feather icon-user-plus auth-icon" />
@@ -30,9 +33,9 @@ const SignUp1 = () => {
                                     <RestRegister />
 
                                     <p className="mb-2">
-                                        Already have an account?{' '}
+                                        {t('auth.alreadyHaveAccount')}{' '}
                                         <NavLink to="/auth/signin" className="f-w-400">
-                                            Login
+                                            {t('auth.signIn')}
                                         </NavLink>
                                     </p>
 

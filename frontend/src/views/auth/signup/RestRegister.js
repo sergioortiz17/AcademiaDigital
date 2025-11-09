@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import { Row, Col, Button, Alert } from 'react-bootstrap';
 
@@ -9,6 +10,7 @@ import useScriptRef from '../../../hooks/useScriptRef';
 import { API_SERVER } from './../../../config/constant';
 
 const RestRegister = ({ className, ...rest }) => {
+    const { t } = useTranslation();
     let history = useHistory();
     const scriptedRef = useScriptRef();
 
@@ -22,9 +24,9 @@ const RestRegister = ({ className, ...rest }) => {
                     submit: null
                 }}
                 validationSchema={Yup.object().shape({
-                    email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-                    username: Yup.string().required('Username is required'),
-                    password: Yup.string().max(255).required('Password is required')
+                    email: Yup.string().email(t('auth.validEmail')).max(255).required(t('auth.emailRequired')),
+                    username: Yup.string().required(t('auth.usernameRequired')),
+                    password: Yup.string().max(255).required(t('auth.passwordRequired'))
                 })}
                 onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
                     try {
@@ -64,12 +66,12 @@ const RestRegister = ({ className, ...rest }) => {
                             <input
                                 className="form-control"
                                 error={touched.username && errors.username}
-                                label="Username"
-                                placeholder="Username"
+                                label={t('auth.username')}
+                                placeholder={t('auth.username')}
                                 name="username"
                                 onBlur={handleBlur}
                                 onChange={handleChange}
-                                type="email"
+                                type="text"
                                 value={values.username}
                             />
                             {touched.username && errors.username && <small className="text-danger form-text">{errors.username}</small>}
@@ -78,8 +80,8 @@ const RestRegister = ({ className, ...rest }) => {
                             <input
                                 className="form-control"
                                 error={touched.email && errors.email}
-                                label="Email Address"
-                                placeholder="Email Address"
+                                label={t('auth.email')}
+                                placeholder={t('auth.email')}
                                 name="email"
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -92,8 +94,8 @@ const RestRegister = ({ className, ...rest }) => {
                             <input
                                 className="form-control"
                                 error={touched.password && errors.password}
-                                label="Password"
-                                placeholder="Password"
+                                label={t('auth.password')}
+                                placeholder={t('auth.password')}
                                 name="password"
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -112,7 +114,7 @@ const RestRegister = ({ className, ...rest }) => {
                         <div className="custom-control custom-checkbox  text-left mb-4 mt-2">
                             <input type="checkbox" className="custom-control-input" id="customCheck1" />
                             <label className="custom-control-label" htmlFor="customCheck1">
-                                Save credentials.
+                                {t('auth.saveCredentials')}
                             </label>
                         </div>
 
@@ -126,7 +128,7 @@ const RestRegister = ({ className, ...rest }) => {
                                     type="submit"
                                     variant="primary"
                                 >
-                                    Sign UP
+                                    {t('auth.signUp')}
                                 </Button>
                             </Col>
                         </Row>

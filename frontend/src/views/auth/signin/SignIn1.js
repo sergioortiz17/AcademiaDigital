@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 
@@ -7,6 +8,8 @@ import Breadcrumb from '../../../layouts/AdminLayout/Breadcrumb';
 import RestLogin from './RestLogin';
 
 const Signin1 = () => {
+    const { t } = useTranslation();
+    
     return (
         <React.Fragment>
             <Breadcrumb />
@@ -20,7 +23,7 @@ const Signin1 = () => {
                     </div>
                     <Card className="borderless text-center">
                         <Card.Body>
-                            <h4 className="mb-4">Academia Digital</h4>
+                            <h4 className="mb-4">{t('auth.appName')}</h4>
 
                             <div className="mb-4">
                                 <i className="feather icon-unlock auth-icon" />
@@ -29,9 +32,9 @@ const Signin1 = () => {
                             <RestLogin />
 
                             <p className="mb-0 text-muted">
-                                Don’t have an account?{' '}
+                                {t('auth.dontHaveAccount')}{' '}
                                 <NavLink to="/auth/signup" className="f-w-400">
-                                    Sign UP
+                                    {t('auth.signUp')}
                                 </NavLink>
                             </p>
 

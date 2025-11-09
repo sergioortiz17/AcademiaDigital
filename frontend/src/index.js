@@ -8,6 +8,7 @@ import { Provider } from 'react-redux';
 import { ConfigProvider } from './contexts/ConfigContext';
 import { PersistGate } from 'redux-persist/integration/react';
 
+import './i18n/config'; // Inicializar i18n
 import './index.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';

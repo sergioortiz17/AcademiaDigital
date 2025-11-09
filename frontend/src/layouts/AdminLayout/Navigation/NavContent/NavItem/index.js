@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ListGroup } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 
@@ -10,13 +11,16 @@ import * as actionType from '../../../../../store/actions';
 import useWindowSize from '../../../../../hooks/useWindowSize';
 
 const NavItem = ({ layout, item }) => {
+    const { t } = useTranslation();
     const windowSize = useWindowSize();
     const configContext = useContext(ConfigContext);
     const { dispatch } = configContext;
 
-    let itemTitle = item.title;
+    // Si el título es una clave de traducción (contiene un punto), traducirlo
+    const translatedTitle = item.title.includes('.') ? t(item.title) : item.title;
+    let itemTitle = translatedTitle;
     if (item.icon) {
-        itemTitle = <span className="pcoded-mtext">{item.title}</span>;
+        itemTitle = <span className="pcoded-mtext">{translatedTitle}</span>;
     }
 
     let itemTarget = '';

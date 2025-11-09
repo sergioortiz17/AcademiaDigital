@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import NavLeft from './NavLeft';
@@ -8,6 +9,7 @@ import { ConfigContext } from '../../../contexts/ConfigContext';
 import * as actionType from '../../../store/actions';
 
 const NavBar = () => {
+    const { t } = useTranslation();
     const configContext = useContext(ConfigContext);
     const { collapseMenu } = configContext.state;
     const { dispatch } = configContext;
@@ -35,7 +37,7 @@ const NavBar = () => {
                     <div className="b-bg">
                         <i className="feather icon-trending-up" />
                     </div>
-                    <span className="b-title">Academia Digital</span>
+                    <span className="b-title">{t('auth.appName')}</span>
                 </Link>
                 {/* <Link to='#' className={moreClass.join(' ')} onClick={() => setMoreToggle(!moreToggle)}>
                     <i className="feather icon-more-vertical"/>

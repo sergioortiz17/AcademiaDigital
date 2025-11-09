@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { Row, Col, Button, Alert } from 'react-bootstrap';
 
@@ -10,6 +11,7 @@ import { API_SERVER } from './../../../config/constant';
 import { ACCOUNT_INITIALIZE } from './../../../store/actions';
 
 const RestLogin = ({ className, ...rest }) => {
+    const { t } = useTranslation();
     const dispatcher = useDispatch();
     const scriptedRef = useScriptRef();
 
@@ -22,8 +24,8 @@ const RestLogin = ({ className, ...rest }) => {
                     submit: null
                 }}
                 validationSchema={Yup.object().shape({
-                    email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-                    password: Yup.string().max(255).required('Password is required')
+                    email: Yup.string().email(t('auth.validEmail')).max(255).required(t('auth.emailRequired')),
+                    password: Yup.string().max(255).required(t('auth.passwordRequired'))
                 })}
                 onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
                     try {
@@ -71,8 +73,8 @@ const RestLogin = ({ className, ...rest }) => {
                             <input
                                 className="form-control"
                                 error={touched.email && errors.email}
-                                label="Email Address"
-                                placeholder="Email Address"
+                                label={t('auth.email')}
+                                placeholder={t('auth.email')}
                                 name="email"
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -85,8 +87,8 @@ const RestLogin = ({ className, ...rest }) => {
                             <input
                                 className="form-control"
                                 error={touched.password && errors.password}
-                                label="Password"
-                                placeholder="Password"
+                                label={t('auth.password')}
+                                placeholder={t('auth.password')}
                                 name="password"
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -105,7 +107,7 @@ const RestLogin = ({ className, ...rest }) => {
                         <div className="custom-control custom-checkbox  text-left mb-4 mt-2">
                             <input type="checkbox" className="custom-control-input" id="customCheck1" />
                             <label className="custom-control-label" htmlFor="customCheck1">
-                                Save credentials.
+                                {t('auth.saveCredentials')}
                             </label>
                         </div>
 
@@ -119,7 +121,7 @@ const RestLogin = ({ className, ...rest }) => {
                                     type="submit"
                                     variant="primary"
                                 >
-                                    Sign IN
+                                    {t('auth.signIn')}
                                 </Button>
                             </Col>
                         </Row>

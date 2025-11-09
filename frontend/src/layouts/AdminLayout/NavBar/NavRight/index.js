@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { ListGroup, Dropdown, Media } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -15,10 +16,15 @@ import avatar3 from '../../../../assets/images/user/avatar-3.jpg';
 import avatar4 from '../../../../assets/images/user/avatar-4.jpg';
 
 const NavRight = () => {
+    const { t, i18n } = useTranslation();
     const account = useSelector((state) => state.account);
     const dispatcher = useDispatch();
 
     const [listOpen, setListOpen] = useState(false);
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
 
     const handleLogout = () => {
         axios
@@ -46,18 +52,18 @@ const NavRight = () => {
                         </Dropdown.Toggle>
                         <Dropdown.Menu alignRight className="notification notification-scroll">
                             <div className="noti-head">
-                                <h6 className="d-inline-block m-b-0">Notifications</h6>
+                                <h6 className="d-inline-block m-b-0">{t('header.notifications')}</h6>
                                 <div className="float-end">
                                     <Link to="#" className="m-e-10">
-                                        mark as read
+                                        {t('header.markAsRead')}
                                     </Link>
-                                    <Link to="#">clear all</Link>
+                                    <Link to="#">{t('header.clearAll')}</Link>
                                 </div>
                             </div>
                             <PerfectScrollbar>
                                 <ListGroup as="ul" bsPrefix=" " variant="flush" className="noti-body">
                                     <ListGroup.Item as="li" bsPrefix=" " className="n-title">
-                                        <p className="m-b-0">NEW</p>
+                                        <p className="m-b-0">{t('header.new')}</p>
                                     </ListGroup.Item>
                                     <ListGroup.Item as="li" bsPrefix=" " className="notification">
                                         <Media>
@@ -75,7 +81,7 @@ const NavRight = () => {
                                         </Media>
                                     </ListGroup.Item>
                                     <ListGroup.Item as="li" bsPrefix=" " className="n-title">
-                                        <p className="m-b-0">EARLIER</p>
+                                        <p className="m-b-0">{t('header.earlier')}</p>
                                     </ListGroup.Item>
                                     <ListGroup.Item as="li" bsPrefix=" " className="notification">
                                         <Media>
@@ -125,7 +131,7 @@ const NavRight = () => {
                                 </ListGroup>
                             </PerfectScrollbar>
                             <div className="noti-footer">
-                                <Link to="#">show all</Link>
+                                <Link to="#">{t('header.showAll')}</Link>
                             </div>
                         </Dropdown.Menu>
                     </Dropdown>
@@ -138,6 +144,21 @@ const NavRight = () => {
                     </Dropdown>
                 </ListGroup.Item>
                 <ListGroup.Item as="li" bsPrefix=" ">
+                    <Dropdown>
+                        <Dropdown.Toggle as={Link} variant="link" to="#" id="dropdown-language" style={{ padding: '0.5rem' }}>
+                            <span style={{ fontSize: '1.2rem' }}>🌐</span>
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu alignRight>
+                            <Dropdown.Item onClick={() => changeLanguage('es')} active={i18n.language === 'es'}>
+                                🇪🇸 {i18n.language === 'es' && '✓ '}Español
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => changeLanguage('en')} active={i18n.language === 'en'}>
+                                🇺🇸 {i18n.language === 'en' && '✓ '}English
+                            </Dropdown.Item>
+                        </Dropdown.Menu>
+                    </Dropdown>
+                </ListGroup.Item>
+                <ListGroup.Item as="li" bsPrefix=" ">
                     <Dropdown className="drp-user">
                         <Dropdown.Toggle as={Link} variant="link" to="#" id="dropdown-basic">
                             <i className="icon feather icon-settings" />
@@ -146,36 +167,36 @@ const NavRight = () => {
                             <div className="pro-head">
                                 <img src={avatar1} className="img-radius" alt="User Profile" />
                                 <span>
-                                    User Menu
+                                    {t('header.userMenu')}
                                 </span>
-                                <Link to="#" className="dud-logout" onClick={handleLogout} title="Logout">
+                                <Link to="#" className="dud-logout" onClick={handleLogout} title={t('header.logout')}>
                                     <i className="feather icon-log-out" />
                                 </Link>
                             </div>
                             <ListGroup as="ul" bsPrefix=" " variant="flush" className="pro-body">
                                 <ListGroup.Item as="li" bsPrefix=" ">
                                     <Link to="#" className="dropdown-item">
-                                        <i className="feather icon-settings" /> Settings
+                                        <i className="feather icon-settings" /> {t('header.settings')}
+                                    </Link>
+                                </ListGroup.Item>
+                                <ListGroup.Item as="li" bsPrefix=" ">
+                                    <Link to="/app/profile" className="dropdown-item">
+                                        <i className="feather icon-user" /> {t('header.profile')}
+                                    </Link>
+                                </ListGroup.Item>
+                                <ListGroup.Item as="li" bsPrefix=" ">
+                                    <Link to="/app/messages" className="dropdown-item">
+                                        <i className="feather icon-mail" /> {t('header.myMessages')}
                                     </Link>
                                 </ListGroup.Item>
                                 <ListGroup.Item as="li" bsPrefix=" ">
                                     <Link to="#" className="dropdown-item">
-                                        <i className="feather icon-user" /> Profile
-                                    </Link>
-                                </ListGroup.Item>
-                                <ListGroup.Item as="li" bsPrefix=" ">
-                                    <Link to="#" className="dropdown-item">
-                                        <i className="feather icon-mail" /> My Messages
-                                    </Link>
-                                </ListGroup.Item>
-                                <ListGroup.Item as="li" bsPrefix=" ">
-                                    <Link to="#" className="dropdown-item">
-                                        <i className="feather icon-lock" /> Lock Screen
+                                        <i className="feather icon-lock" /> {t('header.lockScreen')}
                                     </Link>
                                 </ListGroup.Item>
                                 <ListGroup.Item as="li" bsPrefix=" ">
                                     <Link to="#" className="dropdown-item" onClick={handleLogout}>
-                                        <i className="feather icon-log-out" /> Logout
+                                        <i className="feather icon-log-out" /> {t('header.logout')}
                                     </Link>
                                 </ListGroup.Item>
                             </ListGroup>

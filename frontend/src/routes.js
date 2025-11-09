@@ -68,6 +68,46 @@ const routes = [
                 component: lazy(() => import('./views/dashboard/DashDefault'))
             },
             {
+                exact: true,
+                path: '/app/courses',
+                component: lazy(() => import('./views/courses'))
+            },
+            {
+                exact: true,
+                path: '/app/enrollments',
+                component: lazy(() => import('./views/enrollments'))
+            },
+            {
+                exact: true,
+                path: '/app/calendar',
+                component: lazy(() => import('./views/calendar'))
+            },
+            {
+                exact: true,
+                path: '/app/teachers',
+                component: lazy(() => import('./views/teachers'))
+            },
+            {
+                exact: true,
+                path: '/app/certificates',
+                component: lazy(() => import('./views/certificates'))
+            },
+            {
+                exact: true,
+                path: '/app/grades',
+                component: lazy(() => import('./views/grades'))
+            },
+            {
+                exact: true,
+                path: '/app/messages',
+                component: lazy(() => import('./views/messages'))
+            },
+            {
+                exact: true,
+                path: '/app/profile',
+                component: lazy(() => import('./views/profile'))
+            },
+            {
                 path: '*',
                 exact: true,
                 component: () => <Redirect to={BASE_URL} />

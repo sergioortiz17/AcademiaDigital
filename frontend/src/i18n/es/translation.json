@@ -1,0 +1,104 @@
+{
+  "menu": {
+    "dashboard": "Panel",
+    "courses": "Materias",
+    "enrollments": "Inscripciones",
+    "calendar": "Calendario",
+    "teachers": "Profesores",
+    "certificates": "Certificados",
+    "grades": "Notas",
+    "messages": "Mensajes",
+    "profile": "Perfil",
+    "navigation": "Navegación"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "progress": "Progreso de implementación: {{progress}}%"
+  },
+  "header": {
+    "dropdown": "Opciones",
+    "language": "Idioma",
+    "logout": "Cerrar sesión",
+    "notifications": "Notificaciones",
+    "markAsRead": "marcar como leído",
+    "clearAll": "limpiar todo",
+    "showAll": "mostrar todo",
+    "new": "NUEVO",
+    "earlier": "ANTERIOR",
+    "userMenu": "Menú de Usuario",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "myMessages": "Mis Mensajes",
+    "lockScreen": "Bloquear Pantalla"
+  },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "username": "Nombre de Usuario",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "saveCredentials": "Guardar credenciales",
+    "emailRequired": "El correo es requerido",
+    "passwordRequired": "La contraseña es requerida",
+    "usernameRequired": "El nombre de usuario es requerido",
+    "validEmail": "Debe ser un correo válido",
+    "appName": "Academia Digital"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "close": "Cerrar"
+  },
+  "pages": {
+    "courses": {
+      "title": "Materias",
+      "description": "Listado de cursos o materias inscritas",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "enrollments": {
+      "title": "Inscripciones",
+      "description": "Inscribirse en nuevas materias o talleres",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "calendar": {
+      "title": "Calendario",
+      "description": "Clases, evaluaciones y fechas importantes",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "teachers": {
+      "title": "Profesores",
+      "description": "Listado de docentes y contacto",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "certificates": {
+      "title": "Certificados",
+      "description": "Certificados descargables en PDF",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "grades": {
+      "title": "Notas",
+      "description": "Notas, promedios y progreso",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "messages": {
+      "title": "Mensajes",
+      "description": "Comunicación con docentes y compañeros",
+      "comingSoon": "Esta página está en desarrollo."
+    },
+    "profile": {
+      "title": "Perfil",
+      "description": "Datos personales, idioma, contraseña",
+      "comingSoon": "Esta página está en desarrollo."
+    }
+  }
+}
+

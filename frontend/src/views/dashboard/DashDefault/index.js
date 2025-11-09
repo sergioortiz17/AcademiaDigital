@@ -1,12 +1,20 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import avatar1 from '../../../assets/images/hero-logo.svg';
 import { Row, Col, Card } from "react-bootstrap";
 
 const DashDefault = () => {
+  const { t } = useTranslation();
+  
   return (
     <React.Fragment>
       <Row>
-        <Col >
+        <Col>
+          <h1 className="mb-4">{t('dashboard.title')}</h1>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
           <Card className="card-social">
             <Card.Body className="border-bottom">
               <div className="row align-items-center justify-content-center">
@@ -19,14 +27,16 @@ const DashDefault = () => {
               <div className="row align-items-center justify-content-center card-active" >
                 <div className="col-6">
                   <h4 className="text-center m-b-15">
-                    <span className="mb-0" style={{ color: "white" }}>App deployment progress: 100%</span>
+                    <span className="mb-0" style={{ color: "white" }}>
+                      {t('dashboard.progress', { progress: 100 })}
+                    </span>
                   </h4>
                   <div className="progress">
                     <div
                       className="progress-bar progress-c-green"
                       role="progressbar"
                       style={{ width: "100%", height: "6px"}}
-                      aria-valuenow="40"
+                      aria-valuenow="100"
                       aria-valuemin="0"
                       aria-valuemax="100"
                     />

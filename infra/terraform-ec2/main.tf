@@ -1,6 +1,6 @@
 
 resource "aws_security_group" "ec2_sg" {
-  name        = "ec2_security_group"
+  name        = "ec2_security_group_sergio-ec2-01"
   description = "Security group para permitir SSH y HTTP"
 
   ingress {
@@ -38,6 +38,14 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     description = "Permitir acceso al backend en el puerto 8000"
+  }
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Permitir acceso dbeaver"
   }
 
   egress {
