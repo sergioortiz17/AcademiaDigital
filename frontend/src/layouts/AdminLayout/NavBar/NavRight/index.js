@@ -53,13 +53,13 @@ const NavRight = () => {
                                             <img className="img-radius" src={avatar1} alt="Generic placeholder" />
                                             <Media.Body>
                                                 <p>
-                                                    <strong>Ariel</strong>
+                                                    <strong>Jaz</strong>
                                                     <span className="n-time text-muted">
                                                         <i className="icon feather icon-clock m-e-10" />
                                                         30 min
                                                     </span>
                                                 </p>
-                                                <p>New ticket Added</p>
+                                                <p>Solicitud Constancia de Estudios</p>
                                             </Media.Body>
                                         </Media>
                                     </ListGroup.Item>
@@ -71,13 +71,13 @@ const NavRight = () => {
                                             <img className="img-radius" src={avatar2} alt="Generic placeholder" />
                                             <Media.Body>
                                                 <p>
-                                                    <strong>Karim</strong>
+                                                    <strong>Ramon</strong>
                                                     <span className="n-time text-muted">
                                                         <i className="icon feather icon-clock m-e-10" />
                                                         30 min
                                                     </span>
                                                 </p>
-                                                <p>Purchase New Theme and make payment</p>
+                                                <p>Solicitud de Inscripcion</p>
                                             </Media.Body>
                                         </Media>
                                     </ListGroup.Item>
@@ -86,13 +86,13 @@ const NavRight = () => {
                                             <img className="img-radius" src={avatar3} alt="Generic placeholder" />
                                             <Media.Body>
                                                 <p>
-                                                    <strong>Diego</strong>
+                                                    <strong>Claudia</strong>
                                                     <span className="n-time text-muted">
                                                         <i className="icon feather icon-clock m-r-10" />
                                                         30 min
                                                     </span>
                                                 </p>
-                                                <p>currently login</p>
+                                                <p>Inscripcion de Catedra</p>
                                             </Media.Body>
                                         </Media>
                                     </ListGroup.Item>
@@ -101,13 +101,13 @@ const NavRight = () => {
                                             <img className="img-radius" src={avatar4} alt="Generic placeholder" />
                                             <Media.Body>
                                                 <p>
-                                                    <strong>Emi</strong>
+                                                    <strong>Prof.Pepito</strong>
                                                     <span className="n-time text-muted">
                                                         <i className="icon feather icon-clock m-e-10" />
-                                                        yesterday
+                                                         Ayer
                                                     </span>
                                                 </p>
-                                                <p>Purchase New Cluster</p>
+                                                <p>Solicitud de Horarios</p>
                                             </Media.Body>
                                         </Media>
                                     </ListGroup.Item>
@@ -129,13 +129,16 @@ const NavRight = () => {
 
 
                 <ListGroup.Item as="li" bsPrefix=" ">
-                <Dropdown align="end">
+                <Dropdown align="end" className="nav-lang-dropdown">
                     <Dropdown.Toggle
                     variant="link"
                     id="dropdown-language"
-                    className="nav-icon-btn"
+                    className="nav-icon-btn no-caret"
                     >
-                    <i className="feather icon-globe" />
+                    <div className="lang-icon">
+                        <i className="feather icon-globe" />
+                        <i className="feather icon-chevron-down caret-icon" />
+                    </div>
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu align="end" className="lang-menu">
@@ -145,7 +148,6 @@ const NavRight = () => {
                     >
                         🇪🇸 Español
                     </Dropdown.Item>
-
                     <Dropdown.Item
                         onClick={() => changeLanguage('en')}
                         className={i18n.language === 'en' ? 'lang-active' : ''}
@@ -155,7 +157,6 @@ const NavRight = () => {
                     </Dropdown.Menu>
                 </Dropdown>
                 </ListGroup.Item>
-
 
 
 

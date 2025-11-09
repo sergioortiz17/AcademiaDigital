@@ -18,7 +18,7 @@ const friends = [
     {
         id: 3,
         photo: 'avatar-3.jpg',
-        name: 'Edgar',
+        name: 'Agus',
         status: 1,
         time: 'online'
     },
@@ -48,7 +48,7 @@ const friends = [
     {
         id: 7,
         photo: 'avatar-2.jpg',
-        name: 'Agus',
+        name: 'Edgar',
         new: 1,
         status: 1,
         time: 'online'

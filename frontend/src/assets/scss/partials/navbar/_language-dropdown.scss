@@ -1,0 +1,47 @@
+/* ========================================
+   Language Dropdown (🌐)
+========================================= */
+.nav-icon-btn {
+  padding: 0.5rem !important;
+  color: inherit !important;
+  text-decoration: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-caret::after {
+  display: none !important;
+}
+
+.lang-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lang-icon .feather.icon-globe {
+  font-size: 1rem;
+}
+
+.lang-icon .caret-icon {
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+  position: relative;
+  top: 1px;
+}
+
+.lang-menu {
+  min-width: 160px;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.lang-active {
+  color: #04a9f5 !important;
+  font-weight: 600;
+}
+
+.lang-menu .dropdown-item:hover {
+  background-color: rgba(4, 169, 245, 0.08);
+}
