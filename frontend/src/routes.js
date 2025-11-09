@@ -5,7 +5,7 @@ import Loader from './components/Loader/Loader';
 import AdminLayout from './layouts/AdminLayout';
 
 import GuestGuard from './components/Auth/GuestGuard';
-import AuthGuard from './components/Auth/AuthGuard';
+import AuthGuard from './features/auth/presentation/components/AuthGuard';
 
 import { BASE_URL } from './config/constant';
 

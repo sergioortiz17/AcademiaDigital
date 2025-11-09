@@ -1,1 +1,2 @@
-default_app_config = "api.apps.CoreConfig"
+# API module
+# Mantener compatibilidad con código existente

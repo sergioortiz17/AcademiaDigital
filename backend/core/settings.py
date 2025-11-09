@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    # Apps existentes (mantener por compatibilidad con migraciones)
     "api",
     "api.user",
     "api.authentication",
@@ -133,6 +134,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Mantener compatibilidad con migraciones existentes
+# Las migraciones antiguas usan "api_user.User"
+# Los nuevos modelos usan "infrastructure_persistence_user.User"
+# Por ahora mantenemos el antiguo para no romper migraciones
 AUTH_USER_MODEL = "api_user.User"
 
 # ##################################################################### #
@@ -141,9 +146,10 @@ AUTH_USER_MODEL = "api_user.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "api.authentication.backends.ActiveSessionAuthentication",
+        "api.middleware.authentication_backend.ActiveSessionAuthentication",
     ),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "EXCEPTION_HANDLER": "api.middleware.error_handler.custom_exception_handler",
 }
 
 # ##################################################################### #

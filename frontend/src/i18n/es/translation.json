@@ -58,6 +58,9 @@
     "filter": "Filtrar",
     "close": "Cerrar"
   },
+  "common": {
+    "loading": "Cargando..."
+  },
   "pages": {
     "courses": {
       "title": "Materias",

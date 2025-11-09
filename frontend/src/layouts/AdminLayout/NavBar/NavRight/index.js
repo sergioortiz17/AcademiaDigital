@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch, useSelector } from 'react-redux';
 import { ListGroup, Dropdown, Media } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import PerfectScrollbar from 'react-perfect-scrollbar';
-import axios from 'axios';
-
 import ChatList from './ChatList';
-import { API_SERVER } from '../../../../config/constant';
-import { LOGOUT } from './../../../../store/actions';
+import { useLogout } from '../../../../features/auth/application/useLogout';
 
 import avatar1 from '../../../../assets/images/user/avatar-1.jpg';
 import avatar2 from '../../../../assets/images/user/avatar-2.jpg';
@@ -17,8 +13,7 @@ import avatar4 from '../../../../assets/images/user/avatar-4.jpg';
 
 const NavRight = () => {
     const { t, i18n } = useTranslation();
-    const account = useSelector((state) => state.account);
-    const dispatcher = useDispatch();
+    const { logout } = useLogout();
 
     const [listOpen, setListOpen] = useState(false);
 
@@ -27,19 +22,7 @@ const NavRight = () => {
     };
 
     const handleLogout = () => {
-        axios
-            .post(API_SERVER + 'users/logout', {}, { headers: { Authorization: `${account.token}` } })
-            .then(function (response) {
-                // Force the LOGOUT
-                //if (response.data.success) {
-                dispatcher({ type: LOGOUT });
-                //} else {
-                //    console.log('response - ', response.data.msg);
-                //}
-            })
-            .catch(function (error) {
-                console.log('error - ', error);
-            });
+        logout();
     };
 
     return (

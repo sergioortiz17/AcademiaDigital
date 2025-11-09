@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom';
 
 import Breadcrumb from '../../../layouts/AdminLayout/Breadcrumb';
 
-import RestLogin from './RestLogin';
+import LoginForm from '../../../../features/auth/presentation/components/LoginForm';
 
 const Signin1 = () => {
     const { t } = useTranslation();
@@ -29,7 +29,7 @@ const Signin1 = () => {
                                 <i className="feather icon-unlock auth-icon" />
                             </div>
 
-                            <RestLogin />
+                            <LoginForm />
 
                             <p className="mb-0 text-muted">
                                 {t('auth.dontHaveAccount')}{' '}

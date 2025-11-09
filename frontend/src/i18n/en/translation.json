@@ -58,6 +58,9 @@
     "filter": "Filter",
     "close": "Close"
   },
+  "common": {
+    "loading": "Loading..."
+  },
   "pages": {
     "courses": {
       "title": "Courses",

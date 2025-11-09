@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, Row, Col } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 
-import RestRegister from './RestRegister';
+import RegisterForm from '../../../../features/auth/presentation/components/RegisterForm';
 import Breadcrumb from '../../../layouts/AdminLayout/Breadcrumb';
 
 const SignUp1 = () => {
@@ -30,7 +30,7 @@ const SignUp1 = () => {
                                         <i className="feather icon-user-plus auth-icon" />
                                     </div>
 
-                                    <RestRegister />
+                                    <RegisterForm />
 
                                     <p className="mb-2">
                                         {t('auth.alreadyHaveAccount')}{' '}
