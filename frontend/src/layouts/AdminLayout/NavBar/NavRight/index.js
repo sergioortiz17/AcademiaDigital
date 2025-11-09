@@ -133,24 +133,22 @@ const NavRight = () => {
                     <Dropdown.Toggle
                     variant="link"
                     id="dropdown-language"
-                    style={{ padding: "0.5rem" }}
-                    className="d-flex align-items-center"
+                    className="nav-icon-btn"
                     >
-                    <i className="feather icon-globe" style={{ fontSize: "1.2rem" }} />
-                    {/* ❌ sin caret manual, Bootstrap lo agrega solo */}
+                    <i className="feather icon-globe" />
                     </Dropdown.Toggle>
 
-                    <Dropdown.Menu align="end">
+                    <Dropdown.Menu align="end" className="lang-menu">
                     <Dropdown.Item
-                        onClick={() => changeLanguage("es")}
-                        className={i18n.language === "es" ? "active-lang" : ""}
+                        onClick={() => changeLanguage('es')}
+                        className={i18n.language === 'es' ? 'lang-active' : ''}
                     >
                         🇪🇸 Español
                     </Dropdown.Item>
 
                     <Dropdown.Item
-                        onClick={() => changeLanguage("en")}
-                        className={i18n.language === "en" ? "active-lang" : ""}
+                        onClick={() => changeLanguage('en')}
+                        className={i18n.language === 'en' ? 'lang-active' : ''}
                     >
                         🇺🇸 English
                     </Dropdown.Item>

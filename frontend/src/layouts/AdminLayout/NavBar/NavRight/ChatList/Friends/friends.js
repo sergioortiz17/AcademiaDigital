@@ -2,7 +2,7 @@ const friends = [
     {
         id: 1,
         photo: 'avatar-1.jpg',
-        name: 'Blanca',
+        name: 'Jaz',
         new: 3,
         status: 1,
         time: 'typing'
@@ -10,7 +10,7 @@ const friends = [
     {
         id: 2,
         photo: 'avatar-2.jpg',
-        name: 'Zurdo',
+        name: 'Rodri',
         new: 1,
         status: 1,
         time: 'online'
@@ -18,14 +18,14 @@ const friends = [
     {
         id: 3,
         photo: 'avatar-3.jpg',
-        name: 'Seba',
+        name: 'Edgar',
         status: 1,
         time: 'online'
     },
     {
         id: 4,
         photo: 'avatar-2.jpg',
-        name: 'Ariel',
+        name: 'Ivan',
         status: 0,
         new: 1,
         time: '10 min ago'
@@ -33,14 +33,14 @@ const friends = [
     {
         id: 5,
         photo: 'avatar-4.jpg',
-        name: 'Karim',
+        name: 'Sergio',
         status: 0,
         time: '15 min ago'
     },
     {
         id: 6,
         photo: 'avatar-1.jpg',
-        name: 'Feli',
+        name: 'Claudia',
         new: 3,
         status: 1,
         time: 'typing'
@@ -56,7 +56,7 @@ const friends = [
     {
         id: 8,
         photo: 'avatar-2.jpg',
-        name: 'Lucas',
+        name: 'Mateo',
         status: 1,
         time: 'online'
     },
@@ -71,7 +71,7 @@ const friends = [
     {
         id: 10,
         photo: 'avatar-2.jpg',
-        name: 'Juli',
+        name: 'Cin',
         status: 0,
         time: '15 min ago'
     }
