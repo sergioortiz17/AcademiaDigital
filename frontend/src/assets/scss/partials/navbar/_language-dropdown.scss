@@ -45,3 +45,23 @@
 .lang-menu .dropdown-item:hover {
   background-color: rgba(4, 169, 245, 0.08);
 }
+
+
+/* Reducir espacio entre idiomas del menú */
+.lang-menu .dropdown-item {
+  padding: 0.4rem 1rem; /* antes ~0.75rem 1rem */
+  line-height: 1.2;     /* reduce la altura del texto */
+}
+
+/* Opcional: reducir espacio vertical general del menú */
+.lang-menu {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+
+.lang-menu .dropdown-item {
+  display: flex;
+  align-items: center; /* centra bandera y texto verticalmente */
+  gap: 0.5rem;         /* espacio entre bandera y texto */
+}
