@@ -74,7 +74,7 @@ const DashDefault = () => {
                   </h4>
                   <div className="progress" style={{ height: "6px" }}>
                     <div
-                      className="progress-bar bg-primary"  {/* 🔹 color azul */}
+                      className="progress-bar bg-primary"  
                       role="progressbar"
                       style={{ width: "100%" }}
                       aria-valuenow="100"
