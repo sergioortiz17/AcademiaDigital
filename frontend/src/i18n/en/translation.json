@@ -12,7 +12,7 @@
     "navigation": "Navigation"
   },
   "dashboard": {
-    "title": "Dashboard",
+    "title": "ITSC App",
     "progress": "App deployment progress: {{progress}}%"
   },
   "header": {
@@ -44,7 +44,7 @@
     "passwordRequired": "Password is required",
     "usernameRequired": "Username is required",
     "validEmail": "Must be a valid email",
-    "appName": "Academia Digital"
+    "appName": "ITSC"
   },
   "common": {
     "loading": "Loading...",

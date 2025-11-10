@@ -1,6 +1,6 @@
 export const BASENAME = ''; // don't add '/' at end off BASENAME
 export const BASE_URL = '/app/dashboard/default';
-export const BASE_TITLE = ' | Academia Digital ';
+export const BASE_TITLE = ' | ITSC ';
 //P2: Add ip backend depends localhost or prod
 export const API_SERVER =  process.env.REACT_APP_API_SERVER || 'http://localhost:8000/api/';
 

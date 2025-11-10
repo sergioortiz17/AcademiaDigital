@@ -12,7 +12,7 @@
     "navigation": "Navegación"
   },
   "dashboard": {
-    "title": "Panel de Control",
+    "title": "ITSC App",
     "progress": "Progreso de implementación: {{progress}}%"
   },
   "header": {
@@ -44,7 +44,7 @@
     "passwordRequired": "La contraseña es requerida",
     "usernameRequired": "El nombre de usuario es requerido",
     "validEmail": "Debe ser un correo válido",
-    "appName": "Academia Digital"
+    "appName": "ITSC"
   },
   "common": {
     "loading": "Cargando...",
