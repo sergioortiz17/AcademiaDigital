@@ -70,7 +70,7 @@ const DashDefault = () => {
               <div className="row align-items-center justify-content-center card-active">
                 <div className="col-8 text-center">
                   <h4 className="mb-3 text-white">
-                    {t("dashboard.progress", { progress: 100 })}
+                    {t("dashboard.progress", { progress: 1 })}
                   </h4>
                   <div className="progress" style={{ height: "6px" }}>
                     <div

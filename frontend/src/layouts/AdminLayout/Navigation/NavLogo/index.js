@@ -22,7 +22,7 @@ const NavLogo = () => {
                     <div className="b-bg">
                         <img className="rounded-circle" style={{ width: '40px' }} src={logo} alt="logo" />
                     </div>
-                    <span className="b-title">Academia Digital</span>
+                    <span className="b-title">ITSC App</span>
                 </Link>
                 <Link
                     to="#"
