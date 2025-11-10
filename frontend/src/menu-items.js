@@ -8,7 +8,7 @@ const menuItems = {
             children: [
                 {
                     id: 'dashboard',
-                    title: 'menu.dashboard',
+                    title: 'Inicio',
                     type: 'item',
                     url: '/app/dashboard/default',
                     icon: 'feather icon-home'
