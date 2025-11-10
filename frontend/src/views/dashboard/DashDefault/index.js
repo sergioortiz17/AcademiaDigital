@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import heroLogo from "../../../assets/images/hero-logo.svg";
-import { Row, Col, Card } from "react-bootstrap";
+import { Row, Col, Card, Carousel } from "react-bootstrap";
 
 const DashDefault = () => {
   const { t } = useTranslation();
@@ -33,6 +33,38 @@ const DashDefault = () => {
               </div>
             </Card.Body>
 
+            {/* CARRUSEL DE NOTICIAS */}
+            <Card.Body className="py-4">
+              <Carousel indicators={false} interval={4000} pause="hover">
+                <Carousel.Item>
+                  <h5 className="text-center mb-1 fw-bold text-primary">
+                    Nueva convocatoria a becas
+                  </h5>
+                  <p className="text-center text-muted mb-0">
+                    Postulate antes del 15 de noviembre para acceder a las becas académicas 2025.
+                  </p>
+                </Carousel.Item>
+
+                <Carousel.Item>
+                  <h5 className="text-center mb-1 fw-bold text-primary">
+                    Jornadas de Innovación Educativa
+                  </h5>
+                  <p className="text-center text-muted mb-0">
+                    Participá de los talleres de tecnología aplicada a la enseñanza.
+                  </p>
+                </Carousel.Item>
+
+                <Carousel.Item>
+                  <h5 className="text-center mb-1 fw-bold text-primary">
+                    Inscripciones abiertas 2025
+                  </h5>
+                  <p className="text-center text-muted mb-0">
+                    Ya podés registrarte para el ciclo lectivo 2025 desde el portal de alumnos.
+                  </p>
+                </Carousel.Item>
+              </Carousel>
+            </Card.Body>
+
             {/* PROGRESO */}
             <Card.Body style={{ background: "#eb9c00" }}>
               <div className="row align-items-center justify-content-center card-active">
@@ -42,7 +74,7 @@ const DashDefault = () => {
                   </h4>
                   <div className="progress" style={{ height: "6px" }}>
                     <div
-                      className="progress-bar bg-success"
+                      className="progress-bar bg-primary"  {/* 🔹 color azul */}
                       role="progressbar"
                       style={{ width: "100%" }}
                       aria-valuenow="100"

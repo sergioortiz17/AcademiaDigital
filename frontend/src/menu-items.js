@@ -15,42 +15,42 @@ const menuItems = {
                 },
                 {
                     id: 'courses',
-                    title: 'menu.courses',
+                    title: 'Materias',
                     type: 'item',
                     url: '/app/courses',
                     icon: 'feather icon-book'
                 },
                 {
                     id: 'enrollments',
-                    title: 'menu.enrollments',
+                    title: 'Inscripciones',
                     type: 'item',
                     url: '/app/enrollments',
                     icon: 'feather icon-file-text'
                 },
                 {
                     id: 'calendar',
-                    title: 'menu.calendar',
+                    title: 'Calendario',
                     type: 'item',
                     url: '/app/calendar',
                     icon: 'feather icon-calendar'
                 },
                 {
                     id: 'teachers',
-                    title: 'menu.teachers',
+                    title: 'Profesores',
                     type: 'item',
                     url: '/app/teachers',
                     icon: 'feather icon-users'
                 },
                 {
                     id: 'certificates',
-                    title: 'menu.certificates',
+                    title: 'Certificados',
                     type: 'item',
                     url: '/app/certificates',
                     icon: 'feather icon-award'
                 },
                 {
                     id: 'grades',
-                    title: 'menu.grades',
+                    title: 'Notas',
                     type: 'item',
                     url: '/app/grades',
                     icon: 'feather icon-star'
@@ -59,12 +59,12 @@ const menuItems = {
                     id: 'messages',
                     title: 'menu.messages',
                     type: 'item',
-                    url: '/app/messages',
+                    url: 'Foros',
                     icon: 'feather icon-message-circle'
                 },
                 {
                     id: 'profile',
-                    title: 'menu.profile',
+                    title: 'Perfil',
                     type: 'item',
                     url: '/app/profile',
                     icon: 'feather icon-user'
