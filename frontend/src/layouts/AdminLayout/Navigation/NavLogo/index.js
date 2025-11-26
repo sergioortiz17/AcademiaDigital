@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { ConfigContext } from '../../../../contexts/ConfigContext';
 import * as actionType from '../../../../store/actions';
-import logo from '../../../../assets/images/logo.png';
+import logo from '../../../../assets/images/logo.svg';
 
 const NavLogo = () => {
     const configContext = useContext(ConfigContext);
