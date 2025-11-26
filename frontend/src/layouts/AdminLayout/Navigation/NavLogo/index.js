@@ -19,10 +19,10 @@ const NavLogo = () => {
         <React.Fragment>
             <div className="navbar-brand header-logo">
                 <Link to="#" className="b-brand">
-                    <div className="b-bg">
+                    <div className="b-bg" style={{ borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '50px', height: '50px' }}>
                         <img className="rounded-circle" style={{ width: '40px' }} src={logo} alt="logo" />
                     </div>
-                    <span className="b-title">ITSC App</span>
+                    <span className="b-title" style={{ whiteSpace: 'nowrap' }}>ITSC App</span>
                 </Link>
                 <Link
                     to="#"
