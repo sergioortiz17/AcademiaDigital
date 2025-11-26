@@ -27,6 +27,13 @@
 }
 
 .navbar-collapsed {
+    .b-brand {
+        .b-bg {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    }
+
     .b-brand .b-title {
         transform: rotateY(-90deg);
         transform-origin: 0 0;
