@@ -156,8 +156,8 @@ REST_FRAMEWORK = {
 # ################### CORS              ############################### #
 # ##################################################################### #
 # P2:Allow CORS for ip public ec2 for Front in production
-FRONTEND_IP = os.getenv("FRONTEND_IP", "http://localhost:3000", "http://itsc-app.dryvn.org")
-CORS_ALLOWED_ORIGINS = [f"http://{FRONTEND_IP}:3000","http://localhost:3000", "http://127.0.0.1:3000","http://itsc-app.dryvn.org"]
+FRONTEND_IP = os.getenv("FRONTEND_IP", "http://localhost:3000")
+CORS_ALLOWED_ORIGINS = [f"http://{FRONTEND_IP}:3000","http://localhost:3000", "http://127.0.0.1:3000"]
 
 # ##################################################################### #
 # ################### TESTING           ############################### #
