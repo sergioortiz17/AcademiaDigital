@@ -3,7 +3,8 @@ FROM python:3.10-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev postgresql-dev libpq
+# CAMBIO AQUÍ: postgresql17-dev en lugar de postgresql-dev
+RUN apk add --no-cache gcc musl-dev postgresql17-dev libpq
 
 RUN python -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
