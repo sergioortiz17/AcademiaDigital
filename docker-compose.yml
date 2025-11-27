@@ -3,6 +3,7 @@ networks:
     driver: bridge
 
 services:
+
   db:
     container_name: database
     image: postgres:12.0-alpine
@@ -27,7 +28,7 @@ services:
       - static:/app/static
       - media:/app/media
     env_file:
-      - ./.env 
+      - ./backend/.env
     depends_on:
       db:
         condition: service_healthy
@@ -36,13 +37,16 @@ services:
     networks:
       - app_network
     environment:
-      - FRONTEND_IP=${FRONTEND_IP}  
-      - DJANGO_ALLOWED_HOSTS=*      
+      - DJANGO_ALLOWED_HOSTS=itsc-app.dryvn.org localhost 127.0.0.1 backend
+      - FRONTEND_DOMAIN=itsc-app.dryvn.org
+      - TRUSTED_PROXIES=127.0.0.1,localhost,nginx,backend
 
   frontend:
     container_name: react_frontend
     build:
       context: ./frontend
+      args:
+        - REACT_APP_API_SERVER=/api/
     ports:
       - "3000:80"
     depends_on:
@@ -50,7 +54,8 @@ services:
     networks:
       - app_network
     environment:
-      - REACT_APP_API_URL=http://django_backend:8000/api/  
+      # Frontend will use /api/ (relative path through nginx)
+      - REACT_APP_API_SERVER=/api/
 
 volumes:
   postgres_data:

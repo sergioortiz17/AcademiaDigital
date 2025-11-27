@@ -155,9 +155,31 @@ REST_FRAMEWORK = {
 # ##################################################################### #
 # ################### CORS              ############################### #
 # ##################################################################### #
-# P2:Allow CORS for ip public ec2 for Front in production
-FRONTEND_IP = os.getenv("FRONTEND_IP", "http://localhost:3000")
-CORS_ALLOWED_ORIGINS = [f"http://{FRONTEND_IP}:3000","http://localhost:3000", "http://127.0.0.1:3000"]
+# Allow CORS for frontend (supports both HTTP and HTTPS)
+FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", "localhost")
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    f"http://{FRONTEND_DOMAIN}:3000",
+    f"https://{FRONTEND_DOMAIN}:3000",
+    f"https://{FRONTEND_DOMAIN}",
+    "https://itsc-app.dryvn.org",
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+# Trust proxy headers for HTTPS detection
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ##################################################################### #
 # ################### TESTING           ############################### #

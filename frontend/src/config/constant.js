@@ -1,8 +1,12 @@
 export const BASENAME = ''; // don't add '/' at end off BASENAME
 export const BASE_URL = '/app/dashboard/default';
 export const BASE_TITLE = ' | ITSC ';
-//P2: Add ip backend depends localhost or prod
-export const API_SERVER =  process.env.REACT_APP_API_SERVER || 'http://localhost:8000/api/';
+
+// API Configuration
+// Uses relative paths by default so requests go through same origin (nginx proxy)
+// This avoids Mixed Content errors and ensures HTTPS when served over HTTPS
+// Override at build time with REACT_APP_API_SERVER if needed
+export const API_SERVER = process.env.REACT_APP_API_SERVER || '/api/';
 
 export const CONFIG = {
     layout: 'vertical', // disable on free version
