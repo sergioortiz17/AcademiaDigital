@@ -1,2 +1,0 @@
-# Authentication API v1
-

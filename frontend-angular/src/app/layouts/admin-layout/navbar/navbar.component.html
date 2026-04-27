@@ -1,0 +1,14 @@
+<nav class="navbar header-navbar pcoded-header navbar navbar-expand-lg navbar-light">
+  <div class="m-header">
+    <a class="mobile-menu" id="mobile-collapse1" (click)="toggleMenu()">
+      <span></span>
+    </a>
+    <a [routerLink]="['/app/dashboard/default']" class="b-brand">
+      <img src="assets/images/logo.svg" alt="ITSC" class="logo" />
+      <img src="assets/images/logo-icon.svg" alt="ITSC" class="logo-thumb" />
+    </a>
+  </div>
+  <div class="collapse navbar-collapse">
+    <app-nav-right class="ms-auto"></app-nav-right>
+  </div>
+</nav>

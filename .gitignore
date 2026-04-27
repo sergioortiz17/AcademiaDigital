@@ -1,0 +1,19 @@
+# Scripts de administración de issues
+scripts/
+
+# .NET
+**/bin/
+**/obj/
+**/*.user
+
+# Angular
+frontend-angular/node_modules/
+frontend-angular/dist/
+frontend-angular/.angular/
+
+# Docker
+.env
+
+# IDE
+.vscode/
+.idea/

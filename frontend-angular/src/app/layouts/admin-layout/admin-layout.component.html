@@ -1,0 +1,14 @@
+<app-navigation [isMobile]="isMobile" [collapseMenu]="(collapseMenu$ | async) ?? false"></app-navigation>
+
+<div [class.pcoded-outside]="isMobile">
+  <app-navbar></app-navbar>
+  <div class="pcoded-main-container">
+    <div class="pcoded-wrapper">
+      <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+          <router-outlet></router-outlet>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

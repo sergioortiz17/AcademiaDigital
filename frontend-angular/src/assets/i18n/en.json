@@ -1,0 +1,103 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "courses": "Courses",
+    "enrollments": "Enrollments",
+    "calendar": "Calendar",
+    "teachers": "Teachers",
+    "certificates": "Certificates",
+    "grades": "Grades",
+    "messages": "Messages",
+    "profile": "Profile",
+    "navigation": "Navigation"
+  },
+  "dashboard": {
+    "title": "ITSC App",
+    "progress": "App deployment progress: {{progress}}%"
+  },
+  "header": {
+    "dropdown": "Dropdown",
+    "language": "Language",
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "markAsRead": "mark as read",
+    "clearAll": "clear all",
+    "showAll": "show all",
+    "new": "NEW",
+    "earlier": "EARLIER",
+    "userMenu": "User Menu",
+    "settings": "Settings",
+    "profile": "Profile",
+    "myMessages": "My Messages",
+    "lockScreen": "Lock Screen"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "username": "Username",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "saveCredentials": "Save credentials.",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "usernameRequired": "Username is required",
+    "validEmail": "Must be a valid email",
+    "appName": "ITSC"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "filter": "Filter",
+    "close": "Close"
+  },
+  "pages": {
+    "courses": {
+      "title": "Courses",
+      "description": "List of enrolled courses or subjects",
+      "comingSoon": "This page is under development."
+    },
+    "enrollments": {
+      "title": "Enrollments",
+      "description": "Enroll in new subjects or workshops",
+      "comingSoon": "This page is under development."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "description": "Classes, evaluations and important dates",
+      "comingSoon": "This page is under development."
+    },
+    "teachers": {
+      "title": "Teachers",
+      "description": "List of teachers and contact",
+      "comingSoon": "This page is under development."
+    },
+    "certificates": {
+      "title": "Certificates",
+      "description": "Downloadable certificates in PDF",
+      "comingSoon": "This page is under development."
+    },
+    "grades": {
+      "title": "Grades",
+      "description": "Grades, averages and progress",
+      "comingSoon": "This page is under development."
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Communication with teachers and classmates",
+      "comingSoon": "This page is under development."
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Personal data, language, password",
+      "comingSoon": "This page is under development."
+    }
+  }
+}

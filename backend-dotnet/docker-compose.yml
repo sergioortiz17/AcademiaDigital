@@ -4,7 +4,6 @@ networks:
 
 services:
 
-  # ── Base de datos ─────────────────────────────────────────────────────────
   db:
     container_name: sqlserver
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -26,11 +25,10 @@ services:
     networks:
       - app_network
 
-  # ── Backend .NET ──────────────────────────────────────────────────────────
   backend:
     container_name: dotnet_backend
     build:
-      context: ./backend-dotnet
+      context: .
     ports:
       - "8000:8000"
     depends_on:
@@ -41,21 +39,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=db;Database=AcademiaDigital;User Id=sa;Password=${SA_PASSWORD:-Admin1234!};TrustServerCertificate=True;
-      - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
       - Jwt__ExpirationDays=7
-      - Cors__AllowedOrigins__0=http://localhost:4200
-
-  # ── Frontend Angular ──────────────────────────────────────────────────────
-  frontend:
-    container_name: angular_frontend
-    build:
-      context: ./frontend-angular
-    ports:
-      - "4200:80"
-    depends_on:
-      - backend
-    networks:
-      - app_network
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      - Cors__AllowedOrigins__1=http://localhost:4200
+      - Cors__AllowedOrigins__2=https://itsc-app.dryvn.org
 
 volumes:
   sqlserver_data:

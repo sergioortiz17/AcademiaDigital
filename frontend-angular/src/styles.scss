@@ -1,0 +1,31 @@
+/* Global styles for ITSC Academia Digital - Angular */
+
+// Bootstrap 5
+@import 'bootstrap/scss/bootstrap';
+
+// Datta Able Theme - SCSS assets
+@import 'assets/scss/partials/variables';
+@import 'assets/scss/partials/general';
+@import 'assets/scss/partials/generic';
+@import 'assets/scss/partials/mixins/function';
+
+// Icons
+@import 'assets/scss/partials/font/next-icon';
+@import 'assets/scss/partials/font/feather';
+@import 'assets/scss/partials/font/fontawesome';
+
+// Layout & Navigation
+@import 'assets/scss/partials/menu/menu-lite';
+
+// Theme Elements
+@import 'assets/scss/partials/theme-elements/form';
+@import 'assets/scss/partials/theme-elements/authentication';
+@import 'assets/scss/partials/theme-elements/button';
+@import 'assets/scss/partials/theme-elements/labels-badges';
+@import 'assets/scss/partials/theme-elements/breadcrumb-pagination';
+
+// Widgets
+@import 'assets/scss/partials/widget/widget';
+
+// Navbar language dropdown
+@import 'assets/scss/partials/navbar/language-dropdown';

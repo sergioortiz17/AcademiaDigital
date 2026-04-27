@@ -1,0 +1,67 @@
+<div class="row">
+  <div class="col">
+    <h1 class="mb-4">{{ 'dashboard.title' | translate }}</h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col">
+    <div class="card card-social shadow-sm border-0">
+
+      <!-- LOGO -->
+      <div class="card-body border-bottom text-center py-4">
+        <div class="d-flex justify-content-center align-items-center">
+          <img
+            src="assets/images/hero-logo.svg"
+            alt="Instituto Técnico Superior Córdoba"
+            class="img-fluid"
+            style="max-width: 280px; height: auto; display: block;"
+          />
+        </div>
+      </div>
+
+      <!-- CARRUSEL DE NOTICIAS -->
+      <div class="card-body py-4">
+        <div class="carousel-container text-center" style="min-height: 80px;">
+          <div *ngFor="let item of carouselItems; let i = index" [hidden]="activeSlide !== i">
+            <h5 class="text-center mb-1 fw-bold text-primary">{{ item.title }}</h5>
+            <p class="text-center text-muted mb-0">{{ item.description }}</p>
+          </div>
+          <!-- Indicadores -->
+          <div class="mt-3">
+            <button
+              *ngFor="let item of carouselItems; let i = index"
+              class="btn btn-sm p-1 mx-1"
+              [class.btn-primary]="activeSlide === i"
+              [class.btn-outline-secondary]="activeSlide !== i"
+              style="width: 10px; height: 10px; border-radius: 50%; padding: 0;"
+              (click)="goToSlide(i)"
+            ></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRESO -->
+      <div class="card-body" style="background: #eb9c00;">
+        <div class="row align-items-center justify-content-center card-active">
+          <div class="col-8 text-center">
+            <h4 class="mb-3 text-white">
+              {{ 'dashboard.progress' | translate: { progress: 1 } }}
+            </h4>
+            <div class="progress" style="height: 6px;">
+              <div
+                class="progress-bar bg-primary"
+                role="progressbar"
+                style="width: 100%"
+                aria-valuenow="100"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

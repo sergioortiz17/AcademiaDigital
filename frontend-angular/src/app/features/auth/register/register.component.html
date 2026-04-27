@@ -1,0 +1,99 @@
+<div class="auth-wrapper">
+  <div class="auth-content">
+    <div class="auth-bg">
+      <span class="r"></span>
+      <span class="r s"></span>
+      <span class="r s"></span>
+      <span class="r"></span>
+    </div>
+    <div class="card borderless">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="card-body text-center">
+            <h4 class="mb-4">{{ 'auth.appName' | translate }}</h4>
+
+            <div class="mb-4">
+              <i class="feather icon-user-plus auth-icon"></i>
+            </div>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+
+              <div class="form-group mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="registerForm.get('username')?.touched && registerForm.get('username')?.errors"
+                  formControlName="username"
+                  [placeholder]="'auth.username' | translate"
+                />
+                <small class="text-danger form-text" *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
+                  {{ 'auth.usernameRequired' | translate }}
+                </small>
+              </div>
+
+              <div class="form-group mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.errors"
+                  formControlName="email"
+                  [placeholder]="'auth.email' | translate"
+                />
+                <small class="text-danger form-text" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['required']">
+                  {{ 'auth.emailRequired' | translate }}
+                </small>
+                <small class="text-danger form-text" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['email']">
+                  {{ 'auth.validEmail' | translate }}
+                </small>
+              </div>
+
+              <div class="form-group mb-4">
+                <input
+                  type="password"
+                  class="form-control"
+                  [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.errors"
+                  formControlName="password"
+                  [placeholder]="'auth.password' | translate"
+                />
+                <small class="text-danger form-text" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['required']">
+                  {{ 'auth.passwordRequired' | translate }}
+                </small>
+              </div>
+
+              <div *ngIf="errorMessage" class="alert alert-danger">
+                {{ errorMessage }}
+              </div>
+
+              <div *ngIf="successMessage" class="alert alert-success">
+                {{ successMessage }}
+              </div>
+
+              <div class="row">
+                <div class="col mt-2">
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-block"
+                    [disabled]="isLoading"
+                  >
+                    {{ isLoading ? ('common.loading' | translate) : ('auth.signUp' | translate) }}
+                  </button>
+                </div>
+              </div>
+
+            </form>
+
+            <hr />
+
+            <p class="mb-2">
+              {{ 'auth.alreadyHaveAccount' | translate }}
+              <a [routerLink]="['/auth/signin']" class="f-w-400">
+                {{ 'auth.signIn' | translate }}
+              </a>
+            </p>
+            <br />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

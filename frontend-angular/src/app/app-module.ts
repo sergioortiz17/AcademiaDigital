@@ -1,0 +1,52 @@
+import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateHttpLoader, provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+
+import { AppRoutingModule } from './app-routing-module';
+import { App } from './app';
+import { CoreModule } from './core/core.module';
+import { AdminLayoutModule } from './layouts/admin-layout/admin-layout.module';
+
+import { accountReducer } from './store/account/account.reducer';
+import { configReducer } from './store/config/config.reducer';
+import { environment } from '../environments/environment';
+
+@NgModule({
+  declarations: [App],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    ReactiveFormsModule,
+    FormsModule,
+    AppRoutingModule,
+    CoreModule,
+    AdminLayoutModule,
+    StoreModule.forRoot({
+      account: accountReducer,
+      config: configReducer
+    }),
+    EffectsModule.forRoot([]),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: environment.production
+    }),
+    TranslateModule.forRoot({
+      loader: { provide: TranslateLoader, useClass: TranslateHttpLoader },
+      defaultLanguage: 'es'
+    })
+  ],
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    ...provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' })
+  ],
+  bootstrap: [App]
+})
+export class AppModule { }
