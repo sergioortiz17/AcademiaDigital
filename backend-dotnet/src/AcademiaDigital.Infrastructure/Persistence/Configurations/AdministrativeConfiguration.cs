@@ -8,7 +8,7 @@ public class AdministrativeConfiguration : IEntityTypeConfiguration<Administrati
 {
     public void Configure(EntityTypeBuilder<Administrative> builder)
     {
-        builder.ToTable("academic_administrative");
+        builder.ToTable("Administratives");
 
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Id).HasColumnName("id").ValueGeneratedOnAdd();

@@ -8,7 +8,7 @@ public class SubjectPrerequisiteConfiguration : IEntityTypeConfiguration<Subject
 {
     public void Configure(EntityTypeBuilder<SubjectPrerequisite> builder)
     {
-        builder.ToTable("academic_subject_prerequisite");
+        builder.ToTable("SubjectPrerequisites");
 
         builder.HasKey(sp => new { sp.SubjectId, sp.PrerequisiteSubjectId });
         builder.Property(sp => sp.SubjectId).HasColumnName("subject_id");

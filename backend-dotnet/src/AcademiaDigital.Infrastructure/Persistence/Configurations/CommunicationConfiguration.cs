@@ -8,7 +8,7 @@ public class CommunicationConfiguration : IEntityTypeConfiguration<Communication
 {
     public void Configure(EntityTypeBuilder<Communication> builder)
     {
-        builder.ToTable("academic_communication");
+        builder.ToTable("Communications");
 
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id").ValueGeneratedOnAdd();

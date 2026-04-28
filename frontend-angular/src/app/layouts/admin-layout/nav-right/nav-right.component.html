@@ -1,43 +1,5 @@
 <ul class="navbar-nav ms-auto" id="navbar-right">
 
-  <!-- Notificaciones -->
-  <li class="nav-item dropdown" [class.show]="notificationsOpen">
-    <a class="nav-link" (click)="toggleNotifications()">
-      <i class="feather icon-bell icon"></i>
-    </a>
-    <div class="dropdown-menu dropdown-menu-end notification notification-scroll" [class.show]="notificationsOpen">
-      <div class="noti-head">
-        <h6 class="d-inline-block m-b-0">{{ 'header.notifications' | translate }}</h6>
-        <div class="float-end">
-          <a href="#" class="m-e-10">{{ 'header.markAsRead' | translate }}</a>
-          <a href="#">{{ 'header.clearAll' | translate }}</a>
-        </div>
-      </div>
-      <ul class="list-group list-group-flush noti-body">
-        <li class="list-group-item n-title">
-          <p class="m-b-0">{{ 'header.new' | translate }}</p>
-        </li>
-        <li class="list-group-item notification" *ngFor="let notif of notifications">
-          <div class="media">
-            <img class="img-radius" src="assets/images/user/avatar-1.jpg" alt="avatar" />
-            <div class="media-body">
-              <p>
-                <strong>{{ notif.name }}</strong>
-                <span class="n-time text-muted">
-                  <i class="icon feather icon-clock m-e-10"></i>{{ notif.time }}
-                </span>
-              </p>
-              <p>{{ notif.message }}</p>
-            </div>
-          </div>
-        </li>
-      </ul>
-      <div class="noti-footer">
-        <a href="#">{{ 'header.showAll' | translate }}</a>
-      </div>
-    </div>
-  </li>
-
   <!-- Selector de idioma -->
   <li class="nav-item dropdown nav-lang-dropdown" [class.show]="langOpen">
     <a class="nav-link nav-icon-btn no-caret" (click)="toggleLang()">

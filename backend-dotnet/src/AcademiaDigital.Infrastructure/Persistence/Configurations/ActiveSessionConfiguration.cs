@@ -9,7 +9,7 @@ public class ActiveSessionConfiguration : IEntityTypeConfiguration<ActiveSession
     public void Configure(EntityTypeBuilder<ActiveSession> builder)
     {
         // Mapea a la misma tabla del Django para compatibilidad con la DB existente
-        builder.ToTable("api_authentication_activesession");
+        builder.ToTable("ActiveSessions");
 
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).HasColumnName("id").ValueGeneratedOnAdd();

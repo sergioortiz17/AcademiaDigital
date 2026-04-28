@@ -8,7 +8,7 @@ public class CooperativeEntityConfiguration : IEntityTypeConfiguration<Cooperati
 {
     public void Configure(EntityTypeBuilder<CooperativeEntity> builder)
     {
-        builder.ToTable("academic_cooperative_entity");
+        builder.ToTable("CooperativeEntities");
 
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
