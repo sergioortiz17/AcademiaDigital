@@ -14,16 +14,8 @@ import { take } from 'rxjs/operators';
   standalone: false
 })
 export class NavRightComponent {
-  notificationsOpen = false;
   profileOpen = false;
   langOpen = false;
-
-  notifications = [
-    { name: 'Jaz', message: 'Solicitud Constancia de Estudios', time: '30 min', type: 'new' },
-    { name: 'Ramon', message: 'Solicitud de Inscripcion', time: '30 min', type: 'earlier' },
-    { name: 'Claudia', message: 'Inscripcion de Catedra', time: '30 min', type: 'earlier' },
-    { name: 'Prof.Pepito', message: 'Solicitud de Horarios', time: 'Ayer', type: 'earlier' }
-  ];
 
   constructor(
     private readonly store: Store,
@@ -55,26 +47,17 @@ export class NavRightComponent {
     });
   }
 
-  toggleNotifications(): void {
-    this.notificationsOpen = !this.notificationsOpen;
-    this.profileOpen = false;
-    this.langOpen = false;
-  }
-
   toggleProfile(): void {
     this.profileOpen = !this.profileOpen;
-    this.notificationsOpen = false;
     this.langOpen = false;
   }
 
   toggleLang(): void {
     this.langOpen = !this.langOpen;
-    this.notificationsOpen = false;
     this.profileOpen = false;
   }
 
   closeAll(): void {
-    this.notificationsOpen = false;
     this.profileOpen = false;
     this.langOpen = false;
   }

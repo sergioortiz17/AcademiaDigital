@@ -8,7 +8,7 @@ public class ContestApplicationConfiguration : IEntityTypeConfiguration<ContestA
 {
     public void Configure(EntityTypeBuilder<ContestApplication> builder)
     {
-        builder.ToTable("academic_contest_application");
+        builder.ToTable("ContestApplications");
 
         builder.HasKey(ca => ca.Id);
         builder.Property(ca => ca.Id).HasColumnName("id").ValueGeneratedOnAdd();

@@ -8,7 +8,7 @@ public class TeacherConfiguration : IEntityTypeConfiguration<Teacher>
 {
     public void Configure(EntityTypeBuilder<Teacher> builder)
     {
-        builder.ToTable("academic_teacher");
+        builder.ToTable("Teachers");
 
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Id).HasColumnName("id").ValueGeneratedOnAdd();

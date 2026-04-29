@@ -9,7 +9,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         // Mapea a la misma tabla del Django para compatibilidad con la DB existente
-        builder.ToTable("api_user_user");
+        builder.ToTable("Users");
 
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).HasColumnName("id").ValueGeneratedOnAdd();

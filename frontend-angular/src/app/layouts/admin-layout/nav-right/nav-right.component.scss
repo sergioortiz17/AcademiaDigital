@@ -1,1 +1,23 @@
-// NavRight styles handled by global SCSS
+.drp-user {
+  position: static !important;
+
+  .dropdown-menu.profile-notification {
+    position: fixed !important;
+    top: 60px;
+    right: 10px;
+    left: auto !important;
+    min-width: 240px;
+  }
+}
+
+.nav-lang-dropdown {
+  position: static !important;
+
+  .dropdown-menu.lang-menu {
+    position: fixed !important;
+    top: 60px;
+    right: 60px;
+    left: auto !important;
+    min-width: 140px;
+  }
+}

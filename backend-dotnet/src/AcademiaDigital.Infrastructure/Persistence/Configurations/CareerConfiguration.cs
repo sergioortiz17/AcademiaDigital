@@ -8,7 +8,7 @@ public class CareerConfiguration : IEntityTypeConfiguration<Career>
 {
     public void Configure(EntityTypeBuilder<Career> builder)
     {
-        builder.ToTable("academic_career");
+        builder.ToTable("Careers");
 
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id").ValueGeneratedOnAdd();
