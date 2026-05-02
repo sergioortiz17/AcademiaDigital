@@ -47,6 +47,16 @@ AcademiaDigital/
 
 ---
 
+## Documentación por servicio
+
+| Servicio | README |
+|----------|--------|
+| Frontend Angular | [frontend-angular/README.md](frontend-angular/README.md) |
+| Backend .NET | [backend-dotnet/README.md](backend-dotnet/README.md) |
+| Base de datos (SQL Server local) | [DATABASE_SETUP.md](DATABASE_SETUP.md) |
+
+---
+
 ## Requisitos
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (o Docker Engine + Compose v2)

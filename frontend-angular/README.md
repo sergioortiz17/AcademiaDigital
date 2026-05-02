@@ -1,59 +1,133 @@
-# FrontendAngular
+# AcademiaDigital — Frontend Angular
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.4.
+![Angular](https://img.shields.io/badge/Angular-21-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![NgRx](https://img.shields.io/badge/NgRx-Store-BA2BD2?style=for-the-badge&logo=reactivex&logoColor=white)
 
-## Development server
+Aplicación Angular 21 del proyecto AcademiaDigital. Usa **NgRx** para gestión de estado, **ngx-translate** para internacionalización y **Bootstrap 5** para estilos.
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
-```
+## Requisitos previos
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+| Herramienta | Versión mínima | Verificar |
+|-------------|---------------|-----------|
+| Node.js | 20 LTS | `node -v` |
+| npm | 11 | `npm -v` |
+| Angular CLI | 21 | `ng version` |
 
-## Code scaffolding
+> Si no tenés Angular CLI instalado: `npm install -g @angular/cli`
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+---
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Instalación
 
 ```bash
-ng build
+# Desde la raíz del repositorio
+cd frontend-angular
+
+# Instalar dependencias
+npm install
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Levantar en desarrollo
 
 ```bash
-ng test
+npm start
 ```
 
-## Running end-to-end tests
+El servidor de desarrollo queda corriendo en **http://localhost:4200**.
 
-For end-to-end (e2e) testing, run:
+El archivo [proxy.conf.json](proxy.conf.json) redirige automáticamente todas las llamadas a `/api/*` hacia el backend en `http://localhost:5073`, por lo que no hace falta configurar CORS manualmente durante el desarrollo.
+
+---
+
+## Variables de entorno
+
+Los archivos de entorno viven en [src/environments/](src/environments/):
+
+| Archivo | Uso |
+|---------|-----|
+| `environment.ts` | Desarrollo (por defecto con `npm start`) |
+| `environment.prod.ts` | Producción (`ng build --configuration production`) |
+
+No se requiere ninguna variable de entorno adicional para correr localmente — el proxy se encarga del enrutamiento al backend.
+
+---
+
+## Comandos útiles
 
 ```bash
-ng e2e
+# Servidor de desarrollo (con proxy al backend)
+npm start
+
+# Build de producción
+npm run build
+
+# Build en modo watch (reconstruye al guardar)
+npm run watch
+
+# Correr tests unitarios
+npm test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## Estructura del proyecto
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```
+src/
+├── app/
+│   ├── core/          # Servicios singleton, guards, interceptors
+│   ├── features/      # Módulos de funcionalidad (alumnos, carreras, etc.)
+│   ├── shared/        # Componentes, pipes y directivas reutilizables
+│   └── store/         # NgRx: actions, reducers, effects, selectors
+├── assets/
+│   └── i18n/          # Archivos de traducción (es.json, en.json)
+├── environments/      # Configuraciones por entorno
+└── styles.scss        # Estilos globales
+```
+
+---
+
+## Troubleshooting
+
+### `ng` o `npm start` da "command not found"
+
+- Verificá que Node.js esté instalado: `node -v`
+- Si Node está pero `ng` no: `npm install -g @angular/cli`
+- Si `ng` sigue sin encontrarse después de instalarlo, cerrá y volvé a abrir la terminal para que el PATH se actualice
+
+### `npm install` falla con errores de permisos
+
+No uses `sudo npm install`. En su lugar, corregí los permisos de npm:
+```bash
+mkdir -p ~/.npm-global
+npm config set prefix ~/.npm-global
+echo 'export PATH="$PATH:$HOME/.npm-global/bin"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### La app carga pero las llamadas a `/api` fallan
+
+- Verificá que el backend esté corriendo en **http://localhost:5073** (ver [../backend-dotnet/README.md](../backend-dotnet/README.md))
+- El proxy solo funciona con `npm start` — si abrís el HTML directamente en el browser, el proxy no aplica
+
+### Error de versión de Node
+
+El proyecto usa Angular 21 que requiere Node 20+. Verificá con `node -v`. Si tenés una versión anterior, actualizá con [nvm](https://github.com/nvm-sh/nvm):
+```bash
+nvm install 20
+nvm use 20
+```
+
+---
+
+## Flujo esperado para desarrollo local
+
+1. Levantar el backend .NET (ver [../backend-dotnet/README.md](../backend-dotnet/README.md))
+2. Asegurarse de que el backend corra en el puerto **5073**
+3. Ejecutar `npm start` en esta carpeta
+4. Abrir **http://localhost:4200**
