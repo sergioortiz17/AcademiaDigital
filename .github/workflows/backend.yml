@@ -79,6 +79,7 @@ jobs:
           dotnet ef database update \
             --project ${{ env.INFRA_PROJECT }} \
             --startup-project ${{ env.API_PROJECT }} \
+            --configuration Release \
             --no-build
 
       - name: Remove runner IP from SQL Server firewall
@@ -87,5 +88,4 @@ jobs:
           az sql server firewall-rule delete \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --server ${{ env.SQL_SERVER }} \
-            --name "github-actions-runner" \
-            --yes
+            --name "github-actions-runner"
