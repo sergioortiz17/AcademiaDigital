@@ -14,6 +14,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(u => u.Username).HasColumnName("username").HasMaxLength(255).IsRequired();
+        builder.Property(u => u.LastName).HasColumnName("last_name").HasMaxLength(255).IsRequired(false);
         builder.Property(u => u.Email).HasColumnName("email").HasMaxLength(254).IsRequired();
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u => u.Password).HasColumnName("password").HasMaxLength(128).IsRequired();
