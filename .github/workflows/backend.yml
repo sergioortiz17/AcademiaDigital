@@ -1,0 +1,91 @@
+name: Backend CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend-dotnet/**'
+  push:
+    branches: [main]
+    paths:
+      - 'backend-dotnet/**'
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  SOLUTION: 'backend-dotnet/AcademiaDigital.sln'
+  INFRA_PROJECT: 'backend-dotnet/src/AcademiaDigital.Infrastructure'
+  API_PROJECT: 'backend-dotnet/src/AcademiaDigital.API'
+  SQL_SERVER: 'sql-server-itsc'
+  RESOURCE_GROUP: 'rg-itsc'
+
+jobs:
+  # ── Corre en todo PR: verifica que el codigo compila ──────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration Release
+
+  # ── Solo en merge a main: aplica las migraciones a la DB de Azure ─────────────
+  migrate:
+    name: Apply Migrations
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --configuration Release
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Add runner IP to SQL Server firewall
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "Runner IP: $RUNNER_IP"
+          az sql server firewall-rule create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --server ${{ env.SQL_SERVER }} \
+            --name "github-actions-runner" \
+            --start-ip-address "$RUNNER_IP" \
+            --end-ip-address "$RUNNER_IP"
+
+      - name: Apply EF Core migrations
+        env:
+          ConnectionStrings__DefaultConnection: ${{ secrets.SQL_CONNECTION_STRING }}
+        run: |
+          dotnet ef database update \
+            --project ${{ env.INFRA_PROJECT }} \
+            --startup-project ${{ env.API_PROJECT }} \
+            --no-build
+
+      - name: Remove runner IP from SQL Server firewall
+        if: always()
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --server ${{ env.SQL_SERVER }} \
+            --name "github-actions-runner" \
+            --yes
