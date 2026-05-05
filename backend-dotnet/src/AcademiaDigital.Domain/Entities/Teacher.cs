@@ -8,6 +8,7 @@ public class Teacher
     public string? SpecializationArea { get; set; }
     public DateTime HireDate { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? PhoneNumber { get; set; }
 
     public long UserId { get; set; }
     public User User { get; set; } = null!;
