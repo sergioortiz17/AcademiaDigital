@@ -2,8 +2,39 @@
 
 @include mat.core();
 
-$primary: mat.m2-define-palette(mat.$m2-indigo-palette, 700);
-$accent:  mat.m2-define-palette(mat.$m2-orange-palette, 600);
+// Paleta teal personalizada (sidebar azul-verdoso)
+$teal-palette: (
+  50: #e0f4f5, 100: #b3e2e5, 200: #80cfd4, 300: #4dbbc1,
+  400: #26acb4, 500: #009ea8, 600: #008f98, 700: #007c85,
+  800: #006a72, 900: #004a50,
+  A100: #82fff8, A200: #4ffff4, A400: #1cffef, A700: #02ffec,
+  contrast: (
+    50: rgba(0,0,0,.87), 100: rgba(0,0,0,.87), 200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87), 400: white, 500: white, 600: white,
+    700: white, 800: white, 900: white,
+    A100: rgba(0,0,0,.87), A200: rgba(0,0,0,.87),
+    A400: rgba(0,0,0,.87), A700: rgba(0,0,0,.87),
+  )
+);
+
+// Paleta mostaza personalizada
+$mustard-palette: (
+  50: #fff8e1, 100: #ffedb3, 200: #ffe180, 300: #ffd44d,
+  400: #ffc924, 500: #ffbe00, 600: #f0a500, 700: #de8f00,
+  800: #cc7a00, 900: #a85700,
+  A100: #ffe57f, A200: #ffd740, A400: #ffc400, A700: #ffab00,
+  contrast: (
+    50: rgba(0,0,0,.87), 100: rgba(0,0,0,.87), 200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87), 400: rgba(0,0,0,.87), 500: rgba(0,0,0,.87),
+    600: rgba(0,0,0,.87), 700: rgba(0,0,0,.87), 800: rgba(0,0,0,.87),
+    900: white,
+    A100: rgba(0,0,0,.87), A200: rgba(0,0,0,.87),
+    A400: rgba(0,0,0,.87), A700: rgba(0,0,0,.87),
+  )
+);
+
+$primary: mat.m2-define-palette($teal-palette, 800);
+$accent:  mat.m2-define-palette($mustard-palette, 600);
 $warn:    mat.m2-define-palette(mat.$m2-red-palette);
 
 $theme: mat.m2-define-light-theme((
@@ -27,12 +58,12 @@ $dark-theme: mat.m2-define-dark-theme((
   background: #121212;
   color: #e0e0e0;
 
-  .sidenav { background: #1a237e; }
+  .sidenav { background: #004a50; }
 
   .main-content { background: #121212; }
 
   .auth-container {
-    background: linear-gradient(135deg, #1a237e 0%, #0d1342 100%);
+    background: linear-gradient(135deg, #004a50 0%, #003035 100%);
   }
 
   .auth-logo img,
@@ -42,11 +73,11 @@ $dark-theme: mat.m2-define-dark-theme((
 
   // Links de auth (Iniciar Sesión / Registrarse)
   .auth-footer a[mat-button] {
-    color: #90caf9 !important;
+    color: #80cfd4 !important;
   }
 
   // Textos del carrusel
-  .carousel-title { color: #90caf9; }
+  .carousel-title { color: #80cfd4; }
   .carousel-desc  { color: rgba(255,255,255,.75); }
 
   // Sidenav — vuelve a colores claros sobre fondo oscuro
@@ -57,7 +88,7 @@ $dark-theme: mat.m2-define-dark-theme((
   .nav-group-label           { color: rgba(255,255,255,.5) !important; }
   mat-nav-list .mat-mdc-list-item             { color: rgba(255,255,255,.85) !important; }
   mat-nav-list .mat-mdc-list-item:hover       { background: rgba(255,255,255,.1); }
-  mat-nav-list .mat-mdc-list-item.active-link { background: #5c6bc0; color: #ffffff !important; }
+  mat-nav-list .mat-mdc-list-item.active-link { background: #007c85; color: #ffffff !important; }
   mat-nav-list .mat-mdc-list-item mat-icon    { color: rgba(255,255,255,.85) !important; }
 
   .auth-card .auth-footer { color: rgba(255,255,255,.6); }
@@ -68,8 +99,8 @@ $dark-theme: mat.m2-define-dark-theme((
     p { color: rgba(255,255,255,.6); }
     mat-icon {
       color: #ffffff;
-      background: #2a2a6e;
-      border: 2px solid #7986cb;
+      background: #004a50;
+      border: 2px solid #80cfd4;
       border-radius: 50%;
       padding: 12px;
       width: 88px;
@@ -109,7 +140,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3f51b5 0%, #283593 100%);
+  background: linear-gradient(135deg, #006a72 0%, #004a50 100%);
   padding: 16px;
 }
 
@@ -161,10 +192,10 @@ html, body {
       border-radius: 8px;
       margin: 2px 8px;
       width: calc(100% - 16px);
-      &:hover { background: rgba(63,81,181,.08); }
+      &:hover { background: rgba(0,106,114,.08); }
       &.active-link {
-        background: #c5cae9;
-        color: #283593 !important;
+        background: #b3e2e5;
+        color: #004a50 !important;
         font-weight: 500;
       }
       mat-icon { color: #546e7a !important; margin-right: 12px; }
@@ -203,7 +234,7 @@ html, body {
 .coming-soon-card {
   text-align: center;
   padding: 48px 24px;
-  mat-icon { font-size: 64px; width: 64px; height: 64px; color: #3f51b5; margin-bottom: 16px; }
+  mat-icon { font-size: 64px; width: 64px; height: 64px; color: #006a72; margin-bottom: 16px; }
   h2 { font-weight: 400; margin: 0 0 8px; }
   p { color: rgba(0,0,0,.6); }
 }
@@ -211,14 +242,14 @@ html, body {
 // Dashboard
 .dashboard-card { margin-bottom: 24px; }
 .progress-section {
-  background: #3f51b5;
+  background: #006a72;
   padding: 24px;
   border-radius: 0 0 4px 4px;
   color: white;
   h3 { margin: 0 0 16px; font-weight: 400; }
 }
 .carousel-title {
-  color: #3f51b5;
+  color: #006a72;
   margin: 0 0 8px;
 }
 .carousel-desc {
@@ -229,5 +260,5 @@ html, body {
 .carousel-dots {
   display: flex; justify-content: center; gap: 8px; margin-top: 16px;
   button { width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer; background: #ccc; padding: 0; transition: background .2s; }
-  button.active { background: #3f51b5; }
+  button.active { background: #006a72; }
 }
