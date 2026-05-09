@@ -47,8 +47,18 @@ html, body {
 .auth-card {
   width: 100%;
   max-width: 420px;
-  mat-card-header { justify-content: center; margin-bottom: 8px; }
-  .auth-logo { text-align: center; margin-bottom: 16px; }
+  mat-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .auth-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    width: 100%;
+  }
   mat-form-field { width: 100%; }
   .auth-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
   .auth-footer { text-align: center; margin-top: 16px; color: rgba(0,0,0,.6); font-size: 14px; }
@@ -61,6 +71,11 @@ html, body {
   width: 260px;
   background: #3f51b5;
   color: white;
+  .sidenav-logo {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
   .sidenav-header {
     padding: 20px 16px 8px;
     display: flex;
