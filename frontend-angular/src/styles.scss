@@ -50,15 +50,15 @@ $dark-theme: mat.m2-define-dark-theme((
   .carousel-desc  { color: rgba(255,255,255,.75); }
 
   // Sidenav — vuelve a colores claros sobre fondo oscuro
-  .sidenav-logo              { filter: brightness(0) invert(1); }
+  .sidenav-logo              { filter: brightness(0) invert(1) !important; }
   .sidenav-header            { border-bottom-color: rgba(255,255,255,.15); }
-  .sidenav-header .app-logo  { color: rgba(255,255,255,.7); }
-  .sidenav-header .app-name  { color: #ffffff; }
-  .nav-group-label           { color: rgba(255,255,255,.5); }
-  mat-nav-list .mat-mdc-list-item            { color: rgba(255,255,255,.85); }
-  mat-nav-list .mat-mdc-list-item:hover      { background: rgba(255,255,255,.1); }
-  mat-nav-list .mat-mdc-list-item.active-link { background: #5c6bc0; color: #ffffff; }
-  mat-nav-list .mat-mdc-list-item mat-icon   { color: rgba(255,255,255,.85); }
+  .sidenav-header .app-logo  { color: rgba(255,255,255,.7) !important; }
+  .sidenav-header .app-name  { color: #ffffff !important; }
+  .nav-group-label           { color: rgba(255,255,255,.5) !important; }
+  mat-nav-list .mat-mdc-list-item             { color: rgba(255,255,255,.85) !important; }
+  mat-nav-list .mat-mdc-list-item:hover       { background: rgba(255,255,255,.1); }
+  mat-nav-list .mat-mdc-list-item.active-link { background: #5c6bc0; color: #ffffff !important; }
+  mat-nav-list .mat-mdc-list-item mat-icon    { color: rgba(255,255,255,.85) !important; }
 
   .auth-card .auth-footer { color: rgba(255,255,255,.6); }
 
@@ -157,17 +157,17 @@ html, body {
   }
   mat-nav-list {
     .mat-mdc-list-item {
-      color: #455a64;
+      color: #455a64 !important;
       border-radius: 8px;
       margin: 2px 8px;
       width: calc(100% - 16px);
       &:hover { background: rgba(63,81,181,.08); }
       &.active-link {
         background: #c5cae9;
-        color: #283593;
+        color: #283593 !important;
         font-weight: 500;
       }
-      mat-icon { color: #546e7a; margin-right: 12px; }
+      mat-icon { color: #546e7a !important; margin-right: 12px; }
     }
   }
   .nav-group-label {
