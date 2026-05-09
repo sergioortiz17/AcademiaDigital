@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { accountInitialize } from '../../../store/account/account.actions';
 
@@ -16,47 +15,31 @@ export class LoginComponent {
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  hidePassword = true;
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly store: Store,
-    private readonly router: Router,
-    private readonly translate: TranslateService
+    private readonly router: Router
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-      password: ['', [Validators.required, Validators.maxLength(255)]]
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required]]
     });
   }
 
-  get email() { return this.loginForm.get('email'); }
-  get password() { return this.loginForm.get('password'); }
-
   onSubmit(): void {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
-
+    if (this.loginForm.invalid) { this.loginForm.markAllAsTouched(); return; }
     this.isLoading = true;
     this.errorMessage = '';
-
     const { email, password } = this.loginForm.value;
-
     this.authService.login({ email, password }).subscribe({
       next: (response) => {
         this.isLoading = false;
         if (response.success && response.token) {
-          const state = { token: response.token, user: response.user };
-          localStorage.setItem('academia-account', JSON.stringify(state));
-
-          this.store.dispatch(accountInitialize({
-            isLoggedIn: true,
-            user: response.user,
-            token: response.token
-          }));
-
+          localStorage.setItem('academia-account', JSON.stringify({ token: response.token, user: response.user }));
+          this.store.dispatch(accountInitialize({ isLoggedIn: true, user: response.user, token: response.token }));
           this.router.navigate(['/app/dashboard/default']);
         } else {
           this.errorMessage = response.msg || 'Login failed';

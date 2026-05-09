@@ -1,31 +1,268 @@
-/* Global styles for ITSC Academia Digital - Angular */
+@use '@angular/material' as mat;
 
-// Bootstrap 5
-@import 'bootstrap/scss/bootstrap';
+@include mat.core();
 
-// Datta Able Theme - SCSS assets
-@import 'assets/scss/partials/variables';
-@import 'assets/scss/partials/general';
-@import 'assets/scss/partials/generic';
-@import 'assets/scss/partials/mixins/function';
+// Paleta teal personalizada (sidebar azul-verdoso)
+$teal-palette: (
+  50: #e0f4f5, 100: #b3e2e5, 200: #80cfd4, 300: #4dbbc1,
+  400: #26acb4, 500: #009ea8, 600: #008f98, 700: #007c85,
+  800: #006a72, 900: #004a50,
+  A100: #82fff8, A200: #4ffff4, A400: #1cffef, A700: #02ffec,
+  contrast: (
+    50: rgba(0,0,0,.87), 100: rgba(0,0,0,.87), 200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87), 400: white, 500: white, 600: white,
+    700: white, 800: white, 900: white,
+    A100: rgba(0,0,0,.87), A200: rgba(0,0,0,.87),
+    A400: rgba(0,0,0,.87), A700: rgba(0,0,0,.87),
+  )
+);
 
-// Icons
-@import 'assets/scss/partials/font/next-icon';
-@import 'assets/scss/partials/font/feather';
-@import 'assets/scss/partials/font/fontawesome';
+// Paleta mostaza personalizada
+$mustard-palette: (
+  50: #fff8e1, 100: #ffedb3, 200: #ffe180, 300: #ffd44d,
+  400: #ffc924, 500: #ffbe00, 600: #f0a500, 700: #de8f00,
+  800: #cc7a00, 900: #a85700,
+  A100: #ffe57f, A200: #ffd740, A400: #ffc400, A700: #ffab00,
+  contrast: (
+    50: rgba(0,0,0,.87), 100: rgba(0,0,0,.87), 200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87), 400: rgba(0,0,0,.87), 500: rgba(0,0,0,.87),
+    600: rgba(0,0,0,.87), 700: rgba(0,0,0,.87), 800: rgba(0,0,0,.87),
+    900: white,
+    A100: rgba(0,0,0,.87), A200: rgba(0,0,0,.87),
+    A400: rgba(0,0,0,.87), A700: rgba(0,0,0,.87),
+  )
+);
 
-// Layout & Navigation
-@import 'assets/scss/partials/menu/menu-lite';
+$primary: mat.m2-define-palette($teal-palette, 800);
+$accent:  mat.m2-define-palette($mustard-palette, 600);
+$warn:    mat.m2-define-palette(mat.$m2-red-palette);
 
-// Theme Elements
-@import 'assets/scss/partials/theme-elements/form';
-@import 'assets/scss/partials/theme-elements/authentication';
-@import 'assets/scss/partials/theme-elements/button';
-@import 'assets/scss/partials/theme-elements/labels-badges';
-@import 'assets/scss/partials/theme-elements/breadcrumb-pagination';
+$theme: mat.m2-define-light-theme((
+  color: (primary: $primary, accent: $accent, warn: $warn),
+  typography: mat.m2-define-typography-config(),
+  density: 0
+));
 
-// Widgets
-@import 'assets/scss/partials/widget/widget';
+@include mat.all-component-themes($theme);
 
-// Navbar language dropdown
-@import 'assets/scss/partials/navbar/language-dropdown';
+// ── Dark theme ────────────────────────────────────────────────────────────────
+$dark-theme: mat.m2-define-dark-theme((
+  color: (primary: $primary, accent: $accent, warn: $warn),
+  typography: mat.m2-define-typography-config(),
+  density: 0
+));
+
+.dark-theme {
+  @include mat.all-component-colors($dark-theme);
+
+  background: #121212;
+  color: #e0e0e0;
+
+  .sidenav { background: #004a50; }
+
+  .main-content { background: #121212; }
+
+  .auth-container {
+    background: linear-gradient(135deg, #004a50 0%, #003035 100%);
+  }
+
+  .auth-logo img,
+  .dashboard-card mat-card-content img {
+    filter: brightness(0) invert(1);
+  }
+
+  // Links de auth (Iniciar Sesión / Registrarse)
+  .auth-footer a[mat-button] {
+    color: #80cfd4 !important;
+  }
+
+  // Textos del carrusel
+  .carousel-title { color: #80cfd4; }
+  .carousel-desc  { color: rgba(255,255,255,.75); }
+
+  // Sidenav — vuelve a colores claros sobre fondo oscuro
+  .sidenav-logo              { filter: brightness(0) invert(1) !important; }
+  .sidenav-header            { border-bottom-color: rgba(255,255,255,.15); }
+  .sidenav-header .app-logo  { color: rgba(255,255,255,.7) !important; }
+  .sidenav-header .app-name  { color: #ffffff !important; }
+  .nav-group-label           { color: rgba(255,255,255,.5) !important; }
+  mat-nav-list .mat-mdc-list-item             { color: rgba(255,255,255,.85) !important; }
+  mat-nav-list .mat-mdc-list-item:hover       { background: rgba(255,255,255,.1); }
+  mat-nav-list .mat-mdc-list-item.active-link { background: #007c85; color: #ffffff !important; }
+  mat-nav-list .mat-mdc-list-item mat-icon    { color: rgba(255,255,255,.85) !important; }
+
+  .auth-card .auth-footer { color: rgba(255,255,255,.6); }
+
+  .page-header p { color: rgba(255,255,255,.6); }
+
+  .coming-soon-card {
+    p { color: rgba(255,255,255,.6); }
+    mat-icon {
+      color: #ffffff;
+      background: #004a50;
+      border: 2px solid #80cfd4;
+      border-radius: 50%;
+      padding: 12px;
+      width: 88px;
+      height: 88px;
+      font-size: 64px;
+      line-height: 64px;
+    }
+    h2 { color: rgba(255,255,255,.87); }
+  }
+
+  .carousel-dots button { background: rgba(255,255,255,.3); }
+}
+
+// Carga de Material Icons
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.full-height {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// Auth pages
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #006a72 0%, #004a50 100%);
+  padding: 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  mat-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .auth-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+  mat-form-field { width: 100%; }
+  .auth-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .auth-footer { text-align: center; margin-top: 16px; color: rgba(0,0,0,.6); font-size: 14px; }
+}
+
+// Layout
+.sidenav-container { height: 100vh; }
+
+.sidenav {
+  width: 260px;
+
+  .sidenav-logo {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(400%) hue-rotate(180deg);
+  }
+  .sidenav-header {
+    padding: 20px 16px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0,0,0,.1);
+    margin-bottom: 8px;
+    .app-logo { font-size: 13px; color: #607d8b; font-weight: 300; }
+    .app-name  { font-size: 18px; font-weight: 700; color: #004a50; }
+  }
+  mat-nav-list {
+    .mat-mdc-list-item {
+      color: #455a64 !important;
+      border-radius: 8px;
+      margin: 2px 8px;
+      width: calc(100% - 16px);
+      &:hover { background: rgba(0,106,114,.08); }
+      &.active-link {
+        background: #b3e2e5;
+        font-weight: 600;
+        --mdc-list-list-item-label-text-color: #004a50;
+        --mdc-list-list-item-leading-icon-color: #004a50;
+        .mdc-list-item__primary-text { color: #004a50 !important; }
+        .mdc-list-item__start mat-icon { color: #004a50 !important; }
+        mat-icon { color: #004a50 !important; }
+      }
+      mat-icon { color: #546e7a !important; margin-right: 12px; }
+    }
+  }
+  .nav-group-label {
+    padding: 16px 16px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #90a4ae;
+  }
+}
+
+.main-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  .toolbar-title { font-size: 18px; font-weight: 500; }
+}
+
+.main-content {
+  padding: 24px;
+  @media (max-width: 599px) { padding: 12px; }
+}
+
+// Feature pages placeholder
+.page-header {
+  margin-bottom: 24px;
+  h1 { margin: 0 0 4px; font-size: 24px; font-weight: 500; }
+  p { margin: 0; color: rgba(0,0,0,.6); }
+}
+
+.coming-soon-card {
+  text-align: center;
+  padding: 48px 24px;
+  mat-icon { font-size: 64px; width: 64px; height: 64px; color: #006a72; margin-bottom: 16px; }
+  h2 { font-weight: 400; margin: 0 0 8px; }
+  p { color: rgba(0,0,0,.6); }
+}
+
+// Dashboard
+.dashboard-card { margin-bottom: 24px; }
+.progress-section {
+  background: #006a72;
+  padding: 24px;
+  border-radius: 0 0 4px 4px;
+  color: white;
+  h3 { margin: 0 0 16px; font-weight: 400; }
+}
+.carousel-title {
+  color: #006a72;
+  margin: 0 0 8px;
+}
+.carousel-desc {
+  color: rgba(0,0,0,.6);
+  margin: 0;
+}
+
+.carousel-dots {
+  display: flex; justify-content: center; gap: 8px; margin-top: 16px;
+  button { width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer; background: #ccc; padding: 0; transition: background .2s; }
+  button.active { background: #006a72; }
+}

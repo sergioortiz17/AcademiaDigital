@@ -1,64 +1,30 @@
-<div class="row">
-  <div class="col">
-    <h1 class="mb-4">{{ 'dashboard.title' | translate }}</h1>
-  </div>
+<div class="page-header">
+  <h1>{{ 'dashboard.title' | translate }}</h1>
 </div>
 
-<div class="row">
-  <div class="col">
-    <div class="card card-social shadow-sm border-0">
+<mat-card class="dashboard-card">
+  <mat-card-content style="text-align: center; padding: 24px 16px 8px;">
+    <img src="assets/images/logo.svg" alt="ITSC" style="width: 96px; height: 96px;" />
+  </mat-card-content>
 
-      <!-- LOGO -->
-      <div class="card-body border-bottom text-center py-4">
-        <img
-          src="assets/images/logo.png"
-          alt="Instituto Técnico Superior Córdoba"
-          style="max-height: 80px; width: auto;"
-        />
-      </div>
+  <mat-divider></mat-divider>
 
-      <!-- CARRUSEL DE NOTICIAS -->
-      <div class="card-body py-4">
-        <div class="carousel-container text-center" style="min-height: 80px;">
-          <div *ngFor="let item of carouselItems; let i = index" [hidden]="activeSlide !== i">
-            <h5 class="text-center mb-1 fw-bold text-primary">{{ item.title }}</h5>
-            <p class="text-center text-muted mb-0">{{ item.description }}</p>
-          </div>
-          <!-- Indicadores -->
-          <div class="mt-3">
-            <button
-              *ngFor="let item of carouselItems; let i = index"
-              class="btn btn-sm p-1 mx-1"
-              [class.btn-primary]="activeSlide === i"
-              [class.btn-outline-secondary]="activeSlide !== i"
-              style="width: 10px; height: 10px; border-radius: 50%; padding: 0;"
-              (click)="goToSlide(i)"
-            ></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- PROGRESO -->
-      <div class="card-body" style="background: #eb9c00;">
-        <div class="row align-items-center justify-content-center card-active">
-          <div class="col-8 text-center">
-            <h4 class="mb-3 text-white">
-              {{ 'dashboard.progress' | translate: { progress: 1 } }}
-            </h4>
-            <div class="progress" style="height: 6px;">
-              <div
-                class="progress-bar bg-primary"
-                role="progressbar"
-                style="width: 100%"
-                aria-valuenow="100"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  <mat-card-content style="min-height: 100px; text-align: center; padding: 24px 16px;">
+    <div *ngFor="let item of carouselItems; let i = index" [hidden]="activeSlide !== i">
+      <h3 class="carousel-title">{{ item.title }}</h3>
+      <p class="carousel-desc">{{ item.description }}</p>
     </div>
+    <div class="carousel-dots">
+      <button
+        *ngFor="let item of carouselItems; let i = index"
+        [class.active]="activeSlide === i"
+        (click)="goToSlide(i)">
+      </button>
+    </div>
+  </mat-card-content>
+
+  <div class="progress-section">
+    <h3>{{ 'dashboard.progress' | translate: { progress: 1 } }}</h3>
+    <mat-progress-bar mode="determinate" value="100" color="accent"></mat-progress-bar>
   </div>
-</div>
+</mat-card>

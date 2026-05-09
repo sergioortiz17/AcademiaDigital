@@ -1,14 +1,25 @@
-<app-navigation [isMobile]="isMobile" [collapseMenu]="(collapseMenu$ | async) ?? false"></app-navigation>
+<mat-sidenav-container class="sidenav-container">
 
-<div [class.pcoded-outside]="isMobile">
-  <app-navbar></app-navbar>
-  <div class="pcoded-main-container">
-    <div class="pcoded-wrapper">
-      <div class="pcoded-content">
-        <div class="pcoded-inner-content">
-          <router-outlet></router-outlet>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  <mat-sidenav #sidenav
+    class="sidenav"
+    [mode]="isMobile ? 'over' : 'side'"
+    [opened]="!isMobile">
+    <app-navigation (menuItemClick)="isMobile && sidenav.close()"></app-navigation>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="main-toolbar">
+      <button mat-icon-button (click)="toggleSidenav()" aria-label="Toggle menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="toolbar-title">AcademiaDigital</span>
+      <span class="spacer"></span>
+      <app-nav-right></app-nav-right>
+    </mat-toolbar>
+
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

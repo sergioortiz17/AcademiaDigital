@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { MaterialModule } from '../../shared/material.module';
 
 import { AdminLayoutComponent } from './admin-layout.component';
 import { NavbarComponent } from './navbar/navbar.component';
@@ -18,7 +19,8 @@ import { NavigationComponent } from './navigation/navigation.component';
   imports: [
     CommonModule,
     RouterModule,
-    TranslateModule
+    TranslateModule,
+    MaterialModule
   ],
   exports: [AdminLayoutComponent]
 })

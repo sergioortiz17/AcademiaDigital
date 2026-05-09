@@ -1,59 +1,34 @@
-<ul class="navbar-nav ms-auto" id="navbar-right">
+<!-- Dark mode toggle -->
+<button mat-icon-button (click)="themeService.toggle()" [matTooltip]="themeService.isDark ? 'Modo claro' : 'Modo oscuro'">
+  <mat-icon>{{ themeService.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+</button>
 
-  <!-- Selector de idioma -->
-  <li class="nav-item dropdown nav-lang-dropdown" [class.show]="langOpen">
-    <a class="nav-link nav-icon-btn no-caret" (click)="toggleLang()">
-      <div class="lang-icon">
-        <i class="feather icon-globe"></i>
-        <i class="feather icon-chevron-down caret-icon"></i>
-      </div>
-    </a>
-    <div class="dropdown-menu dropdown-menu-end lang-menu" [class.show]="langOpen">
-      <a class="dropdown-item" (click)="changeLanguage('es')" [class.lang-active]="currentLang === 'es'">
-        🇪🇸 Español
-      </a>
-      <a class="dropdown-item" (click)="changeLanguage('en')" [class.lang-active]="currentLang === 'en'">
-        🇺🇸 English
-      </a>
-    </div>
-  </li>
+<!-- Language selector -->
+<button mat-icon-button [matMenuTriggerFor]="langMenu" matTooltip="Idioma">
+  <mat-icon>language</mat-icon>
+</button>
+<mat-menu #langMenu="matMenu">
+  <button mat-menu-item (click)="changeLanguage('es')" [class.font-weight-bold]="currentLang === 'es'">
+    <mat-icon>flag</mat-icon> Español
+  </button>
+  <button mat-menu-item (click)="changeLanguage('en')" [class.font-weight-bold]="currentLang === 'en'">
+    <mat-icon>flag</mat-icon> English
+  </button>
+</mat-menu>
 
-  <!-- Perfil de usuario -->
-  <li class="nav-item dropdown drp-user" [class.show]="profileOpen">
-    <a class="nav-link" (click)="toggleProfile()">
-      <i class="icon feather icon-settings"></i>
-    </a>
-    <div class="dropdown-menu dropdown-menu-end profile-notification" [class.show]="profileOpen">
-      <div class="pro-head">
-        <img src="assets/images/user/avatar-1.jpg" class="img-radius" alt="User Profile" />
-        <span>{{ 'header.userMenu' | translate }}</span>
-        <a href="#" class="dud-logout" (click)="handleLogout()" [title]="'header.logout' | translate">
-          <i class="feather icon-log-out"></i>
-        </a>
-      </div>
-      <ul class="list-group list-group-flush pro-body">
-        <li class="list-group-item">
-          <a href="#" class="dropdown-item">
-            <i class="feather icon-settings"></i> {{ 'header.settings' | translate }}
-          </a>
-        </li>
-        <li class="list-group-item">
-          <a [routerLink]="['/app/profile']" class="dropdown-item" (click)="closeAll()">
-            <i class="feather icon-user"></i> {{ 'header.profile' | translate }}
-          </a>
-        </li>
-        <li class="list-group-item">
-          <a [routerLink]="['/app/messages']" class="dropdown-item" (click)="closeAll()">
-            <i class="feather icon-mail"></i> {{ 'header.myMessages' | translate }}
-          </a>
-        </li>
-        <li class="list-group-item">
-          <a href="#" class="dropdown-item" (click)="handleLogout()">
-            <i class="feather icon-log-out"></i> {{ 'header.logout' | translate }}
-          </a>
-        </li>
-      </ul>
-    </div>
-  </li>
-
-</ul>
+<!-- User menu -->
+<button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Mi cuenta">
+  <mat-icon>account_circle</mat-icon>
+</button>
+<mat-menu #userMenu="matMenu">
+  <button mat-menu-item [routerLink]="['/app/profile']">
+    <mat-icon>person</mat-icon> {{ 'header.profile' | translate }}
+  </button>
+  <button mat-menu-item [routerLink]="['/app/messages']">
+    <mat-icon>mail</mat-icon> {{ 'header.myMessages' | translate }}
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="handleLogout()">
+    <mat-icon>logout</mat-icon> {{ 'header.logout' | translate }}
+  </button>
+</mat-menu>

@@ -1,14 +1,10 @@
-import { Component, Input } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { collapseMenu } from '../../../store/config/config.actions';
+import { Component, Output, EventEmitter } from '@angular/core';
 
 export interface MenuItem {
   id: string;
   title: string;
-  type: 'item' | 'group' | 'collapse';
-  url?: string;
-  icon?: string;
-  children?: MenuItem[];
+  url: string;
+  icon: string;
 }
 
 @Component({
@@ -18,43 +14,21 @@ export interface MenuItem {
   standalone: false
 })
 export class NavigationComponent {
-  @Input() collapseMenu = false;
-  @Input() isMobile = false;
+  @Output() menuItemClick = new EventEmitter<void>();
 
   menuItems: MenuItem[] = [
-    {
-      id: 'navigation',
-      title: 'menu.navigation',
-      type: 'group',
-      icon: 'icon-navigation',
-      children: [
-        { id: 'dashboard', title: 'Inicio', type: 'item', url: '/app/dashboard/default', icon: 'feather icon-home' },
-        { id: 'courses', title: 'Materias', type: 'item', url: '/app/courses', icon: 'feather icon-book' },
-        { id: 'enrollments', title: 'Inscripciones', type: 'item', url: '/app/enrollments', icon: 'feather icon-file-text' },
-        { id: 'calendar', title: 'Calendario', type: 'item', url: '/app/calendar', icon: 'feather icon-calendar' },
-        { id: 'teachers', title: 'Profesores', type: 'item', url: '/app/teachers', icon: 'feather icon-users' },
-        { id: 'certificates', title: 'Certificados', type: 'item', url: '/app/certificates', icon: 'feather icon-award' },
-        { id: 'grades', title: 'Notas', type: 'item', url: '/app/grades', icon: 'feather icon-star' },
-        { id: 'messages', title: 'Mensajes', type: 'item', url: '/app/messages', icon: 'feather icon-message-circle' },
-        { id: 'profile', title: 'Perfil', type: 'item', url: '/app/profile', icon: 'feather icon-user' }
-      ]
-    }
+    { id: 'dashboard',    title: 'Inicio',        url: '/app/dashboard/default', icon: 'home' },
+    { id: 'courses',      title: 'Materias',       url: '/app/courses',           icon: 'menu_book' },
+    { id: 'enrollments',  title: 'Inscripciones',  url: '/app/enrollments',       icon: 'assignment' },
+    { id: 'calendar',     title: 'Calendario',     url: '/app/calendar',          icon: 'calendar_today' },
+    { id: 'teachers',     title: 'Profesores',     url: '/app/teachers',          icon: 'group' },
+    { id: 'certificates', title: 'Certificados',   url: '/app/certificates',      icon: 'military_tech' },
+    { id: 'grades',       title: 'Notas',          url: '/app/grades',            icon: 'grade' },
+    { id: 'messages',     title: 'Mensajes',       url: '/app/messages',          icon: 'message' },
+    { id: 'profile',      title: 'Perfil',         url: '/app/profile',           icon: 'person' },
   ];
 
-  constructor(private readonly store: Store) {}
-
-  get navClass(): string[] {
-    const classes = ['pcoded-navbar', 'menu-dark', 'navbar-default', 'brand-default'];
-    if (this.collapseMenu) {
-      classes.push('navbar-collapsed');
-    }
-    if (this.isMobile) {
-      classes.push('mob-open');
-    }
-    return classes;
-  }
-
-  toggleCollapse(): void {
-    this.store.dispatch(collapseMenu());
+  onItemClick(): void {
+    this.menuItemClick.emit();
   }
 }
