@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { logout } from '../../../store/account/account.actions';
 import { AuthService } from '../../../core/services/auth.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { selectToken } from '../../../store/account/account.selectors';
 import { take } from 'rxjs/operators';
 
@@ -21,7 +22,8 @@ export class NavRightComponent {
     private readonly store: Store,
     private readonly router: Router,
     private readonly translate: TranslateService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    readonly themeService: ThemeService
   ) {}
 
   get currentLang(): string {

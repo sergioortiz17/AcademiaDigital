@@ -1,3 +1,8 @@
+<!-- Dark mode toggle -->
+<button mat-icon-button (click)="themeService.toggle()" [matTooltip]="themeService.isDark ? 'Modo claro' : 'Modo oscuro'">
+  <mat-icon>{{ themeService.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+</button>
+
 <!-- Language selector -->
 <button mat-icon-button [matMenuTriggerFor]="langMenu" matTooltip="Idioma">
   <mat-icon>language</mat-icon>
