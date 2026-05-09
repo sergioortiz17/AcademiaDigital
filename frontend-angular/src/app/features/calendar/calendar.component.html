@@ -1,10 +1,12 @@
-<div class="row">
-  <div class="col">
-    <h1>{{ 'pages.calendar.title' | translate }}</h1>
-    <p class="text-muted">{{ 'pages.calendar.description' | translate }}</p>
-    <div class="alert alert-info">
-      <i class="feather icon-info"></i>
-      {{ 'pages.calendar.comingSoon' | translate }}
-    </div>
-  </div>
+<div class="page-header">
+  <h1>{{ 'pages.calendar.title' | translate }}</h1>
+  <p>{{ 'pages.calendar.description' | translate }}</p>
 </div>
+
+<mat-card class="coming-soon-card">
+  <mat-card-content>
+    <mat-icon>calendar_today</mat-icon>
+    <h2>Próximamente</h2>
+    <p>{{ 'pages.calendar.comingSoon' | translate }}</p>
+  </mat-card-content>
+</mat-card>

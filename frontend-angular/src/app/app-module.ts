@@ -1,7 +1,9 @@
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // required by Angular Material
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MaterialModule } from './shared/material.module';
 
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
@@ -23,6 +25,8 @@ import { environment } from '../environments/environment';
   declarations: [App],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
+    MaterialModule,
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { MaterialModule } from '../../shared/material.module';
 import { GradesRoutingModule } from './grades-routing.module';
 import { GradesComponent } from './grades.component';
 
@@ -9,6 +10,7 @@ import { GradesComponent } from './grades.component';
   imports: [
     CommonModule,
     TranslateModule,
+    MaterialModule,
     GradesRoutingModule
   ]
 })

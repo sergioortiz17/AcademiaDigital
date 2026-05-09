@@ -1,31 +1,140 @@
-/* Global styles for ITSC Academia Digital - Angular */
+@use '@angular/material' as mat;
 
-// Bootstrap 5
-@import 'bootstrap/scss/bootstrap';
+@include mat.core();
 
-// Datta Able Theme - SCSS assets
-@import 'assets/scss/partials/variables';
-@import 'assets/scss/partials/general';
-@import 'assets/scss/partials/generic';
-@import 'assets/scss/partials/mixins/function';
+$primary: mat.m2-define-palette(mat.$m2-indigo-palette, 700);
+$accent:  mat.m2-define-palette(mat.$m2-orange-palette, 600);
+$warn:    mat.m2-define-palette(mat.$m2-red-palette);
 
-// Icons
-@import 'assets/scss/partials/font/next-icon';
-@import 'assets/scss/partials/font/feather';
-@import 'assets/scss/partials/font/fontawesome';
+$theme: mat.m2-define-light-theme((
+  color: (primary: $primary, accent: $accent, warn: $warn),
+  typography: mat.m2-define-typography-config(),
+  density: 0
+));
 
-// Layout & Navigation
-@import 'assets/scss/partials/menu/menu-lite';
+@include mat.all-component-themes($theme);
 
-// Theme Elements
-@import 'assets/scss/partials/theme-elements/form';
-@import 'assets/scss/partials/theme-elements/authentication';
-@import 'assets/scss/partials/theme-elements/button';
-@import 'assets/scss/partials/theme-elements/labels-badges';
-@import 'assets/scss/partials/theme-elements/breadcrumb-pagination';
+// Carga de Material Icons
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-// Widgets
-@import 'assets/scss/partials/widget/widget';
+*, *::before, *::after { box-sizing: border-box; }
 
-// Navbar language dropdown
-@import 'assets/scss/partials/navbar/language-dropdown';
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.full-height {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// Auth pages
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3f51b5 0%, #283593 100%);
+  padding: 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  mat-card-header { justify-content: center; margin-bottom: 8px; }
+  .auth-logo { text-align: center; margin-bottom: 16px; }
+  mat-form-field { width: 100%; }
+  .auth-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .auth-footer { text-align: center; margin-top: 16px; color: rgba(0,0,0,.6); font-size: 14px; }
+}
+
+// Layout
+.sidenav-container { height: 100vh; }
+
+.sidenav {
+  width: 260px;
+  background: #3f51b5;
+  color: white;
+  .sidenav-header {
+    padding: 20px 16px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.15);
+    margin-bottom: 8px;
+    .app-logo { font-size: 13px; opacity: .8; font-weight: 300; }
+    .app-name { font-size: 18px; font-weight: 700; }
+  }
+  mat-nav-list {
+    .mat-mdc-list-item {
+      color: rgba(255,255,255,.85);
+      border-radius: 8px;
+      margin: 2px 8px;
+      width: calc(100% - 16px);
+      &:hover { background: rgba(255,255,255,.12); }
+      &.active-link {
+        background: rgba(255,255,255,.2);
+        color: white;
+        font-weight: 500;
+      }
+      mat-icon { color: rgba(255,255,255,.85); margin-right: 12px; }
+    }
+  }
+  .nav-group-label {
+    padding: 16px 16px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,.7);
+  }
+}
+
+.main-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  .toolbar-title { font-size: 18px; font-weight: 500; }
+}
+
+.main-content {
+  padding: 24px;
+  @media (max-width: 599px) { padding: 12px; }
+}
+
+// Feature pages placeholder
+.page-header {
+  margin-bottom: 24px;
+  h1 { margin: 0 0 4px; font-size: 24px; font-weight: 500; }
+  p { margin: 0; color: rgba(0,0,0,.6); }
+}
+
+.coming-soon-card {
+  text-align: center;
+  padding: 48px 24px;
+  mat-icon { font-size: 64px; width: 64px; height: 64px; color: #3f51b5; margin-bottom: 16px; }
+  h2 { font-weight: 400; margin: 0 0 8px; }
+  p { color: rgba(0,0,0,.6); }
+}
+
+// Dashboard
+.dashboard-card { margin-bottom: 24px; }
+.progress-section {
+  background: #3f51b5;
+  padding: 24px;
+  border-radius: 0 0 4px 4px;
+  color: white;
+  h3 { margin: 0 0 16px; font-weight: 400; }
+}
+.carousel-dots {
+  display: flex; justify-content: center; gap: 8px; margin-top: 16px;
+  button { width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer; background: #ccc; padding: 0; transition: background .2s; }
+  button.active { background: #3f51b5; }
+}

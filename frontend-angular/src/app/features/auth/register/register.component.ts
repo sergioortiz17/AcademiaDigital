@@ -14,6 +14,7 @@ export class RegisterComponent {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  hidePassword = true;
 
   constructor(
     private readonly fb: FormBuilder,

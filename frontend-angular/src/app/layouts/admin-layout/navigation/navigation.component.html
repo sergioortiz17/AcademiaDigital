@@ -1,39 +1,19 @@
-<nav [ngClass]="navClass">
-  <div class="navbar-wrapper">
-    <!-- Logo -->
-    <div class="navbar-brand header-logo">
-      <a [routerLink]="['/app/dashboard/default']" class="b-brand">
-        <div class="b-bg">
-          <i class="feather icon-trending-up"></i>
-        </div>
-        <span class="b-title">ITSC</span>
-      </a>
-      <a class="mobile-menu" id="mobile-collapse" (click)="toggleCollapse()">
-        <span></span>
-      </a>
-    </div>
-
-    <!-- Contenido del menú -->
-    <div class="navbar-content datta-scroll">
-      <ul class="nav pcoded-inner-navbar" id="nav-ps-next">
-        <ng-container *ngFor="let group of menuItems">
-          <li *ngIf="group.type === 'group'" class="nav-item pcoded-menu-caption">
-            <label>{{ group.title }}</label>
-          </li>
-          <ng-container *ngIf="group.children">
-            <li *ngFor="let item of group.children" class="nav-item">
-              <a
-                [routerLink]="[item.url]"
-                routerLinkActive="active"
-                class="nav-link"
-              >
-                <span class="pcoded-micon"><i [ngClass]="item.icon"></i></span>
-                <span class="pcoded-mtext">{{ item.title }}</span>
-              </a>
-            </li>
-          </ng-container>
-        </ng-container>
-      </ul>
-    </div>
+<div class="sidenav-header">
+  <div>
+    <div class="app-name">ITSC</div>
+    <div class="app-logo">AcademiaDigital</div>
   </div>
-</nav>
+</div>
+
+<span class="nav-group-label">Navegación</span>
+
+<mat-nav-list>
+  <a mat-list-item
+     *ngFor="let item of menuItems"
+     [routerLink]="item.url"
+     routerLinkActive="active-link"
+     (click)="onItemClick()">
+    <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+    <span matListItemTitle>{{ item.title }}</span>
+  </a>
+</mat-nav-list>

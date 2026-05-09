@@ -1,8 +1,8 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { selectCollapseMenu } from '../../store/config/config.selectors';
-import { collapseMenu } from '../../store/config/config.actions';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { MatSidenav } from '@angular/material/sidenav';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-layout',
@@ -10,26 +10,27 @@ import { collapseMenu } from '../../store/config/config.actions';
   styleUrls: ['./admin-layout.component.scss'],
   standalone: false
 })
-export class AdminLayoutComponent implements OnInit {
-  collapseMenu$: Observable<boolean>;
-  windowWidth: number = window.innerWidth;
+export class AdminLayoutComponent implements OnInit, OnDestroy {
+  @ViewChild('sidenav') sidenav!: MatSidenav;
+  isMobile = false;
+  private readonly destroy$ = new Subject<void>();
 
-  constructor(private readonly store: Store) {
-    this.collapseMenu$ = this.store.select(selectCollapseMenu);
-  }
+  constructor(private readonly breakpointObserver: BreakpointObserver) {}
 
   ngOnInit(): void {
-    if (this.windowWidth > 992 && this.windowWidth <= 1024) {
-      this.store.dispatch(collapseMenu());
-    }
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        this.isMobile = result.matches;
+      });
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event: Event): void {
-    this.windowWidth = (event.target as Window).innerWidth;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  get isMobile(): boolean {
-    return this.windowWidth < 992;
+  toggleSidenav(): void {
+    this.sidenav.toggle();
   }
 }
