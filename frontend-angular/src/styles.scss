@@ -49,6 +49,17 @@ $dark-theme: mat.m2-define-dark-theme((
   .carousel-title { color: #90caf9; }
   .carousel-desc  { color: rgba(255,255,255,.75); }
 
+  // Sidenav — vuelve a colores claros sobre fondo oscuro
+  .sidenav-logo              { filter: brightness(0) invert(1); }
+  .sidenav-header            { border-bottom-color: rgba(255,255,255,.15); }
+  .sidenav-header .app-logo  { color: rgba(255,255,255,.7); }
+  .sidenav-header .app-name  { color: #ffffff; }
+  .nav-group-label           { color: rgba(255,255,255,.5); }
+  mat-nav-list .mat-mdc-list-item            { color: rgba(255,255,255,.85); }
+  mat-nav-list .mat-mdc-list-item:hover      { background: rgba(255,255,255,.1); }
+  mat-nav-list .mat-mdc-list-item.active-link { background: #5c6bc0; color: #ffffff; }
+  mat-nav-list .mat-mdc-list-item mat-icon   { color: rgba(255,255,255,.85); }
+
   .auth-card .auth-footer { color: rgba(255,255,255,.6); }
 
   .page-header p { color: rgba(255,255,255,.6); }
@@ -127,36 +138,36 @@ html, body {
 
 .sidenav {
   width: 260px;
-  background: #3f51b5;
-  color: white;
+
   .sidenav-logo {
     width: 40px;
     height: 40px;
     flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(400%) hue-rotate(180deg);
   }
   .sidenav-header {
     padding: 20px 16px 8px;
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid rgba(255,255,255,.15);
+    border-bottom: 1px solid rgba(0,0,0,.1);
     margin-bottom: 8px;
-    .app-logo { font-size: 13px; opacity: .8; font-weight: 300; }
-    .app-name { font-size: 18px; font-weight: 700; }
+    .app-logo { font-size: 13px; color: #607d8b; font-weight: 300; }
+    .app-name  { font-size: 18px; font-weight: 700; color: #37474f; }
   }
   mat-nav-list {
     .mat-mdc-list-item {
-      color: rgba(255,255,255,.85);
+      color: #455a64;
       border-radius: 8px;
       margin: 2px 8px;
       width: calc(100% - 16px);
-      &:hover { background: rgba(255,255,255,.12); }
+      &:hover { background: rgba(63,81,181,.08); }
       &.active-link {
-        background: #5c6bc0;
-        color: #ffffff;
+        background: #c5cae9;
+        color: #283593;
         font-weight: 500;
       }
-      mat-icon { color: rgba(255,255,255,.85); margin-right: 12px; }
+      mat-icon { color: #546e7a; margin-right: 12px; }
     }
   }
   .nav-group-label {
@@ -165,7 +176,7 @@ html, body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: rgba(255,255,255,.7);
+    color: #90a4ae;
   }
 }
 
