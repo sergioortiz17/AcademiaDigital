@@ -1,5 +1,6 @@
 using AcademiaDigital.API.Middleware;
 using AcademiaDigital.Application.UseCases.Authentication;
+using AcademiaDigital.Application.UseCases.Materias;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
@@ -15,6 +16,7 @@ builder.Services.AddScoped<LoginUseCase>();
 builder.Services.AddScoped<RegisterUseCase>();
 builder.Services.AddScoped<LogoutUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
+builder.Services.AddScoped<MateriaService>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration
