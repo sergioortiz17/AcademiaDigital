@@ -16,12 +16,13 @@
 
 ## Equipo
 
-| Equipo | Frontend | Backend | QA | Infraestructura | Admin DB | UX/UI | Project Manager |
-|--------|----------|---------|-----|-----------------|----------|-------|-----------------|
-| Equipo 1 | Ivan Maturano | Juan Pedraza | Jazmin Luna | Agos Pereyra | Agustin Cordoba | Gimena Galan | Rodri Leyria |
-| Equipo 2 | Claudia Rodríguez | Anahi Gordillo | Juan Pedraza | Rocio Acosta | Anahi Gordillo | Agos Arce | Sergio Ortiz |
-| Equipo 3 | Gabriel Condori | Rodri Leyria | Agos Pereyra | Nahuel Velez | Sergio Ortiz | Cintia Ramirez | Profe Maria |
-| Equipo 4 | Elias Giralda | Sergio Ortiz | Edgar Rivarola | Jazmin Luna | Rodri Leyria | Facundo Pereyra | Gabriel Molina |
+| Frontend | Backend | QA | DevOps | Admin DB | UX/UI | Project Manager |
+|----------|---------|-----|--------|----------|-------|-----------------|
+| Ivan Maturano | Juan Pedraza | Jazmin Luna | Agos Pereyra | Agustin Cordoba | Gimena Galan | Rodri Leyria |
+| Claudia Rodríguez | Anahi Gordillo | Juan Pedraza | Rocio Acosta | Anahi Gordillo | Agos Arce | Sergio Ortiz |
+| Gabriel Condori | Rodri Leyria | Agos Pereyra | Nahuel Velez | Sergio Ortiz | Cintia Ramirez | Profe Maria |
+| Elias Giralda | Sergio Ortiz | Edgar Rivarola | Jazmin Luna | Rodri Leyria | Facundo Pereyra | Gabriel Molina |
+| | Jazmin Luna | | Agos Pereyra | | | |
 
 ---
 
