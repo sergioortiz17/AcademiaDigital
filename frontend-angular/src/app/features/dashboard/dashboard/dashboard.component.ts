@@ -7,6 +7,24 @@ import { Component, OnInit } from '@angular/core';
   standalone: false
 })
 export class DashboardComponent implements OnInit {
+
+  /*currentDate: string = '';
+
+  ngOnInit(): void {
+    this.setCurrentDate();
+  }
+
+  setCurrentDate(): void {
+    const today = new Date();
+
+    this.currentDate = today.toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  } */
+  today: Date = new Date();
   carouselItems = [
     {
       title: 'Nueva convocatoria a becas',
@@ -19,8 +37,8 @@ export class DashboardComponent implements OnInit {
     {
       title: 'Inscripciones abiertas 2025',
       description: 'Ya podés registrarte para el ciclo lectivo 2025 desde el portal de alumnos.'
-    }
-  ];
+    } 
+  ]; 
 
   activeSlide = 0;
   private slideInterval: any;
@@ -39,5 +57,5 @@ export class DashboardComponent implements OnInit {
     this.activeSlide = index;
     clearInterval(this.slideInterval);
     this.startCarousel();
-  }
+  } 
 }

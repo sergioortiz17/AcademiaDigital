@@ -1,1 +1,65 @@
 // All styles in global styles.scss
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /*gap: 0.8rem; */
+  height: 100%;
+}
+.action-btn {
+  width: 65px;
+  height: 65px;
+  border-radius: 16px !important;
+  background: none; /* #f1f5f9 !important; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.action-btn:hover {
+  background: none; /*#e2e8f0 !important; */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.action-btn mat-icon {
+  color: white; /*#334155; */
+  font-size: 35px;
+  width: 35px;
+  height: 35px;
+}
+
+.profile-btn {
+  background: none; /* #00579c; */
+}
+
+.profile-btn mat-icon {
+  color: white;
+}
+
+::ng-deep .mat-mdc-menu-panel {
+  border-radius: 18px !important;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important;
+  margin-top: 0.5rem;
+}
+
+::ng-deep .mat-mdc-menu-item {
+  min-height: 48px;
+  font-size: 0.94rem;
+  transition: background 0.2s ease;
+}
+
+::ng-deep .mat-mdc-menu-item:hover {
+  background: #f8fafc !important;
+}
+
+::ng-deep .mat-mdc-menu-item mat-icon {
+  margin-right: 0.8rem;
+
+  color: #475569;
+}
+

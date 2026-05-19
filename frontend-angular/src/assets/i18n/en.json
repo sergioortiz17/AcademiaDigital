@@ -32,7 +32,7 @@
     "lockScreen": "Lock Screen"
   },
   "auth": {
-    "signIn": "Sign In",
+    "signIn": "Log In",
     "signUp": "Sign Up",
     "email": "Email Address",
     "password": "Password",

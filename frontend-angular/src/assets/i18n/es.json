@@ -32,7 +32,7 @@
     "lockScreen": "Bloquear Pantalla"
   },
   "auth": {
-    "signIn": "Iniciar Sesión",
+    "signIn": "Ingresar",
     "signUp": "Registrarse",
     "email": "Correo Electrónico",
     "password": "Contraseña",
