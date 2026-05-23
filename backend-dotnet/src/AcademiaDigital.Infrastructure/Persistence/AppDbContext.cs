@@ -20,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<TeacherContest> TeacherContests => Set<TeacherContest>();
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
     public DbSet<TeachingPosition> TeachingPositions => Set<TeachingPosition>();
+    public DbSet<Carrera> Carreras => Set<Carrera>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
