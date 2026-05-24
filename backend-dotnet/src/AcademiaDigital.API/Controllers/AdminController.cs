@@ -19,13 +19,17 @@ public class AdminController(
         return null!;
     }
 
-    // GET /api/v1/admin/users
+    // GET /api/v1/admin/users?search=&page=1&pageSize=20
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers(CancellationToken ct)
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
     {
         var guard = RequireAdmin(); if (guard != null) return guard;
-        var users = await getUsersUseCase.ExecuteAsync(ct);
-        return Ok(new { success = true, users });
+        var result = await getUsersUseCase.ExecuteAsync(search, page, pageSize, ct);
+        return Ok(new { success = true, result.Users, result.Total, result.Page, result.PageSize });
     }
 
     // PATCH /api/v1/admin/users/{id}/role

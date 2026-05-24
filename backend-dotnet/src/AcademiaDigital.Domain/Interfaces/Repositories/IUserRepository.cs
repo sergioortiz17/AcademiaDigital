@@ -8,11 +8,11 @@ public interface IUserRepository
     Task<User?> FindByIdAsync(long id, CancellationToken ct = default);
     Task<User?> FindByEmailAsync(string email, CancellationToken ct = default);
     Task<User?> AuthenticateAsync(string email, string password, CancellationToken ct = default);
-    Task<User> CreateAsync(string email, string username, string password, UserRole role = UserRole.Alumno, CancellationToken ct = default);
+    Task<User> CreateAsync(string email, string username, string password, string? dni = null, UserRole role = UserRole.Alumno, CancellationToken ct = default);
     Task<User> UpdateAsync(User user, CancellationToken ct = default);
 
     // Admin methods
-    Task<List<User>> GetAllAsync(CancellationToken ct = default);
+    Task<(List<User> Users, int Total)> GetAllAsync(string? search, int skip, int take, CancellationToken ct = default);
     Task<User> UpdateRoleAsync(long userId, UserRole newRole, CancellationToken ct = default);
     Task DeleteAsync(long userId, CancellationToken ct = default);
 }

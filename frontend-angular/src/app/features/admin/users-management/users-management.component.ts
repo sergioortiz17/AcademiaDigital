@@ -4,7 +4,7 @@ import { UserRole } from '../../../store/account/account.actions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-users-management',
@@ -20,13 +20,25 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   UserRole = UserRole;
   currentUserId: number | null = null;
 
-  displayedColumns = ['username', 'email', 'role', 'dateJoined', 'actions'];
+  // Search & pagination
+  searchTerm = '';
+  page = 1;
+  pageSize = 20;
+  total = 0;
+  pageSizeOptions = [20, 50, 100];
+
+  displayedColumns = ['username', 'dni', 'role', 'dateJoined', 'actions'];
 
   private readonly destroy$ = new Subject<void>();
+  private readonly search$ = new Subject<string>();
 
   getRoleLabel(role: number): string {
     const labels: Record<number, string> = { 1: 'Alumno', 2: 'Profesor', 3: 'Admin' };
     return labels[role] ?? 'Desconocido';
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.total / this.pageSize);
   }
 
   constructor(
@@ -39,6 +51,16 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     this.store.select(selectUser).pipe(takeUntil(this.destroy$)).subscribe(u => {
       this.currentUserId = u ? Number(u._id) : null;
     });
+
+    this.search$.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.page = 1;
+      this.loadUsers();
+    });
+
     this.loadUsers();
   }
 
@@ -47,22 +69,44 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.search$.next(value);
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.page = 1;
+    this.loadUsers();
+  }
+
+  prevPage(): void {
+    if (this.page > 1) { this.page--; this.loadUsers(); }
+  }
+
+  nextPage(): void {
+    if (this.page < this.totalPages) { this.page++; this.loadUsers(); }
+  }
+
   loadUsers(): void {
     if (this.isLoading) return;
     this.isLoading = true;
     this.errorMsg = '';
-    this.adminService.getUsers().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (res) => {
-        this.users = res.users;
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.errorMsg = 'Error al cargar usuarios.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    });
+    this.adminService.getUsers(this.searchTerm, this.page, this.pageSize)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.users = res.users;
+          this.total = res.total;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.errorMsg = 'Error al cargar usuarios.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   changeRole(user: UserSummary, newRole: UserRole): void {
@@ -81,6 +125,7 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     this.adminService.deleteUser(user.id).subscribe({
       next: () => {
         this.users = this.users.filter(u => u.id !== user.id);
+        this.total = Math.max(0, this.total - 1);
         this.successMsg = `Usuario ${user.username} eliminado.`;
         setTimeout(() => this.successMsg = '', 3000);
       },

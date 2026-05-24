@@ -13,6 +13,22 @@
       <mat-icon>error</mat-icon> {{ errorMsg }}
     </div>
 
+    <!-- Toolbar: buscador + selector de cantidad -->
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar por email o DNI</mat-label>
+        <input matInput [value]="searchTerm" (input)="onSearchChange($any($event.target).value)" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="pagesize-field">
+        <mat-label>Mostrar</mat-label>
+        <mat-select [value]="pageSize" (selectionChange)="onPageSizeChange($event.value)">
+          <mat-option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }} por página</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
     <div class="table-wrap">
       <div class="loading-overlay" *ngIf="isLoading">
         <mat-spinner diameter="40"></mat-spinner>
@@ -20,86 +36,103 @@
 
       <table mat-table [dataSource]="users" class="users-table">
 
-      <!-- Username -->
-      <ng-container matColumnDef="username">
-        <th mat-header-cell *matHeaderCellDef>Usuario</th>
-        <td mat-cell *matCellDef="let u">
-          <div class="user-info">
-            <mat-icon class="avatar-icon">account_circle</mat-icon>
-            <div>
-              <div class="user-name">{{ u.username }}</div>
-              <div class="user-email">{{ u.email }}</div>
+        <!-- Username -->
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef>Usuario</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="user-info">
+              <mat-icon class="avatar-icon">account_circle</mat-icon>
+              <div>
+                <div class="user-name">{{ u.username }}</div>
+                <div class="user-email">{{ u.email }}</div>
+              </div>
             </div>
-          </div>
-        </td>
-      </ng-container>
+          </td>
+        </ng-container>
 
-      <!-- Email — hidden on mobile, shown inside username cell -->
-      <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef>Email</th>
-        <td mat-cell *matCellDef="let u">{{ u.email }}</td>
-      </ng-container>
+        <!-- DNI -->
+        <ng-container matColumnDef="dni">
+          <th mat-header-cell *matHeaderCellDef>DNI</th>
+          <td mat-cell *matCellDef="let u">
+            <span *ngIf="u.dni; else noDni">{{ u.dni }}</span>
+            <ng-template #noDni><span class="no-data">—</span></ng-template>
+          </td>
+        </ng-container>
 
-      <!-- Role -->
-      <ng-container matColumnDef="role">
-        <th mat-header-cell *matHeaderCellDef>Rol</th>
-        <td mat-cell *matCellDef="let u">
-          <mat-chip-set>
-            <mat-chip [class]="'role-chip role-chip--' + u.role">
-              {{ getRoleLabel(u.role) }}
-            </mat-chip>
-          </mat-chip-set>
-        </td>
-      </ng-container>
+        <!-- Role -->
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Rol</th>
+          <td mat-cell *matCellDef="let u">
+            <mat-chip-set>
+              <mat-chip [class]="'role-chip role-chip--' + u.role">
+                {{ getRoleLabel(u.role) }}
+              </mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
 
-      <!-- Date Joined -->
-      <ng-container matColumnDef="dateJoined">
-        <th mat-header-cell *matHeaderCellDef>Fecha de registro</th>
-        <td mat-cell *matCellDef="let u">{{ u.dateJoined | date:'dd/MM/yyyy' }}</td>
-      </ng-container>
+        <!-- Date Joined -->
+        <ng-container matColumnDef="dateJoined">
+          <th mat-header-cell *matHeaderCellDef>Fecha de registro</th>
+          <td mat-cell *matCellDef="let u">{{ u.dateJoined | date:'dd/MM/yyyy' }}</td>
+        </ng-container>
 
-      <!-- Actions -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Acciones</th>
-        <td mat-cell *matCellDef="let u">
-          <div class="actions-wrap" *ngIf="!isCurrentUser(u); else selfRow">
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="actions-wrap" *ngIf="!isCurrentUser(u); else selfRow">
 
-            <!-- Change role menu -->
-            <button mat-icon-button [matMenuTriggerFor]="roleMenu" matTooltip="Cambiar rol" color="primary">
-              <mat-icon>swap_horiz</mat-icon>
-            </button>
-            <mat-menu #roleMenu="matMenu">
-              <button mat-menu-item (click)="changeRole(u, UserRole.Alumno)" [disabled]="u.role === UserRole.Alumno">
-                <mat-icon>school</mat-icon> Alumno
+              <!-- Change role menu -->
+              <button mat-icon-button [matMenuTriggerFor]="roleMenu" matTooltip="Cambiar rol" color="primary">
+                <mat-icon>swap_horiz</mat-icon>
               </button>
-              <button mat-menu-item (click)="changeRole(u, UserRole.Profesor)" [disabled]="u.role === UserRole.Profesor">
-                <mat-icon>person_pin</mat-icon> Profesor
+              <mat-menu #roleMenu="matMenu">
+                <button mat-menu-item (click)="changeRole(u, UserRole.Alumno)" [disabled]="u.role === UserRole.Alumno">
+                  <mat-icon>school</mat-icon> Alumno
+                </button>
+                <button mat-menu-item (click)="changeRole(u, UserRole.Profesor)" [disabled]="u.role === UserRole.Profesor">
+                  <mat-icon>person_pin</mat-icon> Profesor
+                </button>
+                <button mat-menu-item (click)="changeRole(u, UserRole.Admin)" [disabled]="u.role === UserRole.Admin">
+                  <mat-icon>admin_panel_settings</mat-icon> Admin
+                </button>
+              </mat-menu>
+
+              <!-- Delete -->
+              <button mat-icon-button color="warn" (click)="deleteUser(u)" matTooltip="Eliminar usuario">
+                <mat-icon>delete_outline</mat-icon>
               </button>
-              <button mat-menu-item (click)="changeRole(u, UserRole.Admin)" [disabled]="u.role === UserRole.Admin">
-                <mat-icon>admin_panel_settings</mat-icon> Admin
-              </button>
-            </mat-menu>
+            </div>
 
-            <!-- Delete -->
-            <button mat-icon-button color="warn" (click)="deleteUser(u)" matTooltip="Eliminar usuario">
-              <mat-icon>delete_outline</mat-icon>
-            </button>
-          </div>
+            <ng-template #selfRow>
+              <span class="self-badge">Tú</span>
+            </ng-template>
+          </td>
+        </ng-container>
 
-          <ng-template #selfRow>
-            <span class="self-badge">Tú</span>
-          </ng-template>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
     </div><!-- /table-wrap -->
 
     <div *ngIf="!isLoading && users.length === 0" class="empty-state">
       <mat-icon>group_off</mat-icon>
-      <p>No hay usuarios registrados.</p>
+      <p>No hay usuarios que coincidan.</p>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" *ngIf="total > 0">
+      <span class="pagination-info">
+        {{ (page - 1) * pageSize + 1 }}–{{ [page * pageSize, total] | slice:0:1 }} de {{ total }}
+      </span>
+      <button mat-icon-button (click)="prevPage()" [disabled]="page <= 1" matTooltip="Página anterior">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="page-indicator">{{ page }} / {{ totalPages }}</span>
+      <button mat-icon-button (click)="nextPage()" [disabled]="page >= totalPages" matTooltip="Página siguiente">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
 
   </mat-card-content>

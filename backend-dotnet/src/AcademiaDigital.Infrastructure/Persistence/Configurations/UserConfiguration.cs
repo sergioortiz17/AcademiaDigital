@@ -17,6 +17,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Email).HasColumnName("email").HasMaxLength(254).IsRequired();
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u => u.Password).HasColumnName("password").HasMaxLength(128).IsRequired();
+        builder.Property(u => u.Dni).HasColumnName("dni").HasMaxLength(20).IsRequired(false);
         builder.Property(u => u.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(u => u.DateJoined).HasColumnName("date_joined");
         builder.Property(u => u.Role).HasColumnName("role");

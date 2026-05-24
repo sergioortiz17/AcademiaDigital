@@ -17,6 +17,7 @@ public class UpdateUserRoleUseCase(IUserRepository userRepository)
             Id: updated.Id,
             Username: updated.Username,
             Email: updated.Email,
+            Dni: updated.Dni,
             Role: updated.Role,
             IsActive: updated.IsActive,
             DateJoined: updated.DateJoined);

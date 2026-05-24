@@ -24,13 +24,15 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-      password: ['', [Validators.required, Validators.maxLength(255)]]
+      password: ['', [Validators.required, Validators.maxLength(255)]],
+      dni: ['', [Validators.maxLength(20)]]
     });
   }
 
   get username() { return this.registerForm.get('username'); }
   get email() { return this.registerForm.get('email'); }
   get password() { return this.registerForm.get('password'); }
+  get dni() { return this.registerForm.get('dni'); }
 
   onSubmit(): void {
     if (this.registerForm.invalid) {
@@ -42,9 +44,9 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const { username, email, password } = this.registerForm.value;
+    const { username, email, password, dni } = this.registerForm.value;
 
-    this.authService.register({ username, email, password }).subscribe({
+    this.authService.register({ username, email, password, dni: dni || undefined }).subscribe({
       next: (response) => {
         this.isLoading = false;
         if (response.success) {

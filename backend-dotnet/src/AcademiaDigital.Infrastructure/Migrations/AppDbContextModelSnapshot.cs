@@ -693,6 +693,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
+                    b.Property<string>("Dni")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("dni");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")

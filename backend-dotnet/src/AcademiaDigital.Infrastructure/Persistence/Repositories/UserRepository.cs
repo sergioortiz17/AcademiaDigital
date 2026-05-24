@@ -22,13 +22,14 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
         return passwordHasher.Verify(password, user.Password) ? user : null;
     }
 
-    public async Task<User> CreateAsync(string email, string username, string password, UserRole role = UserRole.Alumno, CancellationToken ct = default)
+    public async Task<User> CreateAsync(string email, string username, string password, string? dni = null, UserRole role = UserRole.Alumno, CancellationToken ct = default)
     {
         var user = new User
         {
             Email = email,
             Username = username,
             Password = passwordHasher.Hash(password),
+            Dni = string.IsNullOrWhiteSpace(dni) ? null : dni.Trim(),
             IsActive = true,
             DateJoined = DateTime.UtcNow,
             Role = role
@@ -46,8 +47,27 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
         return user;
     }
 
-    public async Task<List<User>> GetAllAsync(CancellationToken ct = default)
-        => await db.Users.AsNoTracking().OrderByDescending(u => u.DateJoined).ToListAsync(ct);
+    public async Task<(List<User> Users, int Total)> GetAllAsync(string? search, int skip, int take, CancellationToken ct = default)
+    {
+        var query = db.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(u =>
+                u.Email.ToLower().Contains(term) ||
+                (u.Dni != null && u.Dni.ToLower().Contains(term)));
+        }
+
+        var total = await query.CountAsync(ct);
+        var users = await query
+            .OrderByDescending(u => u.DateJoined)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(ct);
+
+        return (users, total);
+    }
 
     public async Task<User> UpdateRoleAsync(long userId, UserRole newRole, CancellationToken ct = default)
     {

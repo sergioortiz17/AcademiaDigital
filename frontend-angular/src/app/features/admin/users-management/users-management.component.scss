@@ -74,9 +74,35 @@
   &--error   { background: #fce4ec; color: #c62828; }
 }
 
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: .5rem;
+  flex-wrap: wrap;
+}
+
+.search-field { flex: 1 1 260px; }
+.pagesize-field { flex: 0 0 160px; }
+
+.no-data { color: rgba(0,0,0,.3); }
+
 .empty-state {
   text-align: center;
   padding: 3rem;
   color: rgba(0,0,0,.4);
   mat-icon { font-size: 48px; width: 48px; height: 48px; }
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .5rem;
+  padding: .75rem 0 0;
+  font-size: .85rem;
+  color: rgba(0,0,0,.6);
+}
+
+.pagination-info { margin-right: .5rem; }
+.page-indicator { min-width: 48px; text-align: center; font-weight: 600; }
