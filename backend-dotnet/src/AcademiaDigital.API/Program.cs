@@ -1,9 +1,14 @@
 using AcademiaDigital.API.Middleware;
+using AcademiaDigital.API.Security;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +20,31 @@ builder.Services.AddScoped<LoginUseCase>();
 builder.Services.AddScoped<RegisterUseCase>();
 builder.Services.AddScoped<LogoutUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
+builder.Services.AddScoped<ListUsersUseCase>();
+builder.Services.AddScoped<CreateInternalUserUseCase>();
+builder.Services.AddScoped<ChangeUserRoleUseCase>();
+builder.Services.AddScoped<ChangeUserStatusUseCase>();
+builder.Services.AddScoped<ListAdminAuditLogsUseCase>();
+
+// Authentication + authorization policies
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
+    ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAppAuthorization();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration
@@ -71,18 +101,11 @@ builder.Services.AddSwaggerGen(c =>
 // ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// Crear la base de datos y tablas automáticamente si no existen
+// Aplica migraciones pendientes al iniciar la API.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    try
-    {
-        db.Database.EnsureCreated();
-    }
-    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
-    {
-        // Error 1801: Database already exists.
-    }
+    db.Database.Migrate();
 }
 
 // Swagger disponible siempre (no solo en Development)
@@ -96,7 +119,9 @@ app.UseSwaggerUI(c =>
 // ── Middleware pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors();
+app.UseAuthentication();
 app.UseMiddleware<ActiveSessionMiddleware>();
+app.UseAuthorization();
 
 app.MapControllers();
 

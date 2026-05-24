@@ -1,6 +1,9 @@
 # Scripts de administración de issues
 scripts/
 
+# Documentacion local
+docs/
+
 # .NET
 **/bin/
 **/obj/

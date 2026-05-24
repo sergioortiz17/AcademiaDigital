@@ -7,6 +7,7 @@ namespace AcademiaDigital.Infrastructure.Persistence;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();
+    public DbSet<AdminAuditLog> AdminAuditLogs => Set<AdminAuditLog>();
     public DbSet<ActiveSession> ActiveSessions => Set<ActiveSession>();
     public DbSet<Career> Careers => Set<Career>();
     public DbSet<Subject> Subjects => Set<Subject>();
@@ -24,6 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new AdminAuditLogConfiguration());
         modelBuilder.ApplyConfiguration(new ActiveSessionConfiguration());
         modelBuilder.ApplyConfiguration(new CareerConfiguration());
         modelBuilder.ApplyConfiguration(new SubjectConfiguration());

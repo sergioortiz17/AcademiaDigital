@@ -1,5 +1,6 @@
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Interfaces.Services;
+using System.Security.Claims;
 
 namespace AcademiaDigital.API.Middleware;
 
@@ -32,10 +33,21 @@ public class ActiveSessionMiddleware(RequestDelegate next)
                 {
                     context.Items["UserId"] = session.UserId;
                     context.Items["IsSuperuser"] = false;
+
+                    var claims = new[]
+                    {
+                        new Claim("id", session.UserId.ToString()),
+                        new Claim(ClaimTypes.NameIdentifier, session.UserId.ToString()),
+                        new Claim(ClaimTypes.Role, session.User.Role.ToString())
+                    };
+
+                    context.User = new ClaimsPrincipal(
+                        new ClaimsIdentity(claims, "ActiveSession"));
                 }
                 else
                 {
                     context.Items.Remove("UserId");
+                    context.User = new ClaimsPrincipal(new ClaimsIdentity());
                 }
             }
         }

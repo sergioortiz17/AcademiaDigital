@@ -4,6 +4,7 @@ using AcademiaDigital.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AcademiaDigital.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260517012657_AddUserRole")]
+    partial class AddUserRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,50 +53,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ActiveSessions", (string)null);
-                });
-
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.AdminAuditLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("action");
-
-                    b.Property<long>("ActorUserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("actor_user_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Detail")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("detail");
-
-                    b.Property<long?>("TargetUserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("target_user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActorUserId");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("TargetUserId");
-
-                    b.ToTable("AdminAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Administrative", b =>
@@ -691,12 +650,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(254)")
                         .HasColumnName("email");
 
-                    b.Property<int>("FailedLoginAttempts")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0)
-                        .HasColumnName("failed_login_attempts");
-
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -707,10 +660,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("last_name");
-
-                    b.Property<DateTime?>("LockedUntil")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("locked_until");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -723,7 +672,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("Alumno")
+                        .HasDefaultValue("Student")
                         .HasColumnName("role");
 
                     b.Property<string>("Username")
@@ -749,24 +698,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.AdminAuditLog", b =>
-                {
-                    b.HasOne("AcademiaDigital.Domain.Entities.User", "ActorUser")
-                        .WithMany()
-                        .HasForeignKey("ActorUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AcademiaDigital.Domain.Entities.User", "TargetUser")
-                        .WithMany()
-                        .HasForeignKey("TargetUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ActorUser");
-
-                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Administrative", b =>

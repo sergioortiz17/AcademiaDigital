@@ -1,4 +1,5 @@
 using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
@@ -7,11 +8,20 @@ namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
 
 public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : IUserRepository
 {
+    public async Task<IReadOnlyList<User>> ListAsync(CancellationToken ct = default)
+        => await db.Users
+            .AsNoTracking()
+            .OrderBy(u => u.Id)
+            .ToListAsync(ct);
+
     public async Task<User?> FindByIdAsync(long id, CancellationToken ct = default)
         => await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, ct);
 
     public async Task<User?> FindByEmailAsync(string email, CancellationToken ct = default)
         => await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email, ct);
+
+    public async Task<User?> FindByEmailForLoginAsync(string email, CancellationToken ct = default)
+        => await db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
 
     public async Task<User?> AuthenticateAsync(string email, string password, CancellationToken ct = default)
     {
@@ -22,7 +32,7 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
         return passwordHasher.Verify(password, user.Password) ? user : null;
     }
 
-    public async Task<User> CreateAsync(string email, string username, string password, CancellationToken ct = default)
+    public async Task<User> CreateAsync(string email, string username, string password, UserRole role = UserRole.Alumno, CancellationToken ct = default)
     {
         var user = new User
         {
@@ -30,6 +40,9 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
             Username = username,
             Password = passwordHasher.Hash(password),
             IsActive = true,
+            FailedLoginAttempts = 0,
+            LockedUntil = null,
+            Role = role,
             DateJoined = DateTime.UtcNow
         };
 

@@ -1,4 +1,5 @@
 using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,6 +20,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u => u.Password).HasColumnName("password").HasMaxLength(128).IsRequired();
         builder.Property(u => u.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+        builder.Property(u => u.FailedLoginAttempts).HasColumnName("failed_login_attempts").HasDefaultValue(0);
+        builder.Property(u => u.LockedUntil).HasColumnName("locked_until");
         builder.Property(u => u.DateJoined).HasColumnName("date_joined");
+        builder.Property(u => u.Role)
+            .HasColumnName("role")
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .HasDefaultValue(UserRole.Alumno)
+            .IsRequired();
     }
 }
