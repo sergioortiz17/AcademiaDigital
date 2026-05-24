@@ -3,6 +3,7 @@ using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -71,17 +72,20 @@ builder.Services.AddSwaggerGen(c =>
 // ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// Crear la base de datos y tablas automáticamente si no existen
-using (var scope = app.Services.CreateScope())
+// Aplicar migraciones pendientes al iniciar (crea la DB si no existe)
+await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     try
     {
-        db.Database.EnsureCreated();
+        await db.Database.MigrateAsync();
     }
-    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Message.Contains("already an object named"))
     {
-        // Error 1801: Database already exists.
+        // La DB fue creada con EnsureCreated sin historial de migraciones.
+        // Se elimina y recrea limpiamente con todas las migraciones aplicadas.
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
     }
 }
 
@@ -100,4 +104,4 @@ app.UseMiddleware<ActiveSessionMiddleware>();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
