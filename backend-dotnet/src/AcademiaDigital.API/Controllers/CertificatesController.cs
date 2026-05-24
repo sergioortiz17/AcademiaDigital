@@ -1,5 +1,6 @@
 using AcademiaDigital.API.Models;
 using AcademiaDigital.Application.UseCases.Certificates;
+using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -31,13 +32,16 @@ public class CertificatesController(
         return StatusCode(StatusCodes.Status201Created, new { success = true, request = result });
     }
 
-    // GET /api/v1/certificates/all  — admin ve todas las solicitudes
+    // GET /api/v1/certificates/all?search=&status=  — admin ve todas las solicitudes
     [HttpGet("all")]
-    public async Task<IActionResult> GetAllCertificates(CancellationToken ct)
+    public async Task<IActionResult> GetAllCertificates(
+        [FromQuery] string? search,
+        [FromQuery] CertificateStatus? status,
+        CancellationToken ct = default)
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
         if (CurrentUserRole != UserRole.Admin) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
-        var requests = await getAllRequestsUseCase.ExecuteAsync(ct);
+        var requests = await getAllRequestsUseCase.ExecuteAsync(search, status, ct);
         return Ok(new { success = true, requests });
     }
 }

@@ -14,12 +14,23 @@ public class CertificateRequestRepository(AppDbContext db) : ICertificateRequest
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync(ct);
 
-    public async Task<List<CertificateRequest>> GetAllAsync(CancellationToken ct = default)
-        => await db.CertificateRequests
-            .AsNoTracking()
-            .Include(c => c.User)
-            .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync(ct);
+    public async Task<List<CertificateRequest>> GetAllAsync(string? search, CertificateStatus? status, CancellationToken ct = default)
+    {
+        var query = db.CertificateRequests.AsNoTracking().Include(c => c.User).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(c =>
+                c.User.Username.ToLower().Contains(term) ||
+                c.User.Email.ToLower().Contains(term));
+        }
+
+        if (status.HasValue)
+            query = query.Where(c => c.Status == status.Value);
+
+        return await query.OrderByDescending(c => c.CreatedAt).ToListAsync(ct);
+    }
 
     public async Task<CertificateRequest> CreateAsync(long userId, string certificateType, CancellationToken ct = default)
     {

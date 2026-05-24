@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
 import { CertificatesService, CertificateRequest, CERTIFICATE_TYPES } from '../../core/services/certificates.service';
 import { selectUserRole } from '../../store/account/account.selectors';
 import { UserRole } from '../../store/account/account.actions';
@@ -10,7 +12,7 @@ import { UserRole } from '../../store/account/account.actions';
   styleUrls: ['./certificates.component.scss'],
   standalone: false
 })
-export class CertificatesComponent implements OnInit {
+export class CertificatesComponent implements OnInit, OnDestroy {
   requests: CertificateRequest[] = [];
   isLoading = false;
   isSubmitting = false;
@@ -22,35 +24,89 @@ export class CertificatesComponent implements OnInit {
   UserRole = UserRole;
   userRole: UserRole | null = null;
 
-  displayedColumns = ['certificateType', 'status', 'createdAt'];
+  // Admin filters
+  searchTerm = '';
+  selectedStatus: string | null = null;
+
+  statusFilters = [
+    { label: 'Todos',     value: null },
+    { label: 'Pendiente', value: 'Pending' },
+    { label: 'Aprobado',  value: 'Approved' },
+    { label: 'Rechazado', value: 'Rejected' },
+  ];
+
+  displayedColumnsAlumno = ['certificateType', 'status', 'createdAt'];
+  displayedColumnsAdmin  = ['username', 'certificateType', 'status', 'createdAt'];
+
+  get displayedColumns() {
+    return this.userRole === UserRole.Admin
+      ? this.displayedColumnsAdmin
+      : this.displayedColumnsAlumno;
+  }
 
   statusLabels: Record<string, string> = {
-    Pending: 'Pendiente',
+    Pending:  'Pendiente',
     Approved: 'Aprobado',
     Rejected: 'Rechazado'
   };
 
+  private readonly destroy$ = new Subject<void>();
+  private readonly search$  = new Subject<string>();
+
   constructor(
     private readonly certificatesService: CertificatesService,
-    private readonly store: Store
+    private readonly store: Store,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.store.select(selectUserRole).subscribe(role => {
+    this.store.select(selectUserRole).pipe(take(1)).subscribe(role => {
       this.userRole = role as UserRole;
       this.loadRequests();
     });
+
+    this.search$.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.loadRequests());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.search$.next(value);
+  }
+
+  onStatusFilter(status: string | null): void {
+    this.selectedStatus = status;
+    this.loadRequests();
   }
 
   loadRequests(): void {
+    if (this.isLoading) return;
     this.isLoading = true;
+    this.errorMsg = '';
+
     const obs = this.userRole === UserRole.Admin
-      ? this.certificatesService.getAllCertificates()
+      ? this.certificatesService.getAllCertificates(this.searchTerm, this.selectedStatus)
       : this.certificatesService.getMyCertificates();
 
-    obs.subscribe({
-      next: (res) => { this.requests = res.requests; this.isLoading = false; },
-      error: () => { this.errorMsg = 'Error al cargar certificados.'; this.isLoading = false; }
+    obs.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.requests = res.requests;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMsg = 'Error al cargar certificados.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 

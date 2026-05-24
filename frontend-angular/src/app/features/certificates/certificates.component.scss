@@ -15,9 +15,67 @@
   margin-top: .5rem;
 }
 
+// Pills de estado
+.role-pills {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.role-pill {
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  border-radius: 20px;
+  padding: 5px 18px;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: rgba(0,0,0,.6);
+  transition: background .15s, color .15s, border-color .15s;
+
+  &:hover { background: #f0f4ff; border-color: #90a4ae; }
+
+  &--active {
+    background: #3949ab;
+    color: #fff;
+    border-color: #3949ab;
+  }
+}
+
+// Pills de estado con colores propios cuando está activo
+.role-pill[data-status="Pending"].role-pill--active    { background: #e65100; border-color: #e65100; }
+.role-pill[data-status="Approved"].role-pill--active   { background: #2e7d32; border-color: #2e7d32; }
+.role-pill[data-status="Rejected"].role-pill--active   { background: #c62828; border-color: #c62828; }
+
+.toolbar {
+  margin-bottom: .5rem;
+}
+
+.search-field { width: 100%; max-width: 400px; }
+
+// Tabla con overlay
+.table-wrap {
+  position: relative;
+  min-height: 80px;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.7);
+  z-index: 10;
+  border-radius: 8px;
+}
+
 .certs-table { width: 100%; }
 
-.loading-wrap { display: flex; justify-content: center; padding: 2rem; }
+.user-info { display: flex; flex-direction: column; }
+.user-name  { font-weight: 600; font-size: .92rem; }
+.user-email { font-size: .78rem; color: rgba(0,0,0,.65); }
 
 .status-badge {
   padding: 3px 12px;

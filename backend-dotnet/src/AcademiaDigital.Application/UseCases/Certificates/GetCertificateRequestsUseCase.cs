@@ -12,12 +12,14 @@ public class GetCertificateRequestsUseCase(ICertificateRequestRepository reposit
     }
 
     public static CertificateRequestDto Map(CertificateRequest r) =>
-        new(r.Id, r.UserId, r.CertificateType, r.Status.ToString(), r.CreatedAt, r.UpdatedAt);
+        new(r.Id, r.UserId, null, null, r.CertificateType, r.Status.ToString(), r.CreatedAt, r.UpdatedAt);
 }
 
 public record CertificateRequestDto(
     long Id,
     long UserId,
+    string? Username,
+    string? Email,
     string CertificateType,
     string Status,
     DateTime CreatedAt,
