@@ -20,7 +20,7 @@ public class AuthController(
         {
             success = result.Success,
             token = result.Token,
-            user = new { _id = result.User.Id, result.User.Username, result.User.Email }
+            user = new { _id = result.User.Id, result.User.Username, result.User.Email, role = (int)result.User.Role }
         });
     }
 

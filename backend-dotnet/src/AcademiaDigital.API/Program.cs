@@ -1,5 +1,7 @@
 using AcademiaDigital.API.Middleware;
+using AcademiaDigital.Application.UseCases.Admin;
 using AcademiaDigital.Application.UseCases.Authentication;
+using AcademiaDigital.Application.UseCases.Certificates;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
@@ -16,6 +18,16 @@ builder.Services.AddScoped<LoginUseCase>();
 builder.Services.AddScoped<RegisterUseCase>();
 builder.Services.AddScoped<LogoutUseCase>();
 builder.Services.AddScoped<UpdateUserUseCase>();
+
+// Admin
+builder.Services.AddScoped<GetUsersUseCase>();
+builder.Services.AddScoped<UpdateUserRoleUseCase>();
+builder.Services.AddScoped<DeleteUserUseCase>();
+
+// Certificates
+builder.Services.AddScoped<GetCertificateRequestsUseCase>();
+builder.Services.AddScoped<CreateCertificateRequestUseCase>();
+builder.Services.AddScoped<GetAllCertificateRequestsUseCase>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration

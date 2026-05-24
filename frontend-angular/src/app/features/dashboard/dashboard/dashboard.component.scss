@@ -210,9 +210,40 @@
 
 .alerts-content p {
   margin: 0;
-  /* margin-bottom: 1rem;
-  color: #374151; */
   line-height: 1.2;
   font-size: 1.3rem;
   font-weight: 500;
+}
+
+/* Quick-access cards */
+.quick-access-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.quick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.4rem 1rem;
+  border-radius: 20px !important;
+  cursor: pointer;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+
+  mat-icon { font-size: 32px; width: 32px; height: 32px; }
+
+  &:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  &--teal   { background: linear-gradient(135deg, #006a72, #009ea8); }
+  &--blue   { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+  &--indigo { background: linear-gradient(135deg, #3949ab, #5c6bc0); }
+  &--amber  { background: linear-gradient(135deg, #f57c00, #ffa726); }
 }

@@ -1,83 +1,101 @@
 <div class="dashboard-content">
-<div class="date-text">
-  {{ today | date:'fullDate':'':'es' }} <!--- {{ currentDate }} -->
-</div>
+  <div class="date-text">{{ today | date:'fullDate':'':'es' }}</div>
 
-<section class="welcome-card">
-
+  <section class="welcome-card">
     <div class="welcome-content">
-      <h1>¡Hola, Usuario! 👋</h1>
-      <!-- <p>Bienvenido nuevamente a Academia Digital.</p> --> 
+      <h1>¡Hola, {{ (user$ | async)?.username || 'Usuario' }}! 👋</h1>
     </div>
-</section>
+  </section>
 
+  <!-- Quick-access cards by role -->
+  <ng-container *ngIf="userRole$ | async as role">
 
-<div class="dashboard-grid">
-  <mat-card class="main-panel">
-    <mat-card-content>
-      <!-- <img src="assets/images/logo.svg" alt="ITSC" class="dashboard-logo" /> -->
-      <div *ngFor="let item of carouselItems; let i = index" [hidden]="activeSlide !== i">
-        <h3 class="carousel-title"> 
-          {{ item.title }}
-        </h3>
-        <p class="carousel-desc">
-            {{ item.description }}
-        </p>
+    <!-- ALUMNO -->
+    <div class="quick-access-grid" *ngIf="role === UserRole.Alumno">
+      <a mat-card routerLink="/app/certificates" class="quick-card quick-card--teal">
+        <mat-icon>military_tech</mat-icon>
+        <span>Mis Certificados</span>
+      </a>
+      <a mat-card routerLink="/app/enrollments" class="quick-card quick-card--blue">
+        <mat-icon>assignment</mat-icon>
+        <span>Inscripciones</span>
+      </a>
+      <a mat-card routerLink="/app/courses" class="quick-card quick-card--indigo">
+        <mat-icon>menu_book</mat-icon>
+        <span>Carreras</span>
+      </a>
+      <a mat-card routerLink="/app/calendar" class="quick-card quick-card--amber">
+        <mat-icon>calendar_today</mat-icon>
+        <span>Calendario</span>
+      </a>
+    </div>
+
+    <!-- PROFESOR -->
+    <div class="quick-access-grid" *ngIf="role === UserRole.Profesor">
+      <a mat-card routerLink="/app/grades" class="quick-card quick-card--teal">
+        <mat-icon>grade</mat-icon>
+        <span>Cargar Notas</span>
+      </a>
+      <a mat-card routerLink="/app/enrollments" class="quick-card quick-card--blue">
+        <mat-icon>assignment</mat-icon>
+        <span>Inscripciones</span>
+      </a>
+      <a mat-card routerLink="/app/courses" class="quick-card quick-card--indigo">
+        <mat-icon>menu_book</mat-icon>
+        <span>Carreras</span>
+      </a>
+      <a mat-card routerLink="/app/calendar" class="quick-card quick-card--amber">
+        <mat-icon>calendar_today</mat-icon>
+        <span>Calendario</span>
+      </a>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="quick-access-grid" *ngIf="role === UserRole.Admin">
+      <a mat-card routerLink="/app/admin/users" class="quick-card quick-card--teal">
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Gestión de Usuarios</span>
+      </a>
+      <a mat-card routerLink="/app/certificates" class="quick-card quick-card--blue">
+        <mat-icon>military_tech</mat-icon>
+        <span>Certificados</span>
+      </a>
+      <a mat-card routerLink="/app/enrollments" class="quick-card quick-card--indigo">
+        <mat-icon>assignment</mat-icon>
+        <span>Inscripciones</span>
+      </a>
+      <a mat-card routerLink="/app/courses" class="quick-card quick-card--amber">
+        <mat-icon>menu_book</mat-icon>
+        <span>Carreras</span>
+      </a>
+    </div>
+  </ng-container>
+
+  <div class="dashboard-grid">
+    <mat-card class="main-panel">
+      <mat-card-content>
+        <div *ngFor="let item of carouselItems; let i = index" [hidden]="activeSlide !== i">
+          <h3 class="carousel-title">{{ item.title }}</h3>
+          <p class="carousel-desc">{{ item.description }}</p>
+        </div>
+        <div class="carousel-dots">
+          <button *ngFor="let item of carouselItems; let i = index"
+                  [class.active]="activeSlide === i"
+                  (click)="goToSlide(i)"></button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="alerts-card">
+      <div class="alerts-header">
+        <h2>Avisos Importantes</h2>
+        <mat-icon>notifications</mat-icon>
       </div>
-
-      <div class="carousel-dots">
-        <button *ngFor="let item of carouselItems; let i = index" [class.active]="activeSlide === i" (click)="goToSlide(i)"></button>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="alerts-card">
-    <div class="alerts-header">
-      <h2>Avisos Importantes</h2>
-      <mat-icon>
-        notifications
-      </mat-icon>
-    </div>
-
-    <!-- <mat-divider></mat-divider> -->
-
-    <mat-card-content class="alerts-content">
-      <p>Examen de Programación 12/05</p>
-      <p>Entrega de Trabajo Práctico hasta el 10/05</p>
-      <p>Inscripciones abiertas para el próximo cuatrimestre</p>
-    </mat-card-content>
-  </mat-card>
-
-</div>
-</div>
-
-<!--- <div class="page-header">
-  <h1>{{ 'dashboard.title' | translate }}</h1>
-</div>
-
-<mat-card class="dashboard-card">
-  <mat-card-content style="text-align: center; padding: 24px 16px 8px;">
-    <img src="assets/images/logo.svg" alt="ITSC" style="width: 96px; height: 96px;" />
-  </mat-card-content>
-
-  <mat-divider></mat-divider>
-
-  <mat-card-content style="min-height: 100px; text-align: center; padding: 24px 16px;">
-    <div *ngFor="let item of carouselItems; let i = index" [hidden]="activeSlide !== i">
-      <h3 class="carousel-title">{{ item.title }}</h3>
-      <p class="carousel-desc">{{ item.description }}</p>
-    </div>
-    <div class="carousel-dots">
-      <button
-        *ngFor="let item of carouselItems; let i = index"
-        [class.active]="activeSlide === i"
-        (click)="goToSlide(i)">
-      </button>
-    </div>
-  </mat-card-content>
-
-  <div class="progress-section">
-    <h3>{{ 'dashboard.progress' | translate: { progress: 1 } }}</h3>
-    <mat-progress-bar mode="determinate" value="100" color="accent"></mat-progress-bar>
+      <mat-card-content class="alerts-content">
+        <p>Examen de Programación 12/05</p>
+        <p>Entrega de Trabajo Práctico hasta el 10/05</p>
+        <p>Inscripciones abiertas para el próximo cuatrimestre</p>
+      </mat-card-content>
+    </mat-card>
   </div>
-</mat-card> -->
+</div>

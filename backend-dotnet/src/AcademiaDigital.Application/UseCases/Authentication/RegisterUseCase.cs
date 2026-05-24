@@ -1,3 +1,4 @@
+using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 
@@ -11,7 +12,7 @@ public class RegisterUseCase(IUserRepository userRepository)
         if (existing != null)
             throw new EmailAlreadyExistsException();
 
-        var user = await userRepository.CreateAsync(email, username, password, ct);
+        var user = await userRepository.CreateAsync(email, username, password, UserRole.Alumno, ct);
 
         return new RegisterResult(
             Success: true,

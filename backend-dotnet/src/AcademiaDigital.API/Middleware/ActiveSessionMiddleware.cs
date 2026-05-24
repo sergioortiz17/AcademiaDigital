@@ -31,7 +31,8 @@ public class ActiveSessionMiddleware(RequestDelegate next)
                 if (session != null && session.User.IsActive)
                 {
                     context.Items["UserId"] = session.UserId;
-                    context.Items["IsSuperuser"] = false;
+                    context.Items["UserRole"] = (int)session.User.Role;
+                    context.Items["IsSuperuser"] = session.User.Role == AcademiaDigital.Domain.Enums.UserRole.Admin;
                 }
                 else
                 {

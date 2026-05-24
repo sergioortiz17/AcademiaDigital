@@ -1,1 +1,42 @@
-// All styles in global styles.scss
+.actions-bar { margin-bottom: 1.25rem; }
+
+.form-card, .table-card {
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(15,23,42,.06) !important;
+  margin-bottom: 1.25rem;
+}
+
+.full-width { width: 100%; }
+
+.form-actions {
+  display: flex;
+  gap: .75rem;
+  justify-content: flex-end;
+  margin-top: .5rem;
+}
+
+.certs-table { width: 100%; }
+
+.loading-wrap { display: flex; justify-content: center; padding: 2rem; }
+
+.status-badge {
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: .78rem;
+  font-weight: 600;
+  &--pending  { background: #fff8e1; color: #e65100; }
+  &--approved { background: #e8f5e9; color: #2e7d32; }
+  &--rejected { background: #fce4ec; color: #c62828; }
+}
+
+.msg {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .75rem 1rem; border-radius: 10px; margin-bottom: 1rem; font-size: .9rem;
+  &--success { background: #e8f5e9; color: #2e7d32; }
+  &--error   { background: #fce4ec; color: #c62828; }
+}
+
+.empty-state {
+  text-align: center; padding: 3rem; color: rgba(0,0,0,.4);
+  mat-icon { font-size: 48px; width: 48px; height: 48px; }
+}

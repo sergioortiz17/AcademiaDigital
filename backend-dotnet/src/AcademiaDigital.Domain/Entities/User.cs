@@ -1,3 +1,5 @@
+using AcademiaDigital.Domain.Enums;
+
 namespace AcademiaDigital.Domain.Entities;
 
 public class User
@@ -9,4 +11,5 @@ public class User
     public string Password { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public DateTime DateJoined { get; set; } = DateTime.UtcNow;
+    public UserRole Role { get; set; } = UserRole.Alumno;
 }

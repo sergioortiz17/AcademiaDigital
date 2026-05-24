@@ -18,13 +18,15 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatRippleModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTableModule } from '@angular/material/table';
 
 const MATERIAL_MODULES = [
   MatSidenavModule, MatToolbarModule, MatListModule, MatIconModule,
   MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule,
   MatMenuModule, MatProgressBarModule, MatProgressSpinnerModule,
   MatDividerModule, MatTooltipModule, MatSnackBarModule, MatSelectModule,
-  MatChipsModule, MatBadgeModule, MatRippleModule, MatCheckboxModule
+  MatChipsModule, MatBadgeModule, MatRippleModule, MatCheckboxModule,
+  MatTableModule
 ];
 
 @NgModule({ imports: MATERIAL_MODULES, exports: MATERIAL_MODULES })

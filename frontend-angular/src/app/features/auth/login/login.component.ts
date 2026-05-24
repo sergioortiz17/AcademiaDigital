@@ -38,8 +38,9 @@ export class LoginComponent {
       next: (response) => {
         this.isLoading = false;
         if (response.success && response.token) {
-          localStorage.setItem('academia-account', JSON.stringify({ token: response.token, user: response.user }));
-          this.store.dispatch(accountInitialize({ isLoggedIn: true, user: response.user, token: response.token }));
+          const user = { ...response.user, role: response.user?.role ?? 1 };
+          localStorage.setItem('academia-account', JSON.stringify({ token: response.token, user }));
+          this.store.dispatch(accountInitialize({ isLoggedIn: true, user, token: response.token }));
           this.router.navigate(['/app/dashboard/default']);
         } else {
           this.errorMessage = response.msg || 'Login failed';
