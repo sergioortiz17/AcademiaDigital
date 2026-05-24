@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AdminService, UserSummary } from '../../../core/services/admin.service';
 import { UserRole } from '../../../store/account/account.actions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-users-management',
@@ -10,7 +12,7 @@ import { selectUser } from '../../../store/account/account.selectors';
   styleUrls: ['./users-management.component.scss'],
   standalone: false
 })
-export class UsersManagementComponent implements OnInit {
+export class UsersManagementComponent implements OnInit, OnDestroy {
   users: UserSummary[] = [];
   isLoading = false;
   errorMsg = '';
@@ -20,6 +22,8 @@ export class UsersManagementComponent implements OnInit {
 
   displayedColumns = ['username', 'email', 'role', 'dateJoined', 'actions'];
 
+  private readonly destroy$ = new Subject<void>();
+
   getRoleLabel(role: number): string {
     const labels: Record<number, string> = { 1: 'Alumno', 2: 'Profesor', 3: 'Admin' };
     return labels[role] ?? 'Desconocido';
@@ -27,22 +31,37 @@ export class UsersManagementComponent implements OnInit {
 
   constructor(
     private readonly adminService: AdminService,
-    private readonly store: Store
+    private readonly store: Store,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.store.select(selectUser).subscribe(u => {
+    this.store.select(selectUser).pipe(takeUntil(this.destroy$)).subscribe(u => {
       this.currentUserId = u ? Number(u._id) : null;
     });
     this.loadUsers();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadUsers(): void {
+    if (this.isLoading) return;
     this.isLoading = true;
     this.errorMsg = '';
-    this.adminService.getUsers().subscribe({
-      next: (res) => { this.users = res.users; this.isLoading = false; },
-      error: () => { this.errorMsg = 'Error al cargar usuarios.'; this.isLoading = false; }
+    this.adminService.getUsers().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.users = res.users;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMsg = 'Error al cargar usuarios.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
