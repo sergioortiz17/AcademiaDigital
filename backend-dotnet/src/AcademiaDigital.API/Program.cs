@@ -84,20 +84,44 @@ builder.Services.AddSwaggerGen(c =>
 // ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// Aplicar migraciones pendientes al iniciar (crea la DB si no existe)
+// Aplicar migraciones al iniciar con reintentos para tolerar el startup de SQL Server en Docker
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    try
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
+    const int maxAttempts = 10;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
-        await db.Database.MigrateAsync();
-    }
-    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Message.Contains("already an object named"))
-    {
-        // La DB fue creada con EnsureCreated sin historial de migraciones.
-        // Se elimina y recrea limpiamente con todas las migraciones aplicadas.
-        await db.Database.EnsureDeletedAsync();
-        await db.Database.MigrateAsync();
+        try
+        {
+            await db.Database.MigrateAsync();
+            break;
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+        {
+            // Error 1801: el motor SQL Server aún está recuperando la DB en Docker.
+            // MigrateAsync intentó crearla porque no pudo conectarse aún. Reintentar.
+            if (attempt == maxAttempts) throw;
+            startupLogger.LogWarning(ex, "SQL Server no está listo (intento {Attempt}/{Max}), reintentando en 3s...", attempt, maxAttempts);
+            await Task.Delay(3000);
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Message.Contains("already an object named"))
+        {
+            // La DB fue creada con EnsureCreated sin historial de migraciones.
+            // Se elimina y recrea limpiamente con todas las migraciones aplicadas.
+            startupLogger.LogWarning(ex, "DB creada con EnsureCreated detectada, recreando con migraciones...");
+            await db.Database.EnsureDeletedAsync();
+            await db.Database.MigrateAsync();
+            break;
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (attempt < maxAttempts
+            && (ex.Number == -2 || ex.Number == 53 || ex.Number == 40 || ex.Message.Contains("connection")))
+        {
+            // SQL Server todavía no acepta conexiones (arranque Docker).
+            startupLogger.LogWarning(ex, "Sin conexión a SQL Server (intento {Attempt}/{Max}), reintentando en 3s...", attempt, maxAttempts);
+            await Task.Delay(3000);
+        }
     }
 }
 
