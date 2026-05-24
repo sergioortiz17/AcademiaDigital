@@ -12,7 +12,7 @@ public interface IUserRepository
     Task<User> UpdateAsync(User user, CancellationToken ct = default);
 
     // Admin methods
-    Task<(List<User> Users, int Total)> GetAllAsync(string? search, int skip, int take, CancellationToken ct = default);
+    Task<(List<User> Users, int Total)> GetAllAsync(string? search, UserRole? role, int skip, int take, CancellationToken ct = default);
     Task<User> UpdateRoleAsync(long userId, UserRole newRole, CancellationToken ct = default);
     Task DeleteAsync(long userId, CancellationToken ct = default);
 }

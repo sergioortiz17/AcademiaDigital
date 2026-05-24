@@ -24,15 +24,16 @@ export interface GetUsersResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
-  private base = environment.apiServer;
+  private readonly base = environment.apiServer;
 
   constructor(private readonly http: HttpClient) {}
 
-  getUsers(search?: string, page = 1, pageSize = 20): Observable<GetUsersResponse> {
+  getUsers(search?: string, role?: number | null, page = 1, pageSize = 20): Observable<GetUsersResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
     if (search?.trim()) params = params.set('search', search.trim());
+    if (role != null) params = params.set('role', role.toString());
     return this.http.get<GetUsersResponse>(`${this.base}v1/admin/users`, { params });
   }
 

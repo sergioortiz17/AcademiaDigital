@@ -74,6 +74,33 @@
   &--error   { background: #fce4ec; color: #c62828; }
 }
 
+.role-pills {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.role-pill {
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  border-radius: 20px;
+  padding: 5px 18px;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: rgba(0,0,0,.6);
+  transition: background .15s, color .15s, border-color .15s;
+
+  &:hover { background: #f0f4ff; border-color: #90a4ae; }
+
+  &--active {
+    background: #3949ab;
+    color: #fff;
+    border-color: #3949ab;
+  }
+}
+
 .toolbar {
   display: flex;
   gap: 1rem;

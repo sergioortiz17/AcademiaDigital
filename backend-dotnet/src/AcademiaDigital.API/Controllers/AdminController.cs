@@ -19,16 +19,17 @@ public class AdminController(
         return null!;
     }
 
-    // GET /api/v1/admin/users?search=&page=1&pageSize=20
+    // GET /api/v1/admin/users?search=&role=&page=1&pageSize=20
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search,
+        [FromQuery] UserRole? role,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
         var guard = RequireAdmin(); if (guard != null) return guard;
-        var result = await getUsersUseCase.ExecuteAsync(search, page, pageSize, ct);
+        var result = await getUsersUseCase.ExecuteAsync(search, role, page, pageSize, ct);
         return Ok(new { success = true, result.Users, result.Total, result.Page, result.PageSize });
     }
 

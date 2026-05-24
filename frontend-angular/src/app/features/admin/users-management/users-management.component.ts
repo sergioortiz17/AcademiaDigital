@@ -20,12 +20,20 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   UserRole = UserRole;
   currentUserId: number | null = null;
 
-  // Search & pagination
+  // Search, role filter & pagination
   searchTerm = '';
+  selectedRole: number | null = null;
   page = 1;
   pageSize = 20;
   total = 0;
   pageSizeOptions = [20, 50, 100];
+
+  roleFilters = [
+    { label: 'Todos',          value: null },
+    { label: 'Alumnos',        value: UserRole.Alumno },
+    { label: 'Profesores',     value: UserRole.Profesor },
+    { label: 'Administradores', value: UserRole.Admin },
+  ];
 
   displayedColumns = ['username', 'dni', 'role', 'dateJoined', 'actions'];
 
@@ -74,6 +82,12 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     this.search$.next(value);
   }
 
+  onRoleFilter(role: number | null): void {
+    this.selectedRole = role;
+    this.page = 1;
+    this.loadUsers();
+  }
+
   onPageSizeChange(size: number): void {
     this.pageSize = size;
     this.page = 1;
@@ -92,7 +106,7 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     if (this.isLoading) return;
     this.isLoading = true;
     this.errorMsg = '';
-    this.adminService.getUsers(this.searchTerm, this.page, this.pageSize)
+    this.adminService.getUsers(this.searchTerm, this.selectedRole, this.page, this.pageSize)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {

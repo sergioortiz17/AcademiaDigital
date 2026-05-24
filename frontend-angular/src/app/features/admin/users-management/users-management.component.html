@@ -13,6 +13,17 @@
       <mat-icon>error</mat-icon> {{ errorMsg }}
     </div>
 
+    <!-- Pills de filtro por rol -->
+    <div class="role-pills">
+      <button
+        *ngFor="let f of roleFilters"
+        class="role-pill"
+        [class.role-pill--active]="selectedRole === f.value"
+        (click)="onRoleFilter(f.value)">
+        {{ f.label }}
+      </button>
+    </div>
+
     <!-- Toolbar: buscador + selector de cantidad -->
     <div class="toolbar">
       <mat-form-field appearance="outline" class="search-field">

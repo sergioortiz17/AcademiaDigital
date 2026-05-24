@@ -47,7 +47,7 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
         return user;
     }
 
-    public async Task<(List<User> Users, int Total)> GetAllAsync(string? search, int skip, int take, CancellationToken ct = default)
+    public async Task<(List<User> Users, int Total)> GetAllAsync(string? search, UserRole? role, int skip, int take, CancellationToken ct = default)
     {
         var query = db.Users.AsNoTracking();
 
@@ -58,6 +58,9 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
                 u.Email.ToLower().Contains(term) ||
                 (u.Dni != null && u.Dni.ToLower().Contains(term)));
         }
+
+        if (role.HasValue)
+            query = query.Where(u => u.Role == role.Value);
 
         var total = await query.CountAsync(ct);
         var users = await query

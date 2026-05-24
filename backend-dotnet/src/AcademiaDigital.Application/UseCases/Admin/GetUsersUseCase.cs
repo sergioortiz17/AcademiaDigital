@@ -5,13 +5,13 @@ namespace AcademiaDigital.Application.UseCases.Admin;
 
 public class GetUsersUseCase(IUserRepository userRepository)
 {
-    public async Task<GetUsersResult> ExecuteAsync(string? search, int page, int pageSize, CancellationToken ct = default)
+    public async Task<GetUsersResult> ExecuteAsync(string? search, UserRole? role, int page, int pageSize, CancellationToken ct = default)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 200);
         var skip = (page - 1) * pageSize;
 
-        var (users, total) = await userRepository.GetAllAsync(search, skip, pageSize, ct);
+        var (users, total) = await userRepository.GetAllAsync(search, role, skip, pageSize, ct);
 
         var summaries = users.Select(u => new UserSummary(
             Id: u.Id,
