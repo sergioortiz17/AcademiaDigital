@@ -13,11 +13,12 @@
       <mat-icon>error</mat-icon> {{ errorMsg }}
     </div>
 
-    <div *ngIf="isLoading" class="loading-wrap">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
+    <div class="table-wrap">
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
 
-    <table mat-table [dataSource]="users" class="users-table" *ngIf="!isLoading">
+      <table mat-table [dataSource]="users" class="users-table">
 
       <!-- Username -->
       <ng-container matColumnDef="username">
@@ -94,6 +95,7 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
+    </div><!-- /table-wrap -->
 
     <div *ngIf="!isLoading && users.length === 0" class="empty-state">
       <mat-icon>group_off</mat-icon>
