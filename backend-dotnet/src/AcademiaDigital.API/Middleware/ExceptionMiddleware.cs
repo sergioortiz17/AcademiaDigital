@@ -24,7 +24,9 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         {
             InvalidCredentialsException e => (StatusCodes.Status401Unauthorized, e.Message),
             InactiveUserException e => (StatusCodes.Status403Forbidden, e.Message),
+            ForbiddenException e => (StatusCodes.Status403Forbidden, e.Message),
             EmailAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),
+            UserNotFoundException e => (StatusCodes.Status404NotFound, e.Message),
             SessionNotFoundException e => (StatusCodes.Status404NotFound, e.Message),
             UnauthorizedUserUpdateException e => (StatusCodes.Status403Forbidden, e.Message),
             _ => (StatusCodes.Status500InternalServerError, "An internal error occurred")

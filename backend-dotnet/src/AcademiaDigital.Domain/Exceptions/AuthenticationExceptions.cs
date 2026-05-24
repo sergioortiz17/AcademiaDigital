@@ -16,3 +16,9 @@ public class EmailAlreadyExistsException(string message = "Email already taken")
 
 public class UnauthorizedUserUpdateException(string message = "Error updating user")
     : AuthenticationException(message);
+
+public class UserNotFoundException(long id)
+    : AuthenticationException($"User with id {id} not found");
+
+public class ForbiddenException(string message = "Access denied")
+    : AuthenticationException(message);

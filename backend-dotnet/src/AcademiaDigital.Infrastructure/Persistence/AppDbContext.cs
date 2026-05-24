@@ -20,11 +20,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<TeacherContest> TeacherContests => Set<TeacherContest>();
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
     public DbSet<TeachingPosition> TeachingPositions => Set<TeachingPosition>();
+    public DbSet<CertificateRequest> CertificateRequests => Set<CertificateRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ActiveSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new CertificateRequestConfiguration());
         modelBuilder.ApplyConfiguration(new CareerConfiguration());
         modelBuilder.ApplyConfiguration(new SubjectConfiguration());
         modelBuilder.ApplyConfiguration(new SubjectPrerequisiteConfiguration());

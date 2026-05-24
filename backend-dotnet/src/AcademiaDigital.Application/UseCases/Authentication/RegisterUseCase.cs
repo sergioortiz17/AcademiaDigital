@@ -1,3 +1,4 @@
+using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 
@@ -5,13 +6,13 @@ namespace AcademiaDigital.Application.UseCases.Authentication;
 
 public class RegisterUseCase(IUserRepository userRepository)
 {
-    public async Task<RegisterResult> ExecuteAsync(string email, string username, string password, CancellationToken ct = default)
+    public async Task<RegisterResult> ExecuteAsync(string email, string username, string password, string? dni = null, CancellationToken ct = default)
     {
         var existing = await userRepository.FindByEmailAsync(email, ct);
         if (existing != null)
             throw new EmailAlreadyExistsException();
 
-        var user = await userRepository.CreateAsync(email, username, password, ct);
+        var user = await userRepository.CreateAsync(email, username, password, dni, UserRole.Alumno, ct);
 
         return new RegisterResult(
             Success: true,

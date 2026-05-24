@@ -20,7 +20,7 @@ public class AuthController(
         {
             success = result.Success,
             token = result.Token,
-            user = new { _id = result.User.Id, result.User.Username, result.User.Email }
+            user = new { _id = result.User.Id, result.User.Username, result.User.Email, role = (int)result.User.Role }
         });
     }
 
@@ -28,7 +28,7 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var result = await registerUseCase.ExecuteAsync(request.Email, request.Username, request.Password, ct);
+        var result = await registerUseCase.ExecuteAsync(request.Email, request.Username, request.Password, request.Dni, ct);
         return StatusCode(StatusCodes.Status201Created, new
         {
             success = result.Success,
@@ -66,4 +66,5 @@ public record LoginRequest(
 public record RegisterRequest(
     [Required][EmailAddress] string Email,
     [Required] string Username,
-    [Required][MinLength(4)] string Password);
+    [Required][MinLength(4)] string Password,
+    string? Dni = null);
