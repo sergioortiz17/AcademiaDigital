@@ -20,6 +20,9 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
     public async Task<User?> FindByEmailAsync(string email, CancellationToken ct = default)
         => await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email, ct);
 
+    public async Task<User?> FindByDniAsync(string dni, CancellationToken ct = default)
+        => await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Dni == dni, ct);
+
     public async Task<User?> FindByEmailForLoginAsync(string email, CancellationToken ct = default)
         => await db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
 
@@ -32,12 +35,13 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
         return passwordHasher.Verify(password, user.Password) ? user : null;
     }
 
-    public async Task<User> CreateAsync(string email, string username, string password, UserRole role = UserRole.Alumno, CancellationToken ct = default)
+    public async Task<User> CreateAsync(string email, string username, string password, string dni, UserRole role = UserRole.Alumno, CancellationToken ct = default)
     {
         var user = new User
         {
             Email = email,
             Username = username,
+            Dni = dni,
             Password = passwordHasher.Hash(password),
             IsActive = true,
             FailedLoginAttempts = 0,

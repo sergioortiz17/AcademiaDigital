@@ -14,6 +14,7 @@ public class CreateInternalUserUseCase(
         string email,
         string username,
         string password,
+        string dni,
         string role,
         CancellationToken ct = default)
     {
@@ -24,7 +25,11 @@ public class CreateInternalUserUseCase(
         if (existing is not null)
             throw new EmailAlreadyExistsException();
 
-        var user = await userRepository.CreateAsync(email, username, password, parsedRole, ct);
+        var existingDni = await userRepository.FindByDniAsync(dni, ct);
+        if (existingDni is not null)
+            throw new DniAlreadyExistsException();
+
+        var user = await userRepository.CreateAsync(email, username, password, dni, parsedRole, ct);
 
         await auditLogRepository.AddAsync(new AdminAuditLog
         {
@@ -38,6 +43,7 @@ public class CreateInternalUserUseCase(
         return new UserAdminDto(
             user.Id,
             user.Username,
+            user.Dni,
             user.Email,
             user.Role.ToString(),
             user.IsActive,

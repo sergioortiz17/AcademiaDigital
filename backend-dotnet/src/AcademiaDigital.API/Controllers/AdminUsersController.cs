@@ -33,6 +33,7 @@ public class AdminUsersController(
             request.Email,
             request.Username,
             request.Password,
+            request.Dni,
             request.Role,
             ct);
 
@@ -64,6 +65,7 @@ public record CreateInternalUserRequest(
     [Required][EmailAddress] string Email,
     [Required] string Username,
     [Required][MinLength(4)] string Password,
+    [Required][RegularExpression(@"^\d{7,8}$")] string Dni,
     [Required] string Role);
 
 public record ChangeUserRoleRequest([Required] string Role);

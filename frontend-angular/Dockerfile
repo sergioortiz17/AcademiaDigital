@@ -1,8 +1,8 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 ARG ANGULAR_API_URL
 ENV ANGULAR_API_URL=$ANGULAR_API_URL

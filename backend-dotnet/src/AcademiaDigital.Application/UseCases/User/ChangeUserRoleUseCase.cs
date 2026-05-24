@@ -40,6 +40,7 @@ public class ChangeUserRoleUseCase(
         return new UserAdminDto(
             updated.Id,
             updated.Username,
+            updated.Dni,
             updated.Email,
             updated.Role.ToString(),
             updated.IsActive,

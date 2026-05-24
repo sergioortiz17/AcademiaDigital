@@ -26,6 +26,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             InactiveUserException e => (StatusCodes.Status403Forbidden, e.Message),
             AccountLockedException e => (StatusCodes.Status403Forbidden, e.Message),
             EmailAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),
+            DniAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),
             SessionNotFoundException e => (StatusCodes.Status404NotFound, e.Message),
             UnauthorizedUserUpdateException e => (StatusCodes.Status403Forbidden, e.Message),
             UserNotFoundException e => (StatusCodes.Status404NotFound, e.Message),

@@ -685,6 +685,12 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("date_joined");
 
+                    b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("dni");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -735,6 +741,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Dni")
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);

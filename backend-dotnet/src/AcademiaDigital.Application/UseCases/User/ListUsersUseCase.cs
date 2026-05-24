@@ -12,6 +12,7 @@ public class ListUsersUseCase(IUserRepository userRepository)
             .Select(u => new UserAdminDto(
                 u.Id,
                 u.Username,
+                u.Dni,
                 u.Email,
                 u.Role.ToString(),
                 u.IsActive,
@@ -23,6 +24,7 @@ public class ListUsersUseCase(IUserRepository userRepository)
 public record UserAdminDto(
     long Id,
     string Username,
+    string Dni,
     string Email,
     string Role,
     bool IsActive,

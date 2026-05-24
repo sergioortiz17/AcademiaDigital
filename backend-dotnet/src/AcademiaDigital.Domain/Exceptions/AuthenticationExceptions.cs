@@ -17,6 +17,9 @@ public class SessionNotFoundException(string message = "Session not found")
 public class EmailAlreadyExistsException(string message = "Email already taken")
     : AuthenticationException(message);
 
+public class DniAlreadyExistsException(string message = "DNI already taken")
+    : AuthenticationException(message);
+
 public class UnauthorizedUserUpdateException(string message = "Error updating user")
     : AuthenticationException(message);
 
