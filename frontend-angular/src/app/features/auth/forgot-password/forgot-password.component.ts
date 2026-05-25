@@ -21,6 +21,7 @@ export class ForgotPasswordComponent {
   // Step 2 — OTP code
   otpDigits: string[] = ['', '', '', '', '', ''];
   otpError = '';
+  otpLoading = false;
 
   // Step 3 — new password
   passwordForm: FormGroup;
@@ -29,6 +30,7 @@ export class ForgotPasswordComponent {
   hideNewPassword = true;
   hideConfirmPassword = true;
 
+  private userEmail = '';
   private resetToken = '';
 
   constructor(
@@ -79,20 +81,15 @@ export class ForgotPasswordComponent {
     const { email, dni } = this.step1Form.value;
 
     this.authService.forgotPassword(email, dni).subscribe({
-      next: (res) => {
+      next: () => {
         this.step1Loading = false;
-        if (!res.resetToken) {
-          this.step1Error = 'No encontramos una cuenta con ese correo y DNI. Verificá los datos.';
-          this.cdr.detectChanges();
-          return;
-        }
-        this.resetToken = res.resetToken;
+        this.userEmail = email;
         this.currentStep = 2;
         this.cdr.detectChanges();
       },
       error: () => {
         this.step1Loading = false;
-        this.step1Error = 'Error al procesar la solicitud. Intentá de nuevo.';
+        this.step1Error = 'No encontramos una cuenta con ese correo y DNI. Verificá los datos.';
         this.cdr.detectChanges();
       }
     });
@@ -131,14 +128,22 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    if (code !== '000000') {
-      this.otpError = 'Código incorrecto. Verificá e intentá de nuevo.';
-      return;
-    }
-
+    this.otpLoading = true;
     this.otpError = '';
-    this.currentStep = 3;
-    this.cdr.detectChanges();
+
+    this.authService.verifyResetCode(this.userEmail, code).subscribe({
+      next: (res) => {
+        this.otpLoading = false;
+        this.resetToken = res.resetToken;
+        this.currentStep = 3;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.otpLoading = false;
+        this.otpError = err?.error?.msg || 'Código incorrecto. Verificá e intentá de nuevo.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   // ── Step 3 ───────────────────────────────────────────────────────────────────
