@@ -1,1 +1,363 @@
 // All styles in global styles.scss
+
+* {
+  box-sizing: border-box;
+}
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #005495 0%, #00579c 10%, #102c54 100%);
+  padding: 2rem;
+  gap: 15rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.back-button {
+  position: absolute;
+  top: 3rem;
+  left: 3rem;
+  color: white !important;
+  background: transparent;
+  border: none;
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    line-height: 3rem;
+  }
+}
+
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content:space-between;
+  height: 300px;
+  margin-left: 100px; 
+}
+
+.form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  width: 100%;
+  /*min-width: 31.9rem; 360px*/
+  max-width: 640px;
+  border-radius: 45px !important;
+  padding: 2rem;  
+  box-shadow: none;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  
+  mat-card-header {
+    flex-direction: column;
+    align-items: right;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .auth-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+    /*width: 100%; */
+  }
+
+  .logo-circle {
+  width: 133px;
+  height: 133px;
+  border-radius: 50%;
+  background: #00579c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  }
+
+  .logo-circle mat-icon {
+  font-size: 100px;
+  width: 100px;
+  height: 100px;
+  color: white;
+  }
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /*1rem*/
+}
+
+  mat-form-field { width: 100%; }
+  .auth-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .auth-footer { text-align: center; margin-top: 16px; color: rgba(0,0,0,.6); font-size: 14px; }
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.2rem;
+}
+
+.register-button {
+  width: 100%;
+  height: 56px;
+  border-radius: 0 !important;
+  background: #00579c !important;
+  color: white !important;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.register-title {
+  text-align: center;
+  color: #00579c;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #00579c;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+
+.register-button {
+  margin-top: 0.5rem;
+}
+
+.forgot-password {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #333;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+}
+
+.back-login{
+  width: 100%;
+  height: 56px;
+  border-radius: 0 !important;
+  background: white !important;
+  color: #00579c !important;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+/* Para letras y * rojos
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.95rem;
+
+  color: #00579c;
+
+  margin-bottom: 0.4rem;
+
+  font-weight: 500;
+}
+
+.form-group label span {
+  color: #d32f2f;
+
+  margin-left: 0.2rem;
+} */
+
+/* Fondo gris de inputs */
+::ng-deep .mat-mdc-text-field-wrapper {
+  background: #ececec !important;
+
+  border-radius: 0 !important;
+}
+
+::ng-deep .mdc-line-ripple {
+  display: none;
+}
+
+/*::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+} */
+
+::ng-deep .mat-mdc-form-field-required-marker {
+  display: none;
+}
+
+/* Password rules */
+.password-rules {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+ p {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #dc2626;/*#555;*/
+  transition: 0.2s ease;
+  font-weight: 500;
+  }
+ p.valid {
+    color: #16a34a;
+  }
+}
+
+.register-footer {
+  margin-top: 1rem;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 1rem;
+}
+
+.required {
+  color: #d32f2f;
+  font-weight: 300;
+  margin-left: 4px;
+}
+
+.required-text {
+  color: #d32f2f;
+  font-size: 1rem;
+  margin: 0;
+  align-items: center;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #16a34a;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+/*Boton de confirmar registro
+.confirm-btn {
+  width: 100%;
+
+  height: 46px;
+
+  border-radius: 0 !important;
+
+  background: #00579c !important;
+
+  color: white !important;
+
+  font-size: 1rem;
+  font-weight: 500;
+}*/
+
+.double-row {
+  display: flex;
+  /*justify-content: left;
+  margin-bottom: 1rem; 
+  align-items: center;*/
+  gap: 1rem;
+  width: 100%;
+}
+
+.double-row .input-group {
+  flex: 1;
+}
+
+.code-label {
+  font-size: 1.1rem;
+  color: black !important;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
+.continue-button {
+  width: 100%;
+  height: 56px;
+  border-radius: 0 !important;
+  background: #00579c !important;
+  color: white !important;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.name-title {
+  text-align: center;
+  color: #00579c;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+  width: 500px;
+  height: 60px;
+}
+
+/*Estilos del ultimo formulario de registro exitoso*/
+.success-container {
+  text-align: center;
+  height: 100%;
+}
+
+.success-icon {
+  font-size: 113px;
+  width: 113px;
+  height: 113px;
+  color: #31b24c;
+  gap: 1rem;
+}
+
+.success-title {
+  color: #00579c;
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.success-text {
+  margin: 1rem 0 2rem;
+  text-align: center;
+  color: #00579c;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0 0 3rem 0;
+  width: 400px;
+}
+
+.summary-row {
+  display: flex;
+  margin-bottom: 1rem;
+  align-items: center;
+  gap: 5rem;
+}
+
+.summary-row span {
+  color: #00579c;
+  min-width: 120px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.summary-box {
+  background: #ececec;
+  padding: 0.8rem 1rem;
+  width: 100%;
+  max-width: 220px;
+  text-align: center;
+}

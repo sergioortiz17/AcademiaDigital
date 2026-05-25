@@ -41,15 +41,18 @@
           <mat-label>{{ 'auth.password' | translate }}</mat-label>
           <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" autocomplete="current-password" />
           <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-            <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
           <mat-error *ngIf="loginForm.get('password')?.errors?.['required']">{{ 'auth.passwordRequired' | translate }}</mat-error>
         </mat-form-field>
 
-        <mat-error *ngIf="errorMessage" style="margin-bottom: 12px; display: block;">{{ errorMessage }}</mat-error>
+        <!-- Mensaje de error de datos validos-->
+        <mat-error *ngIf="errorMessage" class="login-error">
+          El correo electrónico y/o contraseña ingresados no son correctos. 
+          Verificá tus datos e intenta nuevamente.</mat-error>
 
         <div class="remember-section">
-            <mat-checkbox>
+            <mat-checkbox formControlName="rememberMe">
               Recordarme
             </mat-checkbox>
         </div>

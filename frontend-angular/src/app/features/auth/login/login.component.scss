@@ -13,11 +13,20 @@
 
 .back-button {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  top: 3rem;
+  left: 3rem;
+  /*width: 70px;
+  height: 70px;*/
   color: white !important;
   background: transparent;
   border: none;
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    line-height: 3rem;
+  }
 }
 
 .welcome-section {
@@ -115,4 +124,14 @@ form {
   text-decoration: underline;
 }
 
+}
+
+.login-error {
+  color: #dc2626;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.8rem;
+  text-align: center;
+  width: 400px;
+  height: 30px;
 }

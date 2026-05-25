@@ -1,58 +1,250 @@
 <div class="auth-container">
-  <mat-card class="auth-card">
-    <mat-card-header>
-      <div class="auth-logo">
-        <img src="assets/images/logo.svg" alt="ITSC" style="width: 72px; height: 72px;" />
-      </div>
-      <mat-card-title>{{ 'auth.appName' | translate }}</mat-card-title>
-      <mat-card-subtitle>Crear cuenta nueva</mat-card-subtitle>
-    </mat-card-header>
 
-    <mat-card-content>
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+  <!-- BOTÓN VOLVER -->
+  <button *ngIf="currentStep !== 4" class="back-button" [routerLink]="currentStep === 1 ? ['/auth/signin'] : null" (click)="currentStep > 1 ? currentStep = currentStep - 1 : null">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
 
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'auth.username' | translate }}</mat-label>
-          <input matInput type="text" formControlName="username" autocomplete="username" />
-          <mat-icon matSuffix>person</mat-icon>
-          <mat-error *ngIf="registerForm.get('username')?.errors?.['required']">{{ 'auth.usernameRequired' | translate }}</mat-error>
-        </mat-form-field>
+  <!-- SECCIÓN IZQUIERDA -->
+  <section class="welcome-section">
+    <img src="assets/images/logoITSC.png" alt="Logo ITSC" style="width: 100%; max-width: 132px; height: 158px;"/>
+    <img src="assets/images/texto1.png" alt="ITSC" style="width: 100%; max-width: 250px; height: auto;"/>
+  </section>
 
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'auth.email' | translate }}</mat-label>
-          <input matInput type="email" formControlName="email" autocomplete="email" />
-          <mat-icon matSuffix>email</mat-icon>
-          <mat-error *ngIf="registerForm.get('email')?.errors?.['required']">{{ 'auth.emailRequired' | translate }}</mat-error>
-          <mat-error *ngIf="registerForm.get('email')?.errors?.['email']">{{ 'auth.validEmail' | translate }}</mat-error>
-        </mat-form-field>
+  <!-- SECCIÓN DERECHA -->
+  <section class="form-section">
+    <mat-card class="auth-card">
+      <mat-card-content>
 
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'auth.password' | translate }}</mat-label>
-          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" autocomplete="new-password" />
-          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="registerForm.get('password')?.errors?.['required']">{{ 'auth.passwordRequired' | translate }}</mat-error>
-          <mat-error *ngIf="registerForm.get('password')?.errors?.['minlength']">Mínimo 4 caracteres</mat-error>
-        </mat-form-field>
+        <!-- PASO 1 - REGISTRO -->
+        <!-- ================================================= -->
+        <div *ngIf="currentStep === 1">
+          <h2 class="register-title">Regístrate como usuario</h2>
+          <form [formGroup]="registerForm">
+            <div class="input-group">
+              <h2 class="name-title">Ingresá tu correo electrónico y contraseña</h2>
+              <!-- DNI -->
+             <!-- <mat-form-field appearance="fill">
+                <mat-label>
+                  DNI<span class="required">(*)</span>
+                </mat-label>
+                <input
+                  matInput
+                  type="text"
+                  formControlName="dni"
+                  maxlength="8"
+                  (blur)="checkDni()"
+                />
+                <mat-error *ngIf="dni?.hasError('required')">
+                  El DNI es obligatorio
+                </mat-error>
+                <mat-error *ngIf="dni?.hasError('pattern')">
+                  Ingresa un DNI válido
+                </mat-error>
+              </mat-form-field> -->
 
-        <div *ngIf="errorMessage" style="color: #f44336; margin-bottom: 12px; font-size: 14px;">{{ errorMessage }}</div>
-        <div *ngIf="successMessage" style="color: #4caf50; margin-bottom: 12px; font-size: 14px;">{{ successMessage }}</div>
+              <mat-form-field appearance="fill">
+                <mat-label>Correo electrónico<span class="required">(*)</span></mat-label>
+                <input matInput type="email" formControlName="email" autocomplete="email"/>
+                <mat-error *ngIf="email?.hasError('required')">El correo es obligatorio</mat-error>
+                <mat-error *ngIf="email?.hasError('email')">Correo inválido</mat-error>
+              </mat-form-field>
+            </div>
+            <!-- PASSWORD -->
+            <div class="input-group">
+              <mat-form-field appearance="fill">
+                <mat-label>Contraseña<span class="required">(*)</span></mat-label>
+                <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"/>
+                <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+                  <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                <mat-error *ngIf="password?.invalid && password?.touched">La contraseña no cumple los requisitos</mat-error>
+              </mat-form-field>
+            </div>
+            <!-- CONFIRM PASSWORD -->
+            <div class="input-group">
+              <mat-form-field appearance="fill">
+                <mat-label>Confirmar contraseña<span class="required">(*)</span></mat-label>
+                <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword"/>
+                <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+                  <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                <mat-error *ngIf="registerForm.hasError('passwordMismatch')">Las contraseñas no coinciden</mat-error>
+              </mat-form-field>
+            </div>
 
-        <div class="auth-actions">
-          <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
-            <mat-spinner *ngIf="isLoading" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
-            {{ isLoading ? ('common.loading' | translate) : ('auth.signUp' | translate) }}
+            <!-- REGLAS -->
+            <div class="password-rules">
+              <p [class.valid]="hasMinLength()">• Mínimo 8 caracteres</p>
+              <p [class.valid]="hasUpperCase()">• Una mayúscula</p>
+              <p [class.valid]="hasLowerCase()">• Una minúscula</p>
+              <p [class.valid]="hasSpecialCharacter()">• Algún caracter especial</p>
+            </div>
+            <!-- MENSAJES -->
+            <div *ngIf="checkingDni" class="info-message">Verificando DNI...</div>
+            <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+            <!-- BOTONES -->
+            <div class="auth-actions">
+
+              <!-- IMPORTANTE:ESTE BOTÓN SOLO AVANZA SI EL DNI NO EXISTE -->
+              <button mat-raised-button class="register-button" type="button" [disabled]="isLoading" (click)="nextStepRegister()">
+                {{ isLoading ? ('common.loading' | translate) : ('common.continue' | translate) }}
+              </button>
+              <button mat-raised-button class="back-login" type="button" [routerLink]="['/auth/signin']">
+                {{ isLoading ? ('common.loading' | translate) : ('auth.backAction' | translate) }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- =============================================
+         PASO 2 - DATOS PERSONALES
+         ================================================= -->
+        <div *ngIf="currentStep === 2">
+          <h2 class="register-title">Completá tus datos</h2>
+          <form [formGroup]="personalForm">
+            <div class="input-group">
+              <label>Nombre completo:</label>
+              <mat-form-field appearance="fill">
+                <input matInput formControlName="fullName">
+              </mat-form-field>
+            </div>
+            <div class="double-row">
+              <div class="input-group">
+                <label>DNI:</label>
+                <mat-form-field appearance="fill">
+                  <input matInput formControlName="dni">
+                </mat-form-field>
+              </div>
+              <div class="input-group">
+                <label>Sexo:</label>
+                <mat-form-field appearance="fill">
+                  <mat-select formControlName="gender">
+                    <mat-option value="M">Masculino</mat-option>
+                    <mat-option value="F">Femenino</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>CUIL:</label>
+              <mat-form-field appearance="fill">
+                <input matInput formControlName="cuil">
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <label>Fecha de nacimiento:</label>
+              <mat-form-field appearance="fill">
+                <input matInput [matDatepicker]="picker" formControlName="birthDate">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <label>Teléfono:</label>
+              <div class="double-row">
+                <label class="code-label">+54</label>
+                <mat-form-field appearance="fill">
+                  <input matInput formControlName="phoneCode">
+                </mat-form-field>
+                <mat-form-field appearance="fill">
+                  <input matInput formControlName="phone">
+                </mat-form-field>
+              </div>
+            </div>
+            <div>
+              <button mat-raised-button class="continue-button" type="button" (click)="nextStepOne()"> 
+                {{ isLoading ? ('common.loading' | translate) : ('common.confirm' | translate) }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- =================================================
+         PASO 3 - DATOS ACADÉMICOS
+        ================================================= -->
+
+        <div *ngIf="currentStep === 3">
+          <h2 class="complete-title">Completá tus datos académicos</h2>
+          <form [formGroup]="academicForm">
+            <div class="input-group">
+              <label>Carrera:</label>
+              <mat-form-field appearance="fill">
+                <mat-select formControlName="career">
+                  <mat-option value="software">Desarrollo de Software</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <label>Turno:</label>
+              <mat-form-field appearance="fill">
+                <mat-select formControlName="shift">
+                  <mat-option value="morning">Mañana</mat-option>
+                  <mat-option value="night">Noche</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <label>Sede:</label>
+              <mat-form-field appearance="fill">
+                <mat-select formControlName="campus">
+                  <mat-option value="central">Central</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <label>Cohorte:</label>
+              <mat-form-field appearance="fill">
+                <mat-select formControlName="cohort">
+                  <mat-option value="2026">2026</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div *ngIf="errorMessage" class="error-message">
+              {{ errorMessage }}
+            </div>
+            <!-- AQUÍ recién se hace el POST de usuario-->
+            <div class="auth-actions">
+              <button mat-raised-button class="register-button" type="button" [disabled]="isLoading" (click)="submitFullRegister()">
+                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                {{ isLoading ? ('common.loading' | translate) : ('common.confirm' | translate) }}
+              </button>
+              <!--REVISAR BOTÓN para saltar este paso y completar despues-->
+              <button mat-raised-button class="back-login" type="button" (click)="skipStep()">
+                {{ isLoading ? ('common.loading' | translate) : ('common.skipStep' | translate) }}
+              </button>
+            </div>
+          </form>
+        </div>
+        <!-- ================================================= 
+                   PASO 4 - ÉXITO 
+         ================================================= -->
+        <div *ngIf="currentStep === 4" class="success-container">
+          <mat-icon class="success-icon">check_circle</mat-icon>
+          <h2 class="success-title">¡Preinscripción enviada!</h2>
+          <p class="success-text">Te avisaremos cuando sea confirmada por email.</p>
+
+          <div class="summary-row">
+            <span>Estado:</span>
+            <div class="summary-box">Pendiente</div>
+          </div>
+          <div class="summary-row">
+            <span>Carrera:</span>
+            <div class="summary-box">
+              {{ submittedData?.career }}
+            </div>
+          </div>
+          <div class="summary-row">
+            <span>Turno:</span>
+            <div class="summary-box">
+              {{ submittedData?.shift }}
+            </div>
+          </div>
+          <button mat-raised-button class="register-button" type="button" [routerLink]="['/auth/signin']">
+                {{ isLoading ? ('common.loading' | translate) : ('common.continue' | translate) }}
           </button>
         </div>
-      </form>
-    </mat-card-content>
-
-    <mat-card-actions>
-      <p class="auth-footer">
-        {{ 'auth.alreadyHaveAccount' | translate }}
-        <a [routerLink]="['/auth/signin']" mat-button color="primary">{{ 'auth.signIn' | translate }}</a>
-      </p>
-    </mat-card-actions>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
+  </section>
 </div>

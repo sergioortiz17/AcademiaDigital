@@ -44,7 +44,8 @@
     "passwordRequired": "Password is required",
     "usernameRequired": "Username is required",
     "validEmail": "Must be a valid email",
-    "appName": "ITSC"
+    "appName": "ITSC",
+    "backAction": "Back"
   },
   "common": {
     "loading": "Loading...",
@@ -56,7 +57,10 @@
     "edit": "Edit",
     "search": "Search",
     "filter": "Filter",
-    "close": "Close"
+    "close": "Close",
+    "continue": "Continue",
+    "skipStep": "Skip this step",
+    "confirm": "Confirm"
   },
   "pages": {
     "courses": {
