@@ -16,22 +16,13 @@
     <mat-card class="auth-card">
       <mat-card-content>
 
-        <mat-form-field appearance="outline">
-          <mat-label>DNI (opcional)</mat-label>
-          <input matInput type="text" formControlName="dni" />
-          <mat-icon matSuffix>badge</mat-icon>
-          <mat-error *ngIf="registerForm.get('dni')?.errors?.['maxlength']">Máximo 20 caracteres</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'auth.password' | translate }}</mat-label>
-          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" autocomplete="new-password" />
-          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="registerForm.get('password')?.errors?.['required']">{{ 'auth.passwordRequired' | translate }}</mat-error>
-          <mat-error *ngIf="registerForm.get('password')?.errors?.['minlength']">Mínimo 4 caracteres</mat-error>
-        </mat-form-field>
+        <!-- PASO 1 - REGISTRO -->
+        <!-- ================================================= -->
+        <div *ngIf="currentStep === 1">
+          <h2 class="register-title">Regístrate como usuario</h2>
+          <form [formGroup]="registerForm">
+            <div class="input-group">
+              <h2 class="name-title">Ingresá tu correo electrónico y contraseña</h2>
 
               <mat-form-field appearance="fill">
                 <mat-label>Correo electrónico<span class="required">(*)</span></mat-label>
