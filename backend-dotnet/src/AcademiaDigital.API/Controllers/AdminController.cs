@@ -10,6 +10,7 @@ namespace AcademiaDigital.API.Controllers;
 public class AdminController(
     GetUsersUseCase getUsersUseCase,
     UpdateUserRoleUseCase updateUserRoleUseCase,
+    UpdateUserActiveStatusUseCase updateUserActiveStatusUseCase,
     DeleteUserUseCase deleteUserUseCase) : ApiControllerBase
 {
     private IActionResult RequireAdmin()
@@ -42,6 +43,15 @@ public class AdminController(
         return Ok(new { success = true, user = updated });
     }
 
+    // PATCH /api/v1/admin/users/{id}/active
+    [HttpPatch("users/{id:long}/active")]
+    public async Task<IActionResult> UpdateActiveStatus(long id, [FromBody] UpdateActiveStatusRequest request, CancellationToken ct)
+    {
+        var guard = RequireAdmin(); if (guard != null) return guard;
+        var updated = await updateUserActiveStatusUseCase.ExecuteAsync(CurrentUserId!.Value, id, request.IsActive, ct);
+        return Ok(new { success = true, user = updated });
+    }
+
     // DELETE /api/v1/admin/users/{id}
     [HttpDelete("users/{id:long}")]
     public async Task<IActionResult> DeleteUser(long id, CancellationToken ct)
@@ -53,3 +63,4 @@ public class AdminController(
 }
 
 public record UpdateRoleRequest([Required] UserRole Role);
+public record UpdateActiveStatusRequest([Required] bool IsActive);

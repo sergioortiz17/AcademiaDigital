@@ -6,13 +6,20 @@ namespace AcademiaDigital.Application.UseCases.Authentication;
 
 public class RegisterUseCase(IUserRepository userRepository)
 {
-    public async Task<RegisterResult> ExecuteAsync(string email, string username, string password, string? dni = null, CancellationToken ct = default)
+    public async Task<RegisterResult> ExecuteAsync(string email, string name, string lastName, string password, string dni, CancellationToken ct = default)
     {
-        var existing = await userRepository.FindByEmailAsync(email, ct);
-        if (existing != null)
+        var normalizedEmail = email.Trim();
+        var normalizedDni = dni.Trim();
+
+        var existingEmail = await userRepository.FindByEmailAsync(normalizedEmail, ct);
+        if (existingEmail != null)
             throw new EmailAlreadyExistsException();
 
-        var user = await userRepository.CreateAsync(email, username, password, dni, UserRole.Alumno, ct);
+        var existingDni = await userRepository.FindByDniAsync(normalizedDni, ct);
+        if (existingDni != null)
+            throw new DniAlreadyExistsException();
+
+        var user = await userRepository.CreateAsync(normalizedEmail, name, lastName, password, normalizedDni, UserRole.Alumno, ct);
 
         return new RegisterResult(
             Success: true,

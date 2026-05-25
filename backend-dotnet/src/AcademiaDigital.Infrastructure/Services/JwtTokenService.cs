@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -67,6 +68,24 @@ public class JwtTokenService(IConfiguration configuration) : ITokenService
             var idClaim = jwt.Claims.FirstOrDefault(c => c.Type == "id");
 
             return idClaim != null && long.TryParse(idClaim.Value, out var id) ? id : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public UserRole? GetUserRoleFromToken(string token)
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+            var roleClaim = jwt.Claims.FirstOrDefault(c => c.Type == "role");
+
+            return roleClaim != null && int.TryParse(roleClaim.Value, out var role)
+                ? (UserRole)role
+                : null;
         }
         catch
         {

@@ -13,4 +13,6 @@ public class User
     public bool IsActive { get; set; } = true;
     public DateTime DateJoined { get; set; } = DateTime.UtcNow;
     public UserRole Role { get; set; } = UserRole.Alumno;
+    public int FailedLoginAttempts { get; set; }
+    public DateTime? LockedUntil { get; set; }
 }

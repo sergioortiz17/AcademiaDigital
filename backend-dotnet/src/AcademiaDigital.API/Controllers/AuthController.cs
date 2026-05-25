@@ -2,6 +2,7 @@ using AcademiaDigital.API.Models;
 using AcademiaDigital.Application.UseCases.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace AcademiaDigital.API.Controllers;
 
@@ -28,7 +29,7 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var result = await registerUseCase.ExecuteAsync(request.Email, request.Username, request.Password, request.Dni, ct);
+        var result = await registerUseCase.ExecuteAsync(request.Email, request.Name, request.LastName, request.Password, request.Dni, ct);
         return StatusCode(StatusCodes.Status201Created, new
         {
             success = result.Success,
@@ -64,7 +65,19 @@ public record LoginRequest(
     [Required] string Password);
 
 public record RegisterRequest(
+    [property: JsonPropertyName("name")]
+    [Required] string Name,
+
+    [property: JsonPropertyName("lastname")]
+    [Required] string LastName,
+
+    [property: JsonPropertyName("email")]
     [Required][EmailAddress] string Email,
-    [Required] string Username,
+
+    [property: JsonPropertyName("password")]
     [Required][MinLength(4)] string Password,
-    string? Dni = null);
+
+    [property: JsonPropertyName("DNI")]
+    [Required]
+    [RegularExpression(@"^\d{7,8}$", ErrorMessage = "DNI must contain only numbers and have 7 or 8 digits.")]
+    string Dni);
