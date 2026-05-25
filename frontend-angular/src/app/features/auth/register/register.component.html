@@ -1,7 +1,7 @@
 <div class="auth-container">
 
   <!-- BOTÓN VOLVER -->
-  <button *ngIf="currentStep !== 4" class="back-button" [routerLink]="currentStep === 1 ? ['/auth/signin'] : null" (click)="currentStep > 1 ? currentStep = currentStep - 1 : null">
+  <button *ngIf="currentStep !== 4" class="back-button" [routerLink]="currentStep === 1 ? ['/auth/signin'] : null" (click)="currentStep > 1 ? previousStep() : null">
     <mat-icon>arrow_back</mat-icon>
   </button>
 
@@ -20,10 +20,36 @@
         <!-- ================================================= -->
         <div *ngIf="currentStep === 1">
           <h2 class="register-title">Regístrate como usuario</h2>
+
+          <!-- NOMBRE, APELLIDO Y DNI -->
+          <form [formGroup]="personalForm">
+            <div class="input-group">
+              <mat-form-field appearance="fill">
+                <mat-label>Nombre<span class="required">(*)</span></mat-label>
+                <input matInput formControlName="firstName" autocomplete="given-name"/>
+                <mat-error *ngIf="personalForm.get('firstName')?.hasError('required')">El nombre es obligatorio</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <mat-form-field appearance="fill">
+                <mat-label>Apellido<span class="required">(*)</span></mat-label>
+                <input matInput formControlName="lastName" autocomplete="family-name"/>
+                <mat-error *ngIf="personalForm.get('lastName')?.hasError('required')">El apellido es obligatorio</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="input-group">
+              <mat-form-field appearance="fill">
+                <mat-label>DNI<span class="required">(*)</span></mat-label>
+                <input matInput formControlName="dni" inputmode="numeric" maxlength="8"/>
+                <mat-error *ngIf="personalForm.get('dni')?.hasError('required')">El DNI es obligatorio</mat-error>
+                <mat-error *ngIf="personalForm.get('dni')?.hasError('pattern')">El DNI debe tener 7 u 8 dígitos</mat-error>
+              </mat-form-field>
+            </div>
+          </form>
+
+          <!-- EMAIL Y CONTRASEÑA -->
           <form [formGroup]="registerForm">
             <div class="input-group">
-              <h2 class="name-title">Ingresá tu correo electrónico y contraseña</h2>
-
               <mat-form-field appearance="fill">
                 <mat-label>Correo electrónico<span class="required">(*)</span></mat-label>
                 <input matInput type="email" formControlName="email" autocomplete="email"/>
@@ -31,7 +57,6 @@
                 <mat-error *ngIf="email?.hasError('email')">Correo inválido</mat-error>
               </mat-form-field>
             </div>
-            <!-- PASSWORD -->
             <div class="input-group">
               <mat-form-field appearance="fill">
                 <mat-label>Contraseña<span class="required">(*)</span></mat-label>
@@ -42,7 +67,6 @@
                 <mat-error *ngIf="password?.invalid && password?.touched">La contraseña no cumple los requisitos</mat-error>
               </mat-form-field>
             </div>
-            <!-- CONFIRM PASSWORD -->
             <div class="input-group">
               <mat-form-field appearance="fill">
                 <mat-label>Confirmar contraseña<span class="required">(*)</span></mat-label>
@@ -53,92 +77,24 @@
                 <mat-error *ngIf="registerForm.hasError('passwordMismatch')">Las contraseñas no coinciden</mat-error>
               </mat-form-field>
             </div>
-
-            <!-- REGLAS -->
             <div class="password-rules">
               <p [class.valid]="hasMinLength()">• Mínimo 8 caracteres</p>
               <p [class.valid]="hasUpperCase()">• Una mayúscula</p>
               <p [class.valid]="hasLowerCase()">• Una minúscula</p>
               <p [class.valid]="hasSpecialCharacter()">• Algún caracter especial</p>
             </div>
-            <!-- MENSAJES -->
-            <div *ngIf="checkingDni" class="info-message">Verificando DNI...</div>
-            <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
-            <!-- BOTONES -->
-            <div class="auth-actions">
-
-              <!-- IMPORTANTE:ESTE BOTÓN SOLO AVANZA SI EL DNI NO EXISTE -->
-              <button mat-raised-button class="register-button" type="button" [disabled]="isLoading" (click)="nextStepRegister()">
-                {{ isLoading ? ('common.loading' | translate) : ('common.continue' | translate) }}
-              </button>
-              <button mat-raised-button class="back-login" type="button" [routerLink]="['/auth/signin']">
-                {{ isLoading ? ('common.loading' | translate) : ('auth.backAction' | translate) }}
-              </button>
-            </div>
           </form>
-        </div>
 
-        <!-- =============================================
-         PASO 2 - DATOS PERSONALES
-         ================================================= -->
-        <div *ngIf="currentStep === 2">
-          <h2 class="register-title">Completá tus datos</h2>
-          <form [formGroup]="personalForm">
-            <div class="input-group">
-              <label>Nombre completo:</label>
-              <mat-form-field appearance="fill">
-                <input matInput formControlName="fullName">
-              </mat-form-field>
-            </div>
-            <div class="double-row">
-              <div class="input-group">
-                <label>DNI:</label>
-                <mat-form-field appearance="fill">
-                  <input matInput formControlName="dni">
-                </mat-form-field>
-              </div>
-              <div class="input-group">
-                <label>Sexo:</label>
-                <mat-form-field appearance="fill">
-                  <mat-select formControlName="gender">
-                    <mat-option value="M">Masculino</mat-option>
-                    <mat-option value="F">Femenino</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>CUIL:</label>
-              <mat-form-field appearance="fill">
-                <input matInput formControlName="cuil">
-              </mat-form-field>
-            </div>
-            <div class="input-group">
-              <label>Fecha de nacimiento:</label>
-              <mat-form-field appearance="fill">
-                <input matInput [matDatepicker]="picker" formControlName="birthDate">
-                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-              </mat-form-field>
-            </div>
-            <div class="input-group">
-              <label>Teléfono:</label>
-              <div class="double-row">
-                <label class="code-label">+54</label>
-                <mat-form-field appearance="fill">
-                  <input matInput formControlName="phoneCode">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                  <input matInput formControlName="phone">
-                </mat-form-field>
-              </div>
-            </div>
-            <div>
-              <button mat-raised-button class="continue-button" type="button" (click)="nextStepOne()"> 
-                {{ isLoading ? ('common.loading' | translate) : ('common.confirm' | translate) }}
-              </button>
-            </div>
-          </form>
+          <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+          <div class="auth-actions">
+            <button mat-raised-button class="register-button" type="button" [disabled]="isLoading" (click)="nextStepRegister()">
+              <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+              {{ isLoading ? ('common.loading' | translate) : ('common.continue' | translate) }}
+            </button>
+            <button mat-raised-button class="back-login" type="button" [routerLink]="['/auth/signin']">
+              {{ 'auth.backAction' | translate }}
+            </button>
+          </div>
         </div>
 
         <!-- =================================================
@@ -197,32 +153,15 @@
             </div>
           </form>
         </div>
-        <!-- ================================================= 
-                   PASO 4 - ÉXITO 
+        <!-- =================================================
+                   PASO 4 - ÉXITO
          ================================================= -->
         <div *ngIf="currentStep === 4" class="success-container">
           <mat-icon class="success-icon">check_circle</mat-icon>
-          <h2 class="success-title">¡Preinscripción enviada!</h2>
-          <p class="success-text">Te avisaremos cuando sea confirmada por email.</p>
-
-          <div class="summary-row">
-            <span>Estado:</span>
-            <div class="summary-box">Pendiente</div>
-          </div>
-          <div class="summary-row">
-            <span>Carrera:</span>
-            <div class="summary-box">
-              {{ submittedData?.career }}
-            </div>
-          </div>
-          <div class="summary-row">
-            <span>Turno:</span>
-            <div class="summary-box">
-              {{ submittedData?.shift }}
-            </div>
-          </div>
+          <h2 class="success-title">¡Registro exitoso!</h2>
+          <p class="success-text">Tu cuenta fue creada correctamente. Ya podés iniciar sesión.</p>
           <button mat-raised-button class="register-button" type="button" [routerLink]="['/auth/signin']">
-                {{ isLoading ? ('common.loading' | translate) : ('common.continue' | translate) }}
+            Iniciar sesión
           </button>
         </div>
       </mat-card-content>

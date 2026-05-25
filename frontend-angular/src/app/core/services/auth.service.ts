@@ -9,10 +9,11 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials {
+  name: string;
+  lastname: string;
   email: string;
-  username: string;
   password: string;
-  dni?: string;
+  DNI: string;
 }
 
 export interface AuthResponse {

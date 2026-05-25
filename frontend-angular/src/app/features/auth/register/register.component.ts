@@ -102,19 +102,11 @@ export class RegisterComponent {
 
     this.personalForm = this.fb.group({
 
-      fullName: ['', Validators.required],
+      firstName: ['', Validators.required],
 
-      dni: ['', Validators.required],
+      lastName: ['', Validators.required],
 
-      gender: ['', Validators.required],
-
-      cuil: ['', Validators.required],
-
-      birthDate: ['', Validators.required],
-
-      phoneCode: [''],
-
-      phone: ['', Validators.required]
+      dni: ['', [Validators.required, Validators.pattern(/^\d{7,8}$/)]]
 
     });
 
@@ -276,224 +268,79 @@ export class RegisterComponent {
   // PASO 1 -> PASO 2
   // =====================================================
 
+  // =====================================================
+  // PASO 1 -> REGISTRO (llamada a la API)
+  // =====================================================
+
   nextStepRegister(): void {
 
-    // VALIDAR FORM
-
     if (this.registerForm.invalid) {
-
       this.registerForm.markAllAsTouched();
-
-      this.errorMessage =
-        'Completa correctamente todos los campos';
-
+      this.errorMessage = 'Completa correctamente todos los campos';
       return;
-
     }
-
-    // ESPERANDO VERIFICACIÓN DNI
-
-    //if (this.checkingDni) {
-
-    //  this.errorMessage =
-    //    'Esperando validación del DNI...';
-
-    //  return;
-
-    //}
-
-    // DNI YA EXISTE
-
-    //if (this.dniExists) {
-
-    //  this.errorMessage =
-    //    'El DNI ya está registrado';
-
-    //  return;
-
-    //}
-
-    // LIMPIAR MENSAJES
-
-    this.errorMessage = '';
-
-    // AUTOCOMPLETAR DNI EN FORM PERSONAL
-
-    //this.personalForm.patchValue({
-    //  dni: this.registerForm.value.dni
-    //});
-
-    // AVANZAR
-
-    this.currentStep = 2;
-
-  }
-
-  // =====================================================
-  // PASO 2 -> PASO 3
-  // =====================================================
-
-  nextStepOne(): void {
 
     if (this.personalForm.invalid) {
-
       this.personalForm.markAllAsTouched();
-
+      this.errorMessage = 'Completa correctamente todos los campos';
       return;
-
     }
-
-    this.currentStep = 3;
-
-  }
-
-  // =====================================================
-  // PASO 3 -> REGISTRO FINAL
-  // =====================================================
-
-  submitFullRegister(): void {
-
-    // VALIDAR FORM ACADÉMICO
-
-    if (this.academicForm.invalid) {
-
-      this.academicForm.markAllAsTouched();
-
-      return;
-
-    }
-
-    // LOADING
 
     this.isLoading = true;
-
     this.errorMessage = '';
 
-    // =====================================================
-    // COMBINAR TODOS LOS DATOS
-    // =====================================================
-
     const registerData = {
-
-      // DATOS LOGIN
-
-      //dni: this.registerForm.value.dni,
-
-      username: this.registerForm.value.username,
-
+      name: this.personalForm.value.firstName,
+      lastname: this.personalForm.value.lastName,
       email: this.registerForm.value.email,
-
       password: this.registerForm.value.password,
-
-      // DATOS PERSONALES
-
-      //fullName: this.personalForm.value.fullName,
-
-      //gender: this.personalForm.value.gender,
-
-      //cuil: this.personalForm.value.cuil,
-
-      //birthDate: this.personalForm.value.birthDate,
-
-      //phoneCode: this.personalForm.value.phoneCode,
-
-      //phone: this.personalForm.value.phone,
-
-      // DATOS ACADÉMICOS
-
-      //career: this.academicForm.value.career,
-
-      //shift: this.academicForm.value.shift,
-
-      //campus: this.academicForm.value.campus,
-
-      //cohort: this.academicForm.value.cohort
-
+      DNI: this.personalForm.value.dni
     };
 
-    // =====================================================
-    // POST REGISTER
-    // =====================================================
-
-    this.authService.register(registerData)
-      .subscribe({
-
+    this.authService.register(registerData).subscribe({
       next: (response) => {
-
-        console.log(response);
-        //this.isLoading = false;
-
-
-        if (response.success) {
-
-          this.successMessage =
-            'Usuario registrado correctamente';
-
-          // DATOS PARA PANTALLA FINAL
-
-          this.submittedData = {
-
-            career:
-              this.academicForm.value.career,
-
-            shift:
-              this.academicForm.value.shift
-
-          };
-
-          // IR A PANTALLA ÉXITO
-
-          this.currentStep = 4;
-          this.isLoading = false;
-          this.cdr.detectChanges();
-
-        } else {
-          this.isLoading = false;
-
-          this.errorMessage =
-            response.msg || 'Error en el registro';
-
-        }
-
-      },
-
-      error: (err) => {
-
         this.isLoading = false;
-
-        this.errorMessage =
-          err.message || 'Error en el registro';
-
+        if (response.success) {
+          this.currentStep = 3;
+          this.cdr.detectChanges();
+        } else {
+          this.errorMessage = response.msg || 'Error en el registro';
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err.error?.msg || err.message || 'Error en el registro';
       }
-
     });
 
   }
 
-  skipStep(): void {
+  // =====================================================
+  // PASO 3 -> PASO 4 (datos académicos opcionales)
+  // =====================================================
 
-  this.submittedData = {
-
-    career: 'No especificada',
-
-    shift: 'No especificado'
-
-  };
-
-  this.currentStep = 4;
+  nextStepOne(): void {
+    this.currentStep = 3;
   }
+
+  submitFullRegister(): void {
+    this.currentStep = 4;
+  }
+
+  skipStep(): void {
+    this.currentStep = 4;
+  }
+
   // =====================================================
   // VOLVER PASOS
   // =====================================================
 
   previousStep(): void {
-
-    if (this.currentStep > 1) {
-
+    if (this.currentStep === 3) {
+      this.currentStep = 1;
+    } else if (this.currentStep > 1) {
       this.currentStep--;
-
     }
-
   }
 
 }
