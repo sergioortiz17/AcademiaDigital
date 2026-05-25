@@ -687,6 +687,12 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(254)")
                         .HasColumnName("email");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("failed_login_attempts");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -702,6 +708,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("last_name");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("locked_until");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -725,6 +735,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("Dni")
+                        .IsUnique()
+                        .HasFilter("[dni] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
                 });

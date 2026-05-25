@@ -22,6 +22,7 @@ builder.Services.AddScoped<UpdateUserUseCase>();
 // Admin
 builder.Services.AddScoped<GetUsersUseCase>();
 builder.Services.AddScoped<UpdateUserRoleUseCase>();
+builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
 
 // Certificates
