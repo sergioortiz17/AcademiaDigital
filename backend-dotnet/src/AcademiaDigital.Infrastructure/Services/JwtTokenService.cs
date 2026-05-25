@@ -92,4 +92,53 @@ public class JwtTokenService(IConfiguration configuration) : ITokenService
             return null;
         }
     }
+
+    public string GeneratePasswordResetToken(long userId)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim("id", userId.ToString()),
+            new Claim("purpose", "password-reset")
+        };
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(15),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public long? ValidatePasswordResetToken(string token)
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+
+            handler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
+            }, out _);
+
+            var jwt = handler.ReadJwtToken(token);
+            var purposeClaim = jwt.Claims.FirstOrDefault(c => c.Type == "purpose");
+            if (purposeClaim?.Value != "password-reset") return null;
+
+            var idClaim = jwt.Claims.FirstOrDefault(c => c.Type == "id");
+            return idClaim != null && long.TryParse(idClaim.Value, out var id) ? id : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

@@ -9,4 +9,7 @@ public interface ITokenService
     bool ValidateToken(string token);
     long? GetUserIdFromToken(string token);
     UserRole? GetUserRoleFromToken(string token);
+
+    string GeneratePasswordResetToken(long userId);
+    long? ValidatePasswordResetToken(string token);
 }
