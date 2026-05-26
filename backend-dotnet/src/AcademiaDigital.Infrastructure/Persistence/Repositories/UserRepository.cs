@@ -101,6 +101,14 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
         return user;
     }
 
+    public async Task UpdatePasswordAsync(long userId, string hashedPassword, CancellationToken ct = default)
+    {
+        var user = await db.Users.FindAsync([userId], ct)
+            ?? throw new UserNotFoundException(userId);
+        user.Password = hashedPassword;
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<(List<User> Users, int Total)> GetAllAsync(string? search, UserRole? role, int skip, int take, CancellationToken ct = default)
     {
         var query = db.Users.AsNoTracking();

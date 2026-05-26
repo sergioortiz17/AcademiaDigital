@@ -31,3 +31,9 @@ public class UserNotFoundException(long id)
 
 public class ForbiddenException(string message = "Access denied")
     : AuthenticationException(message);
+
+public class InvalidCurrentPasswordException(string message = "La contraseña actual es incorrecta")
+    : AuthenticationException(message);
+
+public class InvalidResetTokenException(string message = "El token de recuperación es inválido o expiró")
+    : AuthenticationException(message);

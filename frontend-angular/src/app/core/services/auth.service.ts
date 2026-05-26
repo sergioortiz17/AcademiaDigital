@@ -40,6 +40,18 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseURL}v1/users/register`, credentials);
   }
 
+  forgotPassword(email: string, dni: string): Observable<{ success: boolean; resetToken: string | null }> {
+    return this.http.post<{ success: boolean; resetToken: string | null }>(
+      `${this.baseURL}v1/users/forgot-password`, { email, dni }
+    );
+  }
+
+  resetPassword(resetToken: string, newPassword: string): Observable<{ success: boolean; msg: string }> {
+    return this.http.post<{ success: boolean; msg: string }>(
+      `${this.baseURL}v1/users/reset-password`, { resetToken, newPassword }
+    );
+  }
+
   logoutApi(token: string): Observable<any> {
     return this.http.post(`${this.baseURL}v1/users/logout`, { token });
   }

@@ -1,5 +1,6 @@
 using AcademiaDigital.API.Models;
 using AcademiaDigital.Application.UseCases.Authentication;
+using AcademiaDigital.Application.UseCases.User;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -10,7 +11,10 @@ namespace AcademiaDigital.API.Controllers;
 public class AuthController(
     LoginUseCase loginUseCase,
     RegisterUseCase registerUseCase,
-    LogoutUseCase logoutUseCase) : ApiControllerBase
+    LogoutUseCase logoutUseCase,
+    ForgotPasswordUseCase forgotPasswordUseCase,
+    ResetPasswordUseCase resetPasswordUseCase,
+    ChangePasswordUseCase changePasswordUseCase) : ApiControllerBase
 {
     // POST /api/v1/users/login
     [HttpPost("login")]
@@ -58,6 +62,33 @@ public class AuthController(
 
         return Ok(new { success = true });
     }
+
+    // PUT /api/v1/users/change-password  [requiere sesión activa]
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        if (CurrentUserId is null)
+            return Unauthorized(ApiResponse.Fail("User is not logged on."));
+
+        await changePasswordUseCase.ExecuteAsync(CurrentUserId.Value, request.CurrentPassword, request.NewPassword, ct);
+        return Ok(new { success = true, msg = "Contraseña actualizada correctamente" });
+    }
+
+    // POST /api/v1/users/forgot-password  [público]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
+    {
+        var result = await forgotPasswordUseCase.ExecuteAsync(request.Email, ct);
+        return Ok(new { success = result.Success, resetToken = result.ResetToken, msg = "Si el correo está registrado, recibirás instrucciones" });
+    }
+
+    // POST /api/v1/users/reset-password  [público]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
+    {
+        await resetPasswordUseCase.ExecuteAsync(request.ResetToken, request.NewPassword, ct);
+        return Ok(new { success = true, msg = "Contraseña restablecida correctamente" });
+    }
 }
 
 public record LoginRequest(
@@ -81,3 +112,14 @@ public record RegisterRequest(
     [Required]
     [RegularExpression(@"^\d{7,8}$", ErrorMessage = "DNI must contain only numbers and have 7 or 8 digits.")]
     string Dni);
+
+public record ChangePasswordRequest(
+    [Required] string CurrentPassword,
+    [Required][MinLength(8)] string NewPassword);
+
+public record ForgotPasswordRequest(
+    [Required][EmailAddress] string Email);
+
+public record ResetPasswordRequest(
+    [Required] string ResetToken,
+    [Required][MinLength(8)] string NewPassword);

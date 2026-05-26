@@ -1,1 +1,144 @@
-// All styles in global styles.scss
+.loading-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.profile-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 760px;
+}
+
+.profile-card {
+  .card-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--primary-color, #1976d2);
+  }
+}
+
+// Email / DNI de solo lectura
+.readonly-row {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0 8px;
+  flex-wrap: wrap;
+}
+
+.readonly-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.readonly-label {
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.readonly-value {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.section-divider {
+  margin: 12px 0 4px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+
+  mat-form-field {
+    flex: 1;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 0;
+
+    mat-form-field,
+    .phone-group {
+      width: 100%;
+    }
+  }
+}
+
+.phone-group {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  align-items: flex-start;
+
+  .phone-code {
+    flex: 0 0 130px;
+  }
+
+  .phone-number {
+    flex: 1;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.required-note {
+  font-size: 0.78rem;
+  color: #999;
+  margin: -4px 0 8px;
+}
+
+.password-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: -4px 0 12px;
+  font-size: 0.78rem;
+  color: #aaa;
+
+  span {
+    transition: color 0.2s;
+
+    &.valid {
+      color: #2e7d32;
+    }
+  }
+}
+
+.msg-success {
+  color: #2e7d32;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.msg-error {
+  color: #c62828;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+mat-card-actions {
+  padding: 8px 16px 16px;
+}

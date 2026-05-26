@@ -704,6 +704,30 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("dni");
 
+                    b.Property<string>("Gender")
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)")
+                        .HasColumnName("gender");
+
+                    b.Property<string>("Cuil")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("cuil");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("birth_date");
+
+                    b.Property<string>("PhoneCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("phone_code");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("phone");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")

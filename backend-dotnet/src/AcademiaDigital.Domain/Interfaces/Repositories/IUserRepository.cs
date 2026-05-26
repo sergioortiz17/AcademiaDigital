@@ -13,6 +13,7 @@ public interface IUserRepository
     Task<User> RecordFailedLoginAsync(long userId, int maxAttempts, TimeSpan lockoutDuration, CancellationToken ct = default);
     Task ResetLoginFailuresAsync(long userId, CancellationToken ct = default);
     Task<User> UpdateAsync(User user, CancellationToken ct = default);
+    Task UpdatePasswordAsync(long userId, string hashedPassword, CancellationToken ct = default);
 
     // Admin methods
     Task<(List<User> Users, int Total)> GetAllAsync(string? search, UserRole? role, int skip, int take, CancellationToken ct = default);
