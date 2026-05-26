@@ -56,7 +56,8 @@ export class LoginComponent {
           } else {
             localStorage.removeItem('remember-user');
           }
-          this.store.dispatch(accountInitialize({ isLoggedIn: true, user: response.user, token: response.token }));
+          const user = { ...response.user, role: response.user?.role ?? null };
+          this.store.dispatch(accountInitialize({ isLoggedIn: true, user, token: response.token }));
           this.router.navigate(['/app/dashboard/default']);
         } else {
           this.errorMessage = response.msg || 'Login failed';
