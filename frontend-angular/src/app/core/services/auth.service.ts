@@ -40,9 +40,15 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseURL}v1/users/register`, credentials);
   }
 
-  forgotPassword(email: string, dni: string): Observable<{ success: boolean; resetToken: string | null }> {
-    return this.http.post<{ success: boolean; resetToken: string | null }>(
+  forgotPassword(email: string, dni: string): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(
       `${this.baseURL}v1/users/forgot-password`, { email, dni }
+    );
+  }
+
+  verifyResetCode(email: string, code: string): Observable<{ success: boolean; resetToken: string }> {
+    return this.http.post<{ success: boolean; resetToken: string }>(
+      `${this.baseURL}v1/users/verify-reset-code`, { email, code }
     );
   }
 

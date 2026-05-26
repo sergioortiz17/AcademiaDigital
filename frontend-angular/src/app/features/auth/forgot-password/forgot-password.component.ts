@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-forgot-password',
@@ -20,7 +21,9 @@ export class ForgotPasswordComponent {
 
   // Step 2 — OTP code
   otpDigits: string[] = ['', '', '', '', '', ''];
+  otpLoading = false;
   otpError = '';
+  private userEmail = '';
 
   // Step 3 — new password
   passwordForm: FormGroup;
@@ -81,12 +84,12 @@ export class ForgotPasswordComponent {
     this.authService.forgotPassword(email, dni).subscribe({
       next: (res) => {
         this.step1Loading = false;
-        if (!res.resetToken) {
+        if (!res.success) {
           this.step1Error = 'No encontramos una cuenta con ese correo y DNI. Verificá los datos.';
           this.cdr.detectChanges();
           return;
         }
-        this.resetToken = res.resetToken;
+        this.userEmail = email;
         this.currentStep = 2;
         this.cdr.detectChanges();
       },
@@ -131,14 +134,27 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    if (code !== '000000') {
-      this.otpError = 'Código incorrecto. Verificá e intentá de nuevo.';
-      return;
-    }
-
+    this.otpLoading = true;
     this.otpError = '';
-    this.currentStep = 3;
-    this.cdr.detectChanges();
+
+    this.authService.verifyResetCode(this.userEmail, code).subscribe({
+      next: (res) => {
+        this.otpLoading = false;
+        if (!res.success || !res.resetToken) {
+          this.otpError = 'Código incorrecto. Verificá e intentá de nuevo.';
+          this.cdr.detectChanges();
+          return;
+        }
+        this.resetToken = res.resetToken;
+        this.currentStep = 3;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.otpLoading = false;
+        this.otpError = 'Código incorrecto. Verificá e intentá de nuevo.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   // ── Step 3 ───────────────────────────────────────────────────────────────────
@@ -157,7 +173,13 @@ export class ForgotPasswordComponent {
     this.authService.resetPassword(this.resetToken, newPassword).subscribe({
       next: () => {
         this.passwordLoading = false;
-        this.currentStep = 4;
+        Swal.fire({
+          icon: 'success',
+          title: '¡Contraseña actualizada!',
+          text: 'Tu contraseña se actualizó correctamente.',
+          confirmButtonColor: '#00579c',
+          confirmButtonText: 'Ir al login'
+        }).then(() => this.router.navigate(['/auth/signin']));
         this.cdr.detectChanges();
       },
       error: (err) => {
