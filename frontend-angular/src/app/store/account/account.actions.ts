@@ -1,9 +1,16 @@
 import { createAction, props } from '@ngrx/store';
 
+export enum UserRole {
+  Alumno = 1,
+  Profesor = 2,
+  Admin = 3
+}
+
 export interface UserModel {
-  id?: string;
+  _id?: string | number;
   email: string;
   username?: string;
+  role?: UserRole;
 }
 
 export const accountInitialize = createAction(

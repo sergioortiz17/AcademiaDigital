@@ -25,21 +25,39 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]]
+      password: ['', [Validators.required]],
+      rememberMe: [false]
     });
+
+    //Recuerdame
+    const rememberedUser = localStorage.getItem('remember-user');
+    if (rememberedUser) {
+      const parsedUser = JSON.parse(rememberedUser);
+    this.loginForm.patchValue({
+    email: parsedUser.email,
+    password: parsedUser.password,
+    rememberMe: true
+  });
+}
   }
 
   onSubmit(): void {
     if (this.loginForm.invalid) { this.loginForm.markAllAsTouched(); return; }
     this.isLoading = true;
     this.errorMessage = '';
-    const { email, password } = this.loginForm.value;
+    const { email, password, rememberMe } = this.loginForm.value;
     this.authService.login({ email, password }).subscribe({
       next: (response) => {
         this.isLoading = false;
         if (response.success && response.token) {
           localStorage.setItem('academia-account', JSON.stringify({ token: response.token, user: response.user }));
-          this.store.dispatch(accountInitialize({ isLoggedIn: true, user: response.user, token: response.token }));
+          if (rememberMe) {
+            localStorage.setItem('remember-user',JSON.stringify({email,password}));
+          } else {
+            localStorage.removeItem('remember-user');
+          }
+          const user = { ...response.user, role: response.user?.role ?? null };
+          this.store.dispatch(accountInitialize({ isLoggedIn: true, user, token: response.token }));
           this.router.navigate(['/app/dashboard/default']);
         } else {
           this.errorMessage = response.msg || 'Login failed';

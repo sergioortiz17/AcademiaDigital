@@ -1,1 +1,98 @@
 // All styles in global styles.scss
+.layout-container {
+  height: 100vh;
+  background: #f4f7fb;
+  overflow: hidden;
+}
+
+.sidenav {
+  width: 280px;
+  background: white;
+  /*color: white;*/
+  border-right: none;
+  padding: 1rem 0.5rem;
+  /*overflow: hidden; */
+}
+
+.sidenav-container {
+  height: calc(100vh - 74px);
+  margin-top: 74px;
+    /*height: 100%;
+  display: block;
+  background: #f4f7fb; */
+}
+
+.main-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 74px;
+  padding: 0 1.5rem;
+  background: radial-gradient(circle, #005495 0%, #00579c 10%, #102c54 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  /*flex-shrink: 0; */
+}
+
+.menu-button {
+  margin-right: 1rem;
+}
+
+.toolbar-title { font-size: 1.05rem; font-weight: 700; }
+
+.content-area {
+  /*display: flex;
+  flex-direction: column;*/
+  height: 100%;
+  background: #f4f7fb;
+  overflow: auto;
+}
+
+.dashboard-container {
+  padding: 2rem 2.5rem;
+  gap: 1.8rem;
+  /*  flex: 1;
+  overflow-y: auto;
+ min-height: 0; */
+  /*flex-direction: column;
+  @media (max-width: 599px) { padding: 12px; } */
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+
+  height: 100%;
+}
+
+.toolbar-logo-wrapper {
+  width: 51px;
+  height: 51px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  flex-shrink: 0;
+}
+
+.toolbar-logo {
+  width: 53px;
+  height: 53px;
+  object-fit: contain;
+  padding-top: 2px;
+}
+
+.toolbar-text {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+
+  display: block;
+}

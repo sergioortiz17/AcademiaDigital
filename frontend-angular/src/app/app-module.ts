@@ -21,6 +21,11 @@ import { accountReducer } from './store/account/account.reducer';
 import { configReducer } from './store/config/config.reducer';
 import { environment } from '../environments/environment';
 
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+
+registerLocaleData(localeEs);
+
 @NgModule({
   declarations: [App],
   imports: [

@@ -1,3 +1,4 @@
+using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Interfaces.Services;
@@ -9,13 +10,40 @@ public class LoginUseCase(
     ISessionRepository sessionRepository,
     ITokenService tokenService)
 {
+    private const int MaxFailedAttempts = 5;
+    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+
     public async Task<LoginResult> ExecuteAsync(string email, string password, CancellationToken ct = default)
     {
-        var user = await userRepository.AuthenticateAsync(email, password, ct)
-            ?? throw new InvalidCredentialsException();
+        var normalizedEmail = email.Trim();
+        var existingUser = await userRepository.FindByEmailAsync(normalizedEmail, ct);
+
+        if (existingUser?.LockedUntil is DateTime lockedUntil)
+        {
+            if (lockedUntil > DateTime.UtcNow)
+                throw new AccountLockedException(lockedUntil);
+
+            await userRepository.ResetLoginFailuresAsync(existingUser.Id, ct);
+        }
+
+        var user = await userRepository.AuthenticateAsync(normalizedEmail, password, ct);
+        if (user is null)
+        {
+            if (existingUser is not null)
+            {
+                var updated = await userRepository.RecordFailedLoginAsync(existingUser.Id, MaxFailedAttempts, LockoutDuration, ct);
+                if (updated.LockedUntil is DateTime newLockedUntil && updated.FailedLoginAttempts >= MaxFailedAttempts)
+                    throw new AccountLockedException(newLockedUntil);
+            }
+
+            throw new InvalidCredentialsException();
+        }
 
         if (!user.IsActive)
             throw new InactiveUserException();
+
+        if (user.FailedLoginAttempts > 0 || user.LockedUntil is not null)
+            await userRepository.ResetLoginFailuresAsync(user.Id, ct);
 
         var session = await sessionRepository.FindByUserAsync(user.Id, ct);
         string token;
@@ -36,9 +64,9 @@ public class LoginUseCase(
         return new LoginResult(
             Success: true,
             Token: token,
-            User: new UserDto(user.Id, user.Username, user.Email));
+            User: new UserDto(user.Id, user.Username, user.Email, user.Role));
     }
 }
 
 public record LoginResult(bool Success, string Token, UserDto User);
-public record UserDto(long Id, string Username, string Email);
+public record UserDto(long Id, string Username, string Email, UserRole Role);

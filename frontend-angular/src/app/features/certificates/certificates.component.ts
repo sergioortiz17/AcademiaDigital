@@ -1,4 +1,10 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
+import { CertificatesService, CertificateRequest, CERTIFICATE_TYPES } from '../../core/services/certificates.service';
+import { selectUserRole } from '../../store/account/account.selectors';
+import { UserRole } from '../../store/account/account.actions';
 
 @Component({
   selector: 'app-certificates',
@@ -6,4 +12,120 @@ import { Component } from '@angular/core';
   styleUrls: ['./certificates.component.scss'],
   standalone: false
 })
-export class CertificatesComponent {}
+export class CertificatesComponent implements OnInit, OnDestroy {
+  requests: CertificateRequest[] = [];
+  isLoading = false;
+  isSubmitting = false;
+  errorMsg = '';
+  successMsg = '';
+  showForm = false;
+  selectedType = '';
+  certificateTypes = CERTIFICATE_TYPES;
+  UserRole = UserRole;
+  userRole: UserRole | null = null;
+
+  // Admin filters
+  searchTerm = '';
+  selectedStatus: string | null = null;
+
+  statusFilters = [
+    { label: 'Todos',     value: null },
+    { label: 'Pendiente', value: 'Pending' },
+    { label: 'Aprobado',  value: 'Approved' },
+    { label: 'Rechazado', value: 'Rejected' },
+  ];
+
+  displayedColumnsAlumno = ['certificateType', 'status', 'createdAt'];
+  displayedColumnsAdmin  = ['username', 'certificateType', 'status', 'createdAt'];
+
+  get displayedColumns() {
+    return this.userRole === UserRole.Admin
+      ? this.displayedColumnsAdmin
+      : this.displayedColumnsAlumno;
+  }
+
+  statusLabels: Record<string, string> = {
+    Pending:  'Pendiente',
+    Approved: 'Aprobado',
+    Rejected: 'Rechazado'
+  };
+
+  private readonly destroy$ = new Subject<void>();
+  private readonly search$  = new Subject<string>();
+
+  constructor(
+    private readonly certificatesService: CertificatesService,
+    private readonly store: Store,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.store.select(selectUserRole).pipe(take(1)).subscribe(role => {
+      this.userRole = role as UserRole;
+      this.loadRequests();
+    });
+
+    this.search$.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.loadRequests());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm = value;
+    this.search$.next(value);
+  }
+
+  onStatusFilter(status: string | null): void {
+    this.selectedStatus = status;
+    this.loadRequests();
+  }
+
+  loadRequests(): void {
+    if (this.isLoading) return;
+    this.isLoading = true;
+    this.errorMsg = '';
+
+    const obs = this.userRole === UserRole.Admin
+      ? this.certificatesService.getAllCertificates(this.searchTerm, this.selectedStatus)
+      : this.certificatesService.getMyCertificates();
+
+    obs.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.requests = res.requests;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMsg = 'Error al cargar certificados.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  submitRequest(): void {
+    if (!this.selectedType) return;
+    this.isSubmitting = true;
+    this.certificatesService.requestCertificate(this.selectedType).subscribe({
+      next: (res) => {
+        this.requests.unshift(res.request);
+        this.successMsg = 'Solicitud enviada correctamente.';
+        this.showForm = false;
+        this.selectedType = '';
+        this.isSubmitting = false;
+        setTimeout(() => this.successMsg = '', 4000);
+      },
+      error: (err) => {
+        this.errorMsg = err.error?.msg || 'Error al enviar la solicitud.';
+        this.isSubmitting = false;
+      }
+    });
+  }
+}

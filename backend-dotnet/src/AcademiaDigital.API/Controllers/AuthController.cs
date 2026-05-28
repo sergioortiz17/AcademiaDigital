@@ -1,7 +1,9 @@
 using AcademiaDigital.API.Models;
 using AcademiaDigital.Application.UseCases.Authentication;
+using AcademiaDigital.Application.UseCases.User;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace AcademiaDigital.API.Controllers;
 
@@ -9,7 +11,10 @@ namespace AcademiaDigital.API.Controllers;
 public class AuthController(
     LoginUseCase loginUseCase,
     RegisterUseCase registerUseCase,
-    LogoutUseCase logoutUseCase) : ApiControllerBase
+    LogoutUseCase logoutUseCase,
+    ForgotPasswordUseCase forgotPasswordUseCase,
+    ResetPasswordUseCase resetPasswordUseCase,
+    ChangePasswordUseCase changePasswordUseCase) : ApiControllerBase
 {
     // POST /api/v1/users/login
     [HttpPost("login")]
@@ -20,7 +25,7 @@ public class AuthController(
         {
             success = result.Success,
             token = result.Token,
-            user = new { _id = result.User.Id, result.User.Username, result.User.Email }
+            user = new { _id = result.User.Id, result.User.Username, result.User.Email, role = (int)result.User.Role }
         });
     }
 
@@ -28,7 +33,7 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var result = await registerUseCase.ExecuteAsync(request.Email, request.Username, request.Password, ct);
+        var result = await registerUseCase.ExecuteAsync(request.Email, request.Name, request.LastName, request.Password, request.Dni, ct);
         return StatusCode(StatusCodes.Status201Created, new
         {
             success = result.Success,
@@ -57,6 +62,33 @@ public class AuthController(
 
         return Ok(new { success = true });
     }
+
+    // PUT /api/v1/users/change-password  [requiere sesión activa]
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        if (CurrentUserId is null)
+            return Unauthorized(ApiResponse.Fail("User is not logged on."));
+
+        await changePasswordUseCase.ExecuteAsync(CurrentUserId.Value, request.CurrentPassword, request.NewPassword, ct);
+        return Ok(new { success = true, msg = "Contraseña actualizada correctamente" });
+    }
+
+    // POST /api/v1/users/forgot-password  [público]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
+    {
+        var result = await forgotPasswordUseCase.ExecuteAsync(request.Email, ct);
+        return Ok(new { success = result.Success, resetToken = result.ResetToken, msg = "Si el correo está registrado, recibirás instrucciones" });
+    }
+
+    // POST /api/v1/users/reset-password  [público]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
+    {
+        await resetPasswordUseCase.ExecuteAsync(request.ResetToken, request.NewPassword, ct);
+        return Ok(new { success = true, msg = "Contraseña restablecida correctamente" });
+    }
 }
 
 public record LoginRequest(
@@ -64,6 +96,30 @@ public record LoginRequest(
     [Required] string Password);
 
 public record RegisterRequest(
+    [property: JsonPropertyName("name")]
+    [Required] string Name,
+
+    [property: JsonPropertyName("lastname")]
+    [Required] string LastName,
+
+    [property: JsonPropertyName("email")]
     [Required][EmailAddress] string Email,
-    [Required] string Username,
-    [Required][MinLength(4)] string Password);
+
+    [property: JsonPropertyName("password")]
+    [Required][MinLength(4)] string Password,
+
+    [property: JsonPropertyName("DNI")]
+    [Required]
+    [RegularExpression(@"^\d{7,8}$", ErrorMessage = "DNI must contain only numbers and have 7 or 8 digits.")]
+    string Dni);
+
+public record ChangePasswordRequest(
+    [Required] string CurrentPassword,
+    [Required][MinLength(8)] string NewPassword);
+
+public record ForgotPasswordRequest(
+    [Required][EmailAddress] string Email);
+
+public record ResetPasswordRequest(
+    [Required] string ResetToken,
+    [Required][MinLength(8)] string NewPassword);
