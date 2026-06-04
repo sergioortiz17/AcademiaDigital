@@ -1,12 +1,171 @@
 <div class="page-header">
-  <h1>{{ 'pages.profile.title' | translate }}</h1>
-  <p>{{ 'pages.profile.description' | translate }}</p>
+  <h1>Perfil</h1>
+  <p>Datos personales y contraseña</p>
 </div>
 
-<mat-card class="coming-soon-card">
-  <mat-card-content>
-    <mat-icon>manage_accounts</mat-icon>
-    <h2>Próximamente</h2>
-    <p>{{ 'pages.profile.comingSoon' | translate }}</p>
-  </mat-card-content>
-</mat-card>
+<!-- LOADING -->
+<div *ngIf="isLoadingProfile" class="loading-wrapper">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!isLoadingProfile" class="profile-layout">
+
+  <!-- =============================================
+       DATOS PERSONALES
+  ============================================= -->
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="card-icon">person</mat-icon>
+      <mat-card-title>Datos personales</mat-card-title>
+      <mat-card-subtitle>Podés editar tu información personal</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      <!-- EMAIL Y DNI — solo lectura -->
+      <div class="readonly-row">
+        <div class="readonly-field">
+          <span class="readonly-label">Correo electrónico</span>
+          <span class="readonly-value">{{ profile?.email }}</span>
+        </div>
+        <div class="readonly-field">
+          <span class="readonly-label">DNI</span>
+          <span class="readonly-value">{{ profile?.dni ?? '—' }}</span>
+        </div>
+      </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+
+      <!-- FORM EDITABLE -->
+      <form [formGroup]="profileForm" class="profile-form">
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="username"/>
+            <mat-error *ngIf="profileForm.get('username')?.hasError('required')">Obligatorio</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Apellido</mat-label>
+            <input matInput formControlName="lastName"/>
+            <mat-error *ngIf="profileForm.get('lastName')?.hasError('required')">Obligatorio</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>CUIL</mat-label>
+            <input matInput formControlName="cuil" inputmode="numeric" placeholder="Ej: 20-12345678-9"/>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Sexo</mat-label>
+            <mat-select formControlName="gender">
+              <mat-option value="">— No especificado —</mat-option>
+              <mat-option value="M">Masculino</mat-option>
+              <mat-option value="F">Femenino</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha de nacimiento</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="birthDate" [max]="maxBirthDate"/>
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+
+          <div class="phone-group">
+            <mat-form-field appearance="outline" class="phone-code">
+              <mat-label>Cód. Área (+54)</mat-label>
+              <input matInput formControlName="phoneCode" inputmode="numeric" placeholder="351"/>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="phone-number">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="phone" inputmode="numeric" placeholder="123-4567"/>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <p class="required-note">(*) Nombre y Apellido son obligatorios</p>
+
+        <div *ngIf="profileSuccess" class="msg-success">{{ profileSuccess }}</div>
+        <div *ngIf="profileError" class="msg-error">{{ profileError }}</div>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" [disabled]="profileSaving" (click)="saveProfile()">
+        <mat-spinner *ngIf="profileSaving" diameter="18" class="btn-spinner"></mat-spinner>
+        <span>{{ profileSaving ? 'Guardando...' : 'Guardar cambios' }}</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- =============================================
+       CAMBIAR CONTRASEÑA
+  ============================================= -->
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="card-icon">lock</mat-icon>
+      <mat-card-title>Cambiar contraseña</mat-card-title>
+      <mat-card-subtitle>Ingresá tu contraseña actual y la nueva</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="passwordForm" class="profile-form">
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña actual</mat-label>
+          <input matInput [type]="hideCurrentPassword ? 'password' : 'text'" formControlName="currentPassword"/>
+          <button mat-icon-button matSuffix type="button" (click)="hideCurrentPassword = !hideCurrentPassword">
+            <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="passwordForm.get('currentPassword')?.hasError('required')">Ingresá tu contraseña actual</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nueva contraseña</mat-label>
+          <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="newPassword"/>
+          <button mat-icon-button matSuffix type="button" (click)="hideNewPassword = !hideNewPassword">
+            <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="newPassword?.invalid && newPassword?.touched">No cumple los requisitos</mat-error>
+        </mat-form-field>
+
+        <div class="password-rules">
+          <span [class.valid]="hasMinLength()">• Mínimo 8 caracteres</span>
+          <span [class.valid]="hasUpperCase()">• Una mayúscula</span>
+          <span [class.valid]="hasLowerCase()">• Una minúscula</span>
+          <span [class.valid]="hasSpecialChar()">• Caracter especial</span>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Confirmar nueva contraseña</mat-label>
+          <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword"/>
+          <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+            <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched">
+            Las contraseñas no coinciden
+          </mat-error>
+        </mat-form-field>
+
+        <div *ngIf="passwordSuccess" class="msg-success">{{ passwordSuccess }}</div>
+        <div *ngIf="passwordError" class="msg-error">{{ passwordError }}</div>
+
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" [disabled]="passwordSaving" (click)="changePassword()">
+        <mat-spinner *ngIf="passwordSaving" diameter="18" class="btn-spinner"></mat-spinner>
+        <span>{{ passwordSaving ? 'Guardando...' : 'Cambiar contraseña' }}</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+</div>

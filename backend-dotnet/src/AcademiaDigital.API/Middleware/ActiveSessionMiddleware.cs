@@ -1,5 +1,6 @@
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Interfaces.Services;
+using AcademiaDigital.Domain.Enums;
 
 namespace AcademiaDigital.API.Middleware;
 
@@ -27,15 +28,23 @@ public class ActiveSessionMiddleware(RequestDelegate next)
             if (tokenService.ValidateToken(token))
             {
                 var session = await sessionRepository.FindByTokenAsync(token);
+                var tokenUserId = tokenService.GetUserIdFromToken(token);
+                var tokenRole = tokenService.GetUserRoleFromToken(token);
 
-                if (session != null && session.User.IsActive)
+                if (session != null
+                    && session.User.IsActive
+                    && tokenUserId == session.UserId
+                    && tokenRole == session.User.Role)
                 {
                     context.Items["UserId"] = session.UserId;
-                    context.Items["IsSuperuser"] = false;
+                    context.Items["UserRole"] = (int)tokenRole.Value;
+                    context.Items["IsSuperuser"] = tokenRole.Value == UserRole.Admin;
                 }
                 else
                 {
                     context.Items.Remove("UserId");
+                    context.Items.Remove("UserRole");
+                    context.Items.Remove("IsSuperuser");
                 }
             }
         }
