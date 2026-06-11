@@ -36,7 +36,7 @@ jobs:
 
       - name: Run unit tests with coverage
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm test -- --watch=false --coverage --coverage.reporter=lcov --coverage.outputDir=coverage
+        run: npm test -- --configuration=ci
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
