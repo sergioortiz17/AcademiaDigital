@@ -6,7 +6,7 @@ on:
     paths:
       - 'frontend-angular/**'
   push:
-    branches: [feat/forgot-password-and-profile]
+    branches: [feat/sonar]
     paths:
       - 'frontend-angular/**'
 
