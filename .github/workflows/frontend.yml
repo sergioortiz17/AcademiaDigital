@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: ${{ env.WORKING_DIR }}/coverage.info
+          path: ${{ env.WORKING_DIR }}/coverage/frontend-angular/lcov.info
           if-no-files-found: error
           retention-days: 1
 
