@@ -100,9 +100,8 @@
           "configurations": {
             "ci": {
               "watch": false,
-              "codeCoverage": true,
-              "coverageReporters": ["lcov", "text-summary"],
-              "outputDir": "coverage"
+              "coverage": true,
+              "coverageReporters": ["lcov", "text-summary"]
             }
           }
         }
