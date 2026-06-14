@@ -21,8 +21,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
     public DbSet<TeachingPosition> TeachingPositions => Set<TeachingPosition>();
     public DbSet<CertificateRequest> CertificateRequests => Set<CertificateRequest>();
-    public DbSet<Carrera> Carreras => Set<Carrera>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
