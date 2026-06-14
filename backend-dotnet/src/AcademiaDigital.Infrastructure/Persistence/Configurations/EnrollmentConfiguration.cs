@@ -18,20 +18,27 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
         builder.Property(e => e.Status).HasColumnName("status").HasConversion<int>();
         builder.Property(e => e.FinalGrade).HasColumnName("final_grade").HasPrecision(4, 2);
         builder.Property(e => e.StudentId).HasColumnName("student_id");
-        builder.Property(e => e.SubjectId).HasColumnName("subject_id");
+        builder.Property(e => e.CourseId).HasColumnName("course_id");
+        builder.Property(e => e.StudyPlanCourseId).HasColumnName("study_plan_course_id");
         builder.Property(e => e.TeachingPositionId).HasColumnName("teaching_position_id");
 
-        // Un alumno no puede inscribirse dos veces a la misma materia en el mismo período
-        builder.HasIndex(e => new { e.StudentId, e.SubjectId, e.AcademicYear, e.Semester }).IsUnique();
+        builder.HasIndex(e => new { e.StudentId, e.CourseId, e.AcademicYear, e.Semester }).IsUnique();
+        builder.HasIndex(e => new { e.StudentId, e.Status });
+        builder.HasIndex(e => new { e.StudyPlanCourseId, e.Status });
 
         builder.HasOne(e => e.Student)
             .WithMany()
             .HasForeignKey(e => e.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(e => e.Subject)
+        builder.HasOne(e => e.Course)
             .WithMany()
-            .HasForeignKey(e => e.SubjectId)
+            .HasForeignKey(e => e.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.StudyPlanCourse)
+            .WithMany(spc => spc.Enrollments)
+            .HasForeignKey(e => e.StudyPlanCourseId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.TeachingPosition)

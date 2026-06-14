@@ -8,14 +8,14 @@ public class TeacherContestRepository(AppDbContext db) : ITeacherContestReposito
 {
     public async Task<IEnumerable<TeacherContest>> GetAllAsync(CancellationToken ct = default)
         => await db.TeacherContests.AsNoTracking()
-            .Include(tc => tc.Subject)
+            .Include(tc => tc.Course)
             .Include(tc => tc.Career)
             .OrderByDescending(tc => tc.OpenDate)
             .ToListAsync(ct);
 
     public async Task<IEnumerable<TeacherContest>> GetByStatusAsync(ContestStatus status, CancellationToken ct = default)
         => await db.TeacherContests.AsNoTracking()
-            .Include(tc => tc.Subject)
+            .Include(tc => tc.Course)
             .Include(tc => tc.Career)
             .Where(tc => tc.Status == status)
             .OrderByDescending(tc => tc.OpenDate)
@@ -23,7 +23,7 @@ public class TeacherContestRepository(AppDbContext db) : ITeacherContestReposito
 
     public async Task<TeacherContest?> FindByIdAsync(int id, CancellationToken ct = default)
         => await db.TeacherContests.AsNoTracking()
-            .Include(tc => tc.Subject)
+            .Include(tc => tc.Course)
             .Include(tc => tc.Career)
             .Include(tc => tc.Applications).ThenInclude(a => a.Applicant)
             .FirstOrDefaultAsync(tc => tc.Id == id, ct);

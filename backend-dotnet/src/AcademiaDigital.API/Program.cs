@@ -3,7 +3,13 @@ using AcademiaDigital.Application.UseCases.Admin;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Certificates;
 using AcademiaDigital.Application.UseCases.Careers;
+using AcademiaDigital.Application.UseCases.Courses;
+using AcademiaDigital.Application.UseCases.Prerequisites;
+using AcademiaDigital.Application.UseCases.Students;
+using AcademiaDigital.Application.UseCases.StudyPlanCourses;
+using AcademiaDigital.Application.UseCases.StudyPlans;
 using AcademiaDigital.Application.UseCases.User;
+using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +41,30 @@ builder.Services.AddScoped<GetCertificateRequestsUseCase>();
 builder.Services.AddScoped<CreateCertificateRequestUseCase>();
 builder.Services.AddScoped<GetAllCertificateRequestsUseCase>();
 builder.Services.AddScoped<CareerService>();
+
+// Academic module
+builder.Services.AddScoped<PrerequisiteCycleValidator>();
+builder.Services.AddScoped<CourseEligibilityService>();
+builder.Services.AddScoped<AcademicProgressCalculator>();
+builder.Services.AddScoped<GetCareerCoursesQueryHandler>();
+builder.Services.AddScoped<CreateCourseCommandHandler>();
+builder.Services.AddScoped<UpdateCourseCommandHandler>();
+builder.Services.AddScoped<DeleteCourseCommandHandler>();
+builder.Services.AddScoped<GetCareerStudyPlansQueryHandler>();
+builder.Services.AddScoped<CreateStudyPlanCommandHandler>();
+builder.Services.AddScoped<UpdateStudyPlanCommandHandler>();
+builder.Services.AddScoped<ActivateStudyPlanCommandHandler>();
+builder.Services.AddScoped<GetCareerStudyPlanGroupedQueryHandler>();
+builder.Services.AddScoped<GetStudyPlanCoursesQueryHandler>();
+builder.Services.AddScoped<AddCourseToStudyPlanCommandHandler>();
+builder.Services.AddScoped<UpdateStudyPlanCourseCommandHandler>();
+builder.Services.AddScoped<RemoveCourseFromStudyPlanCommandHandler>();
+builder.Services.AddScoped<GetCoursePrerequisitesQueryHandler>();
+builder.Services.AddScoped<AddCoursePrerequisiteCommandHandler>();
+builder.Services.AddScoped<RemoveCoursePrerequisiteCommandHandler>();
+builder.Services.AddScoped<GetEligibleCoursesForStudentQueryHandler>();
+builder.Services.AddScoped<GetStudentAcademicProgressQueryHandler>();
+builder.Services.AddScoped<AssignStudentStudyPlanCommandHandler>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration

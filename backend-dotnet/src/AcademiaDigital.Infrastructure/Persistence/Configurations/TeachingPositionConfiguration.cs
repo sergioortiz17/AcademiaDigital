@@ -17,12 +17,12 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
         builder.Property(tp => tp.PositionType).HasColumnName("position_type").HasConversion<int>();
         builder.Property(tp => tp.MaxStudents).HasColumnName("max_students");
         builder.Property(tp => tp.IsVacant).HasColumnName("is_vacant").HasDefaultValue(true);
-        builder.Property(tp => tp.SubjectId).HasColumnName("subject_id");
+        builder.Property(tp => tp.CourseId).HasColumnName("course_id");
         builder.Property(tp => tp.TeacherId).HasColumnName("teacher_id");
 
-        builder.HasOne(tp => tp.Subject)
+        builder.HasOne(tp => tp.Course)
             .WithMany()
-            .HasForeignKey(tp => tp.SubjectId)
+            .HasForeignKey(tp => tp.CourseId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(tp => tp.Teacher)
