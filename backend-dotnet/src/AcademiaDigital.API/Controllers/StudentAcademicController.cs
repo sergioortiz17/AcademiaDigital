@@ -34,9 +34,17 @@ public class StudentAcademicController(
     [HttpPost("study-plan")]
     public async Task<IActionResult> AssignStudyPlan(long studentId, [FromBody] AssignStudentStudyPlanRequest request, CancellationToken ct)
     {
-        await assignStudyPlanHandler.Handle(new AssignStudentStudyPlanCommand(studentId, request), ct);
-        return NoContent();
+        try
+        {
+            await assignStudyPlanHandler.Handle(new AssignStudentStudyPlanCommand(studentId, request), ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex) { return NotFoundProblem(ex.Message); }
+        catch (InvalidOperationException ex) { return ConflictProblem(ex.Message); }
     }
 
     private ObjectResult NotFoundProblem(string detail) => Problem(detail: detail, statusCode: StatusCodes.Status404NotFound);
+
+    private ObjectResult ConflictProblem(string detail)
+        => Conflict(new ProblemDetails { Title = "Conflict", Detail = detail, Status = StatusCodes.Status409Conflict });
 }

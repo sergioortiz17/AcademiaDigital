@@ -65,6 +65,9 @@ builder.Services.AddScoped<RemoveCoursePrerequisiteCommandHandler>();
 builder.Services.AddScoped<GetEligibleCoursesForStudentQueryHandler>();
 builder.Services.AddScoped<GetStudentAcademicProgressQueryHandler>();
 builder.Services.AddScoped<AssignStudentStudyPlanCommandHandler>();
+builder.Services.AddScoped<GetStudentsQueryHandler>();
+builder.Services.AddScoped<GetStudentByIdQueryHandler>();
+builder.Services.AddScoped<CreateStudentCommandHandler>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration

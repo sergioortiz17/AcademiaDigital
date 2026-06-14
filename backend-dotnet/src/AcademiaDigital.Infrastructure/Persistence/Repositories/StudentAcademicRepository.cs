@@ -12,6 +12,19 @@ public class StudentAcademicRepository(AppDbContext db) : IStudentAcademicReposi
             .Include(ssp => ssp.StudyPlan).ThenInclude(sp => sp.Career)
             .FirstOrDefaultAsync(ssp => ssp.StudentId == studentId && ssp.IsCurrent, ct);
 
+    public async Task<IReadOnlyDictionary<long, StudentStudyPlan>> GetCurrentStudyPlansAsync(IEnumerable<long> studentIds, CancellationToken ct = default)
+    {
+        var ids = studentIds.Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<long, StudentStudyPlan>();
+
+        var currentPlans = await db.StudentStudyPlans.AsNoTracking()
+            .Include(ssp => ssp.StudyPlan)
+            .Where(ssp => ids.Contains(ssp.StudentId) && ssp.IsCurrent)
+            .ToListAsync(ct);
+
+        return currentPlans.ToDictionary(ssp => ssp.StudentId);
+    }
+
     public async Task<IReadOnlyList<Enrollment>> GetEnrollmentsAsync(long studentId, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Course)
@@ -36,6 +49,18 @@ public class StudentAcademicRepository(AppDbContext db) : IStudentAcademicReposi
 
     public async Task<StudentStudyPlan> AssignStudyPlanAsync(StudentStudyPlan studentStudyPlan, CancellationToken ct = default)
     {
+        var currentAssignments = await db.StudentStudyPlans
+            .Where(ssp => ssp.StudentId == studentStudyPlan.StudentId && ssp.IsCurrent)
+            .ToListAsync(ct);
+
+        foreach (var currentAssignment in currentAssignments)
+        {
+            currentAssignment.IsCurrent = false;
+            currentAssignment.EndedAt = DateTime.UtcNow;
+        }
+
+        studentStudyPlan.IsCurrent = true;
+        studentStudyPlan.AssignedAt = DateTime.UtcNow;
         db.StudentStudyPlans.Add(studentStudyPlan);
         await db.SaveChangesAsync(ct);
         return studentStudyPlan;

@@ -141,10 +141,22 @@ public sealed class GetStudentAcademicProgressQueryHandler(
     }
 }
 
-public sealed class AssignStudentStudyPlanCommandHandler(IStudentAcademicRepository studentAcademicRepository)
+public sealed class AssignStudentStudyPlanCommandHandler(
+    IStudentRepository studentRepository,
+    IStudyPlanRepository studyPlanRepository,
+    IStudentAcademicRepository studentAcademicRepository)
 {
     public async Task Handle(AssignStudentStudyPlanCommand command, CancellationToken ct = default)
     {
+        var student = await studentRepository.FindByIdAsync(command.StudentId, ct)
+            ?? throw new KeyNotFoundException("Student not found.");
+
+        var studyPlan = await studyPlanRepository.GetByIdAsync(command.Request.StudyPlanId, ct)
+            ?? throw new KeyNotFoundException("Study plan not found.");
+
+        if (studyPlan.CareerId != student.CareerId)
+            throw new InvalidOperationException("Study plan must belong to the student career.");
+
         var assignment = new StudentStudyPlan
         {
             StudentId = command.StudentId,
