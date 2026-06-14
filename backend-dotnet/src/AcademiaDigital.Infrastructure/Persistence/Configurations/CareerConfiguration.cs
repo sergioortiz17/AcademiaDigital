@@ -20,5 +20,7 @@ public class CareerConfiguration : IEntityTypeConfiguration<Career>
         builder.Property(c => c.DurationYears).HasColumnName("duration_years");
         builder.Property(c => c.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(c => c.CreatedAt).HasColumnName("created_at");
+        builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(c => c.RowVersion).HasColumnName("row_version").IsRowVersion();
     }
 }

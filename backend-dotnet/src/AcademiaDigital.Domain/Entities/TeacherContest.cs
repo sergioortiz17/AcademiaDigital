@@ -12,8 +12,8 @@ public class TeacherContest
     public DateTime CloseDate { get; set; }
     public ContestStatus Status { get; set; } = ContestStatus.Draft;
 
-    public int? SubjectId { get; set; }
-    public Subject? Subject { get; set; }
+    public int? CourseId { get; set; }
+    public Course? Course { get; set; }
 
     public int? CareerId { get; set; }
     public Career? Career { get; set; }

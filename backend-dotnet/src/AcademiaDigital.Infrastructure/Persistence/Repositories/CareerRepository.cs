@@ -10,9 +10,7 @@ public class CareerRepository(AppDbContext db) : ICareerRepository
         => await db.Careers.AsNoTracking().ToListAsync(ct);
 
     public async Task<Career?> FindByIdAsync(int id, CancellationToken ct = default)
-        => await db.Careers.AsNoTracking()
-            .Include(c => c.Subjects)
-            .FirstOrDefaultAsync(c => c.Id == id, ct);
+        => await db.Careers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<Career?> FindByCodeAsync(string code, CancellationToken ct = default)
         => await db.Careers.AsNoTracking().FirstOrDefaultAsync(c => c.Code == code, ct);

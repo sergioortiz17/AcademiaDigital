@@ -17,12 +17,12 @@ public class TeacherContestConfiguration : IEntityTypeConfiguration<TeacherConte
         builder.Property(tc => tc.OpenDate).HasColumnName("open_date");
         builder.Property(tc => tc.CloseDate).HasColumnName("close_date");
         builder.Property(tc => tc.Status).HasColumnName("status").HasConversion<int>();
-        builder.Property(tc => tc.SubjectId).HasColumnName("subject_id");
+        builder.Property(tc => tc.CourseId).HasColumnName("course_id");
         builder.Property(tc => tc.CareerId).HasColumnName("career_id");
 
-        builder.HasOne(tc => tc.Subject)
+        builder.HasOne(tc => tc.Course)
             .WithMany()
-            .HasForeignKey(tc => tc.SubjectId)
+            .HasForeignKey(tc => tc.CourseId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(tc => tc.Career)

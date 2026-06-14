@@ -12,8 +12,8 @@ public class TeachingPosition
     public int MaxStudents { get; set; }
     public bool IsVacant { get; set; } = true;
 
-    public int SubjectId { get; set; }
-    public Subject Subject { get; set; } = null!;
+    public int CourseId { get; set; }
+    public Course Course { get; set; } = null!;
 
     public long? TeacherId { get; set; }
     public Teacher? Teacher { get; set; }

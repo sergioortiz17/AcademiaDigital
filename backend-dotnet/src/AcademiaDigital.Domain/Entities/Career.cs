@@ -10,7 +10,10 @@ public class Career
     public int DurationYears { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public byte[] RowVersion { get; set; } = [];
 
-    public ICollection<Subject> Subjects { get; set; } = [];
+    public ICollection<Course> Courses { get; set; } = [];
+    public ICollection<StudyPlan> StudyPlans { get; set; } = [];
     public ICollection<Student> Students { get; set; } = [];
 }

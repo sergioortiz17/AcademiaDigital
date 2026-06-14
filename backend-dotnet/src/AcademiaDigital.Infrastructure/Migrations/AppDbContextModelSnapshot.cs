@@ -143,9 +143,20 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(200)")
                         .HasColumnName("name");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
+
                     b.Property<int>("TotalCredits")
                         .HasColumnType("int")
                         .HasColumnName("total_credits");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -343,6 +354,223 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.ToTable("CooperativeEntities", (string)null);
                 });
 
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Course", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("int")
+                        .HasColumnName("career_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CareerId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("Courses", (string)null);
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.CourseApprovalRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AllowsPromotion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("allows_promotion");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("MinimumAttendancePercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("minimum_attendance_percentage");
+
+                    b.Property<decimal?>("MinimumPromotionGrade")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("minimum_promotion_grade");
+
+                    b.Property<decimal?>("MinimumRegularGrade")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("minimum_regular_grade");
+
+                    b.Property<string>("PolicyJson")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("policy_json");
+
+                    b.Property<bool>("RequiresFinalExam")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("requires_final_exam");
+
+                    b.Property<int>("StudyPlanCourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("study_plan_course_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudyPlanCourseId")
+                        .IsUnique();
+
+                    b.ToTable("CourseApprovalRules", (string)null);
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.CoursePrerequisite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("course_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("MinimumRequiredStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("minimum_required_status");
+
+                    b.Property<int>("PrerequisiteCourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("prerequisite_course_id");
+
+                    b.Property<string>("PrerequisiteType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("prerequisite_type");
+
+                    b.Property<int>("StudyPlanId")
+                        .HasColumnType("int")
+                        .HasColumnName("study_plan_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("PrerequisiteCourseId");
+
+                    b.HasIndex("StudyPlanId", "CourseId", "PrerequisiteCourseId")
+                        .IsUnique()
+                        .HasFilter("[is_active] = 1");
+
+                    b.ToTable("CoursePrerequisites", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CoursePrerequisites_NoSelfReference", "course_id <> prerequisite_course_id");
+                        });
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.CourseType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("code");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("CourseTypes", (string)null);
+                });
+
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Enrollment", b =>
                 {
                     b.Property<long>("Id")
@@ -355,6 +583,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<int>("AcademicYear")
                         .HasColumnType("int")
                         .HasColumnName("academic_year");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("course_id");
 
                     b.Property<DateTime>("EnrollmentDate")
                         .HasColumnType("datetime2")
@@ -377,9 +609,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("student_id");
 
-                    b.Property<int>("SubjectId")
+                    b.Property<int?>("StudyPlanCourseId")
                         .HasColumnType("int")
-                        .HasColumnName("subject_id");
+                        .HasColumnName("study_plan_course_id");
 
                     b.Property<int?>("TeachingPositionId")
                         .HasColumnType("int")
@@ -387,11 +619,15 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubjectId");
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("TeachingPositionId");
 
-                    b.HasIndex("StudentId", "SubjectId", "AcademicYear", "Semester")
+                    b.HasIndex("StudentId", "Status");
+
+                    b.HasIndex("StudyPlanCourseId", "Status");
+
+                    b.HasIndex("StudentId", "CourseId", "AcademicYear", "Semester")
                         .IsUnique();
 
                     b.ToTable("Enrollments", (string)null);
@@ -440,7 +676,54 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.ToTable("Students", (string)null);
                 });
 
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Subject", b =>
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentStudyPlan", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ended_at");
+
+                    b.Property<bool>("IsCurrent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_current");
+
+                    b.Property<string>("MigrationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("migration_reason");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("student_id");
+
+                    b.Property<int>("StudyPlanId")
+                        .HasColumnType("int")
+                        .HasColumnName("study_plan_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique()
+                        .HasFilter("[is_current] = 1");
+
+                    b.HasIndex("StudyPlanId");
+
+                    b.ToTable("StudentStudyPlans", (string)null);
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlan", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -459,14 +742,17 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("code");
 
-                    b.Property<int>("Credits")
-                        .HasColumnType("int")
-                        .HasColumnName("credits");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("description");
+                    b.Property<DateOnly?>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -480,43 +766,123 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(200)")
                         .HasColumnName("name");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("version_number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CareerId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("StudyPlans", (string)null);
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlanCourse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("course_id");
+
+                    b.Property<int?>("CourseTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("course_type_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("Credits")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("credits");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsMandatory")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_mandatory");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("row_version");
+
                     b.Property<int>("Semester")
                         .HasColumnType("int")
                         .HasColumnName("semester");
 
-                    b.Property<int>("WeeklyHours")
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("weekly_hours");
+                        .HasDefaultValue(0)
+                        .HasColumnName("sort_order");
 
-                    b.Property<int>("Year")
+                    b.Property<int>("StudyPlanId")
                         .HasColumnType("int")
-                        .HasColumnName("year");
+                        .HasColumnName("study_plan_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("WorkloadHours")
+                        .HasColumnType("int")
+                        .HasColumnName("workload_hours");
+
+                    b.Property<int>("YearNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("year_number");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CareerId");
+                    b.HasIndex("CourseId");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("CourseTypeId");
+
+                    b.HasIndex("StudyPlanId", "CourseId")
                         .IsUnique();
 
-                    b.ToTable("Subjects", (string)null);
-                });
+                    b.HasIndex("StudyPlanId", "YearNumber", "Semester", "SortOrder");
 
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.SubjectPrerequisite", b =>
-                {
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("subject_id");
+                    b.ToTable("StudyPlanCourses", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_StudyPlanCourses_Semester", "semester IN (1, 2)");
 
-                    b.Property<int>("PrerequisiteSubjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("prerequisite_subject_id");
-
-                    b.HasKey("SubjectId", "PrerequisiteSubjectId");
-
-                    b.HasIndex("PrerequisiteSubjectId");
-
-                    b.ToTable("SubjectPrerequisites", (string)null);
+                            t.HasCheckConstraint("CK_StudyPlanCourses_YearNumber", "year_number > 0");
+                        });
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Teacher", b =>
@@ -588,6 +954,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("close_date");
 
+                    b.Property<int?>("CourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("course_id");
+
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)")
@@ -601,10 +971,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("status");
 
-                    b.Property<int?>("SubjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("subject_id");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -615,7 +981,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasIndex("CareerId");
 
-                    b.HasIndex("SubjectId");
+                    b.HasIndex("CourseId");
 
                     b.ToTable("TeacherContests", (string)null);
                 });
@@ -632,6 +998,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<int>("AcademicYear")
                         .HasColumnType("int")
                         .HasColumnName("academic_year");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int")
+                        .HasColumnName("course_id");
 
                     b.Property<bool>("IsVacant")
                         .ValueGeneratedOnAdd()
@@ -651,17 +1021,13 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("semester");
 
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("subject_id");
-
                     b.Property<long?>("TeacherId")
                         .HasColumnType("bigint")
                         .HasColumnName("teacher_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubjectId");
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("TeacherId");
 
@@ -677,9 +1043,23 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("birth_date");
+
+                    b.Property<string>("Cuil")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("cuil");
+
                     b.Property<DateTime>("DateJoined")
                         .HasColumnType("datetime2")
                         .HasColumnName("date_joined");
+
+                    b.Property<string>("Dni")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("dni");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -693,40 +1073,16 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("failed_login_attempts");
 
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("Dni")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("dni");
-
                     b.Property<string>("Gender")
                         .HasMaxLength(1)
                         .HasColumnType("nvarchar(1)")
                         .HasColumnName("gender");
 
-                    b.Property<string>("Cuil")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("cuil");
-
-                    b.Property<DateTime?>("BirthDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("birth_date");
-
-                    b.Property<string>("PhoneCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("phone_code");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("phone");
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(255)
@@ -743,10 +1099,18 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(128)")
                         .HasColumnName("password");
 
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("PhoneCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("phone_code");
+
                     b.Property<int>("Role")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasDefaultValue(1)
                         .HasColumnName("role");
 
                     b.Property<string>("Username")
@@ -757,12 +1121,12 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
-
                     b.HasIndex("Dni")
                         .IsUnique()
                         .HasFilter("[dni] IS NOT NULL");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users", (string)null);
                 });
@@ -830,28 +1194,84 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Navigation("Contest");
                 });
 
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Course", b =>
+                {
+                    b.HasOne("AcademiaDigital.Domain.Entities.Career", "Career")
+                        .WithMany("Courses")
+                        .HasForeignKey("CareerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Career");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.CourseApprovalRule", b =>
+                {
+                    b.HasOne("AcademiaDigital.Domain.Entities.StudyPlanCourse", "StudyPlanCourse")
+                        .WithOne("ApprovalRule")
+                        .HasForeignKey("AcademiaDigital.Domain.Entities.CourseApprovalRule", "StudyPlanCourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StudyPlanCourse");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.CoursePrerequisite", b =>
+                {
+                    b.HasOne("AcademiaDigital.Domain.Entities.Course", "Course")
+                        .WithMany("Prerequisites")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademiaDigital.Domain.Entities.Course", "PrerequisiteCourse")
+                        .WithMany("IsPrerequisiteFor")
+                        .HasForeignKey("PrerequisiteCourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademiaDigital.Domain.Entities.StudyPlan", "StudyPlan")
+                        .WithMany("Prerequisites")
+                        .HasForeignKey("StudyPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("PrerequisiteCourse");
+
+                    b.Navigation("StudyPlan");
+                });
+
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Enrollment", b =>
                 {
+                    b.HasOne("AcademiaDigital.Domain.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("AcademiaDigital.Domain.Entities.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AcademiaDigital.Domain.Entities.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasOne("AcademiaDigital.Domain.Entities.StudyPlanCourse", "StudyPlanCourse")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("StudyPlanCourseId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("AcademiaDigital.Domain.Entities.TeachingPosition", "TeachingPosition")
                         .WithMany("Enrollments")
                         .HasForeignKey("TeachingPositionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.Navigation("Course");
+
                     b.Navigation("Student");
 
-                    b.Navigation("Subject");
+                    b.Navigation("StudyPlanCourse");
 
                     b.Navigation("TeachingPosition");
                 });
@@ -875,10 +1295,29 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Subject", b =>
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentStudyPlan", b =>
+                {
+                    b.HasOne("AcademiaDigital.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademiaDigital.Domain.Entities.StudyPlan", "StudyPlan")
+                        .WithMany("StudentStudyPlans")
+                        .HasForeignKey("StudyPlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+
+                    b.Navigation("StudyPlan");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlan", b =>
                 {
                     b.HasOne("AcademiaDigital.Domain.Entities.Career", "Career")
-                        .WithMany("Subjects")
+                        .WithMany("StudyPlans")
                         .HasForeignKey("CareerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -886,23 +1325,30 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Navigation("Career");
                 });
 
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.SubjectPrerequisite", b =>
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlanCourse", b =>
                 {
-                    b.HasOne("AcademiaDigital.Domain.Entities.Subject", "PrerequisiteSubject")
-                        .WithMany("IsPrerequisiteFor")
-                        .HasForeignKey("PrerequisiteSubjectId")
+                    b.HasOne("AcademiaDigital.Domain.Entities.Course", "Course")
+                        .WithMany("StudyPlanCourses")
+                        .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AcademiaDigital.Domain.Entities.Subject", "Subject")
-                        .WithMany("Prerequisites")
-                        .HasForeignKey("SubjectId")
+                    b.HasOne("AcademiaDigital.Domain.Entities.CourseType", "CourseType")
+                        .WithMany("StudyPlanCourses")
+                        .HasForeignKey("CourseTypeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AcademiaDigital.Domain.Entities.StudyPlan", "StudyPlan")
+                        .WithMany("Courses")
+                        .HasForeignKey("StudyPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PrerequisiteSubject");
+                    b.Navigation("Course");
 
-                    b.Navigation("Subject");
+                    b.Navigation("CourseType");
+
+                    b.Navigation("StudyPlan");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Teacher", b =>
@@ -923,21 +1369,21 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasForeignKey("CareerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("AcademiaDigital.Domain.Entities.Subject", "Subject")
+                    b.HasOne("AcademiaDigital.Domain.Entities.Course", "Course")
                         .WithMany()
-                        .HasForeignKey("SubjectId")
+                        .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Career");
 
-                    b.Navigation("Subject");
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.TeachingPosition", b =>
                 {
-                    b.HasOne("AcademiaDigital.Domain.Entities.Subject", "Subject")
+                    b.HasOne("AcademiaDigital.Domain.Entities.Course", "Course")
                         .WithMany()
-                        .HasForeignKey("SubjectId")
+                        .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -946,23 +1392,48 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasForeignKey("TeacherId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Subject");
+                    b.Navigation("Course");
 
                     b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Career", b =>
                 {
+                    b.Navigation("Courses");
+
                     b.Navigation("Students");
 
-                    b.Navigation("Subjects");
+                    b.Navigation("StudyPlans");
                 });
 
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Subject", b =>
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Course", b =>
                 {
                     b.Navigation("IsPrerequisiteFor");
 
                     b.Navigation("Prerequisites");
+
+                    b.Navigation("StudyPlanCourses");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.CourseType", b =>
+                {
+                    b.Navigation("StudyPlanCourses");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlan", b =>
+                {
+                    b.Navigation("Courses");
+
+                    b.Navigation("Prerequisites");
+
+                    b.Navigation("StudentStudyPlans");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlanCourse", b =>
+                {
+                    b.Navigation("ApprovalRule");
+
+                    b.Navigation("Enrollments");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.TeacherContest", b =>

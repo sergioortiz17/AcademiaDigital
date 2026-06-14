@@ -15,6 +15,7 @@ public class StudentRepository(AppDbContext db) : IStudentRepository
     public async Task<IEnumerable<Student>> GetByCareerAsync(int careerId, CancellationToken ct = default)
         => await db.Students.AsNoTracking()
             .Include(s => s.User)
+            .Include(s => s.Career)
             .Where(s => s.CareerId == careerId)
             .ToListAsync(ct);
 
