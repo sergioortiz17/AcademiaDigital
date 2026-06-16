@@ -7,8 +7,6 @@ on:
       - 'frontend-angular/**'
   push:
     branches: [feat/sonar]
-    paths:
-      - 'frontend-angular/**'
 
 env:
   NODE_VERSION: '20'

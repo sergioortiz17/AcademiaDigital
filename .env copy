@@ -1,0 +1,3 @@
+
+SA_PASSWORD=Admin1234!
+JWT_SECRET_KEY=academia-digital-secret-key-local-dev-2024
