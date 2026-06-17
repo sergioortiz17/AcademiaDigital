@@ -6,9 +6,7 @@ on:
     paths:
       - 'backend-dotnet/**'
   push:
-    branches: [main]
-    paths:
-      - 'backend-dotnet/**'
+    branches: [feat/sonar]
 
 env:
   DOTNET_VERSION: '8.0.x'
