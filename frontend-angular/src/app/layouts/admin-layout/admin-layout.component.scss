@@ -96,3 +96,11 @@
 
   display: block;
 }
+
+/*Forzar tema oscuro en columna de navegación*/
+:host-context(.dark-theme) .sidenav,
+:host-context(.dark-theme) mat-sidenav,
+:host-context(.dark-theme) .mat-mdc-sidenav {
+  background-color: var(--sidenav-bg) !important;
+  color: var(--text-primary) !important;
+}

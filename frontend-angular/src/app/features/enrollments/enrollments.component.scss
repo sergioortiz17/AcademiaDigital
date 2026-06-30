@@ -1,1 +1,139 @@
-// All styles in global styles.scss
+.page-header{
+
+    display:flex;
+    justify-content:flex-end;
+
+    margin-bottom:18px;
+
+}
+
+.page-header h1{
+
+    margin:0;
+    font-size:28px;
+    font-weight:600;
+
+}
+
+.my-enrollments-link{
+
+    color:#045797;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+
+}
+
+.my-enrollments-link:hover{
+
+    text-decoration:underline;
+
+}
+
+.plan-container{
+    position:relative;
+    z-index: 2;
+    overflow: visible;
+    background:white;
+
+    border:2px solid #3b84d9;
+
+    border-radius:22px;
+
+    padding:42px 20px 20px 20px;
+
+}
+
+.notice{
+
+    text-align:center;
+
+    font-size:13px;
+
+    line-height:20px;
+
+    margin-bottom:25px;
+
+    text-transform:uppercase;
+
+}
+
+.plan-image{
+
+    display:flex;
+
+    justify-content:center;
+
+}
+
+.plan-image img{
+
+    width:100%;
+
+    max-width:980px;
+
+    border:1px solid #d6d6d6;
+
+}
+
+.plan-title{
+    position:absolute;
+    top:-35px;
+    left: 0px;
+    background:#4b94d9;
+    color:white;
+    padding:16px 32px ;
+    border-radius:14px 14px 0 0;
+    font-size:20px;
+    font-weight:800;
+    box-shadow:0 2px 6px rgba(0,0,0,.18);
+    z-index: 1;
+}
+
+.plan-title span{
+    position: relative;
+    top: -11px; 
+}
+
+.plan-wrapper{
+    position:relative;
+}
+
+/*Mensajes de error*/
+.submit-section{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    margin-top:35px;
+
+}
+
+.success-message{
+
+    background:#dff6e4;
+
+    color:#1e7e34;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    margin-bottom:20px;
+
+}
+
+.error-message{
+
+    background:#fde2e2;
+
+    color:#b91c1c;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    margin-bottom:20px;
+
+}

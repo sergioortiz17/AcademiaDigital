@@ -1,4 +1,4 @@
-<div class="page-header">
+<!--  div class="page-header">
   <h1>{{ 'pages.enrollments.title' | translate }}</h1>
   <p>{{ 'pages.enrollments.description' | translate }}</p>
 </div>
@@ -10,3 +10,43 @@
     <p>{{ 'pages.enrollments.comingSoon' | translate }}</p>
   </mat-card-content>
 </mat-card>
+-->
+
+<div class="page-header">
+    <a class="my-enrollments-link" (click)="openMyEnrollments()">
+      Ver mis inscripciones
+    </a>
+</div>
+
+<!-- PLAN DE ESTUDIOS -->
+<div *ngIf="!showMyEnrollments" class="plan-wrapper">
+    <div class="plan-title">
+        <span>Inscripciones</span>
+    </div>
+
+    <div class="plan-container">
+      <div class="notice">
+        TENGA EN CUENTA EL SIGUIENTE SISTEMA DE CORRELATIVIDADES PARA REALIZAR
+        LA INSCRIPCIÓN.<br>
+
+        PARA INSCRIBIRSE A LA MATERIA QUE VA A CURSAR DEBE TENER APROBADA O
+        REGULAR LA MATERIA PREVIA.
+      </div>
+
+      <div class="plan-image">
+        <img src="assets/images/plan-estudios-software-2023.png" alt="Plan de Estudios">
+      </div>
+    </div>
+  <app-enrollment-form></app-enrollment-form>
+
+</div>
+
+<!-- ACA IRA EL COMPONENTE DE MIS INSCRIPCIONES -->
+
+<div *ngIf="showMyEnrollments">
+
+    <!-- Lo desarrollaremos luego -->
+
+    <p>Listado de mis inscripciones...</p>
+
+</div>

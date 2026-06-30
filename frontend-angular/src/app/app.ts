@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
 import { accountInitialize } from './store/account/account.actions';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,8 @@ import { accountInitialize } from './store/account/account.actions';
 export class App implements OnInit {
   constructor(
     private translate: TranslateService,
-    private store: Store
+    private store: Store,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {

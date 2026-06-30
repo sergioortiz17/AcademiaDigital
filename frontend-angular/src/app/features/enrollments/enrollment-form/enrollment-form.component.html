@@ -1,0 +1,166 @@
+<div class="enrollment-card">
+
+    <div *ngIf="successMsg" class="success-message">
+        {{successMsg}}
+    </div>
+    <div *ngIf="errorMsg" class="error-message">
+        {{errorMsg}}
+    </div>
+    <div class="filters">
+
+        <div class="field">
+
+            <label>Carrera</label>
+            <mat-form-field appearance="outline">
+                <mat-select [(value)]="selectedCareer" (selectionChange)="onCareerChange()">
+                    <mat-option *ngFor="let career of careers" [value]="career.id">
+                        {{career.name}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="field">
+            <label>Año de carrera</label>
+            <mat-form-field appearance="outline">
+                <mat-select [(value)]="selectedYear" (selectionChange)="addYear()">
+                    <mat-option *ngFor="let year of availableYears" [value]="year.id" [disabled]="selectedYears.includes(year.id)">
+                        {{year.name}}
+                    </mat-option>
+                </mat-select>
+                
+            </mat-form-field>
+            <div class="year-chips">
+                    <mat-chip-set>
+                        <mat-chip *ngFor="let year of selectedYears" removable (removed)="removeYear(year)">
+                           {{year}}° Año
+                            <button matChipRemove>
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        </mat-chip>
+                    </mat-chip-set>
+                </div>
+        </div>
+        <div class="field">
+            <label>Sede</label>
+            <mat-form-field appearance="outline">
+                <mat-select [(value)]="selectedCampus">
+                    <mat-option *ngFor="let campus of campuses" [value]="campus">
+                        {{campus}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="field">
+            <label>Turno</label>
+            <mat-form-field appearance="outline">
+                <mat-select [(value)]="selectedShift">
+                    <mat-option *ngFor="let shift of shifts" [value]="shift">
+                        {{shift}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+
+    </div>
+    <div *ngIf="selectedYears.includes(1)" class="year-section">
+        <h2>
+            1° AÑO
+        </h2>
+        <p>
+            Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.
+        </p>
+        <div class="subjects-card">
+            <div class="header">
+                INSCRIBIRME EN
+            </div>
+            <div *ngFor="let subject of firstYearSubjects" class="subject-row">
+                <span>
+                    {{subject.courseName}}
+                </span>
+                <mat-checkbox [checked]="selectedSubjectsByYear[1].includes(subject.courseId)" 
+                    (change)="toggleSubject(1,subject.courseId,$event)">
+                </mat-checkbox>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="selectedYears.includes(2)" class="year-section">
+        <h2>
+            2° AÑO
+        </h2>
+        <p>
+            Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.
+        </p>
+        <div class="subjects-card">
+            <div class="header">
+                INSCRIBIRME EN
+            </div>
+            <div *ngFor="let subject of secondYearSubjects" class="subject-row">
+                <span>
+                    {{subject.courseName}}
+                </span>
+                <mat-checkbox [checked]="selectedSubjectsByYear[2].includes(subject.courseId)" (change)="toggleSubject(2,subject.courseId,$event)">
+                </mat-checkbox>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="selectedYears.includes(3)" class="year-section">
+        <h2>
+            3° AÑO
+        </h2>
+        <p>
+            Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.
+        </p>
+        <div class="subjects-card">
+            <div class="header">
+                INSCRIBIRME EN
+            </div>
+            <div *ngFor="let subject of thirdYearSubjects" class="subject-row">
+                <span>
+                    {{subject.courseName}}
+                </span>
+                <mat-checkbox [checked]="selectedSubjectsByYear[3].includes(subject.courseId)" (change)="toggleSubject(3,subject.courseId,$event)">
+                </mat-checkbox>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="documents-section">
+        <div class="documents-card">
+            <div class="documents-message">
+            PARA QUE SU MATRÍCULA SE REALICE, DEBERÁ PRESENTARSE EN RÍO NEGRO 77
+            DE 18:30 A 20 CON LA SIGUIENTE DOCUMENTACIÓN.
+            <br>
+            UNA COPIA DE LOS SIGUIENTES ÍTEMS.
+            <br>
+            (PUEDE VENIR UN FAMILIAR A TRAER LA DOCUMENTACIÓN)
+        </div>
+
+        <div class="documents-title">
+            A LLENAR POR EL COORDINADOR
+        </div>
+
+        <div *ngFor="let document of requiredDocuments" class="document-row">
+            <span>
+                {{ document.label }}
+            </span>
+            <mat-checkbox [checked]="document.checked" disabled>
+            </mat-checkbox>
+        </div>
+    </div>
+</div>
+
+  <div class="documents-footer">
+    Se enviará una copia de tus respuestas por correo electrónico
+    a la dirección que has proporcionado.
+  </div>
+
+  <div class="submit-section">
+    <button mat-raised-button class="save-btn" (click)="submitEnrollment()" [disabled]="!canSubmit() || isSubmitting">
+        <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
+        <span *ngIf="!isSubmitting">
+            ENVIAR
+        </span>
+    </button>
+  </div>

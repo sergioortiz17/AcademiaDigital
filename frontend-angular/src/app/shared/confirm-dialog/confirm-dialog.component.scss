@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+
+.dialog-header {
+  background: #b8cfe3;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 16px 24px;
+
+  font-size: 20px;
+  font-weight: 600;
+  color: #045797;
+
+  mat-icon {
+    color: #045797;
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+.dialog-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.action {
+  color: #00a651;
+}
+
+.user-box {
+  margin: 20px auto;
+
+  background: #b8cfe3;
+
+  border-radius: 12px;
+
+  padding: 16px;
+
+  max-width: 320px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 10px;
+
+  text-align: left;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+
+  padding: 0 24px 24px;
+}
+
+.cancel-btn {
+  background: #045797;
+  color: white;
+}

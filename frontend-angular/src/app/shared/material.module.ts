@@ -20,6 +20,8 @@ import { MatRippleModule, MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 const MATERIAL_MODULES = [
   MatSidenavModule, MatToolbarModule, MatListModule, MatIconModule,
@@ -27,7 +29,7 @@ const MATERIAL_MODULES = [
   MatMenuModule, MatProgressBarModule, MatProgressSpinnerModule,
   MatDividerModule, MatTooltipModule, MatSnackBarModule, MatSelectModule,
   MatChipsModule, MatBadgeModule, MatRippleModule, MatCheckboxModule,
-  MatTableModule, MatDatepickerModule, MatNativeDateModule
+  MatTableModule, MatDatepickerModule, MatNativeDateModule,MatDialogModule, MatExpansionModule
 ];
 
 @NgModule({ imports: MATERIAL_MODULES, exports: MATERIAL_MODULES })

@@ -30,9 +30,9 @@ export class CertificatesComponent implements OnInit, OnDestroy {
 
   statusFilters = [
     { label: 'Todos',     value: null },
-    { label: 'Pendiente', value: 'Pending' },
-    { label: 'Aprobado',  value: 'Approved' },
-    { label: 'Rechazado', value: 'Rejected' },
+    { label: 'Pendientes', value: 'Pending' },
+    { label: 'Aprobados',  value: 'Approved' },
+    { label: 'Rechazados', value: 'Rejected' },
   ];
 
   displayedColumnsAlumno = ['certificateType', 'status', 'createdAt'];
@@ -53,6 +53,9 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly search$  = new Subject<string>();
 
+  sortColumn: 'username' | 'certificateType' | 'status' | 'createdAt' = 'createdAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
+  
   constructor(
     private readonly certificatesService: CertificatesService,
     private readonly store: Store,
@@ -128,4 +131,65 @@ export class CertificatesComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  sortBy(column: 'username' | 'certificateType' | 'status' | 'createdAt'): void {
+
+  if (this.sortColumn === column) {
+
+    this.sortDirection =
+      this.sortDirection === 'asc'
+      ? 'desc'
+      : 'asc';
+
+  } else {
+
+    this.sortColumn = column;
+    this.sortDirection = 'asc';
+
+  }
+
+  this.requests.sort((a, b) => {
+
+    let valueA: any;
+    let valueB: any;
+
+    switch (column) {
+
+      case 'username':
+        valueA = a.username?.toLowerCase();
+        valueB = b.username?.toLowerCase();
+        break;
+
+      case 'certificateType':
+        valueA = a.certificateType?.toLowerCase();
+        valueB = b.certificateType?.toLowerCase();
+        break;
+
+      case 'status':
+        valueA = a.status?.toLowerCase();
+        valueB = b.status?.toLowerCase();
+        break;
+
+      case 'createdAt':
+        valueA = new Date(a.createdAt).getTime();
+        valueB = new Date(b.createdAt).getTime();
+        break;
+
+    }
+
+    if (valueA < valueB)
+      return this.sortDirection === 'asc' ? -1 : 1;
+
+    if (valueA > valueB)
+      return this.sortDirection === 'asc' ? 1 : -1;
+
+    return 0;
+
+  });
+
+  this.requests = [...this.requests];
+
+this.cdr.detectChanges();
+
+}
 }
