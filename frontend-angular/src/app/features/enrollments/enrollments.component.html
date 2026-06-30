@@ -13,8 +13,8 @@
 -->
 
 <div class="page-header">
-    <a class="my-enrollments-link" (click)="openMyEnrollments()">
-      Ver mis inscripciones
+    <a class="my-enrollments-link" (click)="showMyEnrollments ? backToPlan() : openMyEnrollments()">
+      {{ showMyEnrollments ? 'Volver' : 'Ver mis inscripciones' }}
     </a>
 </div>
 
@@ -41,12 +41,31 @@
 
 </div>
 
-<!-- ACA IRA EL COMPONENTE DE MIS INSCRIPCIONES -->
+<!-- MIS INSCRIPCIONES -->
+<div *ngIf="showMyEnrollments" class="plan-wrapper">
+  <div class="plan-title">
+    <span>Mis inscripciones</span>
+  </div>
 
-<div *ngIf="showMyEnrollments">
-
-    <!-- Lo desarrollaremos luego -->
-
-    <p>Listado de mis inscripciones...</p>
-
+  <div class="plan-container">
+    <div class="enrollment-list">
+      <div class="enrollment-item" *ngFor="let item of myEnrollments">
+        <div class="enrollment-info">
+          <mat-icon class="enrollment-icon">description</mat-icon>
+          <a class="enrollment-link">{{ item.title }}</a>
+        </div>
+        <div class="enrollment-actions">
+          <button mat-icon-button type="button" title="Ver">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Descargar">
+            <mat-icon>download</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Imprimir">
+            <mat-icon>print</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

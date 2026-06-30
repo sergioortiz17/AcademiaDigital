@@ -137,3 +137,64 @@
     margin-bottom:20px;
 
 }
+
+.enrollment-list{
+    display:flex;
+    flex-direction:column;
+}
+
+.enrollment-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 6px;
+    border-bottom:1px solid #eef1f5;
+}
+
+.enrollment-item:last-child{
+    border-bottom:none;
+}
+
+.enrollment-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.enrollment-icon{
+    color:#c9a463;
+    font-size:22px;
+    width:22px;
+    height:22px;
+}
+
+.enrollment-link{
+    color:#045797;
+    font-weight:600;
+    text-decoration:underline;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.enrollment-actions{
+    display:flex;
+    align-items:center;
+    gap:2px;
+}
+
+.enrollment-actions button{
+    width:40px;
+    height:40px;
+    line-height:22px;
+    color:#5f6368;
+}
+
+.enrollment-actions mat-icon{
+    font-size:18px;
+    width:18px;
+    height:18px;
+    vertical-align:middle;
+}
+
+
+
