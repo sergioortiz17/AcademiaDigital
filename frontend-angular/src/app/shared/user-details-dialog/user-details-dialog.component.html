@@ -1,0 +1,42 @@
+<div class="profile-modal">
+
+  <div class="modal-header">
+
+    <div class="user-chip">
+      <mat-icon>person</mat-icon>
+      {{ data.username }} {{ data.lastName }}
+    </div>
+
+    <button mat-icon-button  class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="modal-content">
+
+    <div class="modal-fields">
+    <div class="field">
+      <label>Legajo *</label>
+      <input type="text" [(ngModel)]="data.legajo">
+    </div>
+    <div class="field">
+      <label>Carrera</label>
+      <input type="text" [value]="data.carrera" readonly>
+    </div>
+    <div class="field">
+      <label>Fecha de nacimiento</label>
+      <input [value]="data.birthDate | date:'dd/MM/yyyy'" readonly>
+    </div>
+    <div class="field">
+      <label>Teléfono</label>
+      <input [value]="data.phone" readonly>
+    </div>
+  </div>
+
+  <div class="modal-actions">
+    <button class="save-btn" (click)="save()">
+      Guardar
+    </button>
+  </div>
+  </div>
+</div>

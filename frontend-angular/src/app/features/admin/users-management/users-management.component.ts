@@ -3,8 +3,15 @@ import { AdminService, UserSummary } from '../../../core/services/admin.service'
 import { UserRole } from '../../../store/account/account.actions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin  } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { UserService } from '../../../core/services/user.service';
+import { UserDetailsDialogComponent } from '../../../shared/user-details-dialog/user-details-dialog.component';
+import { StudentService } from '../../../core/services/student.service';
+
+
 
 @Component({
   selector: 'app-users-management',
@@ -52,7 +59,9 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   constructor(
     private readonly adminService: AdminService,
     private readonly store: Store,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private dialog: MatDialog,
+    private readonly studentService: StudentService
   ) {}
 
   ngOnInit(): void {
@@ -123,31 +132,242 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  changeRole(user: UserSummary, newRole: UserRole): void {
+changeRole(user: UserSummary, newRole: UserRole): void {
+
+  const dialogRef = this.openConfirmationDialog(
+    `MODIFICAR`,
+    user
+  ); //${this.getRoleLabel(newRole)}
+
+  dialogRef.afterClosed().subscribe(result => {
+
+    if (!result) return;
+
     this.adminService.updateRole(user.id, newRole).subscribe({
       next: (res) => {
-        user.role = res.user.role;
-        this.successMsg = `Rol de ${user.username} actualizado.`;
-        setTimeout(() => this.successMsg = '', 3000);
-      },
-      error: (err) => { this.errorMsg = err.error?.msg || 'Error al actualizar rol.'; }
-    });
-  }
 
-  deleteUser(user: UserSummary): void {
-    if (!confirm(`¿Eliminar al usuario "${user.username}"?`)) return;
+        this.users = this.users.map(u =>
+          u.id === user.id
+          ? { ...u, role: res.user.role }
+          : u
+        );
+
+        this.successMsg = `Rol de ${user.username} actualizado.`;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (err) => {
+        this.errorMsg =
+          err.error?.msg || 'Error al actualizar rol.';
+        this.cdr.detectChanges();
+      }
+    });
+  });
+}
+
+deleteUser(user: UserSummary): void {
+
+  const dialogRef =
+    this.openConfirmationDialog('ELIMINAR', user);
+
+  dialogRef.afterClosed().subscribe(result => {
+
+    if (!result) return;
+  
     this.adminService.deleteUser(user.id).subscribe({
       next: () => {
-        this.users = this.users.filter(u => u.id !== user.id);
-        this.total = Math.max(0, this.total - 1);
-        this.successMsg = `Usuario ${user.username} eliminado.`;
-        setTimeout(() => this.successMsg = '', 3000);
-      },
-      error: (err) => { this.errorMsg = err.error?.msg || 'Error al eliminar usuario.'; }
-    });
-  }
 
-  isCurrentUser(user: UserSummary): boolean {
-    return this.currentUserId === user.id;
-  }
+        this.users = this.users.filter(u => u.id !== user.id);
+        this.successMsg =
+          `Usuario ${user.username} eliminado.`;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (err) => {
+        this.errorMsg =
+          err.error?.msg || 'Error al eliminar usuario.';
+        this.cdr.detectChanges();
+      }
+    });
+  });
+}
+
+isCurrentUser(user: UserSummary): boolean {
+  return this.currentUserId === user.id;
+}
+
+disableUser(user: UserSummary): void {
+
+  const dialogRef = this.openConfirmationDialog('DESACTIVAR', user);
+
+  dialogRef.afterClosed().subscribe(result => {
+
+    if (!result) return;
+
+    this.adminService.disableUser(user.id).subscribe({
+      next: (res) => {
+
+        this.users = this.users.map(u =>
+          u.id === user.id
+            ? { ...u, isActive: res.user.isActive }
+            : u
+        );
+
+        this.successMsg = `Usuario ${user.username} desactivado.`;
+
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 3000);
+
+      },
+      error: (err) => {
+        this.errorMsg = err.error?.msg || 'Error al desactivar usuario.';
+        this.cdr.detectChanges();
+      }
+    });
+
+  });
+}
+
+activateUser(user: UserSummary): void {
+
+  const dialogRef =
+    this.openConfirmationDialog('ACTIVAR', user);
+
+  dialogRef.afterClosed().subscribe(result => {
+
+    if (!result) return;
+
+    this.adminService.activateUser(user.id).subscribe({
+      next: (res) => {
+
+        this.users = this.users.map(u =>
+          u.id === user.id
+          ? { ...u, isActive: res.user.isActive }
+          : u
+    );
+
+        this.successMsg =
+          `Usuario ${user.username} activado.`;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (err) => {
+        this.errorMsg =
+          err.error?.msg || 'Error al activar usuario.';
+        this.cdr.detectChanges();
+      }
+    });
+
+  });
+}
+
+private openConfirmationDialog(
+  action: string,
+  user: UserSummary
+) {
+  return this.dialog.open(ConfirmDialogComponent, {
+    width: '450px',
+    disableClose: true,
+    data: {
+      title: 'Acción importante',
+      action,
+      username: user.username,
+      dni: user.dni,
+      role: this.getRoleLabel(user.role)
+    }
+  });
+}
+
+//AGREGAR CON GET POR ID ANTES DE HABILITAR
+//openUserDetails(user: UserSummary): void {
+//  this.userService.getProfile(user.id)
+//    .subscribe({
+
+//      next: (profile) => {
+
+//        this.dialog.open(UserDetailsDialogComponent, {
+//          width: '700px',
+//          disableClose: true,
+//          data: profile
+//        });
+
+//      },
+
+//      error: () => {
+//        this.errorMsg = 'No se pudieron cargar los datos.';
+//      }
+
+//    });
+
+//}
+
+openUserDetail(user: UserSummary): void {
+
+  this.studentService.getStudentByUserId(user.id)
+    .subscribe({
+
+     next: (student) => {
+
+        this.dialog.open(UserDetailsDialogComponent, {
+          width: '600px',
+          panelClass: 'user-dialog-panel',
+          data: {
+
+            username: user.username,
+            //lastName: user.lastName,
+            email: user.email,
+            dni: user.dni,
+
+            carrera: student.careerName,
+            legajo: student.legajoNumber,
+
+            fechaIngreso: student.enrollmentDate,
+            estado: student.status,
+            plan: student.currentStudyPlanName
+          }
+        });
+
+      },
+
+      error: () => {
+
+        this.dialog.open(UserDetailsDialogComponent, {
+          width: '600px',
+          panelClass: 'user-dialog-panel',
+          data: {
+
+            username: user.username,
+            email: user.email,
+            dni: user.dni,
+
+            carrera: '-',
+            legajo: '-',
+            fechaIngreso: '-',
+            estado: '-',
+            plan: '-'
+          }
+        });
+
+      }
+
+    });
+
+}
+
 }

@@ -1,0 +1,178 @@
+.profile-modal {
+  width: 600px; /*Debe ser igual al width de openUserDetail*/
+
+  background: #fff;
+
+  border: 1px solid #6ea2d6;
+  border-radius: 18px;
+
+  padding: 16px 18px;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,.15);
+
+  
+}
+
+/* HEADER */
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 18px;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+
+  background: #78a8d6;
+  color: white;
+
+  padding: .45rem 1rem;
+
+  border-radius: 999px;
+
+  font-size: .9rem;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.modal-header button {
+  width: 28px;
+  height: 28px;
+
+  color: #0f4f92;
+}
+
+/* CONTENIDO */
+
+.modal-content {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 1rem 1.5rem;
+}
+
+/* CAMPOS */
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  font-size: .75rem;
+  font-weight: 500;
+
+  margin-bottom: 4px;
+
+  color: #333;
+}
+
+.field input {
+  height: 32px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  padding: 0 10px;
+
+  background: #efefef;
+
+  color: #444;
+
+  font-size: .85rem;
+
+  box-shadow: 0 2px 4px rgba(0,0,0,.18);
+
+  outline: none;
+}
+
+.field input:focus {
+  box-shadow:
+    0 0 0 2px rgba(28,119,189,.2),
+    0 2px 4px rgba(0,0,0,.18);
+}
+
+/* FOOTER */
+
+.modal-actions {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.save-btn {
+  min-width: 120px;
+
+  border: none;
+
+  background: #ffd86a;
+
+  color: #0f4f92;
+
+  font-weight: 600;
+
+  padding: .7rem 1.8rem;
+
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  box-shadow: 0 3px 8px rgba(0,0,0,.25);
+
+  transition: .2s;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+}
+
+.close-btn{
+  width:40px;
+  height:40px;
+  /*min-width:40px;*/
+  padding:0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.close-btn mat-icon{
+  width:20px;
+  height:20px;
+  font-size:20px;
+  line-height:20px;
+}
+
+@media (max-width: 600px) {
+
+  .profile-modal {
+    width: 100%;
+  }
+
+  .modal-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-fields{
+    flex:1;
+
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:18px 24px;
+}

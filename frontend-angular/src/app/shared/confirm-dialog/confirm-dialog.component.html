@@ -1,0 +1,45 @@
+<div class="dialog-header">
+  <mat-icon>warning</mat-icon>
+  <span>Acción importante</span>
+</div>
+
+<div class="dialog-body">
+
+  <p>
+    Está a punto de
+    <strong [class]="actionClass">{{ data.action }}</strong>
+    un usuario
+  </p>
+
+  <div class="user-box">
+
+    <div class="row">
+      <mat-icon>person</mat-icon>
+      <span><b>Nombre:</b> {{ data.username }}</span>
+    </div>
+
+    <div class="row" *ngIf="data.dni">
+      <mat-icon>badge</mat-icon>
+      <span><b>DNI:</b> {{ data.dni }}</span>
+    </div>
+
+    <div class="row" *ngIf="data.role">
+      <mat-icon>admin_panel_settings</mat-icon>
+      <span><b>Rol:</b> {{ data.role }}</span>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">
+    Cancelar
+  </button>
+
+  <button mat-stroked-button class="confirm-btn" (click)="confirm()">
+    Confirmar
+  </button>
+
+</div>

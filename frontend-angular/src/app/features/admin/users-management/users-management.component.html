@@ -54,7 +54,8 @@
             <div class="user-info">
               <mat-icon class="avatar-icon">account_circle</mat-icon>
               <div>
-                <div class="user-name">{{ u.username }}</div>
+                <!-- Para que muestre el apellido debe estar el atributo lastName  en la peticion GET del backend -->
+                <div class="user-name clickable-user" (dblclick)="openUserDetail(u)">{{ u.username }} {{ u.lastName }}</div>
                 <div class="user-email">{{ u.email }}</div>
               </div>
             </div>
@@ -94,8 +95,16 @@
           <td mat-cell *matCellDef="let u">
             <div class="actions-wrap" *ngIf="!isCurrentUser(u); else selfRow">
 
+               <!-- ACTIVAR / DESACTIVAR -->
+              <button *ngIf="u.isActive" mat-icon-button class="btn-color" (click)="disableUser(u)" matTooltip="Desactivar usuario">
+                <mat-icon>pause</mat-icon>
+              </button>
+              <button *ngIf="!u.isActive" mat-icon-button class="btn-color" (click)="activateUser(u)" matTooltip="Activar usuario">
+                <mat-icon>play_circle</mat-icon>
+              </button>
+
               <!-- Change role menu -->
-              <button mat-icon-button [matMenuTriggerFor]="roleMenu" matTooltip="Cambiar rol" color="primary">
+              <button mat-icon-button [matMenuTriggerFor]="roleMenu" matTooltip="Cambiar rol" class="btn-color">
                 <mat-icon>swap_horiz</mat-icon>
               </button>
               <mat-menu #roleMenu="matMenu">

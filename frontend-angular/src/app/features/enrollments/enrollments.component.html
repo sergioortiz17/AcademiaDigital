@@ -1,4 +1,4 @@
-<div class="page-header">
+<!--  div class="page-header">
   <h1>{{ 'pages.enrollments.title' | translate }}</h1>
   <p>{{ 'pages.enrollments.description' | translate }}</p>
 </div>
@@ -10,3 +10,62 @@
     <p>{{ 'pages.enrollments.comingSoon' | translate }}</p>
   </mat-card-content>
 </mat-card>
+-->
+
+<div class="page-header">
+    <a class="my-enrollments-link" (click)="showMyEnrollments ? backToPlan() : openMyEnrollments()">
+      {{ showMyEnrollments ? 'Volver' : 'Ver mis inscripciones' }}
+    </a>
+</div>
+
+<!-- PLAN DE ESTUDIOS -->
+<div *ngIf="!showMyEnrollments" class="plan-wrapper">
+    <div class="plan-title">
+        <span>Inscripciones</span>
+    </div>
+
+    <div class="plan-container">
+      <div class="notice">
+        TENGA EN CUENTA EL SIGUIENTE SISTEMA DE CORRELATIVIDADES PARA REALIZAR
+        LA INSCRIPCIÓN.<br>
+
+        PARA INSCRIBIRSE A LA MATERIA QUE VA A CURSAR DEBE TENER APROBADA O
+        REGULAR LA MATERIA PREVIA.
+      </div>
+
+      <div class="plan-image">
+        <img src="assets/images/plan-estudios-software-2023.png" alt="Plan de Estudios">
+      </div>
+    </div>
+  <app-enrollment-form></app-enrollment-form>
+
+</div>
+
+<!-- MIS INSCRIPCIONES -->
+<div *ngIf="showMyEnrollments" class="plan-wrapper">
+  <div class="plan-title">
+    <span>Mis inscripciones</span>
+  </div>
+
+  <div class="plan-container">
+    <div class="enrollment-list">
+      <div class="enrollment-item" *ngFor="let item of myEnrollments">
+        <div class="enrollment-info">
+          <mat-icon class="enrollment-icon">description</mat-icon>
+          <a class="enrollment-link">{{ item.title }}</a>
+        </div>
+        <div class="enrollment-actions">
+          <button mat-icon-button type="button" title="Ver">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Descargar">
+            <mat-icon>download</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Imprimir">
+            <mat-icon>print</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

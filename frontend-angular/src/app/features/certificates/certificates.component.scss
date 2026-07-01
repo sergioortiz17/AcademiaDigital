@@ -1,9 +1,17 @@
 .actions-bar { margin-bottom: 1.25rem; }
 
-.form-card, .table-card {
+/*.form-card, .table-card {
   border-radius: 20px !important;
   box-shadow: 0 4px 20px rgba(15,23,42,.06) !important;
   margin-bottom: 1.25rem;
+}*/
+
+.table-card{
+    border-radius:28px !important;
+    padding:18px;
+    box-shadow:none !important;
+    border:1px solid #edf0f5;
+    background:white;
 }
 
 .full-width { width: 100%; }
@@ -24,23 +32,23 @@
 }
 
 .role-pill {
-  border: 1.5px solid #e0e0e0;
+  border: 1px solid #e0e0e0;
   background: #fff;
   border-radius: 20px;
   padding: 5px 18px;
   font-size: .82rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   color: rgba(0,0,0,.6);
-  transition: background .15s, color .15s, border-color .15s;
+  transition: background .15s, color .15s, border-color .2s;
 
   &:hover { background: #f0f4ff; border-color: #90a4ae; }
 
-  &--active {
+  /*&--active {
     background: #3949ab;
     color: #fff;
     border-color: #3949ab;
-  }
+  }*/
 }
 
 // Pills de estado con colores propios cuando está activo
@@ -52,7 +60,7 @@
   margin-bottom: .5rem;
 }
 
-.search-field { width: 100%; max-width: 400px; }
+.search-field { width: 100%; max-width: 400px;  }
 
 // Tabla con overlay
 .table-wrap {
@@ -78,8 +86,9 @@
 .user-email { font-size: .78rem; color: rgba(0,0,0,.65); }
 
 .status-badge {
-  padding: 3px 12px;
-  border-radius: 12px;
+  background:none;
+  padding:0;
+  border-radius:0;
   font-size: .78rem;
   font-weight: 600;
   &--pending  { background: #fff8e1; color: #e65100; }
@@ -97,4 +106,109 @@
 .empty-state {
   text-align: center; padding: 3rem; color: rgba(0,0,0,.4);
   mat-icon { font-size: 48px; width: 48px; height: 48px; }
+}
+
+.certs-table th{
+    color:#045797;
+    /*font-size:12px;*/
+    font-weight:700;
+    border-bottom:1px solid #ececec;
+}
+
+.certs-table td{
+    height:48px;
+    border-bottom:1px solid #f3f3f3;
+    /*font-size:12px;*/
+}
+
+.sort-icon{
+    font-size:24px;
+    width:24px;
+    height:24px;
+    color:#045797;
+    vertical-align:middle;
+    cursor:pointer;
+    pointer-events:auto;
+}
+
+.role-pill--active{
+    color:white;
+    outline: none !important;
+}
+
+.role-pill.todos.role-pill--active{
+    background:#045797;
+    border: 1px solid transparent !important;
+}
+
+.role-pill.pending.role-pill--active{
+    background:#f39c12;
+    border: 1px solid transparent !important;
+}
+
+.role-pill.approved.role-pill--active{
+    background:#65c96d;
+    border: 1px solid transparent !important;
+}
+
+.role-pill.rejected.role-pill--active{
+    background:#d9534f;
+    border: 1px solid transparent !important;
+}
+
+.sort-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 5px;
+}
+.sort-button:hover {
+  background: rgba(0,0,0,0.05);
+  border-radius: 50%;
+}
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:18px;
+}
+
+.my-requests-link{
+    color:#045797;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+    margin-right: 12px;
+}
+
+.my-requests-link:hover{
+    text-decoration:underline;
+}
+
+.table-toolbar{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    align-items: center;
+    margin-right: 24px;
+  h1 {
+    font-weight: 500;
+  }  
+}
+
+.back-btn{
+    background: #045797 !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600;
+    font-size: 35px;
+  mat-icon {
+    vertical-align: middle;
+    font-size: 20px;
+  }
+}
+
+.back-btn:hover{
+    background: #1E67A0 !important;
+    color: white !important;
 }

@@ -6,34 +6,41 @@ import { UserRole } from '../../../store/account/account.actions';
 export interface MenuItem {
   id: string;
   title: string;
-  url: string;
-  icon: string;
+  url?: string;
+  icon?: string;
+  children?: MenuItem[];
 }
 
 const MENU_ALUMNO: MenuItem[] = [
   { id: 'dashboard',    title: 'Inicio',         url: '/app/dashboard/default', icon: 'home' },
-  { id: 'courses',      title: 'Carreras',        url: '/app/courses',           icon: 'menu_book' },
+  { id: 'courses',      title: 'Carreras',        url: '/app/courses',           icon: 'book' },
   { id: 'enrollments',  title: 'Inscripciones',   url: '/app/enrollments',       icon: 'assignment' },
+  { id: 'calendar',     title: 'Calendario',      url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
-  { id: 'calendar',     title: 'Calendario',      url: '/app/calendar',          icon: 'calendar_today' },
+  //{ id: 'grades',      title: 'Notas',    url: '/app/',            icon: 'grade' },
 ];
 
 const MENU_PROFESOR: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',          url: '/app/dashboard/default', icon: 'home' },
-  { id: 'grades',      title: 'Cargar Notas',    url: '/app/grades',            icon: 'grade' },
-  { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'menu_book' },
+  //{ id: 'grades',      title: 'Cargar Notas',    url: '/app/grades',            icon: 'grade' },
+  { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'book' },
+  { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'enrollments', title: 'Inscripciones',    url: '/app/enrollments',       icon: 'assignment' },
-  { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_today' },
+  //cambiar por Registro
 ];
 
 const MENU_ADMIN: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',            url: '/app/dashboard/default', icon: 'home' },
-  { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'manage_accounts' },
-  { id: 'courses',     title: 'Carreras',           url: '/app/courses',           icon: 'menu_book' },
+  { id: 'courses',     title: 'Carreras',           url: '/app/courses',           icon: 'book' },
   { id: 'enrollments', title: 'Inscripciones',      url: '/app/enrollments',       icon: 'assignment' },
-  { id: 'teachers',    title: 'Profesores',         url: '/app/teachers',          icon: 'group' },
-  { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'military_tech' },
-  { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_today' },
+  { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
+  //{ id: 'teachers',    title: 'Profesores',         url: '/app/teachers',          icon: 'group' },
+  { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
+    children: [
+      { id: 'certificate-requests', title: '• Peticiones',url: '/app/certificates',icon: '' }
+    ]
+  },
+  { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
 ];
 
 @Component({

@@ -4,7 +4,7 @@
     <div class="app-name">ITSC</div>
     <div class="app-logo">AcademiaDigital</div>
   </div> 
-</div> -->
+</div> 
 
 <span class="nav-group-label">Navegación</span>
 
@@ -17,4 +17,68 @@
     <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
     <span matListItemTitle>{{ item.title }}</span>
   </a>
+</mat-nav-list> -->
+
+<mat-nav-list>
+
+  <ng-container *ngFor="let item of menuItems">
+
+    <!-- Item normal -->
+    <a
+      *ngIf="!item.children"
+      mat-list-item
+      [routerLink]="item.url"
+      routerLinkActive="active-link"
+      (click)="onItemClick()">
+
+      <mat-icon matListItemIcon>
+        {{ item.icon }}
+      </mat-icon>
+
+      <span matListItemTitle>
+        {{ item.title }}
+      </span>
+
+    </a>
+
+    <!-- Item con submenú -->
+    <mat-expansion-panel *ngIf="item.children" class="menu-panel" hideToggle>
+
+      <mat-expansion-panel-header>
+
+        <mat-panel-title>
+
+          <mat-icon matListItemIcon>
+            {{ item.icon }}
+          </mat-icon>
+
+          <span class="menu-title">
+            {{ item.title }}
+          </span>
+
+        </mat-panel-title>
+
+      </mat-expansion-panel-header>
+
+      <a
+        mat-list-item
+        *ngFor="let child of item.children"
+        [routerLink]="child.url"
+        routerLinkActive="active-link"
+        (click)="onItemClick()">
+
+        <mat-icon>
+          {{ child.icon }}
+        </mat-icon>
+
+        <span matListItemTitle>
+          {{ child.title }}
+        </span>
+
+      </a>
+
+    </mat-expansion-panel>
+
+  </ng-container>
+
 </mat-nav-list>
