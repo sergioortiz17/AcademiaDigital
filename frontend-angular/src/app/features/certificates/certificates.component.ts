@@ -14,6 +14,7 @@ import { UserRole } from '../../store/account/account.actions';
 })
 export class CertificatesComponent implements OnInit, OnDestroy {
   requests: CertificateRequest[] = [];
+  allRequests: CertificateRequest[] = [];
   isLoading = false;
   isSubmitting = false;
   errorMsg = '';
@@ -23,6 +24,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   certificateTypes = CERTIFICATE_TYPES;
   UserRole = UserRole;
   userRole: UserRole | null = null;
+  showMyRequests = false;
 
   // Admin filters
   searchTerm = '';
@@ -36,7 +38,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   ];
 
   displayedColumnsAlumno = ['certificateType', 'status', 'createdAt'];
-  displayedColumnsAdmin  = ['username', 'certificateType', 'status', 'createdAt'];
+  displayedColumnsAdmin  = ['username', 'certificateType', 'status', 'createdAt', 'actions'];
 
   get displayedColumns() {
     return this.userRole === UserRole.Admin
@@ -55,7 +57,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
 
   sortColumn: 'username' | 'certificateType' | 'status' | 'createdAt' = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
-  
+
   constructor(
     private readonly certificatesService: CertificatesService,
     private readonly store: Store,
@@ -65,7 +67,9 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.select(selectUserRole).pipe(take(1)).subscribe(role => {
       this.userRole = role as UserRole;
-      this.loadRequests();
+      if(this.userRole===UserRole.Admin){
+        this.loadRequests();
+      }
     });
 
     this.search$.pipe(
@@ -87,7 +91,12 @@ export class CertificatesComponent implements OnInit, OnDestroy {
 
   onStatusFilter(status: string | null): void {
     this.selectedStatus = status;
-    this.loadRequests();
+    if (this.userRole === UserRole.Admin) {
+        this.loadRequests();
+    }
+    else {
+        this.applyFilters();
+    }
   }
 
   loadRequests(): void {
@@ -101,9 +110,10 @@ export class CertificatesComponent implements OnInit, OnDestroy {
 
     obs.pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
-        this.requests = res.requests;
-        this.isLoading = false;
-        this.cdr.detectChanges();
+         this.allRequests = res.requests;
+         this.applyFilters();
+         this.isLoading = false;
+         this.cdr.detectChanges();
       },
       error: () => {
         this.errorMsg = 'Error al cargar certificados.';
@@ -118,7 +128,8 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
     this.certificatesService.requestCertificate(this.selectedType).subscribe({
       next: (res) => {
-        this.requests.unshift(res.request);
+        this.allRequests.unshift(res.request);
+        this.applyFilters();
         this.successMsg = 'Solicitud enviada correctamente.';
         this.showForm = false;
         this.selectedType = '';
@@ -190,6 +201,68 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   this.requests = [...this.requests];
 
 this.cdr.detectChanges();
+}
+
+openMyRequests(): void {
+
+    this.showMyRequests = true;
+    this.selectedStatus = null;
+    this.searchTerm = '';
+    this.loadRequests();
 
 }
+
+closeMyRequests(): void {
+
+    this.showMyRequests = false;
+    this.selectedStatus = null;
+    this.requests = [];
+    this.allRequests = [];
+
+}
+
+approveRequest(request: CertificateRequest): void {
+
+    console.log('Aprobar', request);
+
+    // Aquí luego llamaremos al endpoint
+    //this.certificatesService
+    //    .approveCertificate(request.id)
+    //    .subscribe({
+    //        next:()=>{
+    //        this.loadRequests();
+    //      }
+    //  });
+
+}
+
+rejectRequest(request: CertificateRequest): void {
+
+    console.log('Rechazar', request);
+
+    // Aquí luego llamaremos al endpoint
+    //this.certificatesService
+    //    .rejectCertificate(request.id)
+    //    .subscribe({
+    //      next:()=>{
+    //          this.loadRequests();
+    //      }
+    //  });
+
+}
+
+private applyFilters(): void {
+
+    this.requests = [...this.allRequests];
+
+    if (this.selectedStatus) {
+
+        this.requests = this.requests.filter(
+            x => x.status === this.selectedStatus
+        );
+
+    }
+
+}
+
 }

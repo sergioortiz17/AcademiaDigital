@@ -166,3 +166,49 @@
   background: rgba(0,0,0,0.05);
   border-radius: 50%;
 }
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:18px;
+}
+
+.my-requests-link{
+    color:#045797;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+    margin-right: 12px;
+}
+
+.my-requests-link:hover{
+    text-decoration:underline;
+}
+
+.table-toolbar{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    align-items: center;
+    margin-right: 24px;
+  h1 {
+    font-weight: 500;
+  }  
+}
+
+.back-btn{
+    background: #045797 !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600;
+    font-size: 35px;
+  mat-icon {
+    vertical-align: middle;
+    font-size: 20px;
+  }
+}
+
+.back-btn:hover{
+    background: #1E67A0 !important;
+    color: white !important;
+}

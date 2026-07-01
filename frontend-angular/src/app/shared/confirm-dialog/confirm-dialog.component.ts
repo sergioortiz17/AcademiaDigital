@@ -29,4 +29,26 @@ export class ConfirmDialogComponent {
   cancel(): void {
     this.dialogRef.close(false);
   }
+
+  get actionClass(): string {
+
+  switch (this.data.action.toLowerCase()) {
+
+    case 'activar':
+      return 'action-activate';
+
+    case 'desactivar':
+      return 'action-deactivate';
+
+    case 'modificar':
+      return 'action-modify';
+
+    case 'eliminar':
+      return 'action-delete';
+
+    default:
+      return 'action-default';
+  }
+
+}
 }

@@ -7,7 +7,7 @@
 
   <p>
     Está a punto de
-    <strong class="action">{{ data.action }}</strong>
+    <strong [class]="actionClass">{{ data.action }}</strong>
     un usuario
   </p>
 
@@ -38,7 +38,7 @@
     Cancelar
   </button>
 
-  <button mat-stroked-button color="primary" (click)="confirm()">
+  <button mat-stroked-button class="confirm-btn" (click)="confirm()">
     Confirmar
   </button>
 

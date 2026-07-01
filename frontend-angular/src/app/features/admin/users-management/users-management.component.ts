@@ -132,12 +132,12 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  changeRole(user: UserSummary, newRole: UserRole): void {
+changeRole(user: UserSummary, newRole: UserRole): void {
 
   const dialogRef = this.openConfirmationDialog(
-    `CAMBIAR ROL A ${this.getRoleLabel(newRole)}`,
+    `MODIFICAR`,
     user
-  );
+  ); //${this.getRoleLabel(newRole)}
 
   dialogRef.afterClosed().subscribe(result => {
 
@@ -145,17 +145,25 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
 
     this.adminService.updateRole(user.id, newRole).subscribe({
       next: (res) => {
-        user.role = res.user.role;
+
+        this.users = this.users.map(u =>
+          u.id === user.id
+          ? { ...u, role: res.user.role }
+          : u
+        );
 
         this.successMsg = `Rol de ${user.username} actualizado.`;
+        this.cdr.detectChanges();
 
         setTimeout(() => {
           this.successMsg = '';
+          this.cdr.detectChanges();
         }, 3000);
       },
       error: (err) => {
         this.errorMsg =
           err.error?.msg || 'Error al actualizar rol.';
+        this.cdr.detectChanges();
       }
     });
   });
@@ -169,26 +177,24 @@ deleteUser(user: UserSummary): void {
   dialogRef.afterClosed().subscribe(result => {
 
     if (!result) return;
-
+  
     this.adminService.deleteUser(user.id).subscribe({
       next: () => {
 
-        this.users =
-          this.users.filter(u => u.id !== user.id);
-
-        this.total =
-          Math.max(0, this.total - 1);
-
+        this.users = this.users.filter(u => u.id !== user.id);
         this.successMsg =
           `Usuario ${user.username} eliminado.`;
+        this.cdr.detectChanges();
 
         setTimeout(() => {
           this.successMsg = '';
+          this.cdr.detectChanges();
         }, 3000);
       },
       error: (err) => {
         this.errorMsg =
           err.error?.msg || 'Error al eliminar usuario.';
+        this.cdr.detectChanges();
       }
     });
   });
@@ -200,8 +206,7 @@ isCurrentUser(user: UserSummary): boolean {
 
 disableUser(user: UserSummary): void {
 
-  const dialogRef =
-    this.openConfirmationDialog('DESACTIVAR', user);
+  const dialogRef = this.openConfirmationDialog('DESACTIVAR', user);
 
   dialogRef.afterClosed().subscribe(result => {
 
@@ -210,19 +215,25 @@ disableUser(user: UserSummary): void {
     this.adminService.disableUser(user.id).subscribe({
       next: (res) => {
 
-        user.isActive =
-          res.user.isActive;
+        this.users = this.users.map(u =>
+          u.id === user.id
+            ? { ...u, isActive: res.user.isActive }
+            : u
+        );
 
-        this.successMsg =
-          `Usuario ${user.username} desactivado.`;
+        this.successMsg = `Usuario ${user.username} desactivado.`;
+
+        this.cdr.detectChanges();
 
         setTimeout(() => {
           this.successMsg = '';
+          this.cdr.detectChanges();
         }, 3000);
+
       },
       error: (err) => {
-        this.errorMsg =
-          err.error?.msg || 'Error al desactivar usuario.';
+        this.errorMsg = err.error?.msg || 'Error al desactivar usuario.';
+        this.cdr.detectChanges();
       }
     });
 
@@ -241,19 +252,25 @@ activateUser(user: UserSummary): void {
     this.adminService.activateUser(user.id).subscribe({
       next: (res) => {
 
-        user.isActive =
-          res.user.isActive;
+        this.users = this.users.map(u =>
+          u.id === user.id
+          ? { ...u, isActive: res.user.isActive }
+          : u
+    );
 
         this.successMsg =
           `Usuario ${user.username} activado.`;
+        this.cdr.detectChanges();
 
         setTimeout(() => {
           this.successMsg = '';
+          this.cdr.detectChanges();
         }, 3000);
       },
       error: (err) => {
         this.errorMsg =
           err.error?.msg || 'Error al activar usuario.';
+        this.cdr.detectChanges();
       }
     });
 

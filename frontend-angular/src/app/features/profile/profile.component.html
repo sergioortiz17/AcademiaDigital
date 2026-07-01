@@ -139,6 +139,18 @@
       
       <div class="password-layout">
       <div class="password-fields">
+        
+        <div class="field-group">
+          <label class="field-label">Contraseña actual</label>
+          <mat-form-field appearance="fill" class="custom-field">
+            <input matInput [type]="hideCurrentPassword ? 'password' : 'text'" formControlName="currentPassword"/>
+            <button mat-icon-button matSuffix type="button" (click)="hideCurrentPassword = !hideCurrentPassword">
+              <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+              La contraseña actual es obligatoria</mat-error>
+          </mat-form-field>
+        </div>
         <div class="field-group">
           <label class="field-label">Contraseña nueva</label>
           <mat-form-field appearance="fill" class="custom-field">
