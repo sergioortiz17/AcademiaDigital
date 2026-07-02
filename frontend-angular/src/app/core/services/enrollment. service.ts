@@ -119,6 +119,25 @@ export class EnrollmentService {
     );
   }
 
+  activatePeriod(periodId: number): Observable<{ success: boolean; msg: string }> {
+    return this.http.put<{ success: boolean; msg: string }>(
+      `${this.baseURL}v1/enrollments/periods/${periodId}/activate`,
+      {}
+    );
+  }
+
+  deletePeriod(periodId: number): Observable<{ success: boolean; msg: string }> {
+    return this.http.delete<{ success: boolean; msg: string }>(
+      `${this.baseURL}v1/enrollments/periods/${periodId}`
+    );
+  }
+
+  getPeriodReport(periodId: number): Observable<{ success: boolean; data: any }> {
+    return this.http.get<{ success: boolean; data: any }>(
+      `${this.baseURL}v1/enrollments/periods/${periodId}/report`
+    );
+  }
+
   enroll(request: CreateEnrollmentRequest): Observable<{ success: boolean; msg: string }> {
     return this.http.post<{ success: boolean; msg: string }>(
       `${this.baseURL}v1/enrollments`,

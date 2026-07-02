@@ -74,4 +74,12 @@ public class EnrollmentPeriodRepository(AppDbContext db) : IEnrollmentPeriodRepo
         await db.SaveChangesAsync(ct);
         return period;
     }
+
+    public async Task DeleteAsync(int periodId, CancellationToken ct = default)
+    {
+        var period = await db.EnrollmentPeriods.FindAsync([periodId], ct)
+            ?? throw new KeyNotFoundException("Enrollment period not found.");
+        db.EnrollmentPeriods.Remove(period);
+        await db.SaveChangesAsync(ct);
+    }
 }

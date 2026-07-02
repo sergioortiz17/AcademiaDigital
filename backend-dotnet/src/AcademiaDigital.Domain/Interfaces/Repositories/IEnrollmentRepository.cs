@@ -20,6 +20,11 @@ public sealed record MyEnrollmentRow(
     System.DateTime EnrollmentDate,
     string CourseName);
 
+// Rows used to build period report charts
+public sealed record GenderCountRow(string Gender, int Count);
+public sealed record CourseEnrollmentRow(string CourseName, int StudentCount);
+public sealed record DailyEnrollmentRow(System.DateOnly Date, int StudentCount);
+
 public interface IEnrollmentRepository
 {
     Task<IEnumerable<Enrollment>> GetByStudentAsync(long studentId, CancellationToken ct = default);
@@ -33,6 +38,9 @@ public interface IEnrollmentRepository
     // Optimized projection for student's own enrollment history
     Task<IReadOnlyList<MyEnrollmentRow>> GetMyEnrollmentRowsAsync(long studentId, CancellationToken ct = default);
     Task DeleteByStudentAndPeriodAsync(long studentId, int periodId, CancellationToken ct = default);
+    Task<IReadOnlyList<GenderCountRow>> GetGenderCountsByPeriodAsync(int periodId, CancellationToken ct = default);
+    Task<IReadOnlyList<CourseEnrollmentRow>> GetCourseCountsByPeriodAsync(int periodId, CancellationToken ct = default);
+    Task<IReadOnlyList<DailyEnrollmentRow>> GetDailyCountsByPeriodAsync(int periodId, int days, CancellationToken ct = default);
     Task<Enrollment> CreateAsync(Enrollment enrollment, CancellationToken ct = default);
     Task<Enrollment> UpdateAsync(Enrollment enrollment, CancellationToken ct = default);
     Task DeleteAsync(Enrollment enrollment, CancellationToken ct = default);

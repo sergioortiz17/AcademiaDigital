@@ -83,6 +83,53 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
                 e.Course.Name))
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<GenderCountRow>> GetGenderCountsByPeriodAsync(int periodId, CancellationToken ct = default)
+    {
+        // Load flat projection then group in-memory — Distinct().Count() inside GroupBy
+        // cannot be translated to SQL by EF Core.
+        var rows = await db.Enrollments
+            .AsNoTracking()
+            .Where(e => e.EnrollmentPeriodId == periodId)
+            .Select(e => new { Gender = e.Student.User.Gender ?? "Sin datos", e.StudentId })
+            .ToListAsync(ct);
+
+        return rows
+            .GroupBy(r => r.Gender)
+            .Select(g => new GenderCountRow(g.Key, g.Select(r => r.StudentId).Distinct().Count()))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<CourseEnrollmentRow>> GetCourseCountsByPeriodAsync(int periodId, CancellationToken ct = default)
+    {
+        var rows = await db.Enrollments
+            .AsNoTracking()
+            .Where(e => e.EnrollmentPeriodId == periodId)
+            .Select(e => new { CourseName = e.Course.Name, e.StudentId })
+            .ToListAsync(ct);
+
+        return rows
+            .GroupBy(r => r.CourseName)
+            .Select(g => new CourseEnrollmentRow(g.Key, g.Select(r => r.StudentId).Distinct().Count()))
+            .OrderByDescending(r => r.StudentCount)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<DailyEnrollmentRow>> GetDailyCountsByPeriodAsync(int periodId, int days, CancellationToken ct = default)
+    {
+        var since = DateTime.UtcNow.AddDays(-days).Date;
+        var rows = await db.Enrollments
+            .AsNoTracking()
+            .Where(e => e.EnrollmentPeriodId == periodId && e.EnrollmentDate >= since)
+            .Select(e => new { Date = e.EnrollmentDate.Date, e.StudentId })
+            .ToListAsync(ct);
+
+        return rows
+            .GroupBy(r => r.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new DailyEnrollmentRow(DateOnly.FromDateTime(g.Key), g.Select(r => r.StudentId).Distinct().Count()))
+            .ToList();
+    }
+
     public async Task DeleteByStudentAndPeriodAsync(long studentId, int periodId, CancellationToken ct = default)
     {
         var enrollments = await db.Enrollments

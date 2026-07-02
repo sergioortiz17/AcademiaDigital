@@ -86,9 +86,15 @@
           <span class="period-career">{{ p.careerName }}</span>
           <span class="period-meta">{{ p.studyPlanName }} &bull; {{ p.academicYear }} &bull; {{ semesterLabel(p.semester) }}</span>
           <div class="period-quotas">
-            <span class="quota-chip manana" *ngIf="p.quotasMorning > 0">Mañana: {{ p.quotasMorning }} cupos</span>
-            <span class="quota-chip tarde" *ngIf="p.quotasAfternoon > 0">Tarde: {{ p.quotasAfternoon }} cupos</span>
-            <span class="quota-chip noche" *ngIf="p.quotasEvening > 0">Noche: {{ p.quotasEvening }} cupos</span>
+            <span class="quota-chip manana" *ngIf="p.quotasMorning > 0">
+              Mañana: {{ p.quotasMorning - p.enrolledMorning }}/{{ p.quotasMorning }} cupos
+            </span>
+            <span class="quota-chip tarde" *ngIf="p.quotasAfternoon > 0">
+              Tarde: {{ p.quotasAfternoon - p.enrolledAfternoon }}/{{ p.quotasAfternoon }} cupos
+            </span>
+            <span class="quota-chip noche" *ngIf="p.quotasEvening > 0">
+              Noche: {{ p.quotasEvening - p.enrolledEvening }}/{{ p.quotasEvening }} cupos
+            </span>
           </div>
         </div>
         <div class="period-actions">
@@ -102,11 +108,20 @@
               {{ p.enrolledMorning + p.enrolledAfternoon + p.enrolledEvening }}
             </span>
           </button>
+          <button mat-icon-button matTooltip="Ver reportes" (click)="viewReports(p)">
+            <mat-icon>bar_chart</mat-icon>
+          </button>
           <button mat-icon-button matTooltip="Editar cupos" (click)="startEdit(p)">
             <mat-icon>edit</mat-icon>
           </button>
           <button mat-stroked-button color="warn" *ngIf="p.isActive" (click)="closePeriod(p)">
             Cerrar
+          </button>
+          <button mat-stroked-button color="primary" *ngIf="!p.isActive" (click)="activatePeriod(p)">
+            Activar
+          </button>
+          <button mat-icon-button color="warn" matTooltip="Eliminar período" (click)="deletePeriod(p)">
+            <mat-icon>delete</mat-icon>
           </button>
         </div>
       </div>

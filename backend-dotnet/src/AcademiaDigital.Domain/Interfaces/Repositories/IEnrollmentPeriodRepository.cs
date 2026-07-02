@@ -11,4 +11,5 @@ public interface IEnrollmentPeriodRepository
     Task<IReadOnlyDictionary<int, (int Morning, int Afternoon, int Evening)>> GetAllEnrolledShiftCountsAsync(IEnumerable<int> periodIds, CancellationToken ct = default);
     Task<EnrollmentPeriod> CreateAsync(EnrollmentPeriod period, CancellationToken ct = default);
     Task<EnrollmentPeriod> UpdateAsync(EnrollmentPeriod period, CancellationToken ct = default);
+    Task DeleteAsync(int periodId, CancellationToken ct = default);
 }

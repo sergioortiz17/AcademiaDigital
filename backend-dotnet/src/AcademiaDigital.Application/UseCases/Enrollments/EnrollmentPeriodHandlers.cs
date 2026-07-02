@@ -163,6 +163,9 @@ public sealed class CloseEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposit
 
 public sealed record UpdatePeriodQuotasCommand(int PeriodId, int QuotasMorning, int QuotasAfternoon, int QuotasEvening);
 public sealed record RemoveStudentFromPeriodCommand(int PeriodId, long StudentId);
+public sealed record ActivateEnrollmentPeriodCommand(int PeriodId);
+public sealed record DeleteEnrollmentPeriodCommand(int PeriodId);
+public sealed record GetPeriodReportQuery(int PeriodId);
 
 public sealed class UpdatePeriodQuotasCommandHandler(IEnrollmentPeriodRepository repository)
 {
@@ -238,6 +241,54 @@ public sealed class RemoveStudentFromPeriodCommandHandler(
             ?? throw new KeyNotFoundException("Enrollment period not found.");
 
         await enrollmentRepository.DeleteByStudentAndPeriodAsync(command.StudentId, command.PeriodId, ct);
+    }
+}
+
+public sealed class ActivateEnrollmentPeriodCommandHandler(IEnrollmentPeriodRepository repository)
+{
+    public async Task Handle(ActivateEnrollmentPeriodCommand command, CancellationToken ct = default)
+    {
+        var period = await repository.FindByIdAsync(command.PeriodId, ct)
+            ?? throw new KeyNotFoundException("Enrollment period not found.");
+
+        period.IsActive = true;
+        period.EndDate = null;
+        period.UpdatedAt = DateTime.UtcNow;
+
+        await repository.UpdateAsync(period, ct);
+    }
+}
+
+public sealed class DeleteEnrollmentPeriodCommandHandler(IEnrollmentPeriodRepository repository)
+{
+    public async Task Handle(DeleteEnrollmentPeriodCommand command, CancellationToken ct = default)
+        => await repository.DeleteAsync(command.PeriodId, ct);
+}
+
+public sealed class PeriodReportDto
+{
+    public IReadOnlyList<GenderReportItem> GenderCounts { get; set; } = [];
+    public IReadOnlyList<CourseReportItem> CourseCounts { get; set; } = [];
+    public IReadOnlyList<DailyReportItem> DailyCounts { get; set; } = [];
+}
+public sealed record GenderReportItem(string Gender, int Count);
+public sealed record CourseReportItem(string CourseName, int StudentCount);
+public sealed record DailyReportItem(string Date, int StudentCount);
+
+public sealed class GetPeriodReportQueryHandler(IEnrollmentRepository enrollmentRepository)
+{
+    public async Task<PeriodReportDto> Handle(GetPeriodReportQuery query, CancellationToken ct = default)
+    {
+        var genders = await enrollmentRepository.GetGenderCountsByPeriodAsync(query.PeriodId, ct);
+        var courses = await enrollmentRepository.GetCourseCountsByPeriodAsync(query.PeriodId, ct);
+        var daily = await enrollmentRepository.GetDailyCountsByPeriodAsync(query.PeriodId, 14, ct);
+
+        return new PeriodReportDto
+        {
+            GenderCounts = genders.Select(g => new GenderReportItem(g.Gender, g.Count)).ToList(),
+            CourseCounts = courses.Select(c => new CourseReportItem(c.CourseName, c.StudentCount)).ToList(),
+            DailyCounts = daily.Select(d => new DailyReportItem(d.Date.ToString("dd/MM"), d.StudentCount)).ToList()
+        };
     }
 }
 

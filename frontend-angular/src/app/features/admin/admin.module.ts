@@ -8,6 +8,8 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 import { UserDetailsDialogComponent } from '../../shared/user-details-dialog/user-details-dialog.component';
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
+import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
+import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 
 @NgModule({
   declarations: [
@@ -15,7 +17,9 @@ import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students
     ConfirmDialogComponent,
     UserDetailsDialogComponent,
     EnrollmentManagementComponent,
-    EnrolledStudentsComponent
+    EnrolledStudentsComponent,
+    EnrollmentReportsComponent,
+    SumCountPipe
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })

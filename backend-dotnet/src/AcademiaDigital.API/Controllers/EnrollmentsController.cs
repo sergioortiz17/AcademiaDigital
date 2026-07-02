@@ -8,6 +8,7 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/enrollments")]
 public class EnrollmentsController(
     EnrollmentPeriodFacade periods,
+    EnrollmentPeriodAdminFacade admin,
     CreateEnrollmentCommandHandler createEnrollmentHandler,
     GetMyEnrollmentsQueryHandler getMyEnrollmentsHandler,
     IStudentRepository studentRepository) : ApiControllerBase
@@ -73,6 +74,33 @@ public class EnrollmentsController(
         if (CurrentUserId is null) return Unauthorized();
         await periods.CloseAsync(id, ct);
         return Ok(new { success = true, msg = "Período de inscripción cerrado." });
+    }
+
+    // PUT /api/v1/enrollments/periods/{id}/activate
+    [HttpPut("periods/{id:int}/activate")]
+    public async Task<IActionResult> ActivatePeriod(int id, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        await admin.ActivateAsync(id, ct);
+        return Ok(new { success = true, msg = "Período de inscripción activado." });
+    }
+
+    // DELETE /api/v1/enrollments/periods/{id}
+    [HttpDelete("periods/{id:int}")]
+    public async Task<IActionResult> DeletePeriod(int id, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        await admin.DeleteAsync(id, ct);
+        return Ok(new { success = true, msg = "Período eliminado correctamente." });
+    }
+
+    // GET /api/v1/enrollments/periods/{id}/report
+    [HttpGet("periods/{id:int}/report")]
+    public async Task<IActionResult> GetPeriodReport(int id, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        var report = await admin.GetReportAsync(id, ct);
+        return Ok(new { success = true, data = report });
     }
 
     // DELETE /api/v1/enrollments/periods/{id}/students/{studentId}

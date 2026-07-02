@@ -133,6 +133,33 @@ export class EnrollmentManagementComponent implements OnInit {
     this.router.navigate(['/app/admin/enrollments', period.id, 'students']);
   }
 
+  viewReports(period: EnrollmentPeriodDto): void {
+    this.router.navigate(['/app/admin/enrollments', period.id, 'reports']);
+  }
+
+  activatePeriod(period: EnrollmentPeriodDto): void {
+    if (!confirm(`¿Reactivar el período de inscripción de ${period.careerName}?`)) return;
+    this.enrollmentService.activatePeriod(period.id).subscribe({
+      next: () => {
+        const idx = this.periods.findIndex(p => p.id === period.id);
+        if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: true, endDate: null };
+        this.cdr.detectChanges();
+      },
+      error: err => alert(err.message || 'No se pudo activar el período.')
+    });
+  }
+
+  deletePeriod(period: EnrollmentPeriodDto): void {
+    if (!confirm(`¿Eliminar el período de inscripción de ${period.careerName} ${period.academicYear} - ${this.semesterLabel(period.semester)}?\n\nEsta acción no se puede deshacer.`)) return;
+    this.enrollmentService.deletePeriod(period.id).subscribe({
+      next: () => {
+        this.periods = this.periods.filter(p => p.id !== period.id);
+        this.cdr.detectChanges();
+      },
+      error: err => alert(err.message || 'No se pudo eliminar el período.')
+    });
+  }
+
   startEdit(period: EnrollmentPeriodDto): void {
     this.editingPeriod = period;
     this.editQuotas = {

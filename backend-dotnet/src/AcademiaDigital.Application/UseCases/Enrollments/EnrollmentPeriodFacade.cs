@@ -34,3 +34,19 @@ public sealed class EnrollmentPeriodFacade(
     public Task RemoveStudentAsync(int periodId, long studentId, CancellationToken ct = default)
         => removeStudent.Handle(new RemoveStudentFromPeriodCommand(periodId, studentId), ct);
 }
+
+/// <summary>Facade for admin-only period lifecycle and reporting operations.</summary>
+public sealed class EnrollmentPeriodAdminFacade(
+    ActivateEnrollmentPeriodCommandHandler activate,
+    DeleteEnrollmentPeriodCommandHandler delete,
+    GetPeriodReportQueryHandler getReport)
+{
+    public Task ActivateAsync(int periodId, CancellationToken ct = default)
+        => activate.Handle(new ActivateEnrollmentPeriodCommand(periodId), ct);
+
+    public Task DeleteAsync(int periodId, CancellationToken ct = default)
+        => delete.Handle(new DeleteEnrollmentPeriodCommand(periodId), ct);
+
+    public Task<PeriodReportDto> GetReportAsync(int periodId, CancellationToken ct = default)
+        => getReport.Handle(new GetPeriodReportQuery(periodId), ct);
+}

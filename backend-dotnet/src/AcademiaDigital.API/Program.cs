@@ -79,7 +79,11 @@ builder.Services.AddScoped<CloseEnrollmentPeriodCommandHandler>();
 builder.Services.AddScoped<UpdatePeriodQuotasCommandHandler>();
 builder.Services.AddScoped<RemoveStudentFromPeriodCommandHandler>();
 builder.Services.AddScoped<GetMyEnrollmentsQueryHandler>();
+builder.Services.AddScoped<ActivateEnrollmentPeriodCommandHandler>();
+builder.Services.AddScoped<DeleteEnrollmentPeriodCommandHandler>();
+builder.Services.AddScoped<GetPeriodReportQueryHandler>();
 builder.Services.AddScoped<EnrollmentPeriodFacade>();
+builder.Services.AddScoped<EnrollmentPeriodAdminFacade>();
 builder.Services.AddScoped<CreateEnrollmentCommandHandler>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
