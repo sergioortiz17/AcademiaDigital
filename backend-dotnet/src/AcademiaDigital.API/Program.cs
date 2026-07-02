@@ -78,6 +78,7 @@ builder.Services.AddScoped<OpenEnrollmentPeriodCommandHandler>();
 builder.Services.AddScoped<CloseEnrollmentPeriodCommandHandler>();
 builder.Services.AddScoped<UpdatePeriodQuotasCommandHandler>();
 builder.Services.AddScoped<RemoveStudentFromPeriodCommandHandler>();
+builder.Services.AddScoped<GetMyEnrollmentsQueryHandler>();
 builder.Services.AddScoped<EnrollmentPeriodFacade>();
 builder.Services.AddScoped<CreateEnrollmentCommandHandler>();
 

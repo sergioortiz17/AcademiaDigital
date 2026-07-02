@@ -40,6 +40,7 @@ public sealed class EnrolledStudentDto
 public sealed record GetAllEnrollmentPeriodsQuery();
 public sealed record GetActiveEnrollmentPeriodQuery(int CareerId);
 public sealed record GetEnrolledStudentsQuery(int PeriodId);
+public sealed record GetMyEnrollmentsQuery(long StudentId);
 public sealed record OpenEnrollmentPeriodCommand(
     int CareerId,
     int StudyPlanId,
@@ -179,6 +180,51 @@ public sealed class UpdatePeriodQuotasCommandHandler(IEnrollmentPeriodRepository
 
         var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, ct);
         return Mapper.Map(period, counts);
+    }
+}
+
+public sealed class MyEnrollmentPeriodDto
+{
+    public int PeriodId { get; set; }
+    public int AcademicYear { get; set; }
+    public int Semester { get; set; }
+    public string? Shift { get; set; }
+    public DateTime EnrollmentDate { get; set; }
+    public IReadOnlyList<string> CourseNames { get; set; } = [];
+}
+
+public sealed class GetMyEnrollmentsQueryHandler(IEnrollmentRepository enrollmentRepository)
+{
+    public async Task<IReadOnlyList<MyEnrollmentPeriodDto>> Handle(GetMyEnrollmentsQuery query, CancellationToken ct = default)
+    {
+        // Projected query — no TeachingPosition/Teacher/User joins, only course name needed
+        var rows = await enrollmentRepository.GetMyEnrollmentRowsAsync(query.StudentId, ct);
+
+        // Group by (year, semester) with dictionary — O(n) single pass
+        var index = new Dictionary<(int year, int sem), MyEnrollmentPeriodDto>(capacity: rows.Count);
+        foreach (var row in rows)
+        {
+            var key = (row.AcademicYear, row.Semester);
+            if (!index.TryGetValue(key, out var dto))
+            {
+                dto = new MyEnrollmentPeriodDto
+                {
+                    PeriodId = row.PeriodId,
+                    AcademicYear = row.AcademicYear,
+                    Semester = row.Semester,
+                    Shift = row.Shift,
+                    EnrollmentDate = row.EnrollmentDate,
+                    CourseNames = new List<string>()
+                };
+                index[key] = dto;
+            }
+            ((List<string>)dto.CourseNames).Add(row.CourseName);
+        }
+
+        return index.Values
+            .OrderByDescending(d => d.AcademicYear)
+            .ThenByDescending(d => d.Semester)
+            .ToList();
     }
 }
 

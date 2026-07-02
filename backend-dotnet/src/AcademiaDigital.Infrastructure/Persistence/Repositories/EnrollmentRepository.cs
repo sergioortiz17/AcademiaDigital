@@ -68,6 +68,21 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
         return rows;
     }
 
+    public async Task<IReadOnlyList<MyEnrollmentRow>> GetMyEnrollmentRowsAsync(long studentId, CancellationToken ct = default)
+        => await db.Enrollments
+            .AsNoTracking()
+            .Where(e => e.StudentId == studentId)
+            .OrderByDescending(e => e.AcademicYear)
+            .ThenByDescending(e => e.Semester)
+            .Select(e => new MyEnrollmentRow(
+                e.EnrollmentPeriodId ?? 0,
+                e.AcademicYear,
+                e.Semester,
+                e.Shift,
+                e.EnrollmentDate,
+                e.Course.Name))
+            .ToListAsync(ct);
+
     public async Task DeleteByStudentAndPeriodAsync(long studentId, int periodId, CancellationToken ct = default)
     {
         var enrollments = await db.Enrollments

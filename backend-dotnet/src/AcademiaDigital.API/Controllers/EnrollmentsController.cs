@@ -9,6 +9,7 @@ namespace AcademiaDigital.API.Controllers;
 public class EnrollmentsController(
     EnrollmentPeriodFacade periods,
     CreateEnrollmentCommandHandler createEnrollmentHandler,
+    GetMyEnrollmentsQueryHandler getMyEnrollmentsHandler,
     IStudentRepository studentRepository) : ApiControllerBase
 {
     // GET /api/v1/enrollments/periods
@@ -81,6 +82,28 @@ public class EnrollmentsController(
         if (CurrentUserId is null) return Unauthorized();
         await periods.RemoveStudentAsync(id, studentId, ct);
         return Ok(new { success = true, msg = "Inscripción eliminada correctamente." });
+    }
+
+    // DELETE /api/v1/enrollments/my/{periodId}  — alumno se da de baja de un período
+    [HttpDelete("my/{periodId:int}")]
+    public async Task<IActionResult> CancelMyEnrollment(int periodId, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        var student = await studentRepository.FindByUserIdAsync(CurrentUserId.Value, ct)
+            ?? throw new KeyNotFoundException("Student profile not found.");
+        await periods.RemoveStudentAsync(periodId, student.Id, ct);
+        return Ok(new { success = true, msg = "Inscripción cancelada correctamente." });
+    }
+
+    // GET /api/v1/enrollments/my
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyEnrollments(CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        var student = await studentRepository.FindByUserIdAsync(CurrentUserId.Value, ct)
+            ?? throw new KeyNotFoundException("Student profile not found.");
+        var result = await getMyEnrollmentsHandler.Handle(new GetMyEnrollmentsQuery(student.Id), ct);
+        return Ok(new { success = true, data = result });
     }
 
     // POST /api/v1/enrollments

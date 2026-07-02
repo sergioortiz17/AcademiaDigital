@@ -41,6 +41,15 @@ export interface OpenPeriodRequest {
   quotasEvening: number;
 }
 
+export interface MyEnrollmentPeriodDto {
+  periodId: number;
+  academicYear: number;
+  semester: number;
+  shift: string | null;
+  enrollmentDate: string;
+  courseNames: string[];
+}
+
 export interface CreateEnrollmentRequest {
   enrollmentPeriodId: number;
   shift: string;
@@ -89,6 +98,18 @@ export class EnrollmentService {
     return this.http.put<{ success: boolean; msg: string }>(
       `${this.baseURL}v1/enrollments/periods/${periodId}/close`,
       {}
+    );
+  }
+
+  getMyEnrollments(): Observable<{ success: boolean; data: MyEnrollmentPeriodDto[] }> {
+    return this.http.get<{ success: boolean; data: MyEnrollmentPeriodDto[] }>(
+      `${this.baseURL}v1/enrollments/my`
+    );
+  }
+
+  cancelMyEnrollment(periodId: number): Observable<{ success: boolean; msg: string }> {
+    return this.http.delete<{ success: boolean; msg: string }>(
+      `${this.baseURL}v1/enrollments/my/${periodId}`
     );
   }
 
