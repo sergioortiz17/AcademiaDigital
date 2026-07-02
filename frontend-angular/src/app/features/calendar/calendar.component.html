@@ -1,12 +1,93 @@
-<div class="page-header">
-  <h1>{{ 'pages.calendar.title' | translate }}</h1>
-  <p>{{ 'pages.calendar.description' | translate }}</p>
-</div>
+<div class="calendar-page">
 
-<mat-card class="coming-soon-card">
-  <mat-card-content>
-    <mat-icon>calendar_today</mat-icon>
-    <h2>Próximamente</h2>
-    <p>{{ 'pages.calendar.comingSoon' | translate }}</p>
-  </mat-card-content>
-</mat-card>
+  <!-- Header -->
+  <div class="cal-header">
+    <div class="cal-nav">
+      <button mat-icon-button (click)="prevMonth()" matTooltip="Mes anterior">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="month-label">{{ monthLabel }}</span>
+      <button mat-icon-button (click)="nextMonth()" matTooltip="Mes siguiente">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+    <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+  </div>
+
+  <p *ngIf="error" class="error-msg">{{ error }}</p>
+
+  <!-- Calendar grid + detail panel -->
+  <div class="cal-body" [class.has-detail]="selectedDay">
+
+    <!-- Grid -->
+    <div class="cal-grid">
+      <!-- Day-of-week headers -->
+      <div class="weekday-header" *ngFor="let w of weekDays">{{ w }}</div>
+
+      <!-- Day cells -->
+      <ng-container *ngFor="let week of weeks">
+        <div
+          *ngFor="let day of week"
+          class="day-cell"
+          [class.empty]="!day.isCurrentMonth"
+          [class.today]="day.isToday"
+          [class.has-events]="day.events.length > 0"
+          [class.selected]="selectedDay?.date?.getTime() === day.date?.getTime()"
+          [attr.tabindex]="day.isCurrentMonth && day.events.length > 0 ? 0 : null"
+          [attr.role]="day.isCurrentMonth && day.events.length > 0 ? 'button' : null"
+          (click)="selectDay(day)"
+          (keydown.enter)="selectDay(day)"
+          (keydown.space)="selectDay(day)"
+        >
+          <span class="day-number" *ngIf="day.dayNumber">{{ day.dayNumber }}</span>
+
+          <div class="event-pills" *ngIf="day.events.length > 0">
+            <div
+              class="event-pill"
+              [class]="'event-pill ' + eventTypeClass(day.events[0].eventType)"
+            >
+              <span class="pill-time" *ngIf="day.events[0].startTime">{{ day.events[0].startTime }}</span>
+              <span class="pill-title">{{ day.events[0].title }}</span>
+            </div>
+            <div class="more-badge" *ngIf="day.events.length > 1">+{{ day.events.length - 1 }}</div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Day detail panel -->
+    <div class="day-detail" *ngIf="selectedDay">
+      <div class="detail-header">
+        <span class="detail-date">
+          {{ weekDays[(selectedDay.date!.getDay() + 6) % 7] }},
+          {{ selectedDay.dayNumber }} de {{ monthNames[currentMonth - 1] }}
+        </span>
+        <button mat-icon-button (click)="closeDetail()"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <div class="detail-events">
+        <div class="detail-event" *ngFor="let ev of selectedDay.events">
+          <div class="detail-event-bar" [class]="eventTypeClass(ev.eventType)"></div>
+          <div class="detail-event-content">
+            <span class="detail-event-time" *ngIf="ev.startTime">{{ ev.startTime }} hs</span>
+            <span class="detail-event-title">{{ ev.title }}</span>
+            <span class="detail-event-desc" *ngIf="ev.description">{{ ev.description }}</span>
+            <span class="detail-event-type-badge" [class]="eventTypeClass(ev.eventType)">
+              {{ eventTypeLabel(ev.eventType) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot type-examen"></span> Examen</div>
+    <div class="legend-item"><span class="legend-dot type-entrega"></span> Entrega TP</div>
+    <div class="legend-item"><span class="legend-dot type-clase"></span> Clase</div>
+    <div class="legend-item"><span class="legend-dot type-otro"></span> Evento</div>
+  </div>
+
+</div>
