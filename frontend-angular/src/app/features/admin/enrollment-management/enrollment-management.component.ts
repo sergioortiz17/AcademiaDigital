@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   EnrollmentService,
@@ -43,12 +43,18 @@ export class EnrollmentManagementComponent implements OnInit {
     private readonly enrollmentService: EnrollmentService,
     private readonly careerService: CareerService,
     private readonly subjectService: SubjectService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadPeriods();
-    this.careerService.getCareers().subscribe({ next: c => this.careers = c });
+    this.careerService.getCareers().subscribe({
+      next: c => {
+        this.careers = c;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadPeriods(): void {
@@ -57,10 +63,12 @@ export class EnrollmentManagementComponent implements OnInit {
       next: res => {
         this.periods = res.data;
         this.loadingPeriods = false;
+        this.cdr.detectChanges();
       },
       error: err => {
         console.error(err);
         this.loadingPeriods = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -70,7 +78,10 @@ export class EnrollmentManagementComponent implements OnInit {
     this.studyPlans = [];
     if (!this.openingForm.careerId) return;
     this.subjectService.getStudyPlansByCareer(this.openingForm.careerId).subscribe({
-      next: plans => this.studyPlans = plans.filter(p => p.isActive)
+      next: plans => {
+        this.studyPlans = plans.filter(p => p.isActive);
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -94,12 +105,14 @@ export class EnrollmentManagementComponent implements OnInit {
         this.resetForm();
         this.isSubmitting = false;
         this.successMsg = 'Período de inscripción activado correctamente.';
-        setTimeout(() => this.successMsg = '', 4000);
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         this.loadPeriods();
+        this.cdr.detectChanges();
       },
       error: err => {
         this.errorMsg = err.error?.msg || err.error?.title || 'No se pudo abrir el período.';
         this.isSubmitting = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -110,6 +123,7 @@ export class EnrollmentManagementComponent implements OnInit {
       next: () => {
         const idx = this.periods.findIndex(p => p.id === period.id);
         if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: false };
+        this.cdr.detectChanges();
       },
       error: err => alert(err.error?.msg || 'No se pudo cerrar el período.')
     });
@@ -144,6 +158,7 @@ export class EnrollmentManagementComponent implements OnInit {
         const idx = this.periods.findIndex(p => p.id === res.data.id);
         if (idx > -1) this.periods[idx] = res.data;
         this.editingPeriod = null;
+        this.cdr.detectChanges();
       },
       error: err => alert(err.error?.msg || 'No se pudo actualizar los cupos.')
     });

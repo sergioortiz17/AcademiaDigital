@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
@@ -31,7 +31,8 @@ export class EnrolledStudentsComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly enrollmentService: EnrollmentService
+    private readonly enrollmentService: EnrollmentService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -51,10 +52,12 @@ export class EnrolledStudentsComponent implements OnInit {
           this.dataSource.sort = this.sort;
         });
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.errorMsg = 'No se pudo cargar el listado de inscriptos.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -69,6 +72,7 @@ export class EnrolledStudentsComponent implements OnInit {
     this.enrollmentService.removeStudentFromPeriod(this.periodId, student.studentId).subscribe({
       next: () => {
         this.dataSource.data = this.dataSource.data.filter(s => s.studentId !== student.studentId);
+        this.cdr.detectChanges();
       },
       error: err => alert(err.error?.msg || 'No se pudo dar de baja al estudiante.')
     });
