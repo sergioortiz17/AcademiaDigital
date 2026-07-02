@@ -15,6 +15,7 @@ public class StudyPlanCourse
     public bool IsMandatory { get; set; } = true;
     public decimal? Credits { get; set; }
     public int? WorkloadHours { get; set; }
+    public bool IsAnnual { get; set; } = false;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

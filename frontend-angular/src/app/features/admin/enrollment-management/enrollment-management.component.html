@@ -1,0 +1,136 @@
+<div class="em-container">
+  <div class="em-header">
+    <h2>Gestión de Inscripciones</h2>
+    <button mat-raised-button color="primary" (click)="showOpenForm = !showOpenForm">
+      <mat-icon>add</mat-icon>
+      Activar inscripción
+    </button>
+  </div>
+
+  <div *ngIf="successMsg" class="success-banner">{{ successMsg }}</div>
+
+  <!-- Open period form -->
+  <mat-card *ngIf="showOpenForm" class="open-form-card">
+    <mat-card-title>Nuevo período de inscripción</mat-card-title>
+    <mat-card-content>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Carrera</mat-label>
+          <mat-select [(ngModel)]="openingForm.careerId" (ngModelChange)="onCareerChange()">
+            <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Plan de estudio</mat-label>
+          <mat-select [(ngModel)]="openingForm.studyPlanId" [disabled]="!openingForm.careerId">
+            <mat-option *ngFor="let sp of studyPlans" [value]="sp.id">{{ sp.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Año académico</mat-label>
+          <input matInput type="number" [(ngModel)]="openingForm.academicYear" min="2020" max="2099">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Semestre</mat-label>
+          <mat-select [(ngModel)]="openingForm.semester">
+            <mat-option [value]="1">1° Semestre</mat-option>
+            <mat-option [value]="2">2° Semestre</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Cupos Mañana</mat-label>
+          <input matInput type="number" [(ngModel)]="openingForm.quotasMorning" min="0">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Cupos Tarde</mat-label>
+          <input matInput type="number" [(ngModel)]="openingForm.quotasAfternoon" min="0">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Cupos Noche</mat-label>
+          <input matInput type="number" [(ngModel)]="openingForm.quotasEvening" min="0">
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="errorMsg" class="error-banner">{{ errorMsg }}</div>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-button (click)="showOpenForm = false; resetForm()">Cancelar</button>
+      <button mat-raised-button color="primary"
+              [disabled]="!canOpen() || isSubmitting"
+              (click)="submitOpen()">
+        <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
+        <span *ngIf="!isSubmitting">Activar</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- Periods list -->
+  <div *ngIf="loadingPeriods" class="loading-row" style="padding: 32px 0;">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+
+  <div class="periods-list" *ngIf="!loadingPeriods">
+    <mat-card *ngFor="let p of periods" class="period-card" [class.inactive]="!p.isActive">
+      <div class="period-main">
+        <div class="period-info">
+          <span class="period-career">{{ p.careerName }}</span>
+          <span class="period-meta">{{ p.studyPlanName }} &bull; {{ p.academicYear }} &bull; {{ semesterLabel(p.semester) }}</span>
+          <div class="period-quotas">
+            <span class="quota-chip manana" *ngIf="p.quotasMorning > 0">Mañana: {{ p.quotasMorning }} cupos</span>
+            <span class="quota-chip tarde" *ngIf="p.quotasAfternoon > 0">Tarde: {{ p.quotasAfternoon }} cupos</span>
+            <span class="quota-chip noche" *ngIf="p.quotasEvening > 0">Noche: {{ p.quotasEvening }} cupos</span>
+          </div>
+        </div>
+        <div class="period-actions">
+          <mat-chip [ngClass]="p.isActive ? 'chip-active' : 'chip-closed'">
+            {{ p.isActive ? 'Activo' : 'Cerrado' }}
+          </mat-chip>
+          <button mat-stroked-button (click)="viewStudents(p)" class="students-btn">
+            <mat-icon>group</mat-icon>
+            Ver inscriptos
+            <span class="badge" *ngIf="p.enrolledMorning + p.enrolledAfternoon + p.enrolledEvening > 0">
+              {{ p.enrolledMorning + p.enrolledAfternoon + p.enrolledEvening }}
+            </span>
+          </button>
+          <button mat-icon-button matTooltip="Editar cupos" (click)="startEdit(p)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-stroked-button color="warn" *ngIf="p.isActive" (click)="closePeriod(p)">
+            Cerrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Inline edit quotas -->
+      <div class="edit-quotas-row" *ngIf="editingPeriod?.id === p.id">
+        <mat-form-field appearance="outline" class="quota-input">
+          <mat-label>Cupos Mañana</mat-label>
+          <input matInput type="number" [(ngModel)]="editQuotas.quotasMorning" min="0">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="quota-input">
+          <mat-label>Cupos Tarde</mat-label>
+          <input matInput type="number" [(ngModel)]="editQuotas.quotasAfternoon" min="0">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="quota-input">
+          <mat-label>Cupos Noche</mat-label>
+          <input matInput type="number" [(ngModel)]="editQuotas.quotasEvening" min="0">
+        </mat-form-field>
+        <button mat-raised-button color="primary" (click)="saveQuotas()">Guardar</button>
+        <button mat-button (click)="cancelEdit()">Cancelar</button>
+      </div>
+    </mat-card>
+
+    <p *ngIf="periods.length === 0" class="empty-msg">No hay períodos de inscripción registrados.</p>
+  </div>
+
+</div>

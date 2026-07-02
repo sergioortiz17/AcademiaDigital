@@ -1,15 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '../../shared/material.module';
 import { AdminRoutingModule } from './admin-routing.module';
 import { UsersManagementComponent } from './users-management/users-management.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { UserDetailsDialogComponent } from '../../shared/user-details-dialog/user-details-dialog.component';
-import { FormsModule } from '@angular/forms';
-
+import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
+import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 
 @NgModule({
-  declarations: [UsersManagementComponent,ConfirmDialogComponent, UserDetailsDialogComponent],
-  imports: [CommonModule, MaterialModule, AdminRoutingModule,FormsModule]
+  declarations: [
+    UsersManagementComponent,
+    ConfirmDialogComponent,
+    UserDetailsDialogComponent,
+    EnrollmentManagementComponent,
+    EnrolledStudentsComponent
+  ],
+  imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })
 export class AdminModule {}

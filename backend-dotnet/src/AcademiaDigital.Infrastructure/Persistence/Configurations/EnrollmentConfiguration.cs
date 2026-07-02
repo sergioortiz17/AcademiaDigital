@@ -21,6 +21,8 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
         builder.Property(e => e.CourseId).HasColumnName("course_id");
         builder.Property(e => e.StudyPlanCourseId).HasColumnName("study_plan_course_id");
         builder.Property(e => e.TeachingPositionId).HasColumnName("teaching_position_id");
+        builder.Property(e => e.EnrollmentPeriodId).HasColumnName("enrollment_period_id");
+        builder.Property(e => e.Shift).HasColumnName("shift").HasMaxLength(20);
 
         builder.HasIndex(e => new { e.StudentId, e.CourseId, e.AcademicYear, e.Semester }).IsUnique();
         builder.HasIndex(e => new { e.StudentId, e.Status });

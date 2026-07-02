@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ICooperativeEntityRepository, CooperativeEntityRepository>();
         services.AddScoped<ICommunicationRepository, CommunicationRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+        services.AddScoped<IEnrollmentPeriodRepository, EnrollmentPeriodRepository>();
         services.AddScoped<ITeacherContestRepository, TeacherContestRepository>();
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
         services.AddScoped<ITeachingPositionRepository, TeachingPositionRepository>();

@@ -1,7 +1,7 @@
 <div class="auth-container">
 
   <!-- BOTÓN VOLVER -->
-  <button *ngIf="currentStep !== 4" class="back-button" [routerLink]="currentStep === 1 ? ['/auth/signin'] : null" (click)="currentStep > 1 ? previousStep() : null">
+  <button *ngIf="currentStep !== 3" class="back-button" [routerLink]="currentStep === 1 ? ['/auth/signin'] : null" (click)="currentStep > 1 ? previousStep() : null">
     <mat-icon>arrow_back</mat-icon>
   </button>
 
@@ -17,11 +17,9 @@
       <mat-card-content>
 
         <!-- PASO 1 - REGISTRO -->
-        <!-- ================================================= -->
         <div *ngIf="currentStep === 1">
           <h2 class="register-title">Regístrate como usuario</h2>
 
-          <!-- NOMBRE, APELLIDO Y DNI -->
           <form [formGroup]="personalForm">
             <div class="input-group">
               <mat-form-field appearance="fill">
@@ -45,9 +43,17 @@
                 <mat-error *ngIf="personalForm.get('dni')?.hasError('pattern')">El DNI debe tener 7 u 8 dígitos</mat-error>
               </mat-form-field>
             </div>
+            <div class="input-group">
+              <mat-form-field appearance="fill">
+                <mat-label>Carrera<span class="required">(*)</span></mat-label>
+                <mat-select formControlName="careerId">
+                  <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="personalForm.get('careerId')?.hasError('required')">La carrera es obligatoria</mat-error>
+              </mat-form-field>
+            </div>
           </form>
 
-          <!-- EMAIL Y CONTRASEÑA -->
           <form [formGroup]="registerForm">
             <div class="input-group">
               <mat-form-field appearance="fill">
@@ -97,66 +103,8 @@
           </div>
         </div>
 
-        <!-- =================================================
-         PASO 3 - DATOS ACADÉMICOS
-        ================================================= -->
-
-        <div *ngIf="currentStep === 3">
-          <h2 class="complete-title">Completá tus datos académicos</h2>
-          <form [formGroup]="academicForm">
-            <div class="input-group">
-              <label>Carrera:</label>
-              <mat-form-field appearance="fill">
-                <mat-select formControlName="career">
-                  <mat-option value="software">Desarrollo de Software</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <div class="input-group">
-              <label>Turno:</label>
-              <mat-form-field appearance="fill">
-                <mat-select formControlName="shift">
-                  <mat-option value="morning">Mañana</mat-option>
-                  <mat-option value="night">Noche</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <div class="input-group">
-              <label>Sede:</label>
-              <mat-form-field appearance="fill">
-                <mat-select formControlName="campus">
-                  <mat-option value="central">Central</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <div class="input-group">
-              <label>Cohorte:</label>
-              <mat-form-field appearance="fill">
-                <mat-select formControlName="cohort">
-                  <mat-option value="2026">2026</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <div *ngIf="errorMessage" class="error-message">
-              {{ errorMessage }}
-            </div>
-            <!-- AQUÍ recién se hace el POST de usuario-->
-            <div class="auth-actions">
-              <button mat-raised-button class="register-button" type="button" [disabled]="isLoading" (click)="submitFullRegister()">
-                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-                {{ isLoading ? ('common.loading' | translate) : ('common.confirm' | translate) }}
-              </button>
-              <!--REVISAR BOTÓN para saltar este paso y completar despues-->
-              <button mat-raised-button class="back-login" type="button" (click)="skipStep()">
-                {{ isLoading ? ('common.loading' | translate) : ('common.skipStep' | translate) }}
-              </button>
-            </div>
-          </form>
-        </div>
-        <!-- =================================================
-                   PASO 4 - ÉXITO
-         ================================================= -->
-        <div *ngIf="currentStep === 4" class="success-container">
+        <!-- PASO 3 - ÉXITO -->
+        <div *ngIf="currentStep === 3" class="success-container">
           <mat-icon class="success-icon">check_circle</mat-icon>
           <h2 class="success-title">¡Registro exitoso!</h2>
           <p class="success-text">Tu cuenta fue creada correctamente. Ya podés iniciar sesión.</p>
@@ -164,6 +112,7 @@
             Iniciar sesión
           </button>
         </div>
+
       </mat-card-content>
     </mat-card>
   </section>

@@ -1,0 +1,216 @@
+.em-container {
+  padding: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.em-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h2 { margin: 0; }
+}
+
+.open-form-card {
+  margin-bottom: 24px;
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    mat-form-field { flex: 1 1 200px; }
+  }
+}
+
+.periods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.period-card {
+  padding: 16px;
+
+  &.inactive { opacity: 0.65; }
+
+  .period-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .period-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .period-career {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .period-meta {
+    font-size: 0.875rem;
+    color: #666;
+  }
+
+  .period-quotas {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .quota-chip {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    &.manana { background: #e8f5e9; color: #1b5e20; }
+    &.tarde { background: #fff3e0; color: #b33c00; }
+    &.noche { background: #e8eaf6; color: #1a237e; }
+  }
+
+  .period-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .chip-active { background: #e8f5e9; color: #1b5e20; }
+  .chip-closed { background: #f5f5f5; color: #424242; }
+
+  .students-btn {
+    position: relative;
+
+    .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #c62828;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.edit-quotas-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0 4px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 8px;
+
+  .quota-input { flex: 1 1 120px; }
+}
+
+.students-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+}
+
+.students-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(600px, 100vw);
+  height: 100vh;
+  background: white;
+  z-index: 101;
+  padding: 24px;
+  overflow-y: auto;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.15);
+
+  .students-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pending-badge {
+      background: #fff3cd;
+      color: #856404;
+      font-size: 0.85rem;
+    }
+  }
+
+  .loading-row {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+  }
+}
+
+.students-table {
+  width: 100%;
+}
+
+.empty-msg {
+  color: #888;
+  text-align: center;
+  padding: 32px 0;
+}
+
+.success-banner {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 10px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.error-banner {
+  background: #fdecea;
+  color: #c62828;
+  padding: 10px 16px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.course-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.course-tag {
+  background: #e3f2fd;
+  color: #1565c0;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.baja-btn {
+  font-size: 12px;
+  padding: 0 8px;
+  height: 30px;
+  line-height: 28px;
+}

@@ -23,6 +23,11 @@ public class Enrollment
 
     public int? TeachingPositionId { get; set; }
     public TeachingPosition? TeachingPosition { get; set; }
+
+    public int? EnrollmentPeriodId { get; set; }
+    public EnrollmentPeriod? EnrollmentPeriod { get; set; }
+
+    public string? Shift { get; set; }
 }
 
 public enum EnrollmentStatus

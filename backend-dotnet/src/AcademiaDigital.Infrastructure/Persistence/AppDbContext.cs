@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
     public DbSet<TeachingPosition> TeachingPositions => Set<TeachingPosition>();
     public DbSet<CertificateRequest> CertificateRequests => Set<CertificateRequest>();
+    public DbSet<EnrollmentPeriod> EnrollmentPeriods => Set<EnrollmentPeriod>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
@@ -48,6 +49,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new TeacherContestConfiguration());
         modelBuilder.ApplyConfiguration(new ContestApplicationConfiguration());
         modelBuilder.ApplyConfiguration(new TeachingPositionConfiguration());
+        modelBuilder.ApplyConfiguration(new EnrollmentPeriodConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }

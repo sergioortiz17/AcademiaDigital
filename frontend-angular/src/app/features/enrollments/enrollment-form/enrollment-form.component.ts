@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CareerService } from '../../../core/services/career.service';
 import { SubjectService } from '../../../core/services/subject.service';
-import { EnrollmentService } from '../../../core/services/enrollment. service';
+import { EnrollmentService, EnrollmentPeriodDto } from '../../../core/services/enrollment. service';
 
 export interface Career {
   success: boolean;
@@ -16,361 +16,219 @@ export interface Career {
 }
 
 export interface StudyPlan {
-
   id: number;
   careerId: number;
-  code:string;
+  code: string;
   name: string;
-  versionNumber:number;
-  status:string;
-  effectiveFrom:string;
-  effectiveTo:string;
+  versionNumber: number;
+  status: string;
+  effectiveFrom: string;
+  effectiveTo: string;
   isActive: boolean;
 }
-    
-export interface Subject{
-    id:number;
-    studyPlanId:number;
-    courseId:number;
-    courseCode:string;
-    courseName:string;
-    yearNumber:number;
-    semester:number;
-    sortOrder:number;
-    isMandatory:boolean;
-    credits:number;
-    workloadHours:number;
-    courseType: null;
+
+export interface Subject {
+  id: number;
+  studyPlanId: number;
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  yearNumber: number;
+  semester: number;
+  isAnnual: boolean;
+  sortOrder: number;
+  isMandatory: boolean;
+  credits: number;
+  workloadHours: number;
+  courseType: null;
 }
 
 @Component({
-
-    selector:'app-enrollment-form',
-
-    templateUrl:'./enrollment-form.component.html',
-
-    styleUrls:['./enrollment-form.component.scss'],
-
-    standalone:false
-
+  selector: 'app-enrollment-form',
+  templateUrl: './enrollment-form.component.html',
+  styleUrls: ['./enrollment-form.component.scss'],
+  standalone: false
 })
+export class EnrollmentFormComponent implements OnInit {
+  careers: Career[] = [];
+  subjects: Subject[] = [];
+  firstYearSubjects: Subject[] = [];
+  secondYearSubjects: Subject[] = [];
+  thirdYearSubjects: Subject[] = [];
 
-export class EnrollmentFormComponent implements OnInit{
+  selectedCareer: number | null = null;
+  activePeriod: EnrollmentPeriodDto | null = null;
+  checkingPeriod = false;
 
-    careers:Career[]=[];
-    studyPlans: StudyPlan[] = [];
-    activeStudyPlanId:number|null=null;
-    studyPlanCourses:Subject[]=[];
+  selectedYear: number | null = null;
+  availableYears = [
+    { id: 1, name: 'Primero' },
+    { id: 2, name: 'Segundo' },
+    { id: 3, name: 'Tercero' }
+  ];
+  selectedYears: number[] = [];
 
-    selectedCareer:number|null=null;
+  // stores StudyPlanCourse.id (not courseId)
+  selectedSubjectsByYear: Record<number, number[]> = { 1: [], 2: [], 3: [] };
 
-    selectedYear:number|null=null;
-    //Variables de materias por año
-    availableYears=[
-    {id:1,name:'Primero'},
-    {id:2,name:'Segundo'},
-    {id:3,name:'Tercero'}
-    ];
+  shifts = ['Mañana', 'Tarde', 'Noche'];
+  selectedShift = '';
 
-    selectedYears:number[]=[];
-    subjects:Subject[]=[];
-    firstYearSubjects:any[]=[];
-    secondYearSubjects:any[]=[];
-    thirdYearSubjects:any[]=[];
-    
-    selectedSubjectsByYear: Record<number, number[]> = {
-    1: [] as number[],
-    2: [] as number[],
-    3: [] as number[]
-    };
-    isSubmitting=false;
-    successMsg='';
-    errorMsg='';
+  isSubmitting = false;
+  successMsg = '';
+  errorMsg = '';
 
-    constructor(
-        private careerService:CareerService,
-        private subjectService:SubjectService,
-        private enrollmentService:EnrollmentService
-    ){}
+  requiredDocuments = [
+    { id: 1, label: 'Formulario impreso', checked: false },
+    { id: 2, label: 'DNI', checked: false },
+    { id: 3, label: 'CUIL', checked: false },
+    { id: 4, label: 'Partida de nacimiento', checked: false },
+    { id: 5, label: 'Analítico definitivo', checked: false },
+    { id: 6, label: 'Constancia de analítico en trámite', checked: false },
+    { id: 7, label: 'CUS (Hasta el 30/04/2027)', checked: false },
+    { id: 8, label: 'Cuota cooperadora', checked: false }
+  ];
 
-    ngOnInit():void{
-        this.loadCareers();
-    }
+  constructor(
+    private readonly careerService: CareerService,
+    private readonly subjectService: SubjectService,
+    private readonly enrollmentService: EnrollmentService
+  ) {}
 
-    loadCareers():void{
+  ngOnInit(): void {
+    this.careerService.getCareers().subscribe({
+      next: data => this.careers = data,
+      error: err => console.error(err)
+    });
+  }
 
-        this.careerService.getCareers()
+  onCareerChange(): void {
+    this.activePeriod = null;
+    this.subjects = [];
+    this.firstYearSubjects = [];
+    this.secondYearSubjects = [];
+    this.thirdYearSubjects = [];
+    this.selectedYears = [];
+    this.selectedSubjectsByYear = { 1: [], 2: [], 3: [] };
 
-        .subscribe({
+    if (!this.selectedCareer) return;
 
-            next:(data)=>{
+    this.checkingPeriod = true;
+    this.enrollmentService.getActivePeriod(this.selectedCareer).subscribe({
+      next: res => {
+        this.activePeriod = res.data;
+        this.checkingPeriod = false;
+        if (this.activePeriod) {
+          this.loadStudyPlanCourses(this.activePeriod.studyPlanId);
+        }
+      },
+      error: err => {
+        console.error(err);
+        this.checkingPeriod = false;
+      }
+    });
+  }
 
-                this.careers=data;
+  loadStudyPlanCourses(studyPlanId: number): void {
+    this.subjectService.getSubjectsByCareer(studyPlanId).subscribe({
+      next: courses => {
+        this.subjects = courses;
+        this.organizeSubjects();
+      }
+    });
+  }
 
-            },
+  organizeSubjects(): void {
+    const periodSemester = this.activePeriod?.semester ?? 0;
+    const visible = (s: Subject) => s.isAnnual || s.semester === periodSemester;
+    this.firstYearSubjects = this.subjects.filter(x => x.yearNumber === 1 && visible(x));
+    this.secondYearSubjects = this.subjects.filter(x => x.yearNumber === 2 && visible(x));
+    this.thirdYearSubjects = this.subjects.filter(x => x.yearNumber === 3 && visible(x));
+  }
 
-            error:(err)=>{
+  semesterLabel(subject: Subject): string {
+    if (subject.isAnnual) return 'ANUAL';
+    return subject.semester === 1 ? '1° Cuatrimestre' : '2° Cuatrimestre';
+  }
 
-                console.error(err);
-
-            }
-
-        });
-
-    }
-    campuses=[
-        'Central',
-        'Anexo Norte',
-        'Anexo Sur'
-    ];
-    selectedCampus='';
-    
-    shifts=[
-        'Mañana',
-        'Tarde',
-        'Noche'
-    ];
-    selectedShift='';
-
-    //Carga de materias por año
-    onCareerChange():void{
-
-    if(!this.selectedCareer)
-        return;
-
-    this.subjectService
-    .getStudyPlansByCareer(this.selectedCareer)
-    .subscribe({
-
-        next:(plans)=>{
-            this.studyPlans=plans;
-            const activePlan= plans.find(x=>x.isActive);
-
-            if(!activePlan)
-                return;
-
-            this.activeStudyPlanId= activePlan.id;
-
-            this.loadStudyPlanCourses();
-            //this.subjects=subjects;
-            //this.organizeSubjects();
-            }
-        });
-    }
-
-    loadStudyPlanCourses():void{
-
-    if(!this.activeStudyPlanId)
-        return;
-
-    this.subjectService
-
-        .getSubjectsByCareer(this.activeStudyPlanId)
-
-        .subscribe({
-            next:(courses)=>{
-
-                this.subjects=courses;
-                this.organizeSubjects();
-            }
-        });
-    }
-
-    organizeSubjects():void{
-
-    this.firstYearSubjects=
-
-        this.subjects.filter(x=>x.yearNumber===1);
-
-    this.secondYearSubjects=
-
-        this.subjects.filter(x=>x.yearNumber===2);
-
-    this.thirdYearSubjects=
-
-        this.subjects.filter(x=>x.yearNumber===3);
-    }
-
-    addYear():void{
-
-    if(
-
-        this.selectedYear==null ||
-
-        this.selectedYears.includes(this.selectedYear)
-
-    ) return;
-
+  addYear(): void {
+    if (this.selectedYear == null || this.selectedYears.includes(this.selectedYear)) return;
     this.selectedYears.push(this.selectedYear);
+    this.selectedYears.sort((a, b) => a - b);
+    this.selectedYear = null;
+  }
 
-    this.selectedYears.sort();
+  removeYear(year: number): void {
+    this.selectedYears = this.selectedYears.filter(x => x !== year);
+    this.selectedSubjectsByYear[year] = [];
+  }
 
-    this.selectedYear=null;
-
-    }
-
-    removeYear(year:number):void{
-
-    this.selectedYears =
-        this.selectedYears.filter(
-            x => x !== year
-        );
-
-        this.selectedSubjectsByYear[year] = [];
-    }
-
-    //Seleccionar materias
-    toggleSubject(year:number,subjectId:number,event:any):void{
-
-    const subjects = this.selectedSubjectsByYear[year];
-    if(event.checked){
-        if(!subjects.includes(subjectId))
-            subjects.push(subjectId);
+  toggleSubject(year: number, studyPlanCourseId: number, event: any): void {
+    const list = this.selectedSubjectsByYear[year];
+    if (event.checked) {
+      if (!list.includes(studyPlanCourseId)) list.push(studyPlanCourseId);
     } else {
-         this.selectedSubjectsByYear[year] = subjects.filter(id => id !== subjectId);
+      this.selectedSubjectsByYear[year] = list.filter(id => id !== studyPlanCourseId);
     }
-    }
+  }
 
-    canSubmit():boolean{
+  canSubmit(): boolean {
+    return (
+      this.activePeriod !== null &&
+      this.selectedShift !== '' &&
+      Object.values(this.selectedSubjectsByYear).some(list => list.length > 0)
+    );
+  }
 
-    return(
+  availableQuotas(): number {
+    if (!this.activePeriod) return 0;
+    if (this.selectedShift === 'Mañana')
+      return this.activePeriod.quotasMorning - this.activePeriod.enrolledMorning;
+    if (this.selectedShift === 'Tarde')
+      return this.activePeriod.quotasAfternoon - this.activePeriod.enrolledAfternoon;
+    return this.activePeriod.quotasEvening - this.activePeriod.enrolledEvening;
+  }
 
-        this.selectedCareer!=null &&
+  submitEnrollment(): void {
+    if (!this.canSubmit() || !this.activePeriod) return;
 
-        this.selectedCampus!='' &&
+    this.isSubmitting = true;
+    this.successMsg = '';
+    this.errorMsg = '';
 
-        this.selectedShift!='' &&
-
-        Object.values(this.selectedSubjectsByYear)
-            .some(list => list.length > 0)
-
-        );
-    }
-
-    buildEnrollmentRequest(){
-
-    const subjects=[
-
-        ...this.selectedSubjectsByYear[1],
-
-        ...this.selectedSubjectsByYear[2],
-
-        ...this.selectedSubjectsByYear[3]
-
+    const studyPlanCourseIds = [
+      ...this.selectedSubjectsByYear[1],
+      ...this.selectedSubjectsByYear[2],
+      ...this.selectedSubjectsByYear[3]
     ];
 
-    return{
+    this.enrollmentService.enroll({
+      enrollmentPeriodId: this.activePeriod.id,
+      shift: this.selectedShift,
+      studyPlanCourseIds
+    }).subscribe({
+      next: () => {
+        this.successMsg = 'La inscripción fue realizada correctamente.';
+        this.resetForm();
+        this.isSubmitting = false;
+      },
+      error: err => {
+        this.errorMsg = err.error?.msg || 'No fue posible realizar la inscripción.';
+        this.isSubmitting = false;
+      }
+    });
+  }
 
-        careerId:this.selectedCareer!,
-
-        campus:this.selectedCampus,
-
-        shift:this.selectedShift,
-
-        subjects
-
-    };
-    }
-
-    //Documentos necesarios
-    requiredDocuments = [
-
-  { id: 1, label: 'Formulario impreso', checked: false },
-
-  { id: 2, label: 'DNI', checked: false },
-
-  { id: 3, label: 'CUIL', checked: false },
-
-  { id: 4, label: 'Partida de nacimiento', checked: false },
-
-  { id: 5, label: 'Analítico definitivo', checked: false },
-
-  { id: 6, label: 'Constancia de analítico en trámite', checked: false },
-
-  { id: 7, label: 'CUS (Hasta el 30/04/2027)', checked: false },
-
-  { id: 8, label: 'Cuota cooperadora', checked: false }
-
-];
-
-//Enviar inscripcion
-    submitEnrollment():void{
-
-    if(!this.canSubmit()){
-
-        this.errorMsg=
-
-            'Complete todos los campos requeridos.';
-
-        return;
-
-    }
-
-    this.isSubmitting=true;
-
-    this.successMsg='';
-
-    this.errorMsg='';
-
-    const request=
-
-        this.buildEnrollmentRequest();
-
-    this.enrollmentService
-
-        .enroll(request)
-
-        .subscribe({
-
-            next:()=>{
-
-                this.successMsg=
-
-                    'La inscripción fue realizada correctamente.';
-
-                this.resetForm();
-
-                this.isSubmitting=false;
-
-            },
-
-            error:(err)=>{
-
-                this.errorMsg=
-
-                    err.error?.msg ||
-
-                    'No fue posible realizar la inscripción.';
-
-                this.isSubmitting=false;
-
-            }
-
-        });
-
-    }
-
-    resetForm():void{
-
-    this.selectedCareer=null;
-
-    this.selectedCampus='';
-
-    this.selectedShift='';
-
-    this.selectedYear=null;
-
-    this.selectedYears=[];
-
-    this.selectedSubjectsByYear={
-
-        1:[],
-
-        2:[],
-
-        3:[]
-
-    };
-    }
-
+  resetForm(): void {
+    this.selectedCareer = null;
+    this.activePeriod = null;
+    this.selectedShift = '';
+    this.selectedYear = null;
+    this.selectedYears = [];
+    this.selectedSubjectsByYear = { 1: [], 2: [], 3: [] };
+    this.subjects = [];
+    this.firstYearSubjects = [];
+    this.secondYearSubjects = [];
+    this.thirdYearSubjects = [];
+  }
 }

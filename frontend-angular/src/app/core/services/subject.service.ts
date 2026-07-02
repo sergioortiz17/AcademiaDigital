@@ -27,6 +27,7 @@ export interface Subject{
     courseName:string;
     yearNumber:number;
     semester:number;
+    isAnnual:boolean;
     sortOrder:number;
     isMandatory:boolean;
     credits:number;

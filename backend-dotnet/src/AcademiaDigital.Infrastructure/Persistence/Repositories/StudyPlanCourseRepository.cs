@@ -14,6 +14,12 @@ public class StudyPlanCourseRepository(AppDbContext db) : IStudyPlanCourseReposi
             .Include(spc => spc.ApprovalRule)
             .FirstOrDefaultAsync(spc => spc.Id == id, ct);
 
+    public async Task<IReadOnlyList<StudyPlanCourse>> GetByIdsAsync(IReadOnlyList<int> ids, CancellationToken ct = default)
+        => await db.StudyPlanCourses.AsNoTracking()
+            .Include(spc => spc.Course)
+            .Where(spc => ids.Contains(spc.Id))
+            .ToListAsync(ct);
+
     public async Task<IReadOnlyList<StudyPlanCourse>> GetByStudyPlanIdAsync(int studyPlanId, CancellationToken ct = default)
         => await db.StudyPlanCourses.AsNoTracking()
             .Include(spc => spc.Course)

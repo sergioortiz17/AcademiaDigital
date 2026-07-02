@@ -33,7 +33,7 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var result = await registerUseCase.ExecuteAsync(request.Email, request.Name, request.LastName, request.Password, request.Dni, ct);
+        var result = await registerUseCase.ExecuteAsync(request.Email, request.Name, request.LastName, request.Password, request.Dni, request.CareerId, ct);
         return StatusCode(StatusCodes.Status201Created, new
         {
             success = result.Success,
@@ -111,7 +111,10 @@ public record RegisterRequest(
     [property: JsonPropertyName("DNI")]
     [Required]
     [RegularExpression(@"^\d{7,8}$", ErrorMessage = "DNI must contain only numbers and have 7 or 8 digits.")]
-    string Dni);
+    string Dni,
+
+    [property: JsonPropertyName("careerId")]
+    [Required][Range(1, int.MaxValue)] int CareerId);
 
 public record ChangePasswordRequest(
     [Required] string CurrentPassword,
