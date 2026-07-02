@@ -1,7 +1,6 @@
-<div class="enrollment-card">
+<div *ngIf="errorMsg" class="error-message">{{ errorMsg }}</div>
 
-  <div *ngIf="successMsg" class="success-message">{{ successMsg }}</div>
-  <div *ngIf="errorMsg" class="error-message">{{ errorMsg }}</div>
+<div class="enrollment-card">
 
   <div class="filters">
     <div class="field">
@@ -89,7 +88,13 @@
     </div>
 
     <div *ngIf="selectedYears.includes(1)" class="year-section">
-      <h2>1° AÑO</h2>
+      <div class="year-header">
+        <h2>1° AÑO</h2>
+        <button mat-stroked-button class="select-all-btn" (click)="toggleSelectAllForYear(1)">
+          <mat-icon>{{ isAllSelectedForYear(1) ? 'deselect' : 'done_all' }}</mat-icon>
+          {{ isAllSelectedForYear(1) ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+        </button>
+      </div>
       <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
       <div class="subjects-card">
         <div class="header">INSCRIBIRME EN</div>
@@ -109,7 +114,13 @@
     </div>
 
     <div *ngIf="selectedYears.includes(2)" class="year-section">
-      <h2>2° AÑO</h2>
+      <div class="year-header">
+        <h2>2° AÑO</h2>
+        <button mat-stroked-button class="select-all-btn" (click)="toggleSelectAllForYear(2)">
+          <mat-icon>{{ isAllSelectedForYear(2) ? 'deselect' : 'done_all' }}</mat-icon>
+          {{ isAllSelectedForYear(2) ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+        </button>
+      </div>
       <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
       <div class="subjects-card">
         <div class="header">INSCRIBIRME EN</div>
@@ -129,7 +140,13 @@
     </div>
 
     <div *ngIf="selectedYears.includes(3)" class="year-section">
-      <h2>3° AÑO</h2>
+      <div class="year-header">
+        <h2>3° AÑO</h2>
+        <button mat-stroked-button class="select-all-btn" (click)="toggleSelectAllForYear(3)">
+          <mat-icon>{{ isAllSelectedForYear(3) ? 'deselect' : 'done_all' }}</mat-icon>
+          {{ isAllSelectedForYear(3) ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+        </button>
+      </div>
       <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
       <div class="subjects-card">
         <div class="header">INSCRIBIRME EN</div>

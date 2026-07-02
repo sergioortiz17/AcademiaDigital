@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { CareerService } from '../../../core/services/career.service';
 import { SubjectService } from '../../../core/services/subject.service';
 import { EnrollmentService, EnrollmentPeriodDto } from '../../../core/services/enrollment. service';
+import { EnrollmentSuccessDialogComponent } from './enrollment-success-dialog.component';
 
 export interface Career {
   success: boolean;
@@ -68,14 +70,12 @@ export class EnrollmentFormComponent implements OnInit {
   ];
   selectedYears: number[] = [];
 
-  // stores StudyPlanCourse.id (not courseId)
   selectedSubjectsByYear: Record<number, number[]> = { 1: [], 2: [], 3: [] };
 
   shifts = ['Mañana', 'Tarde', 'Noche'];
   selectedShift = '';
 
   isSubmitting = false;
-  successMsg = '';
   errorMsg = '';
 
   requiredDocuments = [
@@ -92,12 +92,17 @@ export class EnrollmentFormComponent implements OnInit {
   constructor(
     private readonly careerService: CareerService,
     private readonly subjectService: SubjectService,
-    private readonly enrollmentService: EnrollmentService
+    private readonly enrollmentService: EnrollmentService,
+    private readonly dialog: MatDialog,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.careerService.getCareers().subscribe({
-      next: data => this.careers = data,
+      next: data => {
+        this.careers = data;
+        this.cdr.detectChanges();
+      },
       error: err => console.error(err)
     });
   }
@@ -121,10 +126,12 @@ export class EnrollmentFormComponent implements OnInit {
         if (this.activePeriod) {
           this.loadStudyPlanCourses(this.activePeriod.studyPlanId);
         }
+        this.cdr.detectChanges();
       },
       error: err => {
         console.error(err);
         this.checkingPeriod = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -134,6 +141,7 @@ export class EnrollmentFormComponent implements OnInit {
       next: courses => {
         this.subjects = courses;
         this.organizeSubjects();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -172,6 +180,27 @@ export class EnrollmentFormComponent implements OnInit {
     }
   }
 
+  subjectsForYear(year: number): Subject[] {
+    if (year === 1) return this.firstYearSubjects;
+    if (year === 2) return this.secondYearSubjects;
+    return this.thirdYearSubjects;
+  }
+
+  isAllSelectedForYear(year: number): boolean {
+    const subjects = this.subjectsForYear(year);
+    if (subjects.length === 0) return false;
+    return subjects.every(s => this.selectedSubjectsByYear[year].includes(s.id));
+  }
+
+  toggleSelectAllForYear(year: number): void {
+    const subjects = this.subjectsForYear(year);
+    if (this.isAllSelectedForYear(year)) {
+      this.selectedSubjectsByYear[year] = [];
+    } else {
+      this.selectedSubjectsByYear[year] = subjects.map(s => s.id);
+    }
+  }
+
   canSubmit(): boolean {
     return (
       this.activePeriod !== null &&
@@ -193,8 +222,8 @@ export class EnrollmentFormComponent implements OnInit {
     if (!this.canSubmit() || !this.activePeriod) return;
 
     this.isSubmitting = true;
-    this.successMsg = '';
     this.errorMsg = '';
+    this.cdr.detectChanges();
 
     const studyPlanCourseIds = [
       ...this.selectedSubjectsByYear[1],
@@ -208,13 +237,18 @@ export class EnrollmentFormComponent implements OnInit {
       studyPlanCourseIds
     }).subscribe({
       next: () => {
-        this.successMsg = 'La inscripción fue realizada correctamente.';
-        this.resetForm();
         this.isSubmitting = false;
+        this.cdr.detectChanges();
+        this.resetForm();
+        this.dialog.open(EnrollmentSuccessDialogComponent, {
+          width: '420px',
+          disableClose: false
+        });
       },
       error: err => {
-        this.errorMsg = err.error?.msg || 'No fue posible realizar la inscripción.';
+        this.errorMsg = err.message || err.error?.msg || 'No fue posible realizar la inscripción.';
         this.isSubmitting = false;
+        this.cdr.detectChanges();
       }
     });
   }

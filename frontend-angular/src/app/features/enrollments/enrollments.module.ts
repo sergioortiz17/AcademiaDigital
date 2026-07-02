@@ -5,9 +5,10 @@ import { MaterialModule } from '../../shared/material.module';
 import { EnrollmentsRoutingModule } from './enrollments-routing.module';
 import { EnrollmentsComponent } from './enrollments.component';
 import { EnrollmentFormComponent } from './enrollment-form/enrollment-form.component';
+import { EnrollmentSuccessDialogComponent } from './enrollment-form/enrollment-success-dialog.component';
 
 @NgModule({
-  declarations: [EnrollmentsComponent, EnrollmentFormComponent],
+  declarations: [EnrollmentsComponent, EnrollmentFormComponent, EnrollmentSuccessDialogComponent],
   imports: [
     CommonModule,
     TranslateModule,
