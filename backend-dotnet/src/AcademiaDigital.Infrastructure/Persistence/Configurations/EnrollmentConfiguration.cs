@@ -18,6 +18,7 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
         builder.Property(e => e.Status).HasColumnName("status").HasConversion<int>();
         builder.Property(e => e.FinalGrade).HasColumnName("final_grade").HasPrecision(4, 2);
         builder.Property(e => e.StudentId).HasColumnName("student_id");
+        builder.Property(e => e.StudentCareerId).HasColumnName("student_career_id");
         builder.Property(e => e.CourseId).HasColumnName("course_id");
         builder.Property(e => e.StudyPlanCourseId).HasColumnName("study_plan_course_id");
         builder.Property(e => e.TeachingPositionId).HasColumnName("teaching_position_id");
@@ -31,6 +32,11 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
         builder.HasOne(e => e.Student)
             .WithMany()
             .HasForeignKey(e => e.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.StudentCareer)
+            .WithMany(x => x.Enrollments)
+            .HasForeignKey(e => e.StudentCareerId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.Course)

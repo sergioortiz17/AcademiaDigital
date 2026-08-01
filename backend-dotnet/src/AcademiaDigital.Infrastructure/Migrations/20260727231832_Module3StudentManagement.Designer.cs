@@ -4,6 +4,7 @@ using AcademiaDigital.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AcademiaDigital.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727231832_Module3StudentManagement")]
+    partial class Module3StudentManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -785,10 +788,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("status");
 
-                    b.Property<long>("StudentCareerId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("student_career_id");
-
                     b.Property<long>("StudentId")
                         .HasColumnType("bigint")
                         .HasColumnName("student_id");
@@ -806,8 +805,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.HasIndex("CourseId");
 
                     b.HasIndex("EnrollmentPeriodId");
-
-                    b.HasIndex("StudentCareerId");
 
                     b.HasIndex("TeachingPositionId");
 
@@ -1012,8 +1009,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.HasIndex("LegajoNumber")
                         .IsUnique();
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Students", (string)null);
                 });
@@ -1051,9 +1047,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("StudentCareerId")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("StudentId")
                         .HasColumnType("bigint");
 
@@ -1071,7 +1064,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasIndex("CommissionId");
 
-                    b.HasIndex("StudentCareerId")
+                    b.HasIndex("StudentId")
                         .IsUnique()
                         .HasFilter("[IsCurrent] = 1");
 
@@ -1080,44 +1073,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.HasIndex("StudentId", "AcademicYear");
 
                     b.ToTable("StudentAcademicAssignments", (string)null);
-                });
-
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentCareer", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<int>("CareerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("EnrollmentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<long>("StudentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CareerId", "IsActive");
-
-                    b.HasIndex("StudentId", "CareerId")
-                        .IsUnique();
-
-                    b.ToTable("StudentCareers", (string)null);
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentCustomFieldValue", b =>
@@ -1328,10 +1283,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("migration_reason");
 
-                    b.Property<long>("StudentCareerId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("student_career_id");
-
                     b.Property<long>("StudentId")
                         .HasColumnType("bigint")
                         .HasColumnName("student_id");
@@ -1342,11 +1293,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentCareerId")
+                    b.HasIndex("StudentId")
                         .IsUnique()
                         .HasFilter("[is_current] = 1");
-
-                    b.HasIndex("StudentId");
 
                     b.HasIndex("StudyPlanId");
 
@@ -1913,12 +1862,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasForeignKey("EnrollmentPeriodId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("AcademiaDigital.Domain.Entities.StudentCareer", "StudentCareer")
-                        .WithMany("Enrollments")
-                        .HasForeignKey("StudentCareerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("AcademiaDigital.Domain.Entities.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
@@ -1940,8 +1883,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Navigation("EnrollmentPeriod");
 
                     b.Navigation("Student");
-
-                    b.Navigation("StudentCareer");
 
                     b.Navigation("StudyPlanCourse");
 
@@ -2005,12 +1946,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasForeignKey("CommissionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AcademiaDigital.Domain.Entities.StudentCareer", "StudentCareer")
-                        .WithMany("AcademicAssignments")
-                        .HasForeignKey("StudentCareerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("AcademiaDigital.Domain.Entities.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
@@ -2031,28 +1966,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.Navigation("Student");
 
-                    b.Navigation("StudentCareer");
-
                     b.Navigation("StudyPlan");
-                });
-
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentCareer", b =>
-                {
-                    b.HasOne("AcademiaDigital.Domain.Entities.Career", "Career")
-                        .WithMany("StudentCareers")
-                        .HasForeignKey("CareerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AcademiaDigital.Domain.Entities.Student", "Student")
-                        .WithMany("Careers")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Career");
-
-                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentCustomFieldValue", b =>
@@ -2156,12 +2070,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentStudyPlan", b =>
                 {
-                    b.HasOne("AcademiaDigital.Domain.Entities.StudentCareer", "StudentCareer")
-                        .WithMany("StudyPlans")
-                        .HasForeignKey("StudentCareerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("AcademiaDigital.Domain.Entities.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
@@ -2175,8 +2083,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Student");
-
-                    b.Navigation("StudentCareer");
 
                     b.Navigation("StudyPlan");
                 });
@@ -2268,8 +2174,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 {
                     b.Navigation("Courses");
 
-                    b.Navigation("StudentCareers");
-
                     b.Navigation("Students");
 
                     b.Navigation("StudyPlans");
@@ -2292,20 +2196,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.EnrollmentPeriod", b =>
                 {
                     b.Navigation("Enrollments");
-                });
-
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Student", b =>
-                {
-                    b.Navigation("Careers");
-                });
-
-            modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudentCareer", b =>
-                {
-                    b.Navigation("AcademicAssignments");
-
-                    b.Navigation("Enrollments");
-
-                    b.Navigation("StudyPlans");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.StudyPlan", b =>

@@ -5,6 +5,8 @@ public class StudentStudyPlan
     public long Id { get; set; }
     public long StudentId { get; set; }
     public Student Student { get; set; } = null!;
+    public long StudentCareerId { get; set; }
+    public StudentCareer StudentCareer { get; set; } = null!;
     public int StudyPlanId { get; set; }
     public StudyPlan StudyPlan { get; set; } = null!;
     public bool IsCurrent { get; set; } = true;

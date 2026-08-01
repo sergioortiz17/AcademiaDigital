@@ -16,7 +16,7 @@ public class StudentRepository(AppDbContext db) : IStudentRepository
         => await db.Students.AsNoTracking()
             .Include(s => s.User)
             .Include(s => s.Career)
-            .Where(s => s.CareerId == careerId)
+            .Where(s => s.Careers.Any(sc => sc.CareerId == careerId && sc.IsActive))
             .ToListAsync(ct);
 
     public async Task<Student?> FindByIdAsync(long id, CancellationToken ct = default)

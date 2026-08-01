@@ -36,7 +36,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             // Standard exceptions
             KeyNotFoundException e             => (StatusCodes.Status404NotFound,       e.Message),
             ArgumentException e               => (StatusCodes.Status400BadRequest,     e.Message),
-            InvalidOperationException e        => (StatusCodes.Status400BadRequest,     e.Message),
+            InvalidOperationException e        => (StatusCodes.Status409Conflict,       e.Message),
             DbUpdateException                  => (StatusCodes.Status409Conflict,       "Ya existe una inscripción para este alumno en una de las materias seleccionadas."),
             _                                  => (StatusCodes.Status500InternalServerError, "An internal error occurred")
         };

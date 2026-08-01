@@ -14,6 +14,8 @@ public class Enrollment
 
     public long StudentId { get; set; }
     public Student Student { get; set; } = null!;
+    public long StudentCareerId { get; set; }
+    public StudentCareer StudentCareer { get; set; } = null!;
 
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;

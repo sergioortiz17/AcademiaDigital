@@ -16,4 +16,5 @@ public class Career
     public ICollection<Course> Courses { get; set; } = [];
     public ICollection<StudyPlan> StudyPlans { get; set; } = [];
     public ICollection<Student> Students { get; set; } = [];
+    public ICollection<StudentCareer> StudentCareers { get; set; } = [];
 }

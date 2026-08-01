@@ -1,6 +1,7 @@
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Interfaces.Services;
 using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Application.Services;
 using AcademiaDigital.Infrastructure.Persistence;
 using AcademiaDigital.Infrastructure.Persistence.Repositories;
 using AcademiaDigital.Infrastructure.Services;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<ICoursePrerequisiteRepository, CoursePrerequisiteRepository>();
         services.AddScoped<IStudentAcademicRepository, StudentAcademicRepository>();
         services.AddScoped<IStudentRepository, StudentRepository>();
+        services.AddScoped<IStudentCareerRepository, StudentCareerRepository>();
         services.AddScoped<ITeacherRepository, TeacherRepository>();
         services.AddScoped<IAdministrativeRepository, AdministrativeRepository>();
         services.AddScoped<ICooperativeEntityRepository, CooperativeEntityRepository>();
@@ -45,6 +47,7 @@ public static class DependencyInjection
         // Servicios
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IStudentManagementService, StudentManagementService>();
 
         return services;
     }
