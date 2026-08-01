@@ -1,5 +1,5 @@
 # Scripts de administración de issues
-scripts/
+/scripts/
 
 # .NET
 **/bin/
@@ -13,6 +13,11 @@ frontend-angular/.angular/
 
 # Docker
 .env
+
+# Local artifacts and backups
+*.log
+frontend-angular/node_modules.pre-fix/
+frontend-angular/package-lock.pre-fix.json
 
 # IDE
 .vscode/
