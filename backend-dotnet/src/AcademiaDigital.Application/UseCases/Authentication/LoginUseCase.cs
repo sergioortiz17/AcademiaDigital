@@ -50,7 +50,17 @@ public class LoginUseCase(
 
         if (session != null && !session.IsExpired())
         {
-            token = session.Token;
+            var sessionRole = tokenService.GetUserRoleFromToken(session.Token);
+            if (sessionRole == user.Role)
+            {
+                token = session.Token;
+            }
+            else
+            {
+                await sessionRepository.DeleteAsync(session, ct);
+                token = tokenService.GenerateToken(user);
+                await sessionRepository.CreateAsync(user.Id, token, ct);
+            }
         }
         else
         {

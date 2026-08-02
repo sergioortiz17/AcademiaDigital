@@ -1,0 +1,198 @@
+<div *ngIf="errorMsg" class="error-message">{{ errorMsg }}</div>
+
+<div class="enrollment-card">
+
+  <div class="filters">
+    <div class="field">
+      <label>Carrera</label>
+      <mat-form-field appearance="outline">
+        <mat-select [(value)]="selectedCareer" (selectionChange)="onCareerChange()">
+          <mat-option *ngFor="let career of careers" [value]="career.id">
+            {{ career.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Checking period -->
+    <div *ngIf="checkingPeriod" class="period-checking">
+      <mat-spinner diameter="20"></mat-spinner>
+      <span>Verificando período de inscripción...</span>
+    </div>
+
+    <!-- No active period -->
+    <div *ngIf="!checkingPeriod && selectedCareer && !activePeriod" class="period-closed-banner">
+      <mat-icon>lock</mat-icon>
+      <span>Las inscripciones para esta carrera no están abiertas actualmente.</span>
+    </div>
+
+    <!-- Active period info + quotas -->
+    <div *ngIf="activePeriod" class="period-info-banner">
+      <div class="period-info-row">
+        <mat-icon color="primary">event_available</mat-icon>
+        <span>
+          Inscripciones abiertas &mdash; {{ activePeriod.careerName }} &bull;
+          {{ activePeriod.academicYear }} &bull;
+          {{ activePeriod.semester === 1 ? '1° Semestre' : '2° Semestre' }}
+        </span>
+      </div>
+      <div class="quota-row">
+        <span class="quota-chip manana" *ngIf="activePeriod.quotasMorning > 0">
+          Mañana: {{ activePeriod.quotasMorning - activePeriod.enrolledMorning }} cupos disponibles
+        </span>
+        <span class="quota-chip tarde" *ngIf="activePeriod.quotasAfternoon > 0">
+          Tarde: {{ activePeriod.quotasAfternoon - activePeriod.enrolledAfternoon }} cupos disponibles
+        </span>
+        <span class="quota-chip noche" *ngIf="activePeriod.quotasEvening > 0">
+          Noche: {{ activePeriod.quotasEvening - activePeriod.enrolledEvening }} cupos disponibles
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rest of form only shown when period is active -->
+  <ng-container *ngIf="activePeriod">
+
+    <div class="filters">
+      <div class="field">
+        <label>Turno</label>
+        <mat-form-field appearance="outline">
+          <mat-select [(value)]="selectedShift">
+            <mat-option *ngFor="let shift of shifts" [value]="shift">{{ shift }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div *ngIf="selectedShift" class="remaining-quota">
+          Cupos disponibles en turno {{ selectedShift }}: <strong>{{ availableQuotas() }}</strong>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Año de carrera</label>
+        <mat-form-field appearance="outline">
+          <mat-select [(value)]="selectedYear" (selectionChange)="addYear()">
+            <mat-option *ngFor="let year of availableYears" [value]="year.id"
+              [disabled]="selectedYears.includes(year.id)">
+              {{ year.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="year-chips">
+          <mat-chip-set>
+            <mat-chip *ngFor="let year of selectedYears" removable (removed)="removeYear(year)">
+              {{ year }}° Año
+              <button matChipRemove><mat-icon>close</mat-icon></button>
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="selectedYears.includes(1)" class="year-section">
+      <div class="year-header">
+        <h2>1° AÑO</h2>
+        <button mat-stroked-button class="select-all-btn" (click)="toggleSelectAllForYear(1)">
+          <mat-icon>{{ isAllSelectedForYear(1) ? 'deselect' : 'done_all' }}</mat-icon>
+          {{ isAllSelectedForYear(1) ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+        </button>
+      </div>
+      <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
+      <div class="subjects-card">
+        <div class="header">INSCRIBIRME EN</div>
+        <div *ngFor="let subject of firstYearSubjects" class="subject-row">
+          <span class="subject-name">
+            {{ subject.courseName }}
+            <span class="semester-badge" [ngClass]="subject.isAnnual ? 'badge-annual' : 'badge-quarter'">
+              {{ semesterLabel(subject) }}
+            </span>
+          </span>
+          <mat-checkbox
+            [checked]="selectedSubjectsByYear[1].includes(subject.id)"
+            (change)="toggleSubject(1, subject.id, $event)">
+          </mat-checkbox>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="selectedYears.includes(2)" class="year-section">
+      <div class="year-header">
+        <h2>2° AÑO</h2>
+        <button mat-stroked-button class="select-all-btn" (click)="toggleSelectAllForYear(2)">
+          <mat-icon>{{ isAllSelectedForYear(2) ? 'deselect' : 'done_all' }}</mat-icon>
+          {{ isAllSelectedForYear(2) ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+        </button>
+      </div>
+      <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
+      <div class="subjects-card">
+        <div class="header">INSCRIBIRME EN</div>
+        <div *ngFor="let subject of secondYearSubjects" class="subject-row">
+          <span class="subject-name">
+            {{ subject.courseName }}
+            <span class="semester-badge" [ngClass]="subject.isAnnual ? 'badge-annual' : 'badge-quarter'">
+              {{ semesterLabel(subject) }}
+            </span>
+          </span>
+          <mat-checkbox
+            [checked]="selectedSubjectsByYear[2].includes(subject.id)"
+            (change)="toggleSubject(2, subject.id, $event)">
+          </mat-checkbox>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="selectedYears.includes(3)" class="year-section">
+      <div class="year-header">
+        <h2>3° AÑO</h2>
+        <button mat-stroked-button class="select-all-btn" (click)="toggleSelectAllForYear(3)">
+          <mat-icon>{{ isAllSelectedForYear(3) ? 'deselect' : 'done_all' }}</mat-icon>
+          {{ isAllSelectedForYear(3) ? 'Deseleccionar todas' : 'Seleccionar todas' }}
+        </button>
+      </div>
+      <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
+      <div class="subjects-card">
+        <div class="header">INSCRIBIRME EN</div>
+        <div *ngFor="let subject of thirdYearSubjects" class="subject-row">
+          <span class="subject-name">
+            {{ subject.courseName }}
+            <span class="semester-badge" [ngClass]="subject.isAnnual ? 'badge-annual' : 'badge-quarter'">
+              {{ semesterLabel(subject) }}
+            </span>
+          </span>
+          <mat-checkbox
+            [checked]="selectedSubjectsByYear[3].includes(subject.id)"
+            (change)="toggleSubject(3, subject.id, $event)">
+          </mat-checkbox>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<div class="documents-section">
+  <div class="documents-card">
+    <div class="documents-message">
+      PARA QUE SU MATRÍCULA SE REALICE, DEBERÁ PRESENTARSE EN RÍO NEGRO 77
+      DE 18:30 A 20 CON LA SIGUIENTE DOCUMENTACIÓN.
+      <br>UNA COPIA DE LOS SIGUIENTES ÍTEMS.
+      <br>(PUEDE VENIR UN FAMILIAR A TRAER LA DOCUMENTACIÓN)
+    </div>
+    <div class="documents-title">A LLENAR POR EL COORDINADOR</div>
+    <div *ngFor="let document of requiredDocuments" class="document-row">
+      <span>{{ document.label }}</span>
+      <mat-checkbox [checked]="document.checked" disabled></mat-checkbox>
+    </div>
+  </div>
+</div>
+
+<div class="documents-footer">
+  Se enviará una copia de tus respuestas por correo electrónico a la dirección que has proporcionado.
+</div>
+
+<div class="submit-section">
+  <button mat-raised-button class="save-btn"
+    (click)="submitEnrollment()"
+    [disabled]="!canSubmit() || isSubmitting">
+    <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
+    <span *ngIf="!isSubmitting">ENVIAR</span>
+  </button>
+</div>

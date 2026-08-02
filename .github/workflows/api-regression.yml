@@ -1,0 +1,90 @@
+name: API Regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend-dotnet/**'
+      - '.github/workflows/api-regression.yml'
+  workflow_dispatch:
+
+jobs:
+  api-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_ADMIN_PASSWORD: CI_E2E_Admin_123!
+      E2E_SA_PASSWORD: CI_E2E_SQL_123!
+      E2E_JWT_SECRET: ci_e2e_jwt_secret_only_123_academia_digital
+      E2E_SQL_CONNECTION_STRING: Server=localhost,1434;Database=AcademiaDigitalE2E;User Id=sa;Password=CI_E2E_SQL_123!;TrustServerCertificate=True
+      E2E_DATABASE_NAME: AcademiaDigitalE2E
+      E2E_ALLOW_DEVELOPMENT_DATABASE: 'false'
+      E2E_DOCKER_MANAGED_DATABASE: 'true'
+      E2E_PRESERVE_DATA: 'false'
+    defaults:
+      run:
+        working-directory: backend-dotnet/tests/api-regression
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend-dotnet/tests/api-regression/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore backend and .NET tools
+        working-directory: backend-dotnet
+        run: |
+          dotnet tool restore
+          dotnet restore AcademiaDigital.sln
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start disposable API environment
+        run: npm run e2e:reset
+
+      - name: Run typecheck
+        run: npm run typecheck
+
+      - name: Run migration regression
+        run: npm run test:migration
+
+      - name: Run API regression
+        id: api_tests
+        run: npm run test:api
+        continue-on-error: true
+
+      - name: Generate Allure report
+        if: always()
+        run: npm run allure:generate
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-regression-reports
+          path: |
+            backend-dotnet/tests/api-regression/allure-results
+            backend-dotnet/tests/api-regression/allure-report
+            backend-dotnet/tests/api-regression/playwright-report
+            backend-dotnet/tests/api-regression/test-results
+            backend-dotnet/tests/api-regression/.artifacts
+
+      - name: Stop E2E environment
+        if: always()
+        run: npm run e2e:down
+
+      - name: Propagate regression status
+        if: always() && steps.api_tests.outcome == 'failure'
+        run: exit 1

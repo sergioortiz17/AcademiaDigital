@@ -32,6 +32,7 @@ public sealed class StudyPlanCourseDetailDto
     public string CourseName { get; set; } = null!;
     public int YearNumber { get; set; }
     public int Semester { get; set; }
+    public bool IsAnnual { get; set; }
     public int SortOrder { get; set; }
     public bool IsMandatory { get; set; }
     public decimal? Credits { get; set; }

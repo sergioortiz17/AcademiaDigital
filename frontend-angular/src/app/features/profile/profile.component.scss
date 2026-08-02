@@ -1,4 +1,4 @@
-.loading-wrapper {
+  .loading-wrapper {
   display: flex;
   justify-content: center;
   padding: 48px;
@@ -8,16 +8,19 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 760px;
+  max-width: auto;
 }
 
 .profile-card {
-  .card-icon {
+  /*.card-icon {
     font-size: 28px;
     width: 28px;
     height: 28px;
     color: var(--primary-color, #1976d2);
-  }
+  }*/
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 3px 12px rgba(0,0,0,.12);
 }
 
 // Email / DNI de solo lectura
@@ -52,12 +55,12 @@
   margin: 12px 0 4px;
 }
 
-.profile-form {
+/*.profile-form {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding-top: 16px;
-}
+}*/
 
 .form-row {
   display: flex;
@@ -79,7 +82,7 @@
   }
 }
 
-.phone-group {
+/*.phone-group {
   display: flex;
   gap: 8px;
   flex: 1;
@@ -92,7 +95,7 @@
   .phone-number {
     flex: 1;
   }
-}
+}*/
 
 .full-width {
   width: 100%;
@@ -104,7 +107,7 @@
   margin: -4px 0 8px;
 }
 
-.password-rules {
+/*.password-rules {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
@@ -119,7 +122,7 @@
       color: #2e7d32;
     }
   }
-}
+}*/
 
 .msg-success {
   color: #2e7d32;
@@ -141,4 +144,184 @@
 
 mat-card-actions {
   padding: 8px 16px 16px;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  width: 280px;
+  margin-left: 18px;
+
+  background: linear-gradient(
+      90deg,
+      #4f95cf,
+      #4b8fd1
+  );
+
+  color: white;
+  padding: .8rem 2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+
+  mat-icon {
+    font-size: 28px;
+  }
+}
+
+.section-badge2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  width: 350px;
+  margin-left: 18px;
+
+  background: linear-gradient(
+      90deg,
+      #4f95cf,
+      #4b8fd1
+  );
+
+  color: white;
+  padding: .8rem 2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+
+  mat-icon {
+    font-size: 26px;
+  }
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(250px,1fr));
+
+  gap: 0.8rem;
+}
+
+.phone-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/*.phone-code {
+  width: 90px;
+}
+
+.phone-number {
+  flex: 1;
+} */
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-text-field-wrapper {
+  background: #f4f4f4 !important;
+  border-radius: 8px !important;
+}
+
+.save-area {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.save-btn {
+  border: none;
+  background: #f5d26a;
+  color: #0063AF;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: .9rem 2rem;
+
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  transition: .2s;
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+}
+
+.password-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.password-rules {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+
+  color: #2e7d32;
+
+  font-size: .9rem;
+}
+
+/*Estilo de cada campo y titulo*/
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4b5563;
+  padding-left: 5px;
+}
+
+.custom-field {
+  width: 100%;
+
+}
+
+:host ::ng-deep .custom-field .mat-mdc-text-field-wrapper {
+  background: #f3f4f6 !important;
+  border-radius: 12px !important;
+}
+
+:host ::ng-deep .custom-field .mdc-line-ripple {
+  display: none !important;
+}
+
+:host ::ng-deep .custom-field .mdc-floating-label {
+  display: none !important;
+}
+
+:host ::ng-deep .custom-field .mat-mdc-form-field-infix {
+  height: 42px !important;
+  /*padding-top: 8px !important;*/
+  padding-bottom: 8px !important;
+
+}
+
+.password-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem;
+  align-items: start;
+}
+
+.password-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.password-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 300px;
 }

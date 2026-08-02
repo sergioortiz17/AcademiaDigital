@@ -44,4 +44,20 @@ export class AdminService {
   deleteUser(userId: number): Observable<{ success: boolean; msg: string }> {
     return this.http.delete<{ success: boolean; msg: string }>(`${this.base}v1/admin/users/${userId}`);
   }
+
+  activateUser(userId: number): Observable<{ success: boolean; user: UserSummary }> {
+    return this.http.patch<{ success: boolean; user: UserSummary }>(
+      `${this.base}v1/admin/users/${userId}/active`,
+      { isActive: true }
+    );
+  }
+
+  disableUser(userId: number): Observable<{ success: boolean; user: UserSummary }> {
+    return this.http.patch<{ success: boolean; user: UserSummary }>(
+      `${this.base}v1/admin/users/${userId}/active`,
+      { isActive: false }
+    );
+  }
+
+  
 }

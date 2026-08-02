@@ -1,0 +1,79 @@
+<div class="es-container">
+  <div class="es-header">
+    <button mat-icon-button (click)="goBack()" matTooltip="Volver">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="es-title">
+      <h2>Inscriptos del período</h2>
+      <span class="total-badge" *ngIf="!loading">{{ dataSource.filteredData.length }} alumno(s)</span>
+    </div>
+  </div>
+
+  <div *ngIf="errorMsg" class="error-banner">{{ errorMsg }}</div>
+
+  <div *ngIf="loading" class="loading-row">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Buscar por nombre o DNI</mat-label>
+      <input matInput [value]="filterValue" (input)="applyFilter($any($event.target).value)" placeholder="Ej: García o 12345678">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="dataSource" matSort class="es-table" *ngIf="dataSource.data.length > 0">
+
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre y apellido</th>
+          <td mat-cell *matCellDef="let s">{{ s.fullName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="dni">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>DNI</th>
+          <td mat-cell *matCellDef="let s">{{ s.dni }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="courseNames">
+          <th mat-header-cell *matHeaderCellDef>Materias inscriptas</th>
+          <td mat-cell *matCellDef="let s">
+            <div class="course-tags">
+              <span class="course-tag" *ngFor="let c of s.courseNames">{{ c }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let s">
+            <button mat-stroked-button color="warn" (click)="removeStudent(s)" class="baja-btn">
+              <mat-icon>person_remove</mat-icon>
+              Dar de baja
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell empty-row" [attr.colspan]="displayedColumns.length">
+            No se encontraron inscriptos con ese criterio.
+          </td>
+        </tr>
+      </table>
+
+      <p *ngIf="dataSource.data.length === 0" class="empty-msg">
+        Aún no hay inscriptos en este período.
+      </p>
+    </div>
+
+    <mat-paginator
+      *ngIf="dataSource.data.length > 0"
+      [pageSizeOptions]="[10, 25, 50]"
+      pageSize="25"
+      showFirstLastButtons>
+    </mat-paginator>
+  </ng-container>
+</div>

@@ -6,21 +6,28 @@ using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.Students;
 
-public sealed record GetEligibleCoursesForStudentQuery(long StudentId);
-public sealed record GetStudentAcademicProgressQuery(long StudentId);
+public sealed record GetEligibleCoursesForStudentQuery(long StudentId, int? CareerId = null);
+public sealed record GetStudentAcademicProgressQuery(long StudentId, int? CareerId = null);
 public sealed record AssignStudentStudyPlanCommand(long StudentId, AssignStudentStudyPlanRequest Request);
 
 public sealed class GetEligibleCoursesForStudentQueryHandler(
+    IStudentRepository studentRepository,
+    IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
     CourseEligibilityService eligibilityService)
 {
     public async Task<IReadOnlyList<EligibleCourseDto>> Handle(GetEligibleCoursesForStudentQuery query, CancellationToken ct = default)
     {
-        var currentPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(query.StudentId, ct)
+        var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
+            ?? throw new KeyNotFoundException("Student not found.");
+        var careerId = query.CareerId ?? student.CareerId;
+        _ = await studentCareerRepository.FindAsync(query.StudentId, careerId, true, ct)
+            ?? throw new KeyNotFoundException("Active student career not found.");
+        var currentPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(query.StudentId, careerId, ct)
             ?? throw new KeyNotFoundException("Current study plan not found for student.");
 
         var courses = await studentAcademicRepository.GetStudyPlanCoursesAsync(currentPlan.StudyPlanId, ct);
-        var enrollments = await studentAcademicRepository.GetEnrollmentsAsync(query.StudentId, ct);
+        var enrollments = await studentAcademicRepository.GetEnrollmentsAsync(query.StudentId, careerId, ct);
         var prerequisites = await studentAcademicRepository.GetPrerequisitesAsync(currentPlan.StudyPlanId, ct);
 
         var enrollmentByCourse = enrollments
@@ -89,17 +96,24 @@ public sealed class GetEligibleCoursesForStudentQueryHandler(
 }
 
 public sealed class GetStudentAcademicProgressQueryHandler(
+    IStudentRepository studentRepository,
+    IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
     AcademicProgressCalculator progressCalculator,
     CourseEligibilityService eligibilityService)
 {
     public async Task<StudentAcademicProgressDto> Handle(GetStudentAcademicProgressQuery query, CancellationToken ct = default)
     {
-        var currentPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(query.StudentId, ct)
+        var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
+            ?? throw new KeyNotFoundException("Student not found.");
+        var careerId = query.CareerId ?? student.CareerId;
+        _ = await studentCareerRepository.FindAsync(query.StudentId, careerId, true, ct)
+            ?? throw new KeyNotFoundException("Active student career not found.");
+        var currentPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(query.StudentId, careerId, ct)
             ?? throw new KeyNotFoundException("Current study plan not found for student.");
 
         var courses = await studentAcademicRepository.GetStudyPlanCoursesAsync(currentPlan.StudyPlanId, ct);
-        var enrollments = await studentAcademicRepository.GetEnrollmentsAsync(query.StudentId, ct);
+        var enrollments = await studentAcademicRepository.GetEnrollmentsAsync(query.StudentId, careerId, ct);
         var summary = progressCalculator.Calculate(courses, enrollments);
 
         var enrollmentByCourse = enrollments
@@ -144,7 +158,8 @@ public sealed class GetStudentAcademicProgressQueryHandler(
 public sealed class AssignStudentStudyPlanCommandHandler(
     IStudentRepository studentRepository,
     IStudyPlanRepository studyPlanRepository,
-    IStudentAcademicRepository studentAcademicRepository)
+    IStudentAcademicRepository studentAcademicRepository,
+    IStudentCareerRepository studentCareerRepository)
 {
     public async Task Handle(AssignStudentStudyPlanCommand command, CancellationToken ct = default)
     {
@@ -154,12 +169,13 @@ public sealed class AssignStudentStudyPlanCommandHandler(
         var studyPlan = await studyPlanRepository.GetByIdAsync(command.Request.StudyPlanId, ct)
             ?? throw new KeyNotFoundException("Study plan not found.");
 
-        if (studyPlan.CareerId != student.CareerId)
-            throw new InvalidOperationException("Study plan must belong to the student career.");
+        var membership = await studentCareerRepository.FindAsync(student.Id, studyPlan.CareerId, true, ct)
+            ?? throw new InvalidOperationException("Student is not actively enrolled in the study plan career.");
 
         var assignment = new StudentStudyPlan
         {
             StudentId = command.StudentId,
+            StudentCareerId = membership.Id,
             StudyPlanId = command.Request.StudyPlanId,
             MigrationReason = command.Request.MigrationReason
         };

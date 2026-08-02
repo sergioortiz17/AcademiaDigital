@@ -1,0 +1,65 @@
+<div class="reports-container">
+  <div class="reports-header">
+    <button mat-icon-button (click)="goBack()" matTooltip="Volver">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>Reportes del período</h2>
+  </div>
+
+  <div *ngIf="loading" class="loading-row">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <p *ngIf="errorMsg" class="error-msg">{{ errorMsg }}</p>
+
+  <ng-container *ngIf="!loading && report">
+
+    <div *ngIf="report.genderCounts.length === 0 && report.courseCounts.length === 0" class="empty-msg">
+      <mat-icon>info</mat-icon>
+      Todavía no hay inscriptos en este período.
+    </div>
+
+    <div class="charts-grid" *ngIf="report.genderCounts.length > 0 || report.courseCounts.length > 0">
+
+      <!-- Género -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Distribución por género</mat-card-title>
+          <mat-card-subtitle>Total: {{ report.genderCounts | sumCount }} alumnos</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="chart-content pie-content">
+          <canvas #genderChart></canvas>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Inscriptos por materia -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Alumnos por materia</mat-card-title>
+          <mat-card-subtitle>{{ report.courseCounts.length }} materias con inscriptos</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="chart-content">
+          <canvas #courseChart></canvas>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Inscripciones por día -->
+      <mat-card class="chart-card chart-card-wide">
+        <mat-card-header>
+          <mat-card-title>Inscripciones por día (últimas 2 semanas)</mat-card-title>
+          <mat-card-subtitle>Cantidad de alumnos que se inscribieron cada día</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="chart-content" *ngIf="report.dailyCounts.length > 0; else noDailyData">
+          <canvas #dailyChart></canvas>
+        </mat-card-content>
+        <ng-template #noDailyData>
+          <mat-card-content class="empty-daily">
+            <mat-icon>event_busy</mat-icon>
+            <span>Sin inscripciones en los últimos 14 días.</span>
+          </mat-card-content>
+        </ng-template>
+      </mat-card>
+
+    </div>
+  </ng-container>
+</div>

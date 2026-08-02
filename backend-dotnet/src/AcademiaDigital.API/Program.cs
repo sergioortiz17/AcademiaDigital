@@ -1,5 +1,6 @@
 using AcademiaDigital.API.Middleware;
 using AcademiaDigital.Application.UseCases.Admin;
+using AcademiaDigital.Application.UseCases.Enrollments;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Certificates;
 using AcademiaDigital.Application.UseCases.Careers;
@@ -68,6 +69,22 @@ builder.Services.AddScoped<AssignStudentStudyPlanCommandHandler>();
 builder.Services.AddScoped<GetStudentsQueryHandler>();
 builder.Services.AddScoped<GetStudentByIdQueryHandler>();
 builder.Services.AddScoped<CreateStudentCommandHandler>();
+
+// Enrollment periods
+builder.Services.AddScoped<GetAllEnrollmentPeriodsQueryHandler>();
+builder.Services.AddScoped<GetActiveEnrollmentPeriodQueryHandler>();
+builder.Services.AddScoped<GetEnrolledStudentsQueryHandler>();
+builder.Services.AddScoped<OpenEnrollmentPeriodCommandHandler>();
+builder.Services.AddScoped<CloseEnrollmentPeriodCommandHandler>();
+builder.Services.AddScoped<UpdatePeriodQuotasCommandHandler>();
+builder.Services.AddScoped<RemoveStudentFromPeriodCommandHandler>();
+builder.Services.AddScoped<GetMyEnrollmentsQueryHandler>();
+builder.Services.AddScoped<ActivateEnrollmentPeriodCommandHandler>();
+builder.Services.AddScoped<DeleteEnrollmentPeriodCommandHandler>();
+builder.Services.AddScoped<GetPeriodReportQueryHandler>();
+builder.Services.AddScoped<EnrollmentPeriodFacade>();
+builder.Services.AddScoped<EnrollmentPeriodAdminFacade>();
+builder.Services.AddScoped<CreateEnrollmentCommandHandler>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration

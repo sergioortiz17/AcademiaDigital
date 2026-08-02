@@ -14,6 +14,8 @@ public class Enrollment
 
     public long StudentId { get; set; }
     public Student Student { get; set; } = null!;
+    public long StudentCareerId { get; set; }
+    public StudentCareer StudentCareer { get; set; } = null!;
 
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;
@@ -23,6 +25,11 @@ public class Enrollment
 
     public int? TeachingPositionId { get; set; }
     public TeachingPosition? TeachingPosition { get; set; }
+
+    public int? EnrollmentPeriodId { get; set; }
+    public EnrollmentPeriod? EnrollmentPeriod { get; set; }
+
+    public string? Shift { get; set; }
 }
 
 public enum EnrollmentStatus

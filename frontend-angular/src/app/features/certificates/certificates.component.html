@@ -1,18 +1,22 @@
 <div class="page-header">
-  <h1>Certificados</h1>
-  <p *ngIf="userRole === UserRole.Alumno">Solicitá certificados académicos y revisá el estado de tus pedidos.</p>
-  <p *ngIf="userRole === UserRole.Admin">Todas las solicitudes de certificados del sistema.</p>
+  <h1 *ngIf="!showMyRequests">Certificados</h1>
+  <!-- <p *ngIf="userRole === UserRole.Alumno">Solicitá certificados académicos y revisá el estado de tus pedidos.</p>
+     <p *ngIf="userRole === UserRole.Admin">Todas las solicitudes de certificados del sistema.</p> -->
+  <a *ngIf="userRole === UserRole.Alumno && !showMyRequests"
+    class="my-requests-link" (click)="openMyRequests()">
+    Ver mis solicitudes
+  </a>
 </div>
 
 <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
 <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
-<!-- Nueva solicitud (alumno) -->
+<!-- Nueva solicitud (alumno) ANTERIOR 
 <div class="actions-bar" *ngIf="userRole === UserRole.Alumno">
   <button mat-raised-button color="primary" (click)="showForm = !showForm">
     <mat-icon>add</mat-icon> Nueva solicitud
   </button>
-</div>
+</div> 
 
 <mat-card class="form-card" *ngIf="showForm && userRole === UserRole.Alumno">
   <mat-card-content>
@@ -31,85 +35,317 @@
       </button>
     </div>
   </mat-card-content>
-</mat-card>
-
-<mat-card class="table-card">
-  <mat-card-content>
-
-    <!-- Toolbar admin: pills + buscador -->
-    <ng-container *ngIf="userRole === UserRole.Admin">
-      <div class="role-pills">
-        <button
-          *ngFor="let f of statusFilters"
-          class="role-pill"
-          [class.role-pill--active]="selectedStatus === f.value"
-          (click)="onStatusFilter(f.value)">
-          {{ f.label }}
+</mat-card> -->
+<ng-container *ngIf="userRole===UserRole.Alumno && !showMyRequests">
+    <div class="actions-bar">
+        <button mat-raised-button color="primary" (click)="showForm=!showForm">
+            <mat-icon>add</mat-icon>
+            Nueva solicitud
         </button>
-      </div>
+    </div>
 
-      <div class="toolbar">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar por alumno (nombre o email)</mat-label>
-          <input matInput [value]="searchTerm" (input)="onSearchChange($any($event.target).value)" />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
-    </ng-container>
-
-    <!-- Tabla con overlay -->
-    <div class="table-wrap">
-      <div class="loading-overlay" *ngIf="isLoading">
-        <mat-spinner diameter="40"></mat-spinner>
-      </div>
-
-      <table mat-table [dataSource]="requests" class="certs-table">
-
-        <!-- Alumno (solo admin) -->
-        <ng-container matColumnDef="username">
-          <th mat-header-cell *matHeaderCellDef>Alumno</th>
-          <td mat-cell *matCellDef="let r">
-            <div class="user-info">
-              <div>
-                <div class="user-name">{{ r.username }}</div>
-                <div class="user-email">{{ r.email }}</div>
-              </div>
+    <mat-card class="form-card" *ngIf="showForm">
+        <mat-card-content>
+            <h3>
+                Solicitar certificado
+            </h3>
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>
+                    Tipo de certificado
+                </mat-label>
+                <mat-select [(ngModel)]="selectedType">
+                    <mat-option *ngFor="let t of certificateTypes" [value]="t">
+                        {{t}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <div class="form-actions">
+                <button mat-button (click)="showForm=false">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" [disabled]="!selectedType || isSubmitting" (click)="submitRequest()">
+                    <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
+                    <span *ngIf="!isSubmitting">
+                        Enviar solicitud
+                    </span>
+                </button>
             </div>
-          </td>
-        </ng-container>
+        </mat-card-content>
+    </mat-card>
+</ng-container>
 
-        <!-- Tipo -->
-        <ng-container matColumnDef="certificateType">
-          <th mat-header-cell *matHeaderCellDef>Tipo</th>
-          <td mat-cell *matCellDef="let r">{{ r.certificateType }}</td>
-        </ng-container>
-
-        <!-- Estado -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Estado</th>
-          <td mat-cell *matCellDef="let r">
-            <span class="status-badge status-badge--{{ r.status.toLowerCase() }}">
-              {{ statusLabels[r.status] }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Fecha -->
-        <ng-container matColumnDef="createdAt">
-          <th mat-header-cell *matHeaderCellDef>Fecha</th>
-          <td mat-cell *matCellDef="let r">{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+<!-- ===================== -->
+<!-- VISTA ALUMNO -->
+<!-- ===================== -->
+<ng-container *ngIf="userRole === UserRole.Alumno && showMyRequests">
+    <div class="table-toolbar">
+      <h1>Estado de solicitud de Certificados</h1>
+        <button class="back-btn" mat-stroked-button (click)="closeMyRequests()">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
     </div>
+    <mat-card class="table-card">
+        <mat-card-content>
+            <!-- Filtros -->
+            <div class="role-pills">
+                <button *ngFor="let f of statusFilters" class="role-pill"
+                    [ngClass]="{
+                        'role-pill--active': selectedStatus === f.value,
+                        'todos': f.value === null,
+                        'pending': f.value === 'Pending',
+                        'approved': f.value === 'Approved',
+                        'rejected': f.value === 'Rejected'
+                    }"
+                    (click)="onStatusFilter(f.value)">
+                    {{f.label}}
+                </button>
+            </div>
+            <div class="table-wrap">
+                <div class="loading-overlay" *ngIf="isLoading">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+                
+                <table mat-table [dataSource]="requests" class="certs-table">
+                    <!-- Tipo -->
+                    <ng-container matColumnDef="certificateType">
+                        <th mat-header-cell *matHeaderCellDef>
+                            Tipo
+                            <button mat-icon-button class="sort-button" (click)="sortBy('certificateType')">
+                                <mat-icon class="sort-icon">
+                                    swap_vert
+                                </mat-icon>
+                            </button>
+                        </th>
+                        <td mat-cell *matCellDef="let r">
+                            {{r.certificateType}}
+                        </td>
+                    </ng-container>
+                    <!-- Estado -->
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>
+                            Estado
+                            <button mat-icon-button class="sort-button" (click)="sortBy('status')">
+                                <mat-icon class="sort-icon">
+                                    swap_vert
+                                </mat-icon>
+                            </button>
+                        </th>
+                        <td mat-cell *matCellDef="let r">
+                            <span class="status-badge status-badge--{{r.status.toLowerCase()}}">
+                                {{statusLabels[r.status]}}
+                            </span>
+                        </td>
+                    </ng-container>
+                    <!-- Fecha -->
+                    <ng-container matColumnDef="createdAt">
+                        <th mat-header-cell *matHeaderCellDef>
+                            Fecha
+                            <button mat-icon-button class="sort-button" (click)="sortBy('createdAt')">
+                                <mat-icon class="sort-icon">
+                                    swap_vert
+                                </mat-icon>
+                            </button>
+                        </th>
+                        <td mat-cell *matCellDef="let r">
+                            {{r.createdAt | date:'dd/MM/yyyy HH:mm'}}
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="displayedColumnsAlumno"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumnsAlumno;"></tr>
+                </table>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</ng-container>
 
-    <div *ngIf="!isLoading && requests.length === 0" class="empty-state">
-      <mat-icon>military_tech</mat-icon>
-      <p *ngIf="userRole === UserRole.Alumno">No tenés solicitudes. ¡Pedí tu primer certificado!</p>
-      <p *ngIf="userRole !== UserRole.Alumno">No hay solicitudes que coincidan.</p>
-    </div>
+<!-- ===================== -->
+<!-- VISTA ADMIN -->
+<!-- ===================== -->
+<ng-container *ngIf="userRole === UserRole.Admin">
+    <mat-card class="table-card">
+        <mat-card-content>
+            <!-- Pills -->
+            <div class="role-pills">
+                <button *ngFor="let f of statusFilters" class="role-pill"
+                    [ngClass]="{
+                        'role-pill--active': selectedStatus === f.value,
+                        'todos': f.value === null,
+                        'pending': f.value === 'Pending',
+                        'approved': f.value === 'Approved',
+                        'rejected': f.value === 'Rejected'
+                    }"
+                    (click)="onStatusFilter(f.value)">
+                    {{f.label}}
+                </button>
+            </div>
+            <!-- Buscador -->
+            <div class="toolbar">
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>
+                        Buscar por alumno
+                    </mat-label>
+                    <input matInput [value]="searchTerm" (input)="onSearchChange($any($event.target).value)">
+                    <mat-icon matSuffix>
+                        search
+                    </mat-icon>
+                </mat-form-field>
+            </div>
+            <div class="table-wrap">
+                <div class="loading-overlay" *ngIf="isLoading">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+                <table mat-table [dataSource]="requests" class="certs-table">
+                    <!-- Alumno -->
+                    <ng-container matColumnDef="username">
 
-  </mat-card-content>
-</mat-card>
+                        <th mat-header-cell *matHeaderCellDef>
+
+                            Alumno
+
+                        </th>
+
+                        <td mat-cell *matCellDef="let r">
+
+                            <div class="user-info">
+
+                                <div class="user-name">
+
+                                    {{r.username}}
+
+                                </div>
+
+                                <div class="user-email">
+
+                                    {{r.email}}
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </ng-container>
+
+                    <!-- Tipo -->
+
+                    <ng-container matColumnDef="certificateType">
+
+                        <th mat-header-cell *matHeaderCellDef>
+
+                            Tipo
+
+                        </th>
+
+                        <td mat-cell *matCellDef="let r">
+
+                            {{r.certificateType}}
+
+                        </td>
+
+                    </ng-container>
+
+                    <!-- Estado -->
+
+                    <ng-container matColumnDef="status">
+
+                        <th mat-header-cell *matHeaderCellDef>
+
+                            Estado
+
+                        </th>
+
+                        <td mat-cell *matCellDef="let r">
+
+                            <span class="status-badge status-badge--{{r.status.toLowerCase()}}">
+
+                                {{statusLabels[r.status]}}
+
+                            </span>
+
+                        </td>
+
+                    </ng-container>
+
+                    <!-- Fecha -->
+
+                    <ng-container matColumnDef="createdAt">
+
+                        <th mat-header-cell *matHeaderCellDef>
+
+                            Fecha
+
+                        </th>
+
+                        <td mat-cell *matCellDef="let r">
+
+                            {{r.createdAt | date:'dd/MM/yyyy HH:mm'}}
+
+                        </td>
+
+                    </ng-container>
+
+                    <!-- NUEVA COLUMNA -->
+
+                    <ng-container matColumnDef="actions">
+
+                        <th mat-header-cell *matHeaderCellDef>
+
+                            Acciones
+
+                        </th>
+
+                        <td mat-cell *matCellDef="let r">
+
+                            <button
+                                mat-icon-button
+                                color="primary"
+                                [disabled]="r.status==='Approved'"
+                                (click)="approveRequest(r)">
+
+                                <mat-icon>
+
+                                    check
+
+                                </mat-icon>
+
+                            </button>
+
+                            <button
+                                mat-icon-button
+                                color="warn"
+                                [disabled]="r.status==='Rejected'"
+                                (click)="rejectRequest(r)">
+
+                                <mat-icon>
+
+                                    close
+
+                                </mat-icon>
+
+                            </button>
+
+                        </td>
+
+                    </ng-container>
+
+                    <tr
+                        mat-header-row
+                        *matHeaderRowDef="displayedColumnsAdmin">
+
+                    </tr>
+
+                    <tr
+                        mat-row
+                        *matRowDef="let row; columns: displayedColumnsAdmin;">
+
+                    </tr>
+
+                </table>
+
+            </div>
+
+        </mat-card-content>
+
+    </mat-card>
+
+</ng-container> 

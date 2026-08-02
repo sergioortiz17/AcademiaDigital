@@ -13,13 +13,14 @@ public class StudentStudyPlanConfiguration : IEntityTypeConfiguration<StudentStu
         builder.HasKey(ssp => ssp.Id);
         builder.Property(ssp => ssp.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(ssp => ssp.StudentId).HasColumnName("student_id");
+        builder.Property(ssp => ssp.StudentCareerId).HasColumnName("student_career_id");
         builder.Property(ssp => ssp.StudyPlanId).HasColumnName("study_plan_id");
         builder.Property(ssp => ssp.IsCurrent).HasColumnName("is_current").HasDefaultValue(true);
         builder.Property(ssp => ssp.AssignedAt).HasColumnName("assigned_at");
         builder.Property(ssp => ssp.EndedAt).HasColumnName("ended_at");
         builder.Property(ssp => ssp.MigrationReason).HasColumnName("migration_reason").HasMaxLength(500);
 
-        builder.HasIndex(ssp => ssp.StudentId)
+        builder.HasIndex(ssp => ssp.StudentCareerId)
             .IsUnique()
             .HasFilter("[is_current] = 1");
 
@@ -31,6 +32,11 @@ public class StudentStudyPlanConfiguration : IEntityTypeConfiguration<StudentStu
         builder.HasOne(ssp => ssp.StudyPlan)
             .WithMany(sp => sp.StudentStudyPlans)
             .HasForeignKey(ssp => ssp.StudyPlanId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(ssp => ssp.StudentCareer)
+            .WithMany(x => x.StudyPlans)
+            .HasForeignKey(ssp => ssp.StudentCareerId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

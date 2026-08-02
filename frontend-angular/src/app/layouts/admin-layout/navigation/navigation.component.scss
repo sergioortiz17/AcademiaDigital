@@ -119,3 +119,30 @@
     letter-spacing: 1px;
     color: #90a4ae; */
   }
+
+  .menu-panel {
+  background: transparent;
+  box-shadow: none;
+}
+
+.menu-panel .mat-expansion-panel-header {
+  padding: 0 16px;
+  min-height: 52px;
+}
+
+.menu-title {
+  margin-left: 16px;
+  padding-left: 16px;
+}
+
+.menu-panel a {
+  padding-left: 60px;
+}
+
+.menu-panel .mat-expansion-panel-header mat-icon {
+  color: #00579c !important;
+}
+
+.menu-panel.mat-expansion-panel {
+  box-shadow: none;
+}

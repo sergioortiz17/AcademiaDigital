@@ -1,5 +1,7 @@
 using AcademiaDigital.Application.Dtos;
+using AcademiaDigital.Application.Services;
 using AcademiaDigital.Application.UseCases.Students;
+using AcademiaDigital.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AcademiaDigital.API.Controllers;
@@ -9,24 +11,27 @@ namespace AcademiaDigital.API.Controllers;
 public class StudentAcademicController(
     GetEligibleCoursesForStudentQueryHandler eligibleCoursesHandler,
     GetStudentAcademicProgressQueryHandler academicProgressHandler,
-    AssignStudentStudyPlanCommandHandler assignStudyPlanHandler) : ControllerBase
+    AssignStudentStudyPlanCommandHandler assignStudyPlanHandler,
+    IStudentManagementService studentManagement) : ApiControllerBase
 {
     [HttpGet("eligible-courses")]
-    public async Task<IActionResult> GetEligibleCourses(long studentId, CancellationToken ct)
+    public async Task<IActionResult> GetEligibleCourses(long studentId, [FromQuery] int? careerId, CancellationToken ct)
     {
+        var guard = await RequireReaderAsync(studentId, ct); if (guard is not null) return guard;
         try
         {
-            return Ok(await eligibleCoursesHandler.Handle(new GetEligibleCoursesForStudentQuery(studentId), ct));
+            return Ok(await eligibleCoursesHandler.Handle(new GetEligibleCoursesForStudentQuery(studentId, careerId), ct));
         }
         catch (KeyNotFoundException ex) { return NotFoundProblem(ex.Message); }
     }
 
     [HttpGet("academic-progress")]
-    public async Task<IActionResult> GetAcademicProgress(long studentId, CancellationToken ct)
+    public async Task<IActionResult> GetAcademicProgress(long studentId, [FromQuery] int? careerId, CancellationToken ct)
     {
+        var guard = await RequireReaderAsync(studentId, ct); if (guard is not null) return guard;
         try
         {
-            return Ok(await academicProgressHandler.Handle(new GetStudentAcademicProgressQuery(studentId), ct));
+            return Ok(await academicProgressHandler.Handle(new GetStudentAcademicProgressQuery(studentId, careerId), ct));
         }
         catch (KeyNotFoundException ex) { return NotFoundProblem(ex.Message); }
     }
@@ -34,6 +39,7 @@ public class StudentAcademicController(
     [HttpPost("study-plan")]
     public async Task<IActionResult> AssignStudyPlan(long studentId, [FromBody] AssignStudentStudyPlanRequest request, CancellationToken ct)
     {
+        var guard = RequireAdmin(); if (guard is not null) return guard;
         try
         {
             await assignStudyPlanHandler.Handle(new AssignStudentStudyPlanCommand(studentId, request), ct);
@@ -47,4 +53,18 @@ public class StudentAcademicController(
 
     private ObjectResult ConflictProblem(string detail)
         => Conflict(new ProblemDetails { Title = "Conflict", Detail = detail, Status = StatusCodes.Status409Conflict });
+
+    private IActionResult? RequireAdmin()
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    private async Task<IActionResult?> RequireReaderAsync(long studentId, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        if (CurrentUserRole == UserRole.Admin || await studentManagement.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
+            return null;
+        return StatusCode(StatusCodes.Status403Forbidden);
+    }
 }

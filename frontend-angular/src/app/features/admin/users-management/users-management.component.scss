@@ -83,19 +83,19 @@
 
 .role-pill {
   border: 1.5px solid #e0e0e0;
-  background: #fff;
+  background: rgba(28, 119, 189, 0.4);
   border-radius: 20px;
   padding: 5px 18px;
   font-size: .82rem;
   font-weight: 500;
   cursor: pointer;
-  color: rgba(0,0,0,.6);
+  color: #fff;
   transition: background .15s, color .15s, border-color .15s;
 
-  &:hover { background: #f0f4ff; border-color: #90a4ae; }
+  &:hover { background: #f0f4ff; border-color: #90a4ae; color: #125081; }
 
   &--active {
-    background: #3949ab;
+    background: #125081;
     color: #fff;
     border-color: #3949ab;
   }
@@ -133,3 +133,16 @@
 
 .pagination-info { margin-right: .5rem; }
 .page-indicator { min-width: 48px; text-align: center; font-weight: 600; }
+
+.btn-color {
+  color: #045797;
+}
+
+/*seleccion de usuario*/
+.clickable-user {
+  cursor: pointer;
+}
+
+.clickable-user:hover {
+  text-decoration: underline;
+}

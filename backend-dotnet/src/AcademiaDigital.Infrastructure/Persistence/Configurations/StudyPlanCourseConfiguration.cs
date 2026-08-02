@@ -21,6 +21,7 @@ public class StudyPlanCourseConfiguration : IEntityTypeConfiguration<StudyPlanCo
         builder.Property(spc => spc.IsMandatory).HasColumnName("is_mandatory").HasDefaultValue(true);
         builder.Property(spc => spc.Credits).HasColumnName("credits").HasPrecision(5, 2);
         builder.Property(spc => spc.WorkloadHours).HasColumnName("workload_hours");
+        builder.Property(spc => spc.IsAnnual).HasColumnName("is_annual").HasDefaultValue(false);
         builder.Property(spc => spc.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(spc => spc.CreatedAt).HasColumnName("created_at");
         builder.Property(spc => spc.UpdatedAt).HasColumnName("updated_at");
