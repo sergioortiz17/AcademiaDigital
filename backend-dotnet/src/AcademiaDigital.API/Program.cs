@@ -4,6 +4,7 @@ using AcademiaDigital.Application.UseCases.Enrollments;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Certificates;
 using AcademiaDigital.Application.UseCases.Careers;
+using AcademiaDigital.Application.UseCases.CareerImport;
 using AcademiaDigital.Application.UseCases.Courses;
 using AcademiaDigital.Application.UseCases.Prerequisites;
 using AcademiaDigital.Application.UseCases.Students;
@@ -13,6 +14,7 @@ using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
+using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -42,6 +44,7 @@ builder.Services.AddScoped<GetCertificateRequestsUseCase>();
 builder.Services.AddScoped<CreateCertificateRequestUseCase>();
 builder.Services.AddScoped<GetAllCertificateRequestsUseCase>();
 builder.Services.AddScoped<CareerService>();
+builder.Services.AddScoped<ImportCareerFromCsvCommandHandler>();
 
 // Academic module
 builder.Services.AddScoped<PrerequisiteCycleValidator>();
@@ -188,6 +191,12 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "AcademiaDigital API v1");
     c.RoutePrefix = "swagger";
+});
+
+// Scalar convive con Swagger durante la migración del equipo: reutiliza el mismo swagger.json
+app.MapScalarApiReference("/scalar", options =>
+{
+    options.OpenApiRoutePattern = "/swagger/v1/swagger.json";
 });
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────

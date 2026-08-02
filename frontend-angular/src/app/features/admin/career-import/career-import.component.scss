@@ -1,0 +1,86 @@
+.import-card {
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .06) !important;
+}
+
+.section-title {
+  margin: 1.25rem 0 .5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, .75);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: .5rem;
+}
+
+.file-name {
+  font-size: .85rem;
+  color: rgba(0, 0, 0, .6);
+}
+
+.hint {
+  font-size: .78rem;
+  color: rgba(0, 0, 0, .5);
+  word-break: break-all;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: .5rem;
+  vertical-align: middle;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+}
+
+.msg--success {
+  background: rgba(46, 204, 113, .12);
+  color: #1e8449;
+}
+
+.msg--error {
+  background: rgba(231, 76, 60, .12);
+  color: #c0392b;
+}
+
+.row-errors {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: .95rem;
+    margin-bottom: .5rem;
+    color: #c0392b;
+  }
+}
+
+.row-errors-table {
+  width: 100%;
+}
