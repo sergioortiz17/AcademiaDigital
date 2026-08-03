@@ -9,6 +9,7 @@ import { UserDetailsDialogComponent } from '../../shared/user-details-dialog/use
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
+import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 
 @NgModule({
@@ -19,6 +20,7 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     EnrollmentManagementComponent,
     EnrolledStudentsComponent,
     EnrollmentReportsComponent,
+    AttendanceManagementComponent,
     SumCountPipe
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]

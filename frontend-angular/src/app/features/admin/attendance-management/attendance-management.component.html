@@ -1,0 +1,122 @@
+<div class="attendance-wrap">
+<div class="attendance-title-bar">
+  <h1>Asistencias</h1>
+</div>
+
+<mat-card class="attendance-card">
+  <mat-card-content>
+
+    <!-- Filtros -->
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Carrera:</mat-label>
+        <mat-select [(ngModel)]="selectedCareer" (selectionChange)="onFilterChange()">
+          <mat-option *ngFor="let c of careers" [value]="c">{{ c }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Sede:</mat-label>
+        <mat-select [(ngModel)]="selectedSede" (selectionChange)="onFilterChange()">
+          <mat-option *ngFor="let s of sedes" [value]="s">{{ s }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Año:</mat-label>
+        <mat-select [(ngModel)]="selectedYear" (selectionChange)="onFilterChange()">
+          <mat-select-trigger>
+            <mat-chip-set *ngIf="selectedYear">
+              <mat-chip removable (removed)="clearYear()">
+                {{ yearLabel(selectedYear) }}
+                <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
+              </mat-chip>
+            </mat-chip-set>
+          </mat-select-trigger>
+          <mat-option *ngFor="let y of years" [value]="y.value">{{ y.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Materia:</mat-label>
+        <mat-select [(ngModel)]="selectedSubject" (selectionChange)="onFilterChange()">
+          <mat-option *ngFor="let m of subjects" [value]="m">{{ m }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Navegación de mes + búsqueda -->
+    <div class="toolbar">
+      <div class="month-nav">
+        <button mat-icon-button (click)="prevMonth()" matTooltip="Mes anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="month-label">{{ currentMonth | date:'MMMM yyyy':undefined:'es' }}</span>
+        <button mat-icon-button (click)="nextMonth()" matTooltip="Mes siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" class="search-field">
+        <input matInput placeholder="Buscar por nombre, apellido" [(ngModel)]="searchTerm" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Tabla de asistencia -->
+    <div class="table-wrap">
+      <table class="attendance-table">
+        <thead>
+          <tr>
+            <th class="student-col">Alumno</th>
+            <th *ngFor="let day of dayColumns" class="day-col">{{ formatDay(day) }}</th>
+            <th class="avg-col">Promedio Asistencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let row of filteredRows"
+            [class.selected-row]="selectedStudent?.id === row.id"
+            (click)="selectStudent(row)">
+            <td class="student-col">{{ row.fullName }}</td>
+            <td
+              *ngFor="let day of dayColumns"
+              class="day-col status-cell"
+              [ngClass]="'status-' + statusFor(row, day)">
+              {{ statusFor(row, day) }}
+            </td>
+            <td class="avg-col">{{ row.averageAttendance }}%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty-state" *ngIf="filteredRows.length === 0">
+        <mat-icon>event_busy</mat-icon>
+        <p>No hay alumnos que coincidan con la búsqueda.</p>
+      </div>
+    </div>
+
+    <!-- Detalle del alumno seleccionado -->
+    <div class="student-detail" *ngIf="selectedStudent">
+      <div class="detail-info">
+        <p><strong>Nombre:</strong> {{ selectedStudent.fullName }}</p>
+        <p><strong>Cohorte:</strong> {{ selectedStudent.cohort }}</p>
+        <p><strong>Legajo:</strong> {{ selectedStudent.legajo }}</p>
+
+        <label class="upload-link">
+          <mat-icon>file_upload</mat-icon>
+          Subir certificado
+          <input type="file" hidden (change)="onCertificateSelected($event)" />
+        </label>
+        <span class="uploaded-name" *ngIf="uploadedCertificateName">{{ uploadedCertificateName }}</span>
+      </div>
+
+      <button class="download-link" type="button" (click)="downloadSummary()">
+        Descargar Resúmen
+        <mat-icon>file_download</mat-icon>
+      </button>
+    </div>
+
+  </mat-card-content>
+</mat-card>
+</div>
