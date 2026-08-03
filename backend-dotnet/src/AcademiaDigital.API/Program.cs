@@ -33,6 +33,7 @@ builder.Services.AddScoped<ResetPasswordUseCase>();
 
 // Admin
 builder.Services.AddScoped<GetUsersUseCase>();
+builder.Services.AddScoped<GetUserByDniUseCase>();
 builder.Services.AddScoped<UpdateUserRoleUseCase>();
 builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
