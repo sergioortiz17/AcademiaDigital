@@ -54,4 +54,7 @@ public class StudyPlanCourseRepository(AppDbContext db) : IStudyPlanCourseReposi
         db.StudyPlanCourses.Remove(studyPlanCourse);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task DeleteByStudyPlanIdsAsync(IReadOnlyList<int> studyPlanIds, CancellationToken ct = default)
+        => await db.StudyPlanCourses.Where(spc => studyPlanIds.Contains(spc.StudyPlanId)).ExecuteDeleteAsync(ct);
 }

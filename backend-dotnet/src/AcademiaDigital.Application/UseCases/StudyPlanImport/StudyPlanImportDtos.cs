@@ -1,31 +1,29 @@
-namespace AcademiaDigital.Application.UseCases.CareerImport;
+namespace AcademiaDigital.Application.UseCases.StudyPlanImport;
 
 /// <summary>
-/// Error found while validating a single row of the career-import CSV.
+/// Error found while validating a single row of a study-plan CSV.
 /// Row 1 is the header; data rows start at 2 (matches what a spreadsheet app would show).
 /// Row 0 is used for file-level errors (missing columns, empty file, etc.).
 /// </summary>
 public sealed record CsvRowError(int Row, string Error);
 
-public sealed class ImportCareerCsvResult
+public sealed class ImportStudyPlanCsvResult
 {
     public bool Success { get; init; }
-    public int? CareerId { get; init; }
     public int? StudyPlanId { get; init; }
     public int CoursesCreated { get; init; }
     public int PrerequisitesCreated { get; init; }
     public IReadOnlyList<CsvRowError> Errors { get; init; } = [];
 
-    public static ImportCareerCsvResult Failed(IReadOnlyList<CsvRowError> errors) => new()
+    public static ImportStudyPlanCsvResult Failed(IReadOnlyList<CsvRowError> errors) => new()
     {
         Success = false,
         Errors = errors
     };
 
-    public static ImportCareerCsvResult Succeeded(int careerId, int studyPlanId, int coursesCreated, int prerequisitesCreated) => new()
+    public static ImportStudyPlanCsvResult Succeeded(int studyPlanId, int coursesCreated, int prerequisitesCreated) => new()
     {
         Success = true,
-        CareerId = careerId,
         StudyPlanId = studyPlanId,
         CoursesCreated = coursesCreated,
         PrerequisitesCreated = prerequisitesCreated
@@ -33,9 +31,10 @@ public sealed class ImportCareerCsvResult
 }
 
 /// <summary>
-/// A single, already-validated row of the CSV, with everything parsed to its final type.
+/// A single, already-validated row of the study-plan CSV, with everything parsed to its final type.
+/// Shared between the import handler and the diff-preview handler.
 /// </summary>
-internal sealed class CareerImportRow
+public sealed class StudyPlanCsvRow
 {
     public int RowNumber { get; init; }
     public int SortOrder { get; init; }

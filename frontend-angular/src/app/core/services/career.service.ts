@@ -16,54 +16,119 @@ export interface Career {
   durationYears: number;
   isActive: boolean;
   createdAt: string;
+  courseCount?: number;
 }
 
-export interface CareerImportRowError {
+export interface CreateCareerPayload {
+  name: string;
+  code: string;
+  description?: string;
+  totalCredits: number;
+  durationYears: number;
+}
+
+export interface StudyPlan {
+  id: number;
+  careerId: number;
+  code: string;
+  name: string;
+  versionNumber: number;
+  status: 'Draft' | 'Active' | 'Archived';
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
+  isActive: boolean;
+}
+
+export interface CsvRowError {
   row: number;
   error: string;
 }
 
-export interface CareerImportResult {
+export interface StudyPlanImportResult {
   success: boolean;
-  careerId?: number;
   studyPlanId?: number;
   coursesCreated?: number;
   prerequisitesCreated?: number;
-  errors?: CareerImportRowError[];
+  errors?: CsvRowError[];
+}
+
+export interface FieldChange {
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+export interface PrerequisiteChanges {
+  added: string[];
+  removed: string[];
+}
+
+export interface CourseDiffItem {
+  courseCode: string;
+  name: string;
+  yearNumber: number;
+  semester: number;
+  courseTypeCode: string | null;
+  workloadHours: number | null;
+  isMandatory: boolean;
+  prerequisites: string[];
+}
+
+export interface ModifiedCourseDiff {
+  courseCode: string;
+  name: string;
+  fieldChanges: FieldChange[];
+  prerequisiteChanges: PrerequisiteChanges | null;
+}
+
+export interface StudyPlanDiff {
+  studyPlanAId: number;
+  studyPlanBId: number | null;
+  addedCourses: CourseDiffItem[];
+  removedCourses: CourseDiffItem[];
+  modifiedCourses: ModifiedCourseDiff[];
+  unchangedCourseCount: number;
 }
 
 @Injectable({
-
-    providedIn:'root'
-
+  providedIn: 'root'
 })
+export class CareerService {
+  private baseURL = environment.apiServer;
 
+  constructor(private http: HttpClient) {}
 
-export class CareerService{
+  getCareers(): Observable<Career[]> {
+    return this.http.get<Career[]>(`${this.baseURL}v1/careers`);
+  }
 
-    private baseURL=environment.apiServer;
+  createCareer(payload: CreateCareerPayload): Observable<Career> {
+    return this.http.post<Career>(`${this.baseURL}v1/careers`, payload);
+  }
 
-    constructor(private http:HttpClient){}
+  deleteCareer(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseURL}v1/careers/${id}`);
+  }
 
-    getCareers():Observable<Career[]>{
+  getStudyPlans(careerId: number): Observable<StudyPlan[]> {
+    return this.http.get<StudyPlan[]>(`${this.baseURL}v1/careers/${careerId}/study-plans`);
+  }
 
-        return this.http.get<Career[]>(
+  importStudyPlanCsv(careerId: number, formData: FormData): Observable<StudyPlanImportResult> {
+    return this.http.post<StudyPlanImportResult>(
+      `${this.baseURL}v1/careers/${careerId}/study-plans/import`,
+      formData
+    );
+  }
 
-            `${this.baseURL}v1/careers`
+  previewStudyPlanDiff(careerId: number, studyPlanId: number, formData: FormData): Observable<StudyPlanDiff> {
+    return this.http.post<StudyPlanDiff>(
+      `${this.baseURL}v1/careers/${careerId}/study-plans/${studyPlanId}/diff-preview`,
+      formData
+    );
+  }
 
-        );
-
-    }
-
-    importCareerCsv(formData: FormData): Observable<CareerImportResult> {
-
-        return this.http.post<CareerImportResult>(
-
-            `${this.baseURL}v1/careers/import`,
-            formData
-
-        );
-
-    }
-
+  diffStudyPlans(planAId: number, planBId: number): Observable<StudyPlanDiff> {
+    return this.http.get<StudyPlanDiff>(`${this.baseURL}v1/study-plans/${planAId}/diff/${planBId}`);
+  }
 }

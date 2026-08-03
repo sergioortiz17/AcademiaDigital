@@ -10,4 +10,5 @@ public interface IStudyPlanRepository
     Task<bool> ExistsAsync(int id, CancellationToken ct = default);
     Task<StudyPlan> CreateAsync(StudyPlan studyPlan, CancellationToken ct = default);
     Task<StudyPlan> UpdateAsync(StudyPlan studyPlan, CancellationToken ct = default);
+    Task DeleteByCareerIdAsync(int careerId, CancellationToken ct = default);
 }

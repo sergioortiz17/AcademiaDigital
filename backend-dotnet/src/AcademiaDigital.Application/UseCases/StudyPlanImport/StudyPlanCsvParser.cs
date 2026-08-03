@@ -1,33 +1,32 @@
 using System.Globalization;
-using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Domain.Entities;
-using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Services;
 using CsvHelper;
 using CsvHelper.Configuration;
 
-namespace AcademiaDigital.Application.UseCases.CareerImport;
+namespace AcademiaDigital.Application.UseCases.StudyPlanImport;
 
 /// <summary>
-/// Imports a full Career (Career + StudyPlan v1 Active + Courses + StudyPlanCourses +
-/// CoursePrerequisites) from a single CSV in one transactional operation.
-///
-/// Two distinct failure modes, matching the rest of the Careers/Courses use cases:
-///  - Career.Code already exists -> InvalidOperationException (409, handled by ExceptionMiddleware).
-///  - Any row of the CSV is invalid -> no exception; the handler returns a Failed result with the
-///    full list of row errors so the caller can render them and let the admin fix the file. No
-///    partial data is ever committed in this case (validation happens before the transaction opens).
+/// Result of parsing + validating a study-plan CSV. Shared by the import handler (persists it) and
+/// the diff-preview handler (only diffs it against an existing plan, never persists it).
 /// </summary>
-public sealed class ImportCareerFromCsvCommandHandler(
-    ICareerRepository careerRepository,
-    ICourseRepository courseRepository,
-    IStudyPlanRepository studyPlanRepository,
-    IStudyPlanCourseRepository studyPlanCourseRepository,
-    ICoursePrerequisiteRepository prerequisiteRepository,
-    ICourseTypeRepository courseTypeRepository,
-    PrerequisiteCycleValidator cycleValidator,
-    IUnitOfWork unitOfWork)
+public sealed class StudyPlanCsvParseResult
+{
+    public IReadOnlyList<StudyPlanCsvRow> Rows { get; init; } = [];
+    public IReadOnlyList<CsvRowError> Errors { get; init; } = [];
+    public IReadOnlyDictionary<string, CourseType?> CourseTypeCache { get; init; } = new Dictionary<string, CourseType?>();
+    public IReadOnlyList<(string CourseCode, string PrerequisiteCode)> PrerequisitePairs { get; init; } = [];
+    public bool Success => Errors.Count == 0;
+}
+
+/// <summary>
+/// Parses and validates the "sort_order,course_code,name,year_number,semester,course_type_code,
+/// workload_hours,is_mandatory,prerequisites" CSV format used for study-plan imports and diff
+/// previews. Extracted from the original all-in-one career-import handler so both the import
+/// endpoint and the diff-preview endpoint reuse the exact same parsing/validation rules.
+/// </summary>
+public static class StudyPlanCsvParser
 {
     private static readonly string[] RequiredColumns =
     [
@@ -35,16 +34,15 @@ public sealed class ImportCareerFromCsvCommandHandler(
         "course_type_code", "workload_hours", "is_mandatory", "prerequisites"
     ];
 
-    public async Task<ImportCareerCsvResult> Handle(ImportCareerFromCsvCommand command, CancellationToken ct = default)
+    public static async Task<StudyPlanCsvParseResult> ParseAndValidateAsync(
+        Stream csvContent,
+        ICourseTypeRepository courseTypeRepository,
+        PrerequisiteCycleValidator cycleValidator,
+        CancellationToken ct = default)
     {
-        var code = command.Code.Trim();
-        var existingCareer = await careerRepository.FindByCodeAsync(code, ct);
-        if (existingCareer is not null)
-            throw new InvalidOperationException("Career code already exists.");
-
-        var (rows, parseErrors) = await ParseAsync(command.CsvContent, ct);
+        var (rows, parseErrors) = await ParseAsync(csvContent, ct);
         if (parseErrors.Count > 0)
-            return ImportCareerCsvResult.Failed(parseErrors);
+            return new StudyPlanCsvParseResult { Errors = parseErrors };
 
         var errors = new List<CsvRowError>();
 
@@ -111,76 +109,20 @@ public sealed class ImportCareerFromCsvCommandHandler(
         }
 
         if (errors.Count > 0)
-            return ImportCareerCsvResult.Failed(errors);
+            return new StudyPlanCsvParseResult { Errors = errors };
 
-        return await unitOfWork.ExecuteInTransactionAsync(async transactionCt =>
+        return new StudyPlanCsvParseResult
         {
-            var career = await careerRepository.CreateAsync(new Career
-            {
-                Name = command.Name.Trim(),
-                Code = code,
-                Description = command.Description?.Trim(),
-                TotalCredits = command.TotalCredits,
-                DurationYears = command.DurationYears
-            }, transactionCt);
-
-            var studyPlan = await studyPlanRepository.CreateAsync(new StudyPlan
-            {
-                CareerId = career.Id,
-                Code = command.StudyPlanCode.Trim(),
-                Name = command.StudyPlanName.Trim(),
-                VersionNumber = command.VersionNumber,
-                Status = StudyPlanStatus.Active,
-                EffectiveFrom = command.EffectiveFrom
-            }, transactionCt);
-
-            var courseIdByCode = new Dictionary<string, int>();
-            foreach (var row in rows)
-            {
-                var course = await courseRepository.CreateAsync(new Course
-                {
-                    CareerId = career.Id,
-                    Code = row.CourseCode,
-                    Name = row.Name
-                }, transactionCt);
-                courseIdByCode[row.CourseCode] = course.Id;
-
-                CourseType? courseType = string.IsNullOrWhiteSpace(row.CourseTypeCode)
-                    ? null
-                    : courseTypeCache.GetValueOrDefault(row.CourseTypeCode);
-
-                await studyPlanCourseRepository.CreateAsync(new StudyPlanCourse
-                {
-                    StudyPlanId = studyPlan.Id,
-                    CourseId = course.Id,
-                    YearNumber = row.YearNumber,
-                    Semester = row.Semester,
-                    CourseTypeId = courseType?.Id,
-                    SortOrder = row.SortOrder,
-                    IsMandatory = row.IsMandatory,
-                    WorkloadHours = row.WorkloadHours
-                }, transactionCt);
-            }
-
-            var prerequisitesCreated = 0;
-            foreach (var (courseCode, prerequisiteCode) in prerequisitePairs)
-            {
-                await prerequisiteRepository.CreateAsync(new CoursePrerequisite
-                {
-                    StudyPlanId = studyPlan.Id,
-                    CourseId = courseIdByCode[courseCode],
-                    PrerequisiteCourseId = courseIdByCode[prerequisiteCode]
-                }, transactionCt);
-                prerequisitesCreated++;
-            }
-
-            return ImportCareerCsvResult.Succeeded(career.Id, studyPlan.Id, rows.Count, prerequisitesCreated);
-        }, ct);
+            Rows = rows,
+            Errors = [],
+            CourseTypeCache = courseTypeCache,
+            PrerequisitePairs = prerequisitePairs
+        };
     }
 
-    private static async Task<(List<CareerImportRow> Rows, List<CsvRowError> Errors)> ParseAsync(Stream csvContent, CancellationToken ct)
+    private static async Task<(List<StudyPlanCsvRow> Rows, List<CsvRowError> Errors)> ParseAsync(Stream csvContent, CancellationToken ct)
     {
-        var rows = new List<CareerImportRow>();
+        var rows = new List<StudyPlanCsvRow>();
         var errors = new List<CsvRowError>();
 
         var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -270,7 +212,7 @@ public sealed class ImportCareerFromCsvCommandHandler(
 
             if (rowErrorsBefore == errors.Count)
             {
-                rows.Add(new CareerImportRow
+                rows.Add(new StudyPlanCsvRow
                 {
                     RowNumber = rowNumber,
                     SortOrder = sortOrder,
