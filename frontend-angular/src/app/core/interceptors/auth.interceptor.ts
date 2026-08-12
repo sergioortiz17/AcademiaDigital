@@ -33,6 +33,7 @@ export class AuthInterceptor implements HttpInterceptor {
           );
         }
         if (error.status === 401) {
+          console.log('🚪 ACÁ TE ECHA PORQUE EL TOKEN ES INVÁLIDO/EXPIRÓ (auth.interceptor.ts)');
           this.store.dispatch(logout());
           localStorage.removeItem('academia-account');
           if (this.router.url !== '/auth/signin') {
