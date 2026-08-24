@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AcademiaDigital.Domain.Entities;
 
 /// <summary>
@@ -11,16 +13,29 @@ public class TeachingPosition
     public PositionType PositionType { get; set; }
     public int MaxStudents { get; set; }
     public bool IsVacant { get; set; } = true;
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public DateTime? DeactivatedAt { get; set; }
+    public long? DeactivatedByUserId { get; set; }
+    public string? DeactivationReason { get; set; }
 
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;
 
+    public int? CommissionId { get; set; }
+    public Commission? Commission { get; set; }
+
     public long? TeacherId { get; set; }
     public Teacher? Teacher { get; set; }
 
+    public User? DeactivatedByUser { get; set; }
+
     public ICollection<Enrollment> Enrollments { get; set; } = [];
+    public ICollection<TeacherAssignment> Assignments { get; set; } = [];
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum PositionType
 {
     Titular = 0,

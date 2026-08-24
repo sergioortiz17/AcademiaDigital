@@ -16,7 +16,7 @@ jobs:
       E2E_ADMIN_PASSWORD: CI_E2E_Admin_123!
       E2E_SA_PASSWORD: CI_E2E_SQL_123!
       E2E_JWT_SECRET: ci_e2e_jwt_secret_only_123_academia_digital
-      E2E_SQL_CONNECTION_STRING: Server=localhost,1434;Database=AcademiaDigitalE2E;User Id=sa;Password=CI_E2E_SQL_123!;TrustServerCertificate=True
+      E2E_SQL_CONNECTION_STRING: Server=localhost,1434;Database=AcademiaDigitalE2E;User Id=sa;Password=CI_E2E_SQL_123!;Encrypt=False;TrustServerCertificate=True
       E2E_DATABASE_NAME: AcademiaDigitalE2E
       E2E_ALLOW_DEVELOPMENT_DATABASE: 'false'
       E2E_DOCKER_MANAGED_DATABASE: 'true'
