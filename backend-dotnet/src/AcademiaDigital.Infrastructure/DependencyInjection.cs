@@ -33,21 +33,39 @@ public static class DependencyInjection
         services.AddScoped<IStudentAcademicRepository, StudentAcademicRepository>();
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IStudentCareerRepository, StudentCareerRepository>();
+        services.AddScoped<IRematriculationRepository, RematriculationRepository>();
         services.AddScoped<ITeacherRepository, TeacherRepository>();
+        services.AddScoped<ITeacherDocumentRepository, TeacherDocumentRepository>();
+        services.AddScoped<ITeacherAssignmentRepository, TeacherAssignmentRepository>();
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<IGradebookRepository, GradebookRepository>();
+        services.AddScoped<IExamTableRepository, ExamTableRepository>();
         services.AddScoped<IAdministrativeRepository, AdministrativeRepository>();
         services.AddScoped<ICooperativeEntityRepository, CooperativeEntityRepository>();
         services.AddScoped<ICommunicationRepository, CommunicationRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<IEnrollmentPeriodRepository, EnrollmentPeriodRepository>();
+        services.AddScoped<IAdmissionRepository, AdmissionRepository>();
+        services.AddScoped<ICommissionRepository, CommissionRepository>();
         services.AddScoped<ITeacherContestRepository, TeacherContestRepository>();
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
         services.AddScoped<ITeachingPositionRepository, TeachingPositionRepository>();
+        services.AddScoped<IFinanceRepository, FinanceRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IReceiptRepository, ReceiptRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Servicios
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IStudentManagementService, StudentManagementService>();
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddSingleton<IAdmissionAgreementPdfGenerator, SimpleAdmissionAgreementPdfGenerator>();
+        services.AddSingleton<IAdmissionNotificationSender, LocalAdmissionNotificationSender>();
+        services.AddSingleton<IAdmissionChallengeVerifier, ConfigurableAdmissionChallengeVerifier>();
+        services.AddSingleton<IAttendanceReportGenerator, SimpleAttendanceReportGenerator>();
+        services.AddSingleton<ICertificatePdfGenerator, SimpleCertificatePdfGenerator>();
+        services.AddSingleton<IReceiptPdfGenerator, SimpleReceiptPdfGenerator>();
 
         return services;
     }

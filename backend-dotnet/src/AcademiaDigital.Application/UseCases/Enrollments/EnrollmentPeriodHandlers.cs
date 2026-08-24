@@ -1,5 +1,7 @@
 using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Interfaces.Repositories;
+using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.Enrollments;
 
@@ -114,10 +116,17 @@ public sealed class GetEnrolledStudentsQueryHandler(
 public sealed class OpenEnrollmentPeriodCommandHandler(
     IEnrollmentPeriodRepository repository,
     ICareerRepository careerRepository,
-    IStudyPlanRepository studyPlanRepository)
+    IStudyPlanRepository studyPlanRepository,
+    EnrollmentCapacityPolicy capacityPolicy,
+    TimeProvider timeProvider)
 {
     public async Task<EnrollmentPeriodDto> Handle(OpenEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
+        capacityPolicy.EnsureValidQuotas(
+            command.QuotasMorning,
+            command.QuotasAfternoon,
+            command.QuotasEvening);
+
         _ = await careerRepository.FindByIdAsync(command.CareerId, ct)
             ?? throw new KeyNotFoundException("Career not found.");
 
@@ -138,7 +147,7 @@ public sealed class OpenEnrollmentPeriodCommandHandler(
             QuotasAfternoon = command.QuotasAfternoon,
             QuotasEvening = command.QuotasEvening,
             IsActive = true,
-            StartDate = DateTime.UtcNow
+            StartDate = timeProvider.GetUtcNow().UtcDateTime
         };
 
         var created = await repository.CreateAsync(period, ct);
@@ -167,22 +176,42 @@ public sealed record ActivateEnrollmentPeriodCommand(int PeriodId);
 public sealed record DeleteEnrollmentPeriodCommand(int PeriodId);
 public sealed record GetPeriodReportQuery(int PeriodId);
 
-public sealed class UpdatePeriodQuotasCommandHandler(IEnrollmentPeriodRepository repository)
+public sealed class UpdatePeriodQuotasCommandHandler(
+    IEnrollmentPeriodRepository repository,
+    EnrollmentCapacityPolicy capacityPolicy,
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider)
 {
     public async Task<EnrollmentPeriodDto> Handle(UpdatePeriodQuotasCommand command, CancellationToken ct = default)
     {
-        var period = await repository.FindByIdAsync(command.PeriodId, ct)
+        capacityPolicy.EnsureValidQuotas(
+            command.QuotasMorning,
+            command.QuotasAfternoon,
+            command.QuotasEvening);
+
+        await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
+        {
+            var period = await repository.LockForEnrollmentAsync(command.PeriodId, transactionCt)
+                ?? throw new KeyNotFoundException("Enrollment period not found.");
+            var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, transactionCt);
+            capacityPolicy.EnsureQuotasCoverCurrentEnrollment(
+                counts,
+                command.QuotasMorning,
+                command.QuotasAfternoon,
+                command.QuotasEvening);
+
+            period.QuotasMorning = command.QuotasMorning;
+            period.QuotasAfternoon = command.QuotasAfternoon;
+            period.QuotasEvening = command.QuotasEvening;
+            period.UpdatedAt = timeProvider.GetUtcNow().UtcDateTime;
+            await repository.UpdateAsync(period, transactionCt);
+            return true;
+        }, ct);
+
+        var updated = await repository.FindByIdAsync(command.PeriodId, ct)
             ?? throw new KeyNotFoundException("Enrollment period not found.");
-
-        period.QuotasMorning = command.QuotasMorning;
-        period.QuotasAfternoon = command.QuotasAfternoon;
-        period.QuotasEvening = command.QuotasEvening;
-        period.UpdatedAt = DateTime.UtcNow;
-
-        await repository.UpdateAsync(period, ct);
-
-        var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, ct);
-        return Mapper.Map(period, counts);
+        var updatedCounts = await repository.GetEnrolledShiftCountsAsync(updated.Id, ct);
+        return Mapper.Map(updated, updatedCounts);
     }
 }
 

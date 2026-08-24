@@ -17,8 +17,21 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
         builder.Property(tp => tp.PositionType).HasColumnName("position_type").HasConversion<int>();
         builder.Property(tp => tp.MaxStudents).HasColumnName("max_students");
         builder.Property(tp => tp.IsVacant).HasColumnName("is_vacant").HasDefaultValue(true);
+        builder.Property(tp => tp.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+        builder.Property(tp => tp.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("SYSUTCDATETIME()");
+        builder.Property(tp => tp.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("SYSUTCDATETIME()");
+        builder.Property(tp => tp.DeactivatedAt).HasColumnName("deactivated_at");
+        builder.Property(tp => tp.DeactivatedByUserId).HasColumnName("deactivated_by_user_id");
+        builder.Property(tp => tp.DeactivationReason).HasColumnName("deactivation_reason").HasMaxLength(500);
         builder.Property(tp => tp.CourseId).HasColumnName("course_id");
+        builder.Property(tp => tp.CommissionId).HasColumnName("commission_id");
         builder.Property(tp => tp.TeacherId).HasColumnName("teacher_id");
+
+        builder.HasIndex(tp => new { tp.AcademicYear, tp.Semester, tp.IsActive });
+        builder.HasIndex(tp => new { tp.CommissionId, tp.CourseId });
+        builder.ToTable(table => table.HasCheckConstraint(
+            "CK_TeachingPositions_AssignmentState",
+            "([is_vacant] = 1 AND [teacher_id] IS NULL) OR ([is_vacant] = 0 AND [teacher_id] IS NOT NULL)"));
 
         builder.HasOne(tp => tp.Course)
             .WithMany()
@@ -29,5 +42,15 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
             .WithMany()
             .HasForeignKey(tp => tp.TeacherId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(tp => tp.Commission)
+            .WithMany()
+            .HasForeignKey(tp => tp.CommissionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(tp => tp.DeactivatedByUser)
+            .WithMany()
+            .HasForeignKey(tp => tp.DeactivatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
