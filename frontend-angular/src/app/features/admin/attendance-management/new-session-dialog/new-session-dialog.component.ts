@@ -14,7 +14,7 @@ export interface NewSessionDialogData {
   standalone: false
 })
 export class NewSessionDialogComponent {
-  positions = this.data.positions;
+  positions: TeachingPosition[] = [];
 
   teachingPositionId: number | null = null;
   sessionDate: Date = new Date();
@@ -28,7 +28,9 @@ export class NewSessionDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<NewSessionDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: NewSessionDialogData
-  ) {}
+  ) {
+    this.positions = data.positions;
+  }
 
   get isValid(): boolean {
     if (!this.teachingPositionId || !this.sessionDate) return false;
