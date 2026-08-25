@@ -35,6 +35,12 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'enrollments', title: 'Inscripciones',      url: '/app/enrollments',       icon: 'assignment' },
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
   //{ id: 'teachers',    title: 'Profesores',         url: '/app/teachers',          icon: 'group' },
+  { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
+    children: [
+      { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
+      { id: 'grades',     title: '• Notas',       url: '/app/grades',           icon: '' }
+    ]
+  },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
     children: [
       { id: 'certificate-requests', title: '• Peticiones',url: '/app/certificates',icon: '' }
