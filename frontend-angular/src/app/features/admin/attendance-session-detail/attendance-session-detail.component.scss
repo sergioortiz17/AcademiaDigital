@@ -1,0 +1,174 @@
+.detail-wrap {
+  max-width: 1100px;
+  position: relative;
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+}
+
+.back-btn {
+  color: #045797;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--success { background: #e8f5e9; color: #2e7d32; }
+  &--error   { background: #fce4ec; color: #c62828; }
+}
+
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.summary-card, .roster-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+  margin-bottom: 1rem;
+}
+
+.summary-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.course-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #125081;
+}
+
+.session-meta {
+  font-size: .85rem;
+  color: rgba(0, 0, 0, .6);
+}
+
+.summary-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.status-chip {
+  font-size: .78rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 4px 12px;
+
+  &--open { background: #e3f2fd; color: #1565c0; }
+  &--closed { background: #eeeeee; color: #616161; }
+}
+
+.edit-warning {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: #b8860b;
+  font-size: .85rem;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+    vertical-align: middle;
+  }
+
+  thead th {
+    background: #f5f7fa;
+    font-weight: 600;
+    color: rgba(0, 0, 0, .7);
+  }
+
+  .student-col {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  mat-radio-group {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+.notes-input {
+  border: 1px solid rgba(0, 0, 0, .15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: .85rem;
+  width: 160px;
+
+  &:disabled {
+    background: #f5f5f5;
+    color: rgba(0, 0, 0, .4);
+  }
+}
+
+.justified-chip {
+  margin-left: 8px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: #6a1b9a;
+  background: #f3e5f5;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.justification-info {
+  font-size: .82rem;
+  color: #6a1b9a;
+  border-bottom: 1px dotted #6a1b9a;
+  cursor: help;
+}
+
+.justify-btn {
+  color: #b8860b;
+  font-size: .8rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem;
+  color: rgba(0, 0, 0, .4);
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+}
+
+.save-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

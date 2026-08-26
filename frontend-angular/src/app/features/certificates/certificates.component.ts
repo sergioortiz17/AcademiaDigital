@@ -2,7 +2,9 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
 import { CertificatesService, CertificateRequest, CERTIFICATE_TYPES } from '../../core/services/certificates.service';
+import { RejectCertificateDialogComponent } from './reject-certificate-dialog/reject-certificate-dialog.component';
 import { selectUserRole } from '../../store/account/account.selectors';
 import { UserRole } from '../../store/account/account.actions';
 
@@ -58,10 +60,13 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   sortColumn: 'username' | 'certificateType' | 'status' | 'createdAt' = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
 
+  processingIds = new Set<number>();
+
   constructor(
     private readonly certificatesService: CertificatesService,
     private readonly store: Store,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -223,32 +228,62 @@ closeMyRequests(): void {
 
 approveRequest(request: CertificateRequest): void {
 
-    console.log('Aprobar', request);
+    if (this.processingIds.has(request.id)) return;
+    if (!confirm(`¿Aprobar la solicitud de ${request.certificateType} de ${request.username}?`)) return;
 
-    // Aquí luego llamaremos al endpoint
-    //this.certificatesService
-    //    .approveCertificate(request.id)
-    //    .subscribe({
-    //        next:()=>{
-    //        this.loadRequests();
-    //      }
-    //  });
+    this.processingIds.add(request.id);
+    this.certificatesService.approveCertificate(request.id).subscribe({
+      next: (updated) => {
+        this.replaceRequest(updated);
+        this.processingIds.delete(request.id);
+        this.successMsg = 'Solicitud aprobada correctamente.';
+        this.cdr.detectChanges();
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+      },
+      error: (err) => {
+        this.processingIds.delete(request.id);
+        this.errorMsg = err.error?.msg || err.error?.message || 'Error al aprobar la solicitud.';
+        this.cdr.detectChanges();
+      }
+    });
 
 }
 
 rejectRequest(request: CertificateRequest): void {
 
-    console.log('Rechazar', request);
+    if (this.processingIds.has(request.id)) return;
 
-    // Aquí luego llamaremos al endpoint
-    //this.certificatesService
-    //    .rejectCertificate(request.id)
-    //    .subscribe({
-    //      next:()=>{
-    //          this.loadRequests();
-    //      }
-    //  });
+    const dialogRef = this.dialog.open(RejectCertificateDialogComponent, {
+      width: '450px',
+      disableClose: true,
+      data: { username: request.username, certificateType: request.certificateType }
+    });
 
+    dialogRef.afterClosed().subscribe((reason: string | null) => {
+      if (!reason) return;
+
+      this.processingIds.add(request.id);
+      this.certificatesService.rejectCertificate(request.id, reason).subscribe({
+        next: (updated) => {
+          this.replaceRequest(updated);
+          this.processingIds.delete(request.id);
+          this.successMsg = 'Solicitud rechazada correctamente.';
+          this.cdr.detectChanges();
+          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+        },
+        error: (err) => {
+          this.processingIds.delete(request.id);
+          this.errorMsg = err.error?.msg || err.error?.message || 'Error al rechazar la solicitud.';
+          this.cdr.detectChanges();
+        }
+      });
+    });
+
+}
+
+private replaceRequest(updated: CertificateRequest): void {
+    this.allRequests = this.allRequests.map(r => r.id === updated.id ? updated : r);
+    this.applyFilters();
 }
 
 private applyFilters(): void {

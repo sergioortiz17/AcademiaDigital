@@ -1,79 +1,146 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-export type AttendanceStatus = 'P' | 'A' | 'J';
+export type AttendanceScope = 'ClassHour' | 'FullDay';
+export type AttendanceSessionStatus = 'Open' | 'Closed';
+export type AttendanceRecordStatus = 'Present' | 'Late' | 'Absent' | 'Justified';
 
-export interface AttendanceStudent {
+export interface AttendanceSession {
   id: number;
-  fullName: string;
-  cohort: number;
-  legajo: string;
+  idempotencyKey: string;
+  teachingPositionId: number;
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  commissionId: number;
+  commissionCode: string;
+  commissionName: string;
+  academicYear: number;
+  semester: number;
+  sessionDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  scope: AttendanceScope;
+  units: number;
+  status: AttendanceSessionStatus;
+  editDeadlineUtc: string;
+  isAdministrativelyReopened: boolean;
+  recordCount: number;
+  reopeningCount: number;
+  createdAt: string;
+  createdByUserId: number;
+  closedAt: string | null;
+  closedByUserId: number | null;
 }
 
-export interface AttendanceStudentRow extends AttendanceStudent {
-  records: Record<number, AttendanceStatus>;
-  averageAttendance: number;
+export interface AttendanceJustification {
+  id: number;
+  category: string;
+  reason: string;
+  evidenceUrl: string | null;
+  createdAt: string;
+  createdByUserId: number;
 }
 
-export interface AttendanceFilters {
-  careerName: string;
-  sede: string | null;
-  yearNumber: number | null;
-  subjectName: string;
-  month: Date;
+export interface AttendanceRecord {
+  id: number | null;
+  enrollmentId: number;
+  studentId: number;
+  studentName: string;
+  legajoNumber: string;
+  dni: string;
+  status: AttendanceRecordStatus | null;
+  notes: string | null;
+  updatedAt: string | null;
+  justification: AttendanceJustification | null;
 }
 
-// TODO: no existe todavía un endpoint de asistencia en el backend.
-// Cuando exista, reemplazar el cuerpo de getAttendance() por:
-// return this.http.get<AttendanceStudentRow[]>(`${this.baseURL}v1/attendance`, { params: {...} });
+export interface AttendanceSessionDetail {
+  session: AttendanceSession;
+  records: AttendanceRecord[];
+}
+
+export interface AttendanceSessionFilters {
+  academicYear?: number;
+  courseId?: number;
+  commissionId?: number;
+}
+
+export interface CreateAttendanceSessionRequest {
+  teachingPositionId: number;
+  sessionDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  scope: AttendanceScope;
+  units?: number;
+}
+
+export interface SaveAttendanceRecordInput {
+  enrollmentId: number;
+  status: AttendanceRecordStatus;
+  notes?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
-  private readonly students: AttendanceStudent[] = [
-    { id: 1, fullName: 'Jazmín Luna', cohort: 2023, legajo: 'DC-2023-12' },
-    { id: 2, fullName: 'Agostina Arce', cohort: 2023, legajo: 'DC-2023-18' },
-    { id: 3, fullName: 'Gimena Galán', cohort: 2023, legajo: 'DC-2023-25' },
-    { id: 4, fullName: 'Ejemplo Alumno', cohort: 2023, legajo: 'DC-2023-40' },
-    { id: 5, fullName: 'Bruno Sosa', cohort: 2023, legajo: 'DC-2023-33' },
-    { id: 6, fullName: 'Lucía Fernández', cohort: 2023, legajo: 'DC-2023-07' }
-  ];
+  private readonly base = environment.apiServer;
 
-  getAttendance(filters: AttendanceFilters): Observable<AttendanceStudentRow[]> {
-    const daysWithData = Math.min(12, this.daysInMonth(filters.month));
-    const subjectSeed = this.hashString(filters.subjectName);
+  constructor(private readonly http: HttpClient) {}
 
-    const rows: AttendanceStudentRow[] = this.students.map(student => {
-      const records: Record<number, AttendanceStatus> = {};
-      for (let day = 1; day <= daysWithData; day++) {
-        records[day] = this.pseudoStatus(student.id, day, subjectSeed);
-      }
-      return { ...student, records, averageAttendance: this.average(records) };
+  getSessions(filters: AttendanceSessionFilters = {}): Observable<AttendanceSession[]> {
+    let params = new HttpParams();
+    if (filters.academicYear != null) params = params.set('academicYear', filters.academicYear);
+    if (filters.courseId != null) params = params.set('courseId', filters.courseId);
+    if (filters.commissionId != null) params = params.set('commissionId', filters.commissionId);
+    return this.http.get<AttendanceSession[]>(`${this.base}v1/attendance/sessions`, { params });
+  }
+
+  getSession(id: number): Observable<AttendanceSessionDetail> {
+    return this.http.get<AttendanceSessionDetail>(`${this.base}v1/attendance/sessions/${id}`);
+  }
+
+  createSession(request: CreateAttendanceSessionRequest): Observable<AttendanceSession> {
+    const idempotencyKey = crypto.randomUUID();
+    return this.http.post<AttendanceSession>(
+      `${this.base}v1/attendance/sessions`,
+      request,
+      { headers: { 'Idempotency-Key': idempotencyKey } }
+    );
+  }
+
+  saveRecords(sessionId: number, records: SaveAttendanceRecordInput[]): Observable<AttendanceSessionDetail> {
+    return this.http.put<AttendanceSessionDetail>(
+      `${this.base}v1/attendance/sessions/${sessionId}/records`,
+      { records }
+    );
+  }
+
+  closeSession(sessionId: number): Observable<AttendanceSession> {
+    return this.http.post<AttendanceSession>(`${this.base}v1/attendance/sessions/${sessionId}/close`, {});
+  }
+
+  reopenSession(sessionId: number, reason: string): Observable<AttendanceSession> {
+    return this.http.post<AttendanceSession>(`${this.base}v1/attendance/sessions/${sessionId}/reopen`, { reason });
+  }
+
+  justifyRecord(
+    recordId: number,
+    category: string,
+    reason: string,
+    evidenceUrl?: string | null
+  ): Observable<AttendanceJustification> {
+    return this.http.post<AttendanceJustification>(
+      `${this.base}v1/attendance/records/${recordId}/justifications`,
+      { category, reason, evidenceUrl: evidenceUrl || null }
+    );
+  }
+
+  exportSession(sessionId: number, format: 'csv' | 'pdf'): Observable<Blob> {
+    return this.http.get(`${this.base}v1/attendance/sessions/${sessionId}/export`, {
+      params: new HttpParams().set('format', format),
+      responseType: 'blob'
     });
-
-    return of(rows);
-  }
-
-  private pseudoStatus(studentId: number, day: number, subjectSeed: number): AttendanceStatus {
-    const seed = studentId * 97 + day * 13 + subjectSeed;
-    const frac = Math.abs(Math.sin(seed)) % 1;
-    if (frac < 0.78) return 'P';
-    if (frac < 0.92) return 'A';
-    return 'J';
-  }
-
-  private average(records: Record<number, AttendanceStatus>): number {
-    const values = Object.values(records);
-    if (values.length === 0) return 0;
-    const present = values.filter(v => v === 'P' || v === 'J').length;
-    return Math.round((present / values.length) * 100);
-  }
-
-  private hashString(value: string): number {
-    let hash = 0;
-    for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) | 0;
-    return hash;
-  }
-
-  private daysInMonth(month: Date): number {
-    return new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   }
 }

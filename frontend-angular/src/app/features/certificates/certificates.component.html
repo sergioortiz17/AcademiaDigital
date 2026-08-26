@@ -299,7 +299,8 @@
                             <button
                                 mat-icon-button
                                 color="primary"
-                                [disabled]="r.status==='Approved'"
+                                [disabled]="r.status!=='Pending' || processingIds.has(r.id)"
+                                matTooltip="Aprobar"
                                 (click)="approveRequest(r)">
 
                                 <mat-icon>
@@ -313,7 +314,8 @@
                             <button
                                 mat-icon-button
                                 color="warn"
-                                [disabled]="r.status==='Rejected'"
+                                [disabled]="r.status!=='Pending' || processingIds.has(r.id)"
+                                matTooltip="Rechazar"
                                 (click)="rejectRequest(r)">
 
                                 <mat-icon>

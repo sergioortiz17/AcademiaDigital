@@ -66,6 +66,7 @@ public sealed class AddCourseToStudyPlanCommandHandler(
             {
                 MinimumRegularGrade = command.Request.ApprovalRule.MinimumRegularGrade,
                 MinimumPromotionGrade = command.Request.ApprovalRule.MinimumPromotionGrade,
+                MinimumFinalExamGrade = command.Request.ApprovalRule.MinimumFinalExamGrade,
                 MinimumAttendancePercentage = command.Request.ApprovalRule.MinimumAttendancePercentage,
                 RequiresFinalExam = command.Request.ApprovalRule.RequiresFinalExam,
                 AllowsPromotion = command.Request.ApprovalRule.AllowsPromotion,

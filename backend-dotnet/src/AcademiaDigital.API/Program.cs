@@ -1,6 +1,13 @@
 using AcademiaDigital.API.Middleware;
+using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Application.UseCases.Admin;
+using AcademiaDigital.Application.UseCases.Attendance;
+using AcademiaDigital.Application.UseCases.Admissions;
 using AcademiaDigital.Application.UseCases.Enrollments;
+using AcademiaDigital.Application.UseCases.Grades;
+using AcademiaDigital.Application.UseCases.Finance;
+using AcademiaDigital.Application.UseCases.Payments;
+using AcademiaDigital.Application.UseCases.Receipts;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Certificates;
 using AcademiaDigital.Application.UseCases.Careers;
@@ -9,12 +16,14 @@ using AcademiaDigital.Application.UseCases.Prerequisites;
 using AcademiaDigital.Application.UseCases.Students;
 using AcademiaDigital.Application.UseCases.StudyPlanCourses;
 using AcademiaDigital.Application.UseCases.StudyPlans;
+using AcademiaDigital.Application.UseCases.Teachers;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,15 +46,75 @@ builder.Services.AddScoped<UpdateUserRoleUseCase>();
 builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
 
+// Admissions
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<AdmissionApplicationPolicy>();
+builder.Services.AddScoped<AdmissionFormPolicy>();
+builder.Services.AddScoped<AdmissionStatusTransitionPolicy>();
+builder.Services.AddScoped<AdmissionCapacityPolicy>();
+builder.Services.AddScoped<AdmissionTargetPolicy>();
+builder.Services.AddScoped<AdmissionDocumentPolicy>();
+builder.Services.AddScoped<AdmissionCapacityCoordinator>();
+builder.Services.AddScoped<GetAdmissionFormQueryHandler>();
+builder.Services.AddScoped<CreateAdmissionApplicationCommandHandler>();
+builder.Services.AddScoped<GetAdmissionFormsQueryHandler>();
+builder.Services.AddScoped<CreateAdmissionFormCommandHandler>();
+builder.Services.AddScoped<SetAdmissionFormActiveCommandHandler>();
+builder.Services.AddScoped<SetAdmissionFormCapacityCommandHandler>();
+builder.Services.AddScoped<GetAdmissionApplicationsQueryHandler>();
+builder.Services.AddScoped<GetAdmissionApplicationQueryHandler>();
+builder.Services.AddScoped<ChangeAdmissionApplicationStatusCommandHandler>();
+builder.Services.AddScoped<ProcessAdmissionExpirationsCommandHandler>();
+builder.Services.AddScoped<GetAdmissionApplicationDocumentsQueryHandler>();
+builder.Services.AddScoped<SubmitAdmissionApplicationDocumentCommandHandler>();
+builder.Services.AddScoped<ReviewAdmissionApplicationDocumentCommandHandler>();
+builder.Services.AddScoped<GetAdmissionAgreementQueryHandler>();
+builder.Services.AddScoped<DownloadAdmissionAgreementQueryHandler>();
+builder.Services.AddScoped<ProcessAdmissionOutboxCommandHandler>();
+builder.Services.AddScoped<StudentRematriculationPolicy>();
+builder.Services.AddScoped<CreateStudentRematriculationCommandHandler>();
+
 // Certificates
 builder.Services.AddScoped<GetCertificateRequestsUseCase>();
 builder.Services.AddScoped<CreateCertificateRequestUseCase>();
 builder.Services.AddScoped<GetAllCertificateRequestsUseCase>();
+builder.Services.AddScoped<CertificatePolicy>();
+builder.Services.AddScoped<ReviewCertificateRequestCommandHandler>();
+builder.Services.AddScoped<IssueCertificateCommandHandler>();
+builder.Services.AddScoped<GetCertificateHistoryQueryHandler>();
+builder.Services.AddScoped<DownloadCertificateQueryHandler>();
+
+// Finance
+builder.Services.AddScoped<FinancePolicy>();
+builder.Services.AddScoped<GetFinancialConceptsQueryHandler>();
+builder.Services.AddScoped<CreateFinancialConceptCommandHandler>();
+builder.Services.AddScoped<UpdateFinancialConceptCommandHandler>();
+builder.Services.AddScoped<GetFinancialRatesQueryHandler>();
+builder.Services.AddScoped<UpsertFinancialRateCommandHandler>();
+builder.Services.AddScoped<GetFinancialBenefitsQueryHandler>();
+builder.Services.AddScoped<CreateFinancialBenefitCommandHandler>();
+builder.Services.AddScoped<GetBillingPlansQueryHandler>();
+builder.Services.AddScoped<CreateBillingPlanCommandHandler>();
+builder.Services.AddScoped<GenerateStudentDebtsCommandHandler>();
+builder.Services.AddScoped<GetStudentDebtsQueryHandler>();
+builder.Services.AddScoped<PaymentPolicy>();
+builder.Services.AddScoped<GetPaymentMethodsQueryHandler>();
+builder.Services.AddScoped<CreatePaymentCommandHandler>();
+builder.Services.AddScoped<ConfirmPaymentCommandHandler>();
+builder.Services.AddScoped<ReconcilePaymentCommandHandler>();
+builder.Services.AddScoped<ReversePaymentCommandHandler>();
+builder.Services.AddScoped<GetPaymentsQueryHandler>();
+builder.Services.AddScoped<ReceiptWorkflowService>();
+builder.Services.AddScoped<GetReceiptsQueryHandler>();
+builder.Services.AddScoped<GetReceiptQueryHandler>();
+builder.Services.AddScoped<DownloadReceiptQueryHandler>();
 builder.Services.AddScoped<CareerService>();
 
 // Academic module
 builder.Services.AddScoped<PrerequisiteCycleValidator>();
 builder.Services.AddScoped<CourseEligibilityService>();
+builder.Services.AddScoped<EnrollmentEligibilityPolicy>();
+builder.Services.AddScoped<EnrollmentCapacityPolicy>();
 builder.Services.AddScoped<AcademicProgressCalculator>();
 builder.Services.AddScoped<GetCareerCoursesQueryHandler>();
 builder.Services.AddScoped<CreateCourseCommandHandler>();
@@ -69,6 +138,64 @@ builder.Services.AddScoped<AssignStudentStudyPlanCommandHandler>();
 builder.Services.AddScoped<GetStudentsQueryHandler>();
 builder.Services.AddScoped<GetStudentByIdQueryHandler>();
 builder.Services.AddScoped<CreateStudentCommandHandler>();
+
+// Teachers
+builder.Services.AddScoped<TeacherProfilePolicy>();
+builder.Services.AddScoped<GetTeachersQueryHandler>();
+builder.Services.AddScoped<GetTeacherByIdQueryHandler>();
+builder.Services.AddScoped<CreateTeacherCommandHandler>();
+builder.Services.AddScoped<UpdateTeacherCommandHandler>();
+builder.Services.AddScoped<DeactivateTeacherCommandHandler>();
+builder.Services.AddScoped<TeacherDocumentPolicy>();
+builder.Services.AddScoped<GetTeacherDocumentsQueryHandler>();
+builder.Services.AddScoped<SubmitTeacherDocumentCommandHandler>();
+builder.Services.AddScoped<ReviewTeacherDocumentCommandHandler>();
+builder.Services.AddScoped<TeachingAssignmentPolicy>();
+builder.Services.AddScoped<GetTeachingPositionsQueryHandler>();
+builder.Services.AddScoped<GetTeachingPositionByIdQueryHandler>();
+builder.Services.AddScoped<CreateTeachingPositionCommandHandler>();
+builder.Services.AddScoped<UpdateTeachingPositionCommandHandler>();
+builder.Services.AddScoped<DeactivateTeachingPositionCommandHandler>();
+builder.Services.AddScoped<GetTeacherAssignmentsQueryHandler>();
+builder.Services.AddScoped<GetMyTeacherAssignmentsQueryHandler>();
+builder.Services.AddScoped<AssignTeacherCommandHandler>();
+builder.Services.AddScoped<EndTeacherAssignmentCommandHandler>();
+
+// Attendance
+builder.Services.AddScoped<AttendancePolicy>();
+builder.Services.AddScoped<GetAttendanceSessionsQueryHandler>();
+builder.Services.AddScoped<GetAttendanceSessionQueryHandler>();
+builder.Services.AddScoped<CreateAttendanceSessionCommandHandler>();
+builder.Services.AddScoped<SaveAttendanceRecordsCommandHandler>();
+builder.Services.AddScoped<CloseAttendanceSessionCommandHandler>();
+builder.Services.AddScoped<ReopenAttendanceSessionCommandHandler>();
+builder.Services.AddScoped<JustifyAttendanceRecordCommandHandler>();
+builder.Services.AddScoped<GetStudentAttendanceSummaryQueryHandler>();
+builder.Services.AddScoped<GetMyAttendanceSummaryQueryHandler>();
+builder.Services.AddScoped<ExportAttendanceSessionQueryHandler>();
+
+// Grades and exam tables
+builder.Services.AddScoped<GradebookPolicy>();
+builder.Services.AddScoped<ExamTablePolicy>();
+builder.Services.AddScoped<GetGradebooksQueryHandler>();
+builder.Services.AddScoped<GetGradebookQueryHandler>();
+builder.Services.AddScoped<CreateGradebookCommandHandler>();
+builder.Services.AddScoped<SaveGradeEntriesCommandHandler>();
+builder.Services.AddScoped<SubmitGradebookCommandHandler>();
+builder.Services.AddScoped<ApproveGradebookCommandHandler>();
+builder.Services.AddScoped<PublishGradebookCommandHandler>();
+builder.Services.AddScoped<CloseGradebookCommandHandler>();
+builder.Services.AddScoped<ReopenGradebookCommandHandler>();
+builder.Services.AddScoped<GetMyGradesQueryHandler>();
+builder.Services.AddScoped<GetExamTablesQueryHandler>();
+builder.Services.AddScoped<GetExamTableQueryHandler>();
+builder.Services.AddScoped<CreateExamTableCommandHandler>();
+builder.Services.AddScoped<RegisterForExamCommandHandler>();
+builder.Services.AddScoped<StartExamGradingCommandHandler>();
+builder.Services.AddScoped<SaveExamResultsCommandHandler>();
+builder.Services.AddScoped<PublishExamTableCommandHandler>();
+builder.Services.AddScoped<ReopenExamTableCommandHandler>();
+builder.Services.AddScoped<GetMyExamTablesQueryHandler>();
 
 // Enrollment periods
 builder.Services.AddScoped<GetAllEnrollmentPeriodsQueryHandler>();
@@ -96,6 +223,45 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()));
+
+// Public admission anti-abuse. Partition strictly by the connection IP; trusted
+// reverse proxies must configure forwarded headers at the deployment boundary.
+var admissionRateLimit = builder.Configuration.GetSection("AdmissionAntiAbuse:RateLimit");
+var admissionRateLimitEnabled = admissionRateLimit.GetValue("Enabled", true);
+var admissionPermitLimit = Math.Clamp(admissionRateLimit.GetValue("PermitLimit", 10), 1, 1000);
+var admissionWindowSeconds = Math.Clamp(admissionRateLimit.GetValue("WindowSeconds", 60), 1, 3600);
+var admissionQueueLimit = Math.Clamp(admissionRateLimit.GetValue("QueueLimit", 0), 0, 100);
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers.RetryAfter =
+                Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { success = false, msg = "Too many admission attempts. Please retry later." },
+            cancellationToken);
+    };
+    options.AddPolicy("PublicAdmissionSubmission", httpContext =>
+    {
+        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        if (!admissionRateLimitEnabled)
+            return RateLimitPartition.GetNoLimiter(partitionKey);
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = admissionPermitLimit,
+                Window = TimeSpan.FromSeconds(admissionWindowSeconds),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = admissionQueueLimit,
+                AutoReplenishment = true
+            });
+    });
+});
 
 // ── Controllers ───────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
@@ -140,6 +306,10 @@ builder.Services.AddSwaggerGen(c =>
 
 // ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+// Resolve once at startup so an unsupported mode, missing secret or unsafe
+// verification URL fails fast instead of weakening the first public request.
+_ = app.Services.GetRequiredService<IAdmissionChallengeVerifier>();
 
 // Aplicar migraciones al iniciar con reintentos para tolerar el startup de SQL Server en Docker
 await using (var scope = app.Services.CreateAsyncScope())
@@ -193,6 +363,7 @@ app.UseSwaggerUI(c =>
 // ── Middleware pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors();
+app.UseRateLimiter();
 app.UseMiddleware<ActiveSessionMiddleware>();
 
 app.MapControllers();

@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  AttendanceService,
-  AttendanceStudentRow
-} from '../../../core/services/attendance.service';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { AttendanceService, AttendanceSession } from '../../../core/services/attendance.service';
+import { TeachingPositionService, TeachingPosition } from '../../../core/services/teaching-position.service';
+import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
+import { ReopenSessionDialogComponent } from './reopen-session-dialog/reopen-session-dialog.component';
 
 @Component({
   selector: 'app-attendance-management',
@@ -11,134 +13,174 @@ import {
   standalone: false
 })
 export class AttendanceManagementComponent implements OnInit {
-  careers = ['Desarrollo de Software'];
-  selectedCareer = this.careers[0];
+  positions: TeachingPosition[] = [];
+  sessions: AttendanceSession[] = [];
 
-  sedes = ['Sede Centro', 'Sede Norte'];
-  selectedSede: string | null = null;
+  selectedPositionId: number | null = null;
 
-  years = [
-    { value: 1, label: 'Primero' },
-    { value: 2, label: 'Segundo' },
-    { value: 3, label: 'Tercero' }
-  ];
-  selectedYear: number | null = 1;
+  isLoading = false;
+  isCreating = false;
+  errorMsg = '';
+  successMsg = '';
+  processingIds = new Set<number>();
 
-  private readonly subjectsByCareer: Record<string, string[]> = {
-    'Desarrollo de Software': [
-      'Base de Datos',
-      'Programación I',
-      'Programación II',
-      'Elementos de Matemática y Lógica',
-      'Sistemas y Organizaciones',
-      'Redes'
-    ]
-  };
-  selectedSubject = 'Base de Datos';
+  displayedColumns = ['course', 'date', 'time', 'scope', 'status', 'records', 'actions'];
 
-  currentMonth = new Date(2026, 5, 1);
-  searchTerm = '';
-
-  rows: AttendanceStudentRow[] = [];
-  selectedStudent: AttendanceStudentRow | null = null;
-  uploadedCertificateName: string | null = null;
-
-  constructor(private readonly attendanceService: AttendanceService) {}
+  constructor(
+    private readonly attendanceService: AttendanceService,
+    private readonly teachingPositionService: TeachingPositionService,
+    private readonly dialog: MatDialog,
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.loadAttendance();
+    this.teachingPositionService.getTeachingPositions({ includeInactive: false }).subscribe({
+      next: (positions) => {
+        this.positions = positions;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMsg = 'No se pudieron cargar los cargos docentes.';
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.loadSessions();
   }
 
-  get subjects(): string[] {
-    return this.subjectsByCareer[this.selectedCareer] ?? [];
+  get selectedPosition(): TeachingPosition | undefined {
+    return this.positions.find(p => p.id === this.selectedPositionId);
   }
 
-  get dayColumns(): number[] {
-    const days = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0).getDate();
-    return Array.from({ length: days }, (_, i) => i + 1);
+  onPositionFilterChange(): void {
+    this.loadSessions();
   }
 
-  get filteredRows(): AttendanceStudentRow[] {
-    const term = this.searchTerm.trim().toLowerCase();
-    if (!term) return this.rows;
-    return this.rows.filter(r => r.fullName.toLowerCase().includes(term));
+  loadSessions(): void {
+    if (this.isLoading) return;
+    this.isLoading = true;
+    this.errorMsg = '';
+
+    const position = this.selectedPosition;
+    const filters = position
+      ? { courseId: position.courseId, commissionId: position.commissionId ?? undefined, academicYear: position.academicYear }
+      : {};
+
+    this.attendanceService.getSessions(filters).subscribe({
+      next: (sessions) => {
+        this.sessions = [...sessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate));
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMsg = 'Error al cargar las sesiones de asistencia.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  yearLabel(value: number | null): string {
-    return this.years.find(y => y.value === value)?.label ?? '';
-  }
-
-  loadAttendance(): void {
-    this.attendanceService
-      .getAttendance({
-        careerName: this.selectedCareer,
-        sede: this.selectedSede,
-        yearNumber: this.selectedYear,
-        subjectName: this.selectedSubject,
-        month: this.currentMonth
-      })
-      .subscribe(rows => {
-        this.rows = rows;
-        const preferredId = this.selectedStudent?.id ?? 4;
-        this.selectedStudent = rows.find(r => r.id === preferredId) ?? rows[0] ?? null;
-      });
-  }
-
-  onFilterChange(): void {
-    this.loadAttendance();
-  }
-
-  clearYear(): void {
-    this.selectedYear = null;
-    this.onFilterChange();
-  }
-
-  prevMonth(): void {
-    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
-    this.loadAttendance();
-  }
-
-  nextMonth(): void {
-    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
-    this.loadAttendance();
-  }
-
-  selectStudent(row: AttendanceStudentRow): void {
-    this.selectedStudent = row;
-    this.uploadedCertificateName = null;
-  }
-
-  statusFor(row: AttendanceStudentRow, day: number): string {
-    return row.records[day] ?? '';
-  }
-
-  formatDay(day: number): string {
-    const month = (this.currentMonth.getMonth() + 1).toString().padStart(2, '0');
-    return `${day.toString().padStart(2, '0')}/${month}`;
-  }
-
-  onCertificateSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.uploadedCertificateName = file.name;
-    input.value = '';
-  }
-
-  downloadSummary(): void {
-    const header = ['Alumno', ...this.dayColumns.map(d => this.formatDay(d)), 'Promedio Asistencia'];
-    const lines = [header.join(',')];
-
-    for (const row of this.filteredRows) {
-      const cells = this.dayColumns.map(d => this.statusFor(row, d));
-      lines.push([row.fullName, ...cells, `${row.averageAttendance}%`].join(','));
+  openNewSessionDialog(): void {
+    if (this.positions.length === 0) {
+      this.errorMsg = 'No hay cargos docentes activos para crear una sesión.';
+      return;
     }
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `asistencias_${this.selectedSubject}_${this.currentMonth.getMonth() + 1}-${this.currentMonth.getFullYear()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const dialogRef = this.dialog.open(NewSessionDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { positions: this.positions }
+    });
+
+    dialogRef.afterClosed().subscribe((request) => {
+      if (!request) return;
+
+      this.isCreating = true;
+      this.attendanceService.createSession(request).subscribe({
+        next: () => {
+          this.isCreating = false;
+          this.successMsg = 'Sesión creada correctamente.';
+          this.loadSessions();
+          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+        },
+        error: (err) => {
+          this.isCreating = false;
+          this.errorMsg = err.error?.message || err.error?.title || 'Error al crear la sesión.';
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
+  viewSession(session: AttendanceSession): void {
+    this.router.navigate(['/app/admin/attendance', session.id]);
+  }
+
+  closeSession(session: AttendanceSession, event: Event): void {
+    event.stopPropagation();
+    if (this.processingIds.has(session.id)) return;
+    if (!confirm(`¿Cerrar la sesión del ${session.sessionDate}? Ya no se podrán editar los registros salvo reapertura administrativa.`)) return;
+
+    this.processingIds.add(session.id);
+    this.attendanceService.closeSession(session.id).subscribe({
+      next: (updated) => {
+        this.replaceSession(updated);
+        this.processingIds.delete(session.id);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.processingIds.delete(session.id);
+        this.errorMsg = err.error?.message || 'Error al cerrar la sesión.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  reopenSession(session: AttendanceSession, event: Event): void {
+    event.stopPropagation();
+    if (this.processingIds.has(session.id)) return;
+
+    const dialogRef = this.dialog.open(ReopenSessionDialogComponent, { width: '450px', disableClose: true });
+
+    dialogRef.afterClosed().subscribe((reason: string | null) => {
+      if (!reason) return;
+
+      this.processingIds.add(session.id);
+      this.attendanceService.reopenSession(session.id, reason).subscribe({
+        next: (updated) => {
+          this.replaceSession(updated);
+          this.processingIds.delete(session.id);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.processingIds.delete(session.id);
+          this.errorMsg = err.error?.message || 'Error al reabrir la sesión.';
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
+  exportSession(session: AttendanceSession, format: 'csv' | 'pdf', event: Event): void {
+    event.stopPropagation();
+    this.attendanceService.exportSession(session.id, format).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `asistencia_sesion_${session.id}.${format}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.errorMsg = 'Error al exportar la sesión.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private replaceSession(updated: AttendanceSession): void {
+    this.sessions = this.sessions.map(s => s.id === updated.id ? updated : s);
   }
 }

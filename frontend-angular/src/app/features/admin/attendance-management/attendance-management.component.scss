@@ -22,133 +22,82 @@
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
 }
 
-// ---- Filtros ----
-.filters-row {
+.msg {
   display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  margin-bottom: .5rem;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--success { background: #e8f5e9; color: #2e7d32; }
+  &--error   { background: #fce4ec; color: #c62828; }
 }
 
-.filter-field {
-  flex: 1 1 200px;
-  min-width: 160px;
-}
-
-// ---- Toolbar: navegación de mes + búsqueda ----
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  margin: .5rem 0 1rem;
+  margin-bottom: 1rem;
 }
 
-.month-nav {
-  display: flex;
-  align-items: center;
-  gap: .25rem;
-  background: #125081;
-  color: #fff;
-  border-radius: 20px;
-  padding: 2px 6px;
+.filter-field {
+  flex: 1 1 320px;
+  min-width: 260px;
 }
 
-.month-nav .mat-icon {
-  color: #fff;
-}
-
-.month-label {
-  min-width: 130px;
-  text-align: center;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.search-field {
-  flex: 0 1 320px;
-}
-
-// ---- Tabla ----
 .table-wrap {
   position: relative;
-  overflow-x: auto;
-  border: 1px solid rgba(0, 0, 0, .08);
+  min-height: 80px;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .7);
+  z-index: 10;
   border-radius: 8px;
 }
 
-.attendance-table {
+.sessions-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: .88rem;
+}
 
-  th, td {
-    padding: 10px 14px;
-    text-align: center;
-    white-space: nowrap;
-    border-bottom: 1px solid rgba(0, 0, 0, .06);
-  }
+.course-name { font-weight: 600; font-size: .92rem; }
+.commission-name { font-size: .78rem; color: rgba(0, 0, 0, .5); }
 
-  thead th {
-    background: #f5f7fa;
-    font-weight: 600;
-    color: rgba(0, 0, 0, .7);
-  }
+.no-data { color: rgba(0, 0, 0, .35); }
 
-  .student-col {
-    text-align: left;
-    position: sticky;
-    left: 0;
-    background: #fff;
-    font-weight: 500;
-  }
+.status-chip {
+  font-size: .78rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 3px 12px;
 
-  thead .student-col {
-    background: #f5f7fa;
-  }
+  &--open { background: #e3f2fd; color: #1565c0; }
+  &--closed { background: #eeeeee; color: #616161; }
+}
 
-  .day-col {
-    min-width: 46px;
-  }
+.reopened-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-left: 4px;
+  color: #b8860b;
+}
 
-  .avg-col {
-    font-weight: 600;
-    color: #125081;
-    position: sticky;
-    right: 0;
-    background: #fff;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, .06);
-  }
+.clickable-row {
+  cursor: pointer;
 
-  thead .avg-col {
-    background: #f5f7fa;
-  }
-
-  tbody tr {
-    cursor: pointer;
-
-    &:hover {
-      background: #f5f9ff;
-    }
-  }
-
-  .selected-row {
-    box-shadow: inset 0 0 0 2px #125081;
-
-    td {
-      background: #eaf2fb;
-    }
-  }
-
-  .status-cell {
-    font-weight: 700;
-
-    &:hover {
-      outline: 2px solid #f5a623;
-      outline-offset: -2px;
-      border-radius: 4px;
-    }
+  &:hover {
+    background: #f5f9ff;
   }
 }
 
@@ -157,80 +106,5 @@
   padding: 3rem;
   color: rgba(0, 0, 0, .4);
 
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-  }
-}
-
-// ---- Detalle del alumno ----
-.student-detail {
-  margin-top: 1.5rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.detail-info p {
-  margin: 0 0 4px;
-  font-size: .92rem;
-  color: rgba(0, 0, 0, .75);
-
-  strong {
-    color: #125081;
-  }
-}
-
-.upload-link {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  margin-top: 6px;
-  color: #b8860b;
-  font-size: .88rem;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.uploaded-name {
-  display: block;
-  font-size: .8rem;
-  color: rgba(0, 0, 0, .5);
-  margin-top: 2px;
-}
-
-.download-link {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  background: none;
-  border: none;
-  color: #125081;
-  font-size: .92rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
+  mat-icon { font-size: 48px; width: 48px; height: 48px; }
 }

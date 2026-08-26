@@ -64,7 +64,7 @@ Admin → Career → Courses → StudyPlan → StudyPlanCourses → activar plan
 
 1. La guía académica antigua usa estado `Active` y omite `careerId` en register; el código actual usa `Regular` y exige carrera.
 2. Careers, Courses, StudyPlans y StudyPlanCourses continúan públicos aunque Swagger aplica Bearer globalmente.
-3. Enrollment aún no verifica cupos, correlativas ni elegibilidad calculada; sí valida membresía, plan del período y pertenencia de todos los IDs solicitados.
+3. Enrollment ya verifica cupos concurrentes por turno, correlativas y elegibilidad; todavía no devuelve las advertencias de correlativas `Soft` en el contrato de alta.
 4. Los turnos difieren entre módulos: inglés en Commission y español en Enrollment.
 5. Swagger declara Bearer globalmente, pero no expresa los guards reales ni contratos completos de respuesta/error.
 6. Las eliminaciones API no alcanzan para limpiar un flujo con asignaciones; el modo aislado requiere cleanup directo controlado. El modo de población omite cleanup para conservar el grafo académico generado.
@@ -73,7 +73,7 @@ Admin → Career → Courses → StudyPlan → StudyPlanCourses → activar plan
 
 - P0 implementado: auth, catálogo, comisión, alta Student, plan, asignación, enrollment, consultas, validaciones esenciales y autorización.
 - P1 implementado en suite: requisitos/documentos, becas, custom fields tipados y autorización propia/cruzada.
-- P1 pendiente: correlatividades completas, estado/historial, cuotas/reportes y CRUD restante.
+- P1 pendiente: exponer advertencias `Soft`, completar estado/historial y CRUD restante.
 - P2: Admin, certificados, calendario, concurrencia, carga y expiración firmada de JWT.
 
 ## Hallazgo P1 corregido
