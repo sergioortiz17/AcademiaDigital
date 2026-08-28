@@ -11,7 +11,6 @@ import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
 import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
-import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
 import { NewSessionDialogComponent } from './attendance-management/new-session-dialog/new-session-dialog.component';
 import { ReopenSessionDialogComponent } from './attendance-management/reopen-session-dialog/reopen-session-dialog.component';
 import { JustifyAttendanceDialogComponent } from './attendance-management/justify-attendance-dialog/justify-attendance-dialog.component';

@@ -136,7 +136,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
         this.allRequests.unshift(res.request);
         this.applyFilters();
         this.successMsg = 'Solicitud enviada correctamente.';
-        this.showForm = false;
+        //this.showForm = false;
         this.selectedType = '';
         this.isSubmitting = false;
         setTimeout(() => this.successMsg = '', 4000);
@@ -295,9 +295,15 @@ private applyFilters(): void {
         this.requests = this.requests.filter(
             x => x.status === this.selectedStatus
         );
-
     }
+}
 
+selectCertificate(type: string): void {
+  if (this.isSubmitting) {
+    return;
+  }
+  this.selectedType = type;
+  this.submitRequest();
 }
 
 }

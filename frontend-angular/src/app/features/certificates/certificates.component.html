@@ -1,11 +1,13 @@
+<ng-container  *ngIf="userRole===UserRole.Alumno && !showMyRequests" class="certificates-wrap">
 <div class="page-header">
-  <h1 *ngIf="!showMyRequests">Certificados</h1>
+    <div *ngIf="!showMyRequests" class="certificates-tab">
+      Certificados
+    </div>
   <!-- <p *ngIf="userRole === UserRole.Alumno">Solicitá certificados académicos y revisá el estado de tus pedidos.</p>
      <p *ngIf="userRole === UserRole.Admin">Todas las solicitudes de certificados del sistema.</p> -->
-  <a *ngIf="userRole === UserRole.Alumno && !showMyRequests"
-    class="my-requests-link" (click)="openMyRequests()">
-    Ver mis solicitudes
-  </a>
+    <a *ngIf="userRole === UserRole.Alumno && !showMyRequests" class="my-requests-link" (click)="openMyRequests()">
+        Ver mis solicitudes
+    </a>
 </div>
 
 <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
@@ -35,7 +37,8 @@
       </button>
     </div>
   </mat-card-content>
-</mat-card> -->
+</mat-card> 
+
 <ng-container *ngIf="userRole===UserRole.Alumno && !showMyRequests">
     <div class="actions-bar">
         <button mat-raised-button color="primary" (click)="showForm=!showForm">
@@ -72,6 +75,104 @@
             </div>
         </mat-card-content>
     </mat-card>
+</ng-container>
+-->
+<div class="certificates-card">
+    <h2>¿Qué certificado desea solicitar?</h2>
+    <p class="subtitle">
+      Seleccione una opción para continuar.
+    </p>
+
+    <!-- Constancia General -->
+    <button type="button" class="certificate-option certificate-general" (click)="selectCertificate('Certificado de alumno regular')">
+      <div class="option-icon">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="option-content">
+        <span class="option-title">
+          Solicitar Certificado de Alumno Regular
+        </span>
+        <span class="option-description">
+          Certifica que pertenece al Instituto.
+        </span>
+      </div>
+      <mat-icon class="option-arrow">
+        chevron_right
+      </mat-icon>
+    </button>
+
+    <!-- Certificado de Examen -->
+    <button type="button" class="certificate-option certificate-exam" (click)="selectCertificate('Permiso de examen')">
+      <div class="option-icon">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="option-content">
+        <span class="option-title">
+          Solicitar Certificado de Exámen
+        </span>
+        <span class="option-description">
+          Certifica la inscripción a un exámen.
+        </span>
+      </div>
+      <mat-icon class="option-arrow">
+        chevron_right
+      </mat-icon>
+    </button>
+
+    <!-- Certificado Analítico -->
+    <button type="button" class="certificate-option certificate-analytical" (click)="selectCertificate('Certificado analítico')">
+      <div class="option-icon">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="option-content">
+        <span class="option-title">
+          Solicitar Certificado Analítico
+        </span>
+        <span class="option-description">
+          Certifica el avance o finalización de la carrera.
+        </span>
+      </div>
+      <mat-icon class="option-arrow">
+        chevron_right
+      </mat-icon>
+    </button>
+
+    <!-- Solicitar Certificado de promedio -->
+    <button type="button" class="certificate-option certificate-general" (click)="selectCertificate('Certificado de promedio')">
+      <div class="option-icon">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="option-content">
+        <span class="option-title">
+          Solicitar Certificado de Promedio
+        </span>
+        <span class="option-description">
+          Certifica el promedio académico obtenido.
+        </span>
+      </div>
+      <mat-icon class="option-arrow">
+        chevron_right
+      </mat-icon>
+    </button>
+
+    <!-- Certificado de Egreso -->
+    <button type="button" class="certificate-option certificate-exam" (click)="selectCertificate('Constancia de egreso')">
+      <div class="option-icon">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="option-content">
+        <span class="option-title">
+          Solicitar Certificado de Egreso
+        </span>
+        <span class="option-description">
+          Certifica la finalización de la carrera.
+        </span>
+      </div>
+      <mat-icon class="option-arrow">
+        chevron_right
+      </mat-icon>
+    </button>
+</div>
 </ng-container>
 
 <!-- ===================== -->
