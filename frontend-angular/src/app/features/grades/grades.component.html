@@ -46,7 +46,7 @@
 
       <div class="status-row">
         <span class="status-chip" [ngClass]="'status-chip--' + d.gradebook.status.toLowerCase()">
-          {{ d.gradebook.status }}
+          {{ statusLabel(d.gradebook.status) }}
         </span>
         <span class="status-note" *ngIf="!canEdit">
           La planilla ya no se puede editar en este estado.

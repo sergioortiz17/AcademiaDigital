@@ -26,6 +26,14 @@ const RESULT_LABELS: Record<string, string> = {
   Failed: 'Libre'
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  Draft: 'Borrador',
+  Submitted: 'Enviada',
+  Approved: 'Aprobada',
+  Published: 'Publicada',
+  Closed: 'Cerrada'
+};
+
 @Component({
   selector: 'app-grades',
   templateUrl: './grades.component.html',
@@ -90,6 +98,10 @@ export class GradesComponent implements OnInit {
   resultLabel(status: string | null): string {
     if (!status) return '—';
     return RESULT_LABELS[status] ?? status;
+  }
+
+  statusLabel(status: string): string {
+    return STATUS_LABELS[status] ?? status;
   }
 
   onPositionChange(): void {
