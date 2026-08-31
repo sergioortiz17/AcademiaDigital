@@ -62,6 +62,21 @@ export interface GradebookDetail {
   students: GradebookStudent[];
 }
 
+export interface StudentPublishedGradebook {
+  gradebookId: number;
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  academicYear: number;
+  semester: number;
+  status: GradebookStatus;
+  evaluations: GradebookEvaluation[];
+  grades: GradeEntry[];
+  average: number;
+  resultStatus: string;
+  publishedAt: string;
+}
+
 export interface GradebookFilters {
   academicYear?: number;
   courseId?: number;
@@ -129,5 +144,11 @@ export class GradebookService {
 
   reopenGradebook(id: number, reason: string): Observable<Gradebook> {
     return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/reopen`, { reason });
+  }
+
+  getMyGrades(courseId?: number): Observable<StudentPublishedGradebook[]> {
+    let params = new HttpParams();
+    if (courseId != null) params = params.set('courseId', courseId);
+    return this.http.get<StudentPublishedGradebook[]>(`${this.base}v1/gradebooks/me`, { params });
   }
 }
