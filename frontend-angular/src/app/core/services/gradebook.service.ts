@@ -114,4 +114,20 @@ export class GradebookService {
   submitGradebook(id: number): Observable<Gradebook> {
     return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/submit`, {});
   }
+
+  approveGradebook(id: number): Observable<Gradebook> {
+    return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/approve`, {});
+  }
+
+  publishGradebook(id: number): Observable<Gradebook> {
+    return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/publish`, {});
+  }
+
+  closeGradebook(id: number): Observable<Gradebook> {
+    return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/close`, {});
+  }
+
+  reopenGradebook(id: number, reason: string): Observable<Gradebook> {
+    return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/reopen`, { reason });
+  }
 }
