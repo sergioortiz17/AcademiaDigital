@@ -9,7 +9,7 @@ const routes: Routes = [
     path: '',
     component: GradesComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Profesor] }
+    data: { roles: [UserRole.Profesor, UserRole.Alumno] }
   }
 ];
 

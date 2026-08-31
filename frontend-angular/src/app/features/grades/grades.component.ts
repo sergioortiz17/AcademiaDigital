@@ -1,11 +1,16 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { Store } from '@ngrx/store';
+import { selectUserRole } from '../../store/account/account.selectors';
+import { UserRole } from '../../store/account/account.actions';
+import { CareerService, Career } from '../../core/services/career.service';
 import { TeacherService, TeacherAssignment } from '../../core/services/teacher.service';
 import {
   GradebookService,
   GradebookDetail,
   GradebookStudent,
-  SaveGradeEntryInput
+  SaveGradeEntryInput,
+  StudentPublishedGradebook
 } from '../../core/services/gradebook.service';
 import { EvaluationSetupDialogComponent } from './evaluation-setup-dialog/evaluation-setup-dialog.component';
 
@@ -41,6 +46,22 @@ const STATUS_LABELS: Record<string, string> = {
   standalone: false
 })
 export class GradesComponent implements OnInit {
+  UserRole = UserRole;
+  userRole: UserRole | null = null;
+
+  // Carrera/Sede decorativos (sin datos reales del backend), consistentes con el mockup.
+  careers: Career[] = [];
+  selectedCareerId: number | null = null;
+  sedes = ['Sede Centro', 'Sede Norte'];
+  selectedSede: string | null = null;
+  planYears = [
+    { value: 1, label: 'Primero' },
+    { value: 2, label: 'Segundo' },
+    { value: 3, label: 'Tercero' }
+  ];
+  selectedPlanYear: number | null = null;
+
+  // --- Profesor ---
   assignments: TeacherAssignment[] = [];
   selectedTeachingPositionId: number | null = null;
 
@@ -49,22 +70,47 @@ export class GradesComponent implements OnInit {
   selectedStudent: EditableRow | null = null;
   searchTerm = '';
 
-  isLoading = false;
   isCreating = false;
   isSaving = false;
   isSubmitting = false;
-  errorMsg = '';
-  successMsg = '';
   noGradebookYet = false;
 
+  // --- Alumno ---
+  myGradebooks: StudentPublishedGradebook[] = [];
+  academicYears: number[] = [];
+  selectedAcademicYear: number | null = null;
+
+  isLoading = false;
+  errorMsg = '';
+  successMsg = '';
+
   constructor(
+    private readonly store: Store,
     private readonly teacherService: TeacherService,
     private readonly gradebookService: GradebookService,
+    private readonly careerService: CareerService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.careerService.getCareers().subscribe(careers => {
+      this.careers = careers;
+      this.selectedCareerId = careers[0]?.id ?? null;
+      this.cdr.detectChanges();
+    });
+
+    this.store.select(selectUserRole).subscribe(role => {
+      this.userRole = role as UserRole;
+      if (this.userRole === UserRole.Profesor) {
+        this.loadMyAssignments();
+      } else if (this.userRole === UserRole.Alumno) {
+        this.loadMyGrades();
+      }
+    });
+  }
+
+  loadMyAssignments(): void {
     this.teacherService.getMyAssignments(false).subscribe({
       next: (assignments) => {
         this.assignments = assignments;
@@ -300,6 +346,77 @@ export class GradesComponent implements OnInit {
     const a = document.createElement('a');
     a.href = url;
     a.download = `notas_${this.detail.gradebook.courseName}_${this.detail.gradebook.commissionName}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ===================== Alumno =====================
+
+  loadMyGrades(): void {
+    this.isLoading = true;
+    this.errorMsg = '';
+    this.gradebookService.getMyGrades().subscribe({
+      next: (gradebooks) => {
+        this.myGradebooks = gradebooks;
+        this.academicYears = [...new Set(gradebooks.map(g => g.academicYear))].sort((a, b) => b - a);
+        this.selectedAcademicYear = this.academicYears[0] ?? null;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMsg = err.message || 'No se pudieron cargar tus calificaciones.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  get filteredMyGradebooks(): StudentPublishedGradebook[] {
+    if (this.selectedAcademicYear == null) return this.myGradebooks;
+    return this.myGradebooks.filter(g => g.academicYear === this.selectedAcademicYear);
+  }
+
+  get myColumns(): string[] {
+    const seen = new Set<string>();
+    const columns: string[] = [];
+    for (const gradebook of this.filteredMyGradebooks) {
+      for (const evaluation of gradebook.evaluations) {
+        if (!seen.has(evaluation.name)) {
+          seen.add(evaluation.name);
+          columns.push(evaluation.name);
+        }
+      }
+    }
+    return columns;
+  }
+
+  myGradeFor(gradebook: StudentPublishedGradebook, columnName: string): { score: number | null; updatedAt: string | null } | null {
+    const evaluation = gradebook.evaluations.find(e => e.name === columnName);
+    if (!evaluation) return null;
+    const grade = gradebook.grades.find(g => g.evaluationId === evaluation.id);
+    return { score: grade?.score ?? null, updatedAt: grade?.updatedAt ?? null };
+  }
+
+  downloadMySummary(): void {
+    const columns = this.myColumns;
+    const header = ['Materia', ...columns, 'Promedio', 'Condición'];
+    const lines = [header.join(',')];
+
+    for (const gradebook of this.filteredMyGradebooks) {
+      const cells = columns.map(col => this.myGradeFor(gradebook, col)?.score ?? '');
+      lines.push([
+        gradebook.courseName,
+        ...cells,
+        gradebook.average,
+        this.resultLabel(gradebook.resultStatus)
+      ].join(','));
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mis_calificaciones_${this.selectedAcademicYear ?? ''}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

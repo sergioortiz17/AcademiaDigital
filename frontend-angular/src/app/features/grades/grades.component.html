@@ -9,124 +9,241 @@
     <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
     <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
-    <div class="toolbar">
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Materia — Comisión</mat-label>
-        <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
-          <mat-option *ngFor="let a of assignments" [value]="a.teachingPositionId">
-            {{ a.courseName }} — {{ a.commissionName }} ({{ a.academicYear }})
-          </mat-option>
-        </mat-select>
-        <mat-hint *ngIf="assignments.length === 0">No tenés materias asignadas actualmente.</mat-hint>
-      </mat-form-field>
+    <!-- ===================== PROFESOR ===================== -->
+    <ng-container *ngIf="userRole === UserRole.Profesor">
 
-      <mat-form-field appearance="outline" class="search-field" *ngIf="detail">
-        <mat-label>Buscar por nombre, apellido</mat-label>
-        <input matInput [(ngModel)]="searchTerm">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-    </div>
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="filter-field filter-field--small">
+          <mat-label>Carrera</mat-label>
+          <mat-select [(ngModel)]="selectedCareerId">
+            <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-    <div class="loading-overlay" *ngIf="isLoading">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
+        <mat-form-field appearance="outline" class="filter-field filter-field--small">
+          <mat-label>Sede</mat-label>
+          <mat-select [(ngModel)]="selectedSede">
+            <mat-option *ngFor="let s of sedes" [value]="s">{{ s }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-    <!-- Sin planilla creada todavía -->
-    <div class="empty-gradebook" *ngIf="!isLoading && noGradebookYet">
-      <mat-icon>post_add</mat-icon>
-      <p>Todavía no hay una planilla de notas para esta materia y comisión.</p>
-      <button mat-raised-button color="primary" [disabled]="isCreating" (click)="openCreateDialog()">
-        <mat-icon>add</mat-icon>
-        Crear planilla
-      </button>
-    </div>
+        <mat-form-field appearance="outline" class="filter-field filter-field--small">
+          <mat-label>Año</mat-label>
+          <mat-select [(ngModel)]="selectedPlanYear">
+            <mat-select-trigger>
+              <mat-chip-set *ngIf="selectedPlanYear">
+                <mat-chip removable (removed)="selectedPlanYear = null">
+                  {{ planYears[selectedPlanYear - 1]?.label }}
+                  <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
+                </mat-chip>
+              </mat-chip-set>
+            </mat-select-trigger>
+            <mat-option *ngFor="let y of planYears" [value]="y.value">{{ y.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-    <!-- Planilla cargada -->
-    <ng-container *ngIf="!isLoading && detail as d">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Materia</mat-label>
+          <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
+            <mat-option *ngFor="let a of assignments" [value]="a.teachingPositionId">
+              {{ a.courseName }} — {{ a.commissionName }} ({{ a.academicYear }})
+            </mat-option>
+          </mat-select>
+          <mat-hint *ngIf="assignments.length === 0">No tenés materias asignadas actualmente.</mat-hint>
+        </mat-form-field>
 
-      <div class="status-row">
-        <span class="status-chip" [ngClass]="'status-chip--' + d.gradebook.status.toLowerCase()">
-          {{ statusLabel(d.gradebook.status) }}
-        </span>
-        <span class="status-note" *ngIf="!canEdit">
-          La planilla ya no se puede editar en este estado.
-        </span>
+        <mat-form-field appearance="outline" class="search-field" *ngIf="detail">
+          <mat-label>Buscar por nombre, apellido</mat-label>
+          <input matInput [(ngModel)]="searchTerm">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
       </div>
 
-      <div class="table-wrap">
-        <table class="grades-table">
-          <thead>
-            <tr>
-              <th class="student-col">Alumno</th>
-              <ng-container *ngFor="let ev of d.evaluations">
-                <th class="date-col">FECHA</th>
-                <th class="score-col">{{ ev.name }}</th>
-              </ng-container>
-              <th class="avg-col">Promedio</th>
-              <th class="condition-col">Condición</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              *ngFor="let row of filteredRows"
-              [class.selected-row]="selectedStudent?.enrollmentId === row.enrollmentId"
-              (click)="selectStudent(row)">
-              <td class="student-col">{{ row.studentName }}</td>
-              <ng-container *ngFor="let ev of d.evaluations">
-                <td class="date-col">
-                  {{ row.editableGrades[ev.id]?.updatedAt ? (row.editableGrades[ev.id]?.updatedAt | date:'dd/MM/yy') : '—' }}
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <!-- Sin planilla creada todavía -->
+      <div class="empty-gradebook" *ngIf="!isLoading && noGradebookYet">
+        <mat-icon>post_add</mat-icon>
+        <p>Todavía no hay una planilla de notas para esta materia y comisión.</p>
+        <button mat-raised-button color="primary" [disabled]="isCreating" (click)="openCreateDialog()">
+          <mat-icon>add</mat-icon>
+          Crear planilla
+        </button>
+      </div>
+
+      <!-- Planilla cargada -->
+      <ng-container *ngIf="!isLoading && detail as d">
+
+        <div class="status-row">
+          <span class="status-chip" [ngClass]="'status-chip--' + d.gradebook.status.toLowerCase()">
+            {{ statusLabel(d.gradebook.status) }}
+          </span>
+          <span class="status-note" *ngIf="!canEdit">
+            La planilla ya no se puede editar en este estado.
+          </span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="grades-table">
+            <thead>
+              <tr>
+                <th class="student-col">Alumno</th>
+                <ng-container *ngFor="let ev of d.evaluations">
+                  <th class="date-col">FECHA</th>
+                  <th class="score-col">{{ ev.name }}</th>
+                </ng-container>
+                <th class="avg-col">Promedio</th>
+                <th class="condition-col">Condición</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of filteredRows"
+                [class.selected-row]="selectedStudent?.enrollmentId === row.enrollmentId"
+                (click)="selectStudent(row)">
+                <td class="student-col">{{ row.studentName }}</td>
+                <ng-container *ngFor="let ev of d.evaluations">
+                  <td class="date-col">
+                    {{ row.editableGrades[ev.id]?.updatedAt ? (row.editableGrades[ev.id]?.updatedAt | date:'dd/MM/yy') : '—' }}
+                  </td>
+                  <td class="score-col" (click)="$event.stopPropagation()">
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="ev.maximumScore"
+                      step="0.01"
+                      [disabled]="!canEdit"
+                      [(ngModel)]="row.editableGrades[ev.id]!.score">
+                  </td>
+                </ng-container>
+                <td class="avg-col">{{ row.average ?? '—' }}</td>
+                <td class="condition-col">
+                  <span *ngIf="row.resultStatus" class="condition-chip" [ngClass]="'condition-chip--' + row.resultStatus.toLowerCase()">
+                    {{ resultLabel(row.resultStatus) }}
+                  </span>
+                  <span *ngIf="!row.resultStatus">—</span>
                 </td>
-                <td class="score-col" (click)="$event.stopPropagation()">
-                  <input
-                    type="number"
-                    min="0"
-                    [max]="ev.maximumScore"
-                    step="0.01"
-                    [disabled]="!canEdit"
-                    [(ngModel)]="row.editableGrades[ev.id]!.score">
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="empty-state" *ngIf="filteredRows.length === 0">
+            <mat-icon>group_off</mat-icon>
+            <p>No hay alumnos que coincidan con la búsqueda.</p>
+          </div>
+        </div>
+
+        <div class="student-detail" *ngIf="selectedStudent as s">
+          <div class="detail-info">
+            <p><strong>Nombre:</strong> {{ s.studentName }}</p>
+            <p><strong>Legajo:</strong> {{ s.legajoNumber }}</p>
+            <p><strong>DNI:</strong> {{ s.dni }}</p>
+          </div>
+
+          <div class="detail-actions">
+            <button class="download-link" type="button" (click)="downloadSummary()">
+              Descargar Resúmen
+              <mat-icon>file_download</mat-icon>
+            </button>
+
+            <button mat-raised-button color="primary" [disabled]="!canEdit || isSaving" (click)="saveGrades()">
+              <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
+              <span *ngIf="!isSaving">Guardar</span>
+            </button>
+
+            <button mat-stroked-button [disabled]="!canEdit || isSubmitting" (click)="submitGradebook()">
+              <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
+              <span *ngIf="!isSubmitting">Enviar a Secretaría</span>
+            </button>
+          </div>
+        </div>
+
+      </ng-container>
+
+    </ng-container>
+
+    <!-- ===================== ALUMNO ===================== -->
+    <ng-container *ngIf="userRole === UserRole.Alumno">
+
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="filter-field filter-field--small">
+          <mat-label>Carrera</mat-label>
+          <mat-select [(ngModel)]="selectedCareerId">
+            <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field filter-field--small">
+          <mat-label>Sede</mat-label>
+          <mat-select [(ngModel)]="selectedSede">
+            <mat-option *ngFor="let s of sedes" [value]="s">{{ s }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field filter-field--small">
+          <mat-label>Año</mat-label>
+          <mat-select [(ngModel)]="selectedAcademicYear">
+            <mat-option *ngFor="let y of academicYears" [value]="y">{{ y }}</mat-option>
+          </mat-select>
+          <mat-hint *ngIf="academicYears.length === 0">Todavía no tenés calificaciones publicadas.</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+        <div class="table-wrap" *ngIf="filteredMyGradebooks.length > 0">
+          <table class="grades-table">
+            <thead>
+              <tr>
+                <th class="student-col">Materia</th>
+                <ng-container *ngFor="let col of myColumns">
+                  <th class="date-col">FECHA</th>
+                  <th class="score-col">{{ col }}</th>
+                </ng-container>
+                <th class="avg-col">Promedio</th>
+                <th class="condition-col">Condición</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let g of filteredMyGradebooks">
+                <td class="student-col">{{ g.courseName }}</td>
+                <ng-container *ngFor="let col of myColumns">
+                  <td class="date-col">
+                    {{ myGradeFor(g, col)?.updatedAt ? (myGradeFor(g, col)?.updatedAt | date:'dd/MM/yy') : '—' }}
+                  </td>
+                  <td class="score-col">{{ myGradeFor(g, col)?.score ?? '—' }}</td>
+                </ng-container>
+                <td class="avg-col">{{ g.average }}</td>
+                <td class="condition-col">
+                  <span class="condition-chip" [ngClass]="'condition-chip--' + g.resultStatus.toLowerCase()">
+                    {{ resultLabel(g.resultStatus) }}
+                  </span>
                 </td>
-              </ng-container>
-              <td class="avg-col">{{ row.average ?? '—' }}</td>
-              <td class="condition-col">
-                <span *ngIf="row.resultStatus" class="condition-chip" [ngClass]="'condition-chip--' + row.resultStatus.toLowerCase()">
-                  {{ resultLabel(row.resultStatus) }}
-                </span>
-                <span *ngIf="!row.resultStatus">—</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="empty-state" *ngIf="filteredRows.length === 0">
-          <mat-icon>group_off</mat-icon>
-          <p>No hay alumnos que coincidan con la búsqueda.</p>
-        </div>
-      </div>
-
-      <div class="student-detail" *ngIf="selectedStudent as s">
-        <div class="detail-info">
-          <p><strong>Nombre:</strong> {{ s.studentName }}</p>
-          <p><strong>Legajo:</strong> {{ s.legajoNumber }}</p>
-          <p><strong>DNI:</strong> {{ s.dni }}</p>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="detail-actions">
-          <button class="download-link" type="button" (click)="downloadSummary()">
-            Descargar Resúmen
-            <mat-icon>file_download</mat-icon>
-          </button>
-
-          <button mat-raised-button color="primary" [disabled]="!canEdit || isSaving" (click)="saveGrades()">
-            <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
-            <span *ngIf="!isSaving">Guardar</span>
-          </button>
-
-          <button mat-stroked-button [disabled]="!canEdit || isSubmitting" (click)="submitGradebook()">
-            <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-            <span *ngIf="!isSubmitting">Enviar a Secretaría</span>
-          </button>
+        <div class="empty-state" *ngIf="filteredMyGradebooks.length === 0">
+          <mat-icon>grade</mat-icon>
+          <p>Todavía no tenés calificaciones publicadas para este año.</p>
         </div>
-      </div>
+
+        <div class="student-detail" *ngIf="filteredMyGradebooks.length > 0">
+          <span></span>
+          <div class="detail-actions">
+            <button class="download-link" type="button" (click)="downloadMySummary()">
+              Descargar Resúmen
+              <mat-icon>file_download</mat-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
 
     </ng-container>
 
