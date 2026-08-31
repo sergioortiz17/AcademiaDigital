@@ -5,7 +5,6 @@ import { EnrollmentManagementComponent } from './enrollment-management/enrollmen
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
 import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
-import { AttendanceSessionDetailComponent } from './attendance-session-detail/attendance-session-detail.component';
 import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
@@ -47,12 +46,6 @@ const routes: Routes = [
   {
     path: 'attendance',
     component: AttendanceManagementComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
-  },
-  {
-    path: 'attendance/:id',
-    component: AttendanceSessionDetailComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

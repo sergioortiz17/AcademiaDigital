@@ -11,10 +11,8 @@ import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
-import { NewSessionDialogComponent } from './attendance-management/new-session-dialog/new-session-dialog.component';
 import { ReopenSessionDialogComponent } from './attendance-management/reopen-session-dialog/reopen-session-dialog.component';
 import { JustifyAttendanceDialogComponent } from './attendance-management/justify-attendance-dialog/justify-attendance-dialog.component';
-import { AttendanceSessionDetailComponent } from './attendance-session-detail/attendance-session-detail.component';
 import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
 import { TeacherFormDialogComponent } from './teacher-management/teacher-form-dialog/teacher-form-dialog.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
@@ -35,10 +33,8 @@ import { ReopenGradebookDialogComponent } from './gradebook-management/reopen-gr
     EnrollmentReportsComponent,
     SumCountPipe,
     AttendanceManagementComponent,
-    NewSessionDialogComponent,
     ReopenSessionDialogComponent,
     JustifyAttendanceDialogComponent,
-    AttendanceSessionDetailComponent,
     TeacherManagementComponent,
     TeacherFormDialogComponent,
     TeacherDetailComponent,
