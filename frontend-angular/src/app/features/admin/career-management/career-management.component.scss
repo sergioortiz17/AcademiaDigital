@@ -1,0 +1,66 @@
+.careers-card {
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .06) !important;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.table-wrap {
+  position: relative;
+  min-height: 120px;
+}
+
+.careers-table {
+  width: 100%;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .6);
+  z-index: 1;
+}
+
+.no-data-row {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: rgba(0, 0, 0, .55);
+  font-size: .9rem;
+}
+
+.status-chip--active {
+  background: rgba(46, 204, 113, .15) !important;
+  color: #1e8449 !important;
+}
+
+.status-chip--inactive {
+  background: rgba(149, 165, 166, .18) !important;
+  color: #616a6b !important;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+}
+
+.msg--success {
+  background: rgba(46, 204, 113, .12);
+  color: #1e8449;
+}
+
+.msg--error {
+  background: rgba(231, 76, 60, .12);
+  color: #c0392b;
+}

@@ -12,9 +12,11 @@ export class AuthGuard implements CanActivate {
   constructor(private store: Store, private router: Router) {}
 
   canActivate(): Observable<boolean> {
+    console.log('🛡️ ACÁ EL GUARD TE FRENA A REVISAR SI PODÉS ENTRAR (auth.guard.ts)');
     return this.store.select(selectIsLoggedIn).pipe(
       take(1),
       map((isLoggedIn) => {
+        console.log('🛡️ ACÁ EL GUARD DECIDE: ¿estás logueado? ->', isLoggedIn, '(auth.guard.ts)');
         if (!isLoggedIn) {
           this.router.navigate(['/auth/signin']);
           return false;

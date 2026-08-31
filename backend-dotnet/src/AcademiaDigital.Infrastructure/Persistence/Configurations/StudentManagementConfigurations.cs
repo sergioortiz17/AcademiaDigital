@@ -41,7 +41,7 @@ public class StudentAcademicAssignmentConfiguration : IEntityTypeConfiguration<S
         b.HasKey(x => x.Id);
         b.Property(x => x.Reason).HasMaxLength(500);
         b.HasIndex(x => new { x.StudentId, x.AcademicYear });
-        b.HasIndex(x => x.StudentCareerId).IsUnique().HasFilter("[IsCurrent] = 1");
+        b.HasIndex(x => x.StudentCareerId).IsUnique().HasFilter("\"IsCurrent\" = true");
         b.HasOne(x => x.Student).WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.StudentCareer).WithMany(x => x.AcademicAssignments).HasForeignKey(x => x.StudentCareerId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.Career).WithMany().HasForeignKey(x => x.CareerId).OnDelete(DeleteBehavior.Restrict);

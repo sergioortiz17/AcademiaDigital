@@ -11,4 +11,5 @@ public interface IStudyPlanCourseRepository
     Task<StudyPlanCourse> CreateAsync(StudyPlanCourse studyPlanCourse, CancellationToken ct = default);
     Task<StudyPlanCourse> UpdateAsync(StudyPlanCourse studyPlanCourse, CancellationToken ct = default);
     Task DeleteAsync(StudyPlanCourse studyPlanCourse, CancellationToken ct = default);
+    Task DeleteByStudyPlanIdsAsync(IReadOnlyList<int> studyPlanIds, CancellationToken ct = default);
 }

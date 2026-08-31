@@ -4,6 +4,7 @@ import { UsersManagementComponent } from './users-management/users-management.co
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
+import { CareerManagementComponent } from './career-management/career-management.component';
 import { RoleGuard } from '../../core/guards/role.guard';
 import { UserRole } from '../../store/account/account.actions';
 
@@ -11,6 +12,12 @@ const routes: Routes = [
   {
     path: 'users',
     component: UsersManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'careers',
+    component: CareerManagementComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

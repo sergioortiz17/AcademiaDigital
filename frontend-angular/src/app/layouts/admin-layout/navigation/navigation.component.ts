@@ -42,6 +42,7 @@ const MENU_ADMIN: MenuItem[] = [
   },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
+  { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
 ];
 
 @Component({

@@ -9,6 +9,10 @@ import { UserDetailsDialogComponent } from '../../shared/user-details-dialog/use
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
+import { StudyPlanImportComponent } from './study-plan-import/study-plan-import.component';
+import { CareerCreateComponent } from './career-create/career-create.component';
+import { StudyPlanDiffComponent } from './study-plan-diff/study-plan-diff.component';
+import { CareerManagementComponent } from './career-management/career-management.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 
 @NgModule({
@@ -19,6 +23,10 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     EnrollmentManagementComponent,
     EnrolledStudentsComponent,
     EnrollmentReportsComponent,
+    StudyPlanImportComponent,
+    CareerCreateComponent,
+    StudyPlanDiffComponent,
+    CareerManagementComponent,
     SumCountPipe
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
