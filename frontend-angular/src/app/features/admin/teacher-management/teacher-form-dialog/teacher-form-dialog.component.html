@@ -8,7 +8,7 @@
   <div class="user-picker" *ngIf="!isEdit">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Buscar usuario (rol Profesor)</mat-label>
-      <input matInput [value]="userSearchTerm" (input)="onUserSearchChange($any($event.target).value)" placeholder="Nombre, email o DNI">
+      <input matInput [value]="userSearchTerm" (input)="onUserSearchChange($any($event.target).value)" placeholder="Email o DNI">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
