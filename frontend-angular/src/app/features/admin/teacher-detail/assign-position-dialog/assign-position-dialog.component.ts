@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { TeachingPositionService, TeachingPosition } from '../../../../core/services/teaching-position.service';
 
@@ -24,7 +24,8 @@ export class AssignPositionDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<AssignPositionDialogComponent>,
-    private readonly teachingPositionService: TeachingPositionService
+    private readonly teachingPositionService: TeachingPositionService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -33,8 +34,12 @@ export class AssignPositionDialogComponent implements OnInit {
       next: (positions) => {
         this.positions = positions;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.isLoading = false; }
+      error: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 

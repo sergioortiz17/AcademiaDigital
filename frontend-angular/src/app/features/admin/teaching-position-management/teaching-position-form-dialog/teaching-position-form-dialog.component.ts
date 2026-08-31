@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CareerService, Career } from '../../../../core/services/career.service';
 import { CourseService, Course } from '../../../../core/services/course.service';
@@ -43,7 +43,8 @@ export class TeachingPositionFormDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: TeachingPositionFormDialogData,
     private readonly careerService: CareerService,
     private readonly courseService: CourseService,
-    private readonly commissionService: CommissionService
+    private readonly commissionService: CommissionService,
+    private readonly cdr: ChangeDetectorRef
   ) {
     this.isEdit = !!data.position;
     if (data.position) {
@@ -58,7 +59,10 @@ export class TeachingPositionFormDialogComponent implements OnInit {
 
   ngOnInit(): void {
     if (!this.isEdit) {
-      this.careerService.getCareers().subscribe(careers => { this.careers = careers; });
+      this.careerService.getCareers().subscribe(careers => {
+        this.careers = careers;
+        this.cdr.detectChanges();
+      });
     }
   }
 
@@ -69,8 +73,14 @@ export class TeachingPositionFormDialogComponent implements OnInit {
     this.commissions = [];
     if (!this.selectedCareerId) return;
 
-    this.courseService.getCoursesByCareer(this.selectedCareerId).subscribe(courses => { this.courses = courses; });
-    this.commissionService.getCommissions(this.selectedCareerId).subscribe(commissions => { this.commissions = commissions; });
+    this.courseService.getCoursesByCareer(this.selectedCareerId).subscribe(courses => {
+      this.courses = courses;
+      this.cdr.detectChanges();
+    });
+    this.commissionService.getCommissions(this.selectedCareerId).subscribe(commissions => {
+      this.commissions = commissions;
+      this.cdr.detectChanges();
+    });
   }
 
   get isValid(): boolean {
