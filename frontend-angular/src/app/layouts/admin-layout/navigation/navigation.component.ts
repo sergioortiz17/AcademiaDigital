@@ -23,6 +23,7 @@ const MENU_ALUMNO: MenuItem[] = [
 const MENU_PROFESOR: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',          url: '/app/dashboard/default', icon: 'home' },
   { id: 'grades',      title: 'Cargar Calificaciones', url: '/app/grades',      icon: 'grade' },
+  { id: 'attendance',  title: 'Cargar Asistencia', url: '/app/attendance',      icon: 'fact_check' },
   { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'book' },
   { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'enrollments', title: 'Inscripciones',    url: '/app/enrollments',       icon: 'assignment' },
