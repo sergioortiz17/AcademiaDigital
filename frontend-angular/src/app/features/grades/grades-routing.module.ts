@@ -1,9 +1,16 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { GradesComponent } from './grades.component';
+import { RoleGuard } from '../../core/guards/role.guard';
+import { UserRole } from '../../store/account/account.actions';
 
 const routes: Routes = [
-  { path: '', component: GradesComponent }
+  {
+    path: '',
+    component: GradesComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Profesor] }
+  }
 ];
 
 @NgModule({
