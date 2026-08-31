@@ -1,0 +1,120 @@
+<div class="grades-wrap">
+<div class="grades-title-bar">
+  <h1>Calificaciones</h1>
+</div>
+
+<mat-card class="grades-card">
+  <mat-card-content>
+
+    <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+    <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+    <div class="toolbar">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Materia — Comisión</mat-label>
+        <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
+          <mat-option *ngFor="let p of positions" [value]="p.id">
+            {{ p.courseName }} — {{ p.commissionName }} ({{ p.academicYear }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="search-field" *ngIf="detail">
+        <mat-label>Buscar por nombre, apellido</mat-label>
+        <input matInput [(ngModel)]="searchTerm">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="loading-overlay" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <div class="empty-gradebook" *ngIf="!isLoading && noGradebookYet">
+      <mat-icon>post_add</mat-icon>
+      <p>Todavía no hay una planilla de notas para esta materia y comisión.</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading && detail as d">
+
+      <div class="status-row">
+        <span class="status-chip" [ngClass]="'status-chip--' + d.gradebook.status.toLowerCase()">
+          {{ statusLabel(d.gradebook.status) }}
+        </span>
+        <span class="status-note">
+          Solo el profesor puede editar notas y fechas. El Admin gestiona el workflow de la planilla.
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="grades-table">
+          <thead>
+            <tr>
+              <th class="student-col">Alumno</th>
+              <ng-container *ngFor="let ev of d.evaluations">
+                <th class="date-col">FECHA</th>
+                <th class="score-col">{{ ev.name }}</th>
+              </ng-container>
+              <th class="avg-col">Promedio</th>
+              <th class="condition-col">Condición</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of filteredStudents"
+              [class.selected-row]="selectedStudent?.enrollmentId === row.enrollmentId"
+              (click)="selectStudent(row)">
+              <td class="student-col">{{ row.studentName }}</td>
+              <ng-container *ngFor="let ev of d.evaluations">
+                <ng-container *ngFor="let g of row.grades">
+                  <ng-container *ngIf="g.evaluationId === ev.id">
+                    <td class="date-col">{{ g.updatedAt ? (g.updatedAt | date:'dd/MM/yy') : '—' }}</td>
+                    <td class="score-col">{{ g.score ?? '—' }}</td>
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+              <td class="avg-col">{{ row.average ?? '—' }}</td>
+              <td class="condition-col">
+                <span *ngIf="row.resultStatus" class="condition-chip" [ngClass]="'condition-chip--' + row.resultStatus.toLowerCase()">
+                  {{ resultLabel(row.resultStatus) }}
+                </span>
+                <span *ngIf="!row.resultStatus">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="empty-state" *ngIf="filteredStudents.length === 0">
+          <mat-icon>group_off</mat-icon>
+          <p>No hay alumnos que coincidan con la búsqueda.</p>
+        </div>
+      </div>
+
+      <div class="student-detail" *ngIf="selectedStudent as s">
+        <div class="detail-info">
+          <p><strong>Nombre:</strong> {{ s.studentName }}</p>
+          <p><strong>Legajo:</strong> {{ s.legajoNumber }}</p>
+          <p><strong>DNI:</strong> {{ s.dni }}</p>
+        </div>
+
+        <div class="detail-actions">
+          <button mat-stroked-button [disabled]="d.gradebook.status !== 'Submitted' || isProcessing" (click)="approve()">
+            Aprobar
+          </button>
+          <button mat-stroked-button [disabled]="d.gradebook.status !== 'Approved' || isProcessing" (click)="publish()">
+            Publicar
+          </button>
+          <button mat-raised-button color="primary" [disabled]="d.gradebook.status !== 'Published' || isProcessing" (click)="close()">
+            Cerrar planilla
+          </button>
+          <button mat-stroked-button color="warn" [disabled]="d.gradebook.status === 'Draft' || isProcessing" (click)="reopen()">
+            Reabrir
+          </button>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </mat-card-content>
+</mat-card>
+</div>
