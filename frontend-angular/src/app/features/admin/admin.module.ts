@@ -22,6 +22,8 @@ import { AssignPositionDialogComponent } from './teacher-detail/assign-position-
 import { EndAssignmentDialogComponent } from './teacher-detail/end-assignment-dialog/end-assignment-dialog.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { TeachingPositionFormDialogComponent } from './teaching-position-management/teaching-position-form-dialog/teaching-position-form-dialog.component';
+import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
+import { ReopenGradebookDialogComponent } from './gradebook-management/reopen-gradebook-dialog/reopen-gradebook-dialog.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +45,9 @@ import { TeachingPositionFormDialogComponent } from './teaching-position-managem
     AssignPositionDialogComponent,
     EndAssignmentDialogComponent,
     TeachingPositionManagementComponent,
-    TeachingPositionFormDialogComponent
+    TeachingPositionFormDialogComponent,
+    GradebookManagementComponent,
+    ReopenGradebookDialogComponent
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })
