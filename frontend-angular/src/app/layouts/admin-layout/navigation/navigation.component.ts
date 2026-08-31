@@ -26,6 +26,7 @@ const MENU_PROFESOR: MenuItem[] = [
   { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'book' },
   { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'enrollments', title: 'Inscripciones',    url: '/app/enrollments',       icon: 'assignment' },
+  { id: 'my-assignments', title: 'Mis asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
   //cambiar por Registro
 ];
 
@@ -34,7 +35,12 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'courses',     title: 'Carreras',           url: '/app/courses',           icon: 'book' },
   { id: 'enrollments', title: 'Inscripciones',      url: '/app/enrollments',       icon: 'assignment' },
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
-  //{ id: 'teachers',    title: 'Profesores',         url: '/app/teachers',          icon: 'group' },
+  { id: 'teachers',    title: 'Docentes',           icon: 'group',
+    children: [
+      { id: 'teacher-list',       title: '• Legajos', url: '/app/admin/teachers',           icon: '' },
+      { id: 'teaching-positions', title: '• Cargos',  url: '/app/admin/teaching-positions',  icon: '' }
+    ]
+  },
   { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
     children: [
       { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
