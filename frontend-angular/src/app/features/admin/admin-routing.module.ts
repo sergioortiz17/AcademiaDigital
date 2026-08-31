@@ -6,6 +6,9 @@ import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
 import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
 import { AttendanceSessionDetailComponent } from './attendance-session-detail/attendance-session-detail.component';
+import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
+import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
+import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { RoleGuard } from '../../core/guards/role.guard';
 import { UserRole } from '../../store/account/account.actions';
 
@@ -13,6 +16,24 @@ const routes: Routes = [
   {
     path: 'users',
     component: UsersManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'teachers',
+    component: TeacherManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'teachers/:id',
+    component: TeacherDetailComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'teaching-positions',
+    component: TeachingPositionManagementComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

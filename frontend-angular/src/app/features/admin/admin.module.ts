@@ -15,6 +15,13 @@ import { NewSessionDialogComponent } from './attendance-management/new-session-d
 import { ReopenSessionDialogComponent } from './attendance-management/reopen-session-dialog/reopen-session-dialog.component';
 import { JustifyAttendanceDialogComponent } from './attendance-management/justify-attendance-dialog/justify-attendance-dialog.component';
 import { AttendanceSessionDetailComponent } from './attendance-session-detail/attendance-session-detail.component';
+import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
+import { TeacherFormDialogComponent } from './teacher-management/teacher-form-dialog/teacher-form-dialog.component';
+import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
+import { AssignPositionDialogComponent } from './teacher-detail/assign-position-dialog/assign-position-dialog.component';
+import { EndAssignmentDialogComponent } from './teacher-detail/end-assignment-dialog/end-assignment-dialog.component';
+import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
+import { TeachingPositionFormDialogComponent } from './teaching-position-management/teaching-position-form-dialog/teaching-position-form-dialog.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +36,14 @@ import { AttendanceSessionDetailComponent } from './attendance-session-detail/at
     NewSessionDialogComponent,
     ReopenSessionDialogComponent,
     JustifyAttendanceDialogComponent,
-    AttendanceSessionDetailComponent
+    AttendanceSessionDetailComponent,
+    TeacherManagementComponent,
+    TeacherFormDialogComponent,
+    TeacherDetailComponent,
+    AssignPositionDialogComponent,
+    EndAssignmentDialogComponent,
+    TeachingPositionManagementComponent,
+    TeachingPositionFormDialogComponent
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })
