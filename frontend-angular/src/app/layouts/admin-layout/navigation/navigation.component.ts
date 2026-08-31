@@ -43,8 +43,8 @@ const MENU_ADMIN: MenuItem[] = [
   },
   { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
     children: [
-      { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' }
-      // '• Notas' queda pendiente hasta armar la vista de Admin para Gradebook (aprobar/publicar/cerrar).
+      { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
+      { id: 'gradebooks', title: '• Notas',       url: '/app/admin/gradebooks', icon: '' }
     ]
   },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
