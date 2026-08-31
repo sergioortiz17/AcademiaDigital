@@ -46,6 +46,11 @@
 .filter-field {
   flex: 1 1 320px;
   min-width: 260px;
+
+  &--small {
+    flex: 0 1 180px;
+    min-width: 150px;
+  }
 }
 
 .search-field {
