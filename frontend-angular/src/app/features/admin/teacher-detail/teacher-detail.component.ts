@@ -44,7 +44,7 @@ export class TeacherDetailComponent implements OnInit {
         this.loadAssignments();
       },
       error: (err) => {
-        this.errorMsg = err.error?.message || 'No se pudo cargar el legajo.';
+        this.errorMsg = err.error?.msg || 'No se pudo cargar el legajo.';
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -92,7 +92,7 @@ export class TeacherDetailComponent implements OnInit {
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.error?.message || 'Error al actualizar el legajo.';
+          this.errorMsg = err.error?.msg || 'Error al actualizar el legajo.';
           this.cdr.detectChanges();
         }
       });
@@ -114,7 +114,7 @@ export class TeacherDetailComponent implements OnInit {
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.error?.message || 'Error al asignar el cargo.';
+          this.errorMsg = err.error?.msg || 'Error al asignar el cargo.';
           this.cdr.detectChanges();
         }
       });
@@ -137,7 +137,7 @@ export class TeacherDetailComponent implements OnInit {
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.error?.message || 'Error al finalizar la designación.';
+          this.errorMsg = err.error?.msg || 'Error al finalizar la designación.';
           this.cdr.detectChanges();
         }
       });

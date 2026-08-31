@@ -106,7 +106,7 @@ export class AttendanceManagementComponent implements OnInit {
         },
         error: (err) => {
           this.isCreating = false;
-          this.errorMsg = err.error?.message || err.error?.title || 'Error al crear la sesión.';
+          this.errorMsg = err.error?.msg || err.error?.title || 'Error al crear la sesión.';
           this.cdr.detectChanges();
         }
       });
@@ -131,7 +131,7 @@ export class AttendanceManagementComponent implements OnInit {
       },
       error: (err) => {
         this.processingIds.delete(session.id);
-        this.errorMsg = err.error?.message || 'Error al cerrar la sesión.';
+        this.errorMsg = err.error?.msg || 'Error al cerrar la sesión.';
         this.cdr.detectChanges();
       }
     });
@@ -155,7 +155,7 @@ export class AttendanceManagementComponent implements OnInit {
         },
         error: (err) => {
           this.processingIds.delete(session.id);
-          this.errorMsg = err.error?.message || 'Error al reabrir la sesión.';
+          this.errorMsg = err.error?.msg || 'Error al reabrir la sesión.';
           this.cdr.detectChanges();
         }
       });

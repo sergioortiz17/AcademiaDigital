@@ -84,7 +84,7 @@ export class TeacherManagementComponent implements OnInit {
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.error?.message || err.error?.title || 'Error al crear el docente.';
+          this.errorMsg = err.error?.msg || err.error?.title || 'Error al crear el docente.';
           this.cdr.detectChanges();
         }
       });
@@ -101,7 +101,7 @@ export class TeacherManagementComponent implements OnInit {
         this.loadTeachers();
       },
       error: (err) => {
-        this.errorMsg = err.error?.message || 'Error al dar de baja al docente.';
+        this.errorMsg = err.error?.msg || 'Error al dar de baja al docente.';
         this.cdr.detectChanges();
       }
     });
