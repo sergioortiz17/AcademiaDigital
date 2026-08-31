@@ -238,7 +238,7 @@ export class AttendanceComponent implements OnInit {
     const dialogRef = this.dialog.open(NewSessionDialogComponent, {
       width: '480px',
       disableClose: true,
-      data: { teachingPositionId: assignment.teachingPositionId, defaultDate: new Date(this.currentMonth) }
+      data: { teachingPositionId: assignment.teachingPositionId }
     });
 
     dialogRef.afterClosed().subscribe((request) => {
