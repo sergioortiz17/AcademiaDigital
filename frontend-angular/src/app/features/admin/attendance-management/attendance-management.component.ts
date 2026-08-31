@@ -8,7 +8,8 @@ import {
   AttendanceService,
   AttendanceSession,
   AttendanceRecordStatus,
-  AttendanceJustification
+  AttendanceJustification,
+  parseDateOnly
 } from '../../../core/services/attendance.service';
 import { ReopenSessionDialogComponent } from './reopen-session-dialog/reopen-session-dialog.component';
 import { JustifyAttendanceDialogComponent, JustifyAttendanceDialogResult } from './justify-attendance-dialog/justify-attendance-dialog.component';
@@ -96,7 +97,7 @@ export class AttendanceManagementComponent implements OnInit {
     const month = this.currentMonth.getMonth();
     return this.allSessions
       .filter(s => {
-        const d = new Date(s.sessionDate);
+        const d = parseDateOnly(s.sessionDate);
         return d.getFullYear() === year && d.getMonth() === month;
       })
       .sort((a, b) => a.sessionDate.localeCompare(b.sessionDate));
