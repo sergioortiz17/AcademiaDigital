@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -40,7 +40,8 @@ export class TeacherFormDialogComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<TeacherFormDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: TeacherFormDialogData,
-    private readonly adminService: AdminService
+    private readonly adminService: AdminService,
+    private readonly cdr: ChangeDetectorRef
   ) {
     this.isEdit = !!data.teacher;
     if (data.teacher) {
@@ -66,6 +67,7 @@ export class TeacherFormDialogComponent implements OnInit {
       switchMap(term => this.adminService.getUsers(term, UserRole.Profesor, 1, 10))
     ).subscribe(res => {
       this.userResults = res.users;
+      this.cdr.detectChanges();
     });
   }
 
