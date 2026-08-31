@@ -3,6 +3,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export function parseDateOnly(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export type AttendanceScope = 'ClassHour' | 'FullDay';
 export type AttendanceSessionStatus = 'Open' | 'Closed';
 export type AttendanceRecordStatus = 'Present' | 'Late' | 'Absent' | 'Justified';

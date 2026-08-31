@@ -8,7 +8,8 @@ import {
   AttendanceService,
   AttendanceSession,
   AttendanceRecordStatus,
-  SaveAttendanceRecordInput
+  SaveAttendanceRecordInput,
+  parseDateOnly
 } from '../../core/services/attendance.service';
 import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
 
