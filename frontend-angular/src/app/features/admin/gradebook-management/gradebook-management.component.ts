@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { TeachingPositionService, TeachingPosition } from '../../../core/services/teaching-position.service';
 import { GradebookService, GradebookDetail, GradebookStudent } from '../../../core/services/gradebook.service';
+import { CareerService, Career } from '../../../core/services/career.service';
 import { ReopenGradebookDialogComponent } from './reopen-gradebook-dialog/reopen-gradebook-dialog.component';
 
 const RESULT_LABELS: Record<string, string> = {
@@ -26,6 +27,18 @@ const STATUS_LABELS: Record<string, string> = {
   standalone: false
 })
 export class GradebookManagementComponent implements OnInit {
+  // Carrera/Sede/Año decorativos (sin datos reales del backend), consistentes con el mockup.
+  careers: Career[] = [];
+  selectedCareerId: number | null = null;
+  sedes = ['Sede Centro', 'Sede Norte'];
+  selectedSede: string | null = null;
+  planYears = [
+    { value: 1, label: 'Primero' },
+    { value: 2, label: 'Segundo' },
+    { value: 3, label: 'Tercero' }
+  ];
+  selectedPlanYear: number | null = null;
+
   positions: TeachingPosition[] = [];
   selectedTeachingPositionId: number | null = null;
 
@@ -42,11 +55,18 @@ export class GradebookManagementComponent implements OnInit {
   constructor(
     private readonly teachingPositionService: TeachingPositionService,
     private readonly gradebookService: GradebookService,
+    private readonly careerService: CareerService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.careerService.getCareers().subscribe(careers => {
+      this.careers = careers;
+      this.selectedCareerId = careers[0]?.id ?? null;
+      this.cdr.detectChanges();
+    });
+
     this.teachingPositionService.getTeachingPositions({ includeInactive: false }).subscribe({
       next: (positions) => {
         this.positions = positions;

@@ -10,8 +10,37 @@
     <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
     <div class="toolbar">
+      <mat-form-field appearance="outline" class="filter-field filter-field--small">
+        <mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="selectedCareerId">
+          <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field filter-field--small">
+        <mat-label>Sede</mat-label>
+        <mat-select [(ngModel)]="selectedSede">
+          <mat-option *ngFor="let s of sedes" [value]="s">{{ s }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field filter-field--small">
+        <mat-label>Año</mat-label>
+        <mat-select [(ngModel)]="selectedPlanYear">
+          <mat-select-trigger>
+            <mat-chip-set *ngIf="selectedPlanYear">
+              <mat-chip removable (removed)="selectedPlanYear = null">
+                {{ planYears[selectedPlanYear - 1]?.label }}
+                <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
+              </mat-chip>
+            </mat-chip-set>
+          </mat-select-trigger>
+          <mat-option *ngFor="let y of planYears" [value]="y.value">{{ y.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Materia — Comisión</mat-label>
+        <mat-label>Materia</mat-label>
         <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
           <mat-option *ngFor="let p of positions" [value]="p.id">
             {{ p.courseName }} — {{ p.commissionName }} ({{ p.academicYear }})
