@@ -100,7 +100,7 @@ export class AttendanceComponent implements OnInit {
     const month = this.currentMonth.getMonth();
     return this.allSessions
       .filter(s => {
-        const d = new Date(s.sessionDate);
+        const d = parseDateOnly(s.sessionDate);
         return d.getFullYear() === year && d.getMonth() === month;
       })
       .sort((a, b) => a.sessionDate.localeCompare(b.sessionDate));
@@ -117,7 +117,7 @@ export class AttendanceComponent implements OnInit {
   }
 
   formatDay(dateStr: string): string {
-    const d = new Date(dateStr);
+    const d = parseDateOnly(dateStr);
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
   }
 
