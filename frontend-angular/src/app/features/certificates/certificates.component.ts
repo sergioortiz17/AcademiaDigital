@@ -142,7 +142,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
         setTimeout(() => this.successMsg = '', 4000);
       },
       error: (err) => {
-        this.errorMsg = err.error?.msg || 'Error al enviar la solicitud.';
+        this.errorMsg = err.message || 'Error al enviar la solicitud.';
         this.isSubmitting = false;
       }
     });
@@ -242,7 +242,7 @@ approveRequest(request: CertificateRequest): void {
       },
       error: (err) => {
         this.processingIds.delete(request.id);
-        this.errorMsg = err.error?.msg || err.error?.message || 'Error al aprobar la solicitud.';
+        this.errorMsg = err.message || 'Error al aprobar la solicitud.';
         this.cdr.detectChanges();
       }
     });
@@ -273,7 +273,7 @@ rejectRequest(request: CertificateRequest): void {
         },
         error: (err) => {
           this.processingIds.delete(request.id);
-          this.errorMsg = err.error?.msg || err.error?.message || 'Error al rechazar la solicitud.';
+          this.errorMsg = err.message || 'Error al rechazar la solicitud.';
           this.cdr.detectChanges();
         }
       });

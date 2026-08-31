@@ -76,7 +76,7 @@ export class TeachingPositionManagementComponent implements OnInit {
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.error?.msg || err.error?.title || 'Error al crear el cargo.';
+          this.errorMsg = err.message || 'Error al crear el cargo.';
           this.cdr.detectChanges();
         }
       });
@@ -99,7 +99,7 @@ export class TeachingPositionManagementComponent implements OnInit {
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.error?.msg || 'Error al actualizar el cargo.';
+          this.errorMsg = err.message || 'Error al actualizar el cargo.';
           this.cdr.detectChanges();
         }
       });
@@ -121,7 +121,7 @@ export class TeachingPositionManagementComponent implements OnInit {
         this.loadPositions();
       },
       error: (err) => {
-        this.errorMsg = err.error?.msg || 'Error al dar de baja el cargo.';
+        this.errorMsg = err.message || 'Error al dar de baja el cargo.';
         this.cdr.detectChanges();
       }
     });

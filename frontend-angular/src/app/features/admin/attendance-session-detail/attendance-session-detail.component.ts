@@ -77,7 +77,7 @@ export class AttendanceSessionDetailComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMsg = err.error?.msg || 'No se pudo cargar la sesión.';
+        this.errorMsg = err.message || 'No se pudo cargar la sesión.';
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -114,7 +114,7 @@ export class AttendanceSessionDetailComponent implements OnInit {
       },
       error: (err) => {
         this.isSaving = false;
-        this.errorMsg = err.error?.msg || 'Error al guardar la asistencia.';
+        this.errorMsg = err.message || 'Error al guardar la asistencia.';
         this.cdr.detectChanges();
       }
     });
@@ -129,7 +129,7 @@ export class AttendanceSessionDetailComponent implements OnInit {
         this.loadDetail();
       },
       error: (err) => {
-        this.errorMsg = err.error?.msg || 'Error al cerrar la sesión.';
+        this.errorMsg = err.message || 'Error al cerrar la sesión.';
         this.cdr.detectChanges();
       }
     });
@@ -144,7 +144,7 @@ export class AttendanceSessionDetailComponent implements OnInit {
       this.attendanceService.reopenSession(this.sessionId, reason).subscribe({
         next: () => this.loadDetail(),
         error: (err) => {
-          this.errorMsg = err.error?.msg || 'Error al reabrir la sesión.';
+          this.errorMsg = err.message || 'Error al reabrir la sesión.';
           this.cdr.detectChanges();
         }
       });
@@ -176,7 +176,7 @@ export class AttendanceSessionDetailComponent implements OnInit {
         },
         error: (err) => {
           this.processingRecordId = null;
-          this.errorMsg = err.error?.msg || 'Error al justificar la inasistencia.';
+          this.errorMsg = err.message || 'Error al justificar la inasistencia.';
           this.cdr.detectChanges();
         }
       });
