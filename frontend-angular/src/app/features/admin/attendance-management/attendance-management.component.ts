@@ -127,7 +127,7 @@ export class AttendanceManagementComponent implements OnInit {
   }
 
   formatDay(dateStr: string): string {
-    const d = new Date(dateStr);
+    const d = parseDateOnly(dateStr);
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
   }
 
