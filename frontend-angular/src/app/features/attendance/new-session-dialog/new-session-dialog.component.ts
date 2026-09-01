@@ -1,10 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { AttendanceScope, CreateAttendanceSessionRequest } from '../../../../core/services/attendance.service';
-import { TeachingPosition } from '../../../../core/services/teaching-position.service';
+import { AttendanceScope, CreateAttendanceSessionRequest } from '../../../core/services/attendance.service';
 
 export interface NewSessionDialogData {
-  positions: TeachingPosition[];
+  teachingPositionId: number;
+  defaultDate?: Date;
 }
 
 @Component({
@@ -14,26 +14,24 @@ export interface NewSessionDialogData {
   standalone: false
 })
 export class NewSessionDialogComponent {
-  positions: TeachingPosition[] = [];
-
-  teachingPositionId: number | null = null;
-  sessionDate: Date = new Date();
+  sessionDate: Date;
   scope: AttendanceScope = 'ClassHour';
   startTime = '';
   endTime = '';
   units = 1;
 
   maxDate = new Date();
+  minDate = new Date(new Date().setDate(new Date().getDate() - 2));
 
   constructor(
     public dialogRef: MatDialogRef<NewSessionDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: NewSessionDialogData
   ) {
-    this.positions = data.positions;
+    this.sessionDate = data.defaultDate ?? new Date();
   }
 
   get isValid(): boolean {
-    if (!this.teachingPositionId || !this.sessionDate) return false;
+    if (!this.sessionDate) return false;
     if (this.scope === 'ClassHour') {
       return !!this.startTime && !!this.endTime && this.startTime < this.endTime;
     }
@@ -56,7 +54,7 @@ export class NewSessionDialogComponent {
     if (!this.isValid) return;
 
     const request: CreateAttendanceSessionRequest = {
-      teachingPositionId: this.teachingPositionId!,
+      teachingPositionId: this.data.teachingPositionId,
       sessionDate: this.toDateOnly(this.sessionDate),
       scope: this.scope,
       units: this.scope === 'ClassHour' ? this.units : 1,

@@ -129,8 +129,9 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   }
 
   submitRequest(): void {
-    if (!this.selectedType) return;
+    if (!this.selectedType || this.isSubmitting) return;
     this.isSubmitting = true;
+    this.errorMsg = '';
     this.certificatesService.requestCertificate(this.selectedType).subscribe({
       next: (res) => {
         this.allRequests.unshift(res.request);
@@ -139,11 +140,13 @@ export class CertificatesComponent implements OnInit, OnDestroy {
         //this.showForm = false;
         this.selectedType = '';
         this.isSubmitting = false;
-        setTimeout(() => this.successMsg = '', 4000);
+        this.cdr.detectChanges();
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
       },
       error: (err) => {
-        this.errorMsg = err.error?.msg || 'Error al enviar la solicitud.';
+        this.errorMsg = err.message || 'Error al enviar la solicitud.';
         this.isSubmitting = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -242,7 +245,7 @@ approveRequest(request: CertificateRequest): void {
       },
       error: (err) => {
         this.processingIds.delete(request.id);
-        this.errorMsg = err.error?.msg || err.error?.message || 'Error al aprobar la solicitud.';
+        this.errorMsg = err.message || 'Error al aprobar la solicitud.';
         this.cdr.detectChanges();
       }
     });
@@ -273,7 +276,7 @@ rejectRequest(request: CertificateRequest): void {
         },
         error: (err) => {
           this.processingIds.delete(request.id);
-          this.errorMsg = err.error?.msg || err.error?.message || 'Error al rechazar la solicitud.';
+          this.errorMsg = err.message || 'Error al rechazar la solicitud.';
           this.cdr.detectChanges();
         }
       });

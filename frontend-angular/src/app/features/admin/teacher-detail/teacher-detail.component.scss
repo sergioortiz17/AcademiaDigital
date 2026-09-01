@@ -38,73 +38,100 @@
   padding: 2rem;
 }
 
-.summary-card, .roster-card {
+.profile-card, .assignments-card {
   border-radius: 16px !important;
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
   margin-bottom: 1rem;
 }
 
-.summary-row {
+.profile-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.course-name {
+.teacher-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: #125081;
 }
 
-.session-meta {
+.teacher-email {
   font-size: .85rem;
   color: rgba(0, 0, 0, .6);
 }
 
-.summary-actions {
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem 1.5rem;
+  font-size: .85rem;
+  margin-top: .5rem;
+
+  .label {
+    display: block;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: rgba(0, 0, 0, .45);
+  }
+}
+
+.deactivation-info {
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   gap: .5rem;
-  flex-wrap: wrap;
+  color: #c62828;
+  font-size: .85rem;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
 
 .status-chip {
   font-size: .78rem;
   font-weight: 600;
   border-radius: 12px;
-  padding: 4px 12px;
+  padding: 3px 12px;
 
-  &--open { background: #e3f2fd; color: #1565c0; }
-  &--closed { background: #eeeeee; color: #616161; }
+  &--active { background: #e8f5e9; color: #2e7d32; }
+  &--inactive { background: #eeeeee; color: #616161; }
 }
 
-.edit-warning {
-  margin-top: 1rem;
+.assignments-header {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  color: #b8860b;
-  font-size: .85rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
 
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  h3 { margin: 0; }
 }
 
-.table-wrap {
-  overflow-x: auto;
+.assignments-actions {
+  display: flex;
+  gap: .75rem;
 }
 
-.roster-table {
+.assignments-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: .88rem;
+  font-size: .85rem;
 
   th, td {
     padding: 10px 12px;
     text-align: left;
     border-bottom: 1px solid rgba(0, 0, 0, .06);
-    vertical-align: middle;
   }
 
   thead th {
@@ -112,50 +139,13 @@
     font-weight: 600;
     color: rgba(0, 0, 0, .7);
   }
-
-  .student-col {
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  mat-radio-group {
-    display: flex;
-    gap: 8px;
-  }
 }
 
-.notes-input {
-  border: 1px solid rgba(0, 0, 0, .15);
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: .85rem;
-  width: 160px;
+.course-name { font-weight: 500; }
+.commission-name { font-size: .78rem; color: rgba(0, 0, 0, .5); }
 
-  &:disabled {
-    background: #f5f5f5;
-    color: rgba(0, 0, 0, .4);
-  }
-}
-
-.justified-chip {
-  margin-left: 8px;
-  font-size: .75rem;
-  font-weight: 600;
-  color: #6a1b9a;
-  background: #f3e5f5;
-  border-radius: 10px;
-  padding: 2px 8px;
-}
-
-.justification-info {
-  font-size: .82rem;
-  color: #6a1b9a;
-  border-bottom: 1px dotted #6a1b9a;
-  cursor: help;
-}
-
-.justify-btn {
-  color: #b8860b;
+.end-btn {
+  color: #c62828;
   font-size: .8rem;
 }
 
@@ -165,10 +155,4 @@
   color: rgba(0, 0, 0, .4);
 
   mat-icon { font-size: 40px; width: 40px; height: 40px; }
-}
-
-.save-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
 }

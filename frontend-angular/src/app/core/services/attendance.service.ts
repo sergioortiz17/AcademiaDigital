@@ -3,6 +3,51 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export function parseDateOnly(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+const ATTENDANCE_ERROR_TRANSLATIONS: Record<string, string> = {
+  'The teacher is not assigned to this course and commission.':
+    'No estás asignado a esta materia/comisión para la fecha seleccionada.',
+  'The teacher cannot manage this attendance session.':
+    'No tenés permisos para gestionar esta sesión de asistencia.',
+  'An attendance session already exists for this course, commission and time.':
+    'Ya existe un día cargado para esa fecha y ese horario.',
+  'The idempotency key was already used with a different attendance session.':
+    'Ocurrió un conflicto al crear el día. Intentá nuevamente.',
+  'Attendance sessions cannot be created in the future.':
+    'No se pueden crear días de asistencia con fecha futura.',
+  'Session date must belong to the teaching position academic year.':
+    'La fecha debe pertenecer al año académico de la materia.',
+  'Attendance units must be between 1 and 12.':
+    'Las unidades deben estar entre 1 y 12.',
+  'Class-hour attendance requires a valid start and end time.':
+    'Para "Hora cátedra" completá la hora de inicio y de fin.',
+  'Full-day attendance does not accept times and always uses one unit.':
+    '"Día completo" no admite horarios.',
+  'The attendance session is closed.':
+    'La sesión está cerrada.',
+  'The 48-hour attendance edit window has expired.':
+    'Venció el plazo de 48 horas para editar esta asistencia.',
+  'The attendance session is already closed.':
+    'La sesión ya está cerrada.',
+  'Only a closed attendance session can be reopened.':
+    'Solo se puede reabrir una sesión cerrada.',
+  'A reopening reason of at least three characters is required.':
+    'El motivo de reapertura debe tener al menos 3 caracteres.',
+  'Only an absence or late arrival can be justified.':
+    'Solo se puede justificar una ausencia o una tardanza.',
+  'Attendance requires an active teaching position with a commission.':
+    'La materia no tiene una comisión activa asignada.'
+};
+
+export function translateAttendanceError(message: string | undefined | null, fallback: string): string {
+  if (!message) return fallback;
+  return ATTENDANCE_ERROR_TRANSLATIONS[message] ?? message;
+}
+
 export type AttendanceScope = 'ClassHour' | 'FullDay';
 export type AttendanceSessionStatus = 'Open' | 'Closed';
 export type AttendanceRecordStatus = 'Present' | 'Late' | 'Absent' | 'Justified';

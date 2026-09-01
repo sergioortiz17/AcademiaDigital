@@ -42,6 +42,10 @@ const routes: Routes = [
         loadChildren: () => import('./features/grades/grades.module').then(m => m.GradesModule)
       },
       {
+        path: 'attendance',
+        loadChildren: () => import('./features/attendance/attendance.module').then(m => m.AttendanceModule)
+      },
+      {
         path: 'messages',
         loadChildren: () => import('./features/messages/messages.module').then(m => m.MessagesModule)
       },

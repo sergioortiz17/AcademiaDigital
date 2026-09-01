@@ -1,24 +1,16 @@
 <div class="dialog-header">
   <mat-icon>event_available</mat-icon>
-  <span>Nueva sesión de asistencia</span>
+  <span>Nuevo día de clase</span>
 </div>
 
 <div class="dialog-body">
 
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Materia — Comisión</mat-label>
-    <mat-select [(ngModel)]="teachingPositionId">
-      <mat-option *ngFor="let p of positions" [value]="p.id">
-        {{ p.courseName }} — {{ p.commissionName }} ({{ p.academicYear }}, {{ p.semester }}° cuatr.)
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field appearance="outline" class="full-width">
     <mat-label>Fecha</mat-label>
-    <input matInput [matDatepicker]="picker" [(ngModel)]="sessionDate" [max]="maxDate">
+    <input matInput [matDatepicker]="picker" [(ngModel)]="sessionDate" [min]="minDate" [max]="maxDate">
     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
+    <mat-hint>Solo se puede cargar asistencia hasta 48hs después de la clase.</mat-hint>
   </mat-form-field>
 
   <div class="scope-row">
@@ -49,5 +41,5 @@
 
 <div class="dialog-actions">
   <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
-  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear sesión</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear día</button>
 </div>
