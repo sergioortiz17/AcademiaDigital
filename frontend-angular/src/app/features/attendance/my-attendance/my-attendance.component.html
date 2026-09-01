@@ -176,7 +176,7 @@
             <span class="detail-course">{{ selectedGroup.courseName }}</span>
             <span class="year-chip">{{ it.academicYear }}</span>
             <span class="detail-condition" [ngClass]="'detail-condition--' + riskLevel(it.attendancePercentage)">
-              {{ it.isAtRisk ? 'En riesgo' : 'Al día' }}
+              {{ riskLevel(it.attendancePercentage) === 'high' ? 'En riesgo' : 'Al día' }}
             </span>
           </div>
 
