@@ -5,9 +5,10 @@ import { MaterialModule } from '../../shared/material.module';
 import { AttendanceRoutingModule } from './attendance-routing.module';
 import { AttendanceComponent } from './attendance.component';
 import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
+import { MyAttendanceComponent } from './my-attendance/my-attendance.component';
 
 @NgModule({
-  declarations: [AttendanceComponent, NewSessionDialogComponent],
+  declarations: [AttendanceComponent, NewSessionDialogComponent, MyAttendanceComponent],
   imports: [CommonModule, FormsModule, MaterialModule, AttendanceRoutingModule]
 })
 export class AttendanceModule {}
