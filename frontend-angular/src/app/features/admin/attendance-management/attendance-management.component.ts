@@ -9,7 +9,8 @@ import {
   AttendanceSession,
   AttendanceRecordStatus,
   AttendanceJustification,
-  parseDateOnly
+  parseDateOnly,
+  translateAttendanceError
 } from '../../../core/services/attendance.service';
 import { ReopenSessionDialogComponent } from './reopen-session-dialog/reopen-session-dialog.component';
 import { JustifyAttendanceDialogComponent, JustifyAttendanceDialogResult } from './justify-attendance-dialog/justify-attendance-dialog.component';
@@ -82,10 +83,15 @@ export class AttendanceManagementComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMsg = err.message || 'No se pudieron cargar los cargos docentes.';
-        this.cdr.detectChanges();
+        this.showError(err.message || 'No se pudieron cargar los cargos docentes.');
       }
     });
+  }
+
+  private showError(message: string): void {
+    this.errorMsg = message;
+    this.cdr.detectChanges();
+    setTimeout(() => { this.errorMsg = ''; this.cdr.detectChanges(); }, 6000);
   }
 
   get selectedPosition(): TeachingPosition | undefined {
@@ -159,9 +165,8 @@ export class AttendanceManagementComponent implements OnInit {
         this.loadAllDetails();
       },
       error: (err) => {
-        this.errorMsg = err.message || 'Error al cargar las sesiones.';
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.showError(translateAttendanceError(err.message, 'Error al cargar las sesiones.'));
       }
     });
   }
@@ -249,8 +254,7 @@ export class AttendanceManagementComponent implements OnInit {
         },
         error: (err) => {
           this.isProcessing = false;
-          this.errorMsg = err.message || 'Error al reabrir la sesión.';
-          this.cdr.detectChanges();
+          this.showError(translateAttendanceError(err.message, 'Error al reabrir la sesión.'));
         }
       });
     });
@@ -291,8 +295,7 @@ export class AttendanceManagementComponent implements OnInit {
         },
         error: (err) => {
           this.isProcessing = false;
-          this.errorMsg = err.message || 'Error al justificar la inasistencia.';
-          this.cdr.detectChanges();
+          this.showError(translateAttendanceError(err.message, 'Error al justificar la inasistencia.'));
         }
       });
     });

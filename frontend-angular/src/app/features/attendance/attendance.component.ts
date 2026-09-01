@@ -9,7 +9,8 @@ import {
   AttendanceSession,
   AttendanceRecordStatus,
   SaveAttendanceRecordInput,
-  parseDateOnly
+  parseDateOnly,
+  translateAttendanceError
 } from '../../core/services/attendance.service';
 import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
 
@@ -86,10 +87,15 @@ export class AttendanceComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMsg = err.message || 'No se pudieron cargar tus materias asignadas.';
-        this.cdr.detectChanges();
+        this.showError(err.message || 'No se pudieron cargar tus materias asignadas.');
       }
     });
+  }
+
+  private showError(message: string): void {
+    this.errorMsg = message;
+    this.cdr.detectChanges();
+    setTimeout(() => { this.errorMsg = ''; this.cdr.detectChanges(); }, 6000);
   }
 
   get selectedAssignment(): TeacherAssignment | undefined {
@@ -156,9 +162,8 @@ export class AttendanceComponent implements OnInit {
         this.loadAllDetails();
       },
       error: (err) => {
-        this.errorMsg = err.message || 'Error al cargar las sesiones.';
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.showError(translateAttendanceError(err.message, 'Error al cargar las sesiones.'));
       }
     });
   }
@@ -253,8 +258,7 @@ export class AttendanceComponent implements OnInit {
         },
         error: (err) => {
           this.isCreating = false;
-          this.errorMsg = err.message || 'Error al crear el día.';
-          this.cdr.detectChanges();
+          this.showError(translateAttendanceError(err.message, 'Error al crear el día.'));
         }
       });
     });
@@ -269,8 +273,7 @@ export class AttendanceComponent implements OnInit {
         this.loadSessions();
       },
       error: (err) => {
-        this.errorMsg = err.message || 'Error al cerrar la sesión.';
-        this.cdr.detectChanges();
+        this.showError(translateAttendanceError(err.message, 'Error al cerrar la sesión.'));
       }
     });
   }
@@ -293,7 +296,7 @@ export class AttendanceComponent implements OnInit {
       .filter(item => item.records.length > 0);
 
     if (requests.length === 0) {
-      this.errorMsg = 'No hay cambios para guardar en este mes.';
+      this.showError('No hay cambios para guardar en este mes.');
       return;
     }
 
@@ -310,8 +313,7 @@ export class AttendanceComponent implements OnInit {
       },
       error: (err) => {
         this.isSaving = false;
-        this.errorMsg = err.message || 'Error al guardar la asistencia.';
-        this.cdr.detectChanges();
+        this.showError(translateAttendanceError(err.message, 'Error al guardar la asistencia.'));
       }
     });
   }

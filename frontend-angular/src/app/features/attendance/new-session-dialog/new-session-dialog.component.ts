@@ -21,6 +21,7 @@ export class NewSessionDialogComponent {
   units = 1;
 
   maxDate = new Date();
+  minDate = new Date(new Date().setDate(new Date().getDate() - 2));
 
   constructor(
     public dialogRef: MatDialogRef<NewSessionDialogComponent>,
