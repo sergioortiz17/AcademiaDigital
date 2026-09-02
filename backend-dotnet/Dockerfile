@@ -2,19 +2,18 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy solution and project files first (layer cache for restore)
-COPY AcademiaDigital.sln ./
+# Copy production project files first (layer cache for restore)
 COPY src/AcademiaDigital.Domain/AcademiaDigital.Domain.csproj        ./src/AcademiaDigital.Domain/
 COPY src/AcademiaDigital.Application/AcademiaDigital.Application.csproj ./src/AcademiaDigital.Application/
 COPY src/AcademiaDigital.Infrastructure/AcademiaDigital.Infrastructure.csproj ./src/AcademiaDigital.Infrastructure/
 COPY src/AcademiaDigital.API/AcademiaDigital.API.csproj               ./src/AcademiaDigital.API/
 
-RUN dotnet restore
+RUN dotnet restore src/AcademiaDigital.API/AcademiaDigital.API.csproj
 
-# Copy everything and publish
-COPY . .
+# Copy only production sources and publish
+COPY src ./src
 RUN dotnet publish src/AcademiaDigital.API/AcademiaDigital.API.csproj \
-    -c Release -o /publish
+    -c Release -o /publish --no-restore
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

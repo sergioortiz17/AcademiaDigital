@@ -15,6 +15,7 @@ export const env = {
   responseTimeMs: Number(process.env.API_RESPONSE_TIME_MS ?? 3000),
   adminEmail: required('E2E_ADMIN_EMAIL', 'admin.playwright@e2e.local'),
   adminPassword: required('E2E_ADMIN_PASSWORD'),
+  admissionChallengeToken: required('E2E_ADMISSION_CHALLENGE_TOKEN', 'e2e-admission-challenge-token'),
   sqlConnectionString: required('E2E_SQL_CONNECTION_STRING'),
   allowDbCleanup: parseBoolean(process.env.E2E_ALLOW_DB_CLEANUP ?? 'true'),
   allowDevelopmentDatabase: parseBoolean(process.env.E2E_ALLOW_DEVELOPMENT_DATABASE),

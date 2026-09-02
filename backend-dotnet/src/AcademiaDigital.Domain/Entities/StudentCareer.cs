@@ -15,4 +15,5 @@ public class StudentCareer
     public ICollection<StudentStudyPlan> StudyPlans { get; set; } = [];
     public ICollection<StudentAcademicAssignment> AcademicAssignments { get; set; } = [];
     public ICollection<Enrollment> Enrollments { get; set; } = [];
+    public ICollection<StudentRematriculation> Rematriculations { get; set; } = [];
 }

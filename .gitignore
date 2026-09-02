@@ -23,3 +23,10 @@ frontend-angular/package-lock.pre-fix.json
 .vscode/
 .idea/
 docs/
+
+# Keep approved backend planning and quality reports versioned while other local docs remain ignored.
+!backend-dotnet/docs/
+backend-dotnet/docs/*
+!backend-dotnet/docs/ROADMAP_M4_M11.md
+!backend-dotnet/docs/COBERTURA_CALIDAD_ARQUITECTURA.md
+!backend-dotnet/docs/API_COVERAGE_MATRIX.md

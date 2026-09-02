@@ -1,0 +1,28 @@
+<div class="dialog-header">
+  <mat-icon>event_busy</mat-icon>
+  <span>Finalizar designación</span>
+</div>
+
+<div class="dialog-body">
+  <p>
+    <strong>{{ data.assignment.courseName }}</strong> — {{ data.assignment.commissionName }}
+  </p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Fecha de finalización</mat-label>
+    <input matInput [matDatepicker]="endPicker" [(ngModel)]="endedOn" [min]="minDate">
+    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+    <mat-datepicker #endPicker></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Motivo</mat-label>
+    <textarea matInput rows="3" maxlength="500" [(ngModel)]="reason" placeholder="Explicá por qué finaliza la designación"></textarea>
+    <mat-hint *ngIf="reason.trim().length < 3">Mínimo 3 caracteres.</mat-hint>
+  </mat-form-field>
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Finalizar</button>
+</div>

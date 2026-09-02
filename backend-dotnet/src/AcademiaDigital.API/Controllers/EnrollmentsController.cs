@@ -1,4 +1,5 @@
 using AcademiaDigital.Application.UseCases.Enrollments;
+using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -17,7 +18,8 @@ public class EnrollmentsController(
     [HttpGet("periods")]
     public async Task<IActionResult> GetAllPeriods(CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         var result = await periods.GetAllAsync(ct);
         return Ok(new { success = true, data = result });
     }
@@ -35,7 +37,8 @@ public class EnrollmentsController(
     [HttpGet("periods/{id:int}/students")]
     public async Task<IActionResult> GetEnrolledStudents(int id, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         var (total, students) = await periods.GetStudentsAsync(id, ct);
         return Ok(new { success = true, total, data = students });
     }
@@ -44,7 +47,8 @@ public class EnrollmentsController(
     [HttpPost("periods")]
     public async Task<IActionResult> OpenPeriod([FromBody] OpenPeriodRequest request, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         var command = new OpenEnrollmentPeriodCommand(
             request.CareerId,
             request.StudyPlanId,
@@ -61,7 +65,8 @@ public class EnrollmentsController(
     [HttpPut("periods/{id:int}/quotas")]
     public async Task<IActionResult> UpdateQuotas(int id, [FromBody] UpdateQuotasRequest request, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         var command = new UpdatePeriodQuotasCommand(id, request.QuotasMorning, request.QuotasAfternoon, request.QuotasEvening);
         var result = await periods.UpdateQuotasAsync(command, ct);
         return Ok(new { success = true, data = result });
@@ -71,7 +76,8 @@ public class EnrollmentsController(
     [HttpPut("periods/{id:int}/close")]
     public async Task<IActionResult> ClosePeriod(int id, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         await periods.CloseAsync(id, ct);
         return Ok(new { success = true, msg = "Período de inscripción cerrado." });
     }
@@ -80,7 +86,8 @@ public class EnrollmentsController(
     [HttpPut("periods/{id:int}/activate")]
     public async Task<IActionResult> ActivatePeriod(int id, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         await admin.ActivateAsync(id, ct);
         return Ok(new { success = true, msg = "Período de inscripción activado." });
     }
@@ -89,7 +96,8 @@ public class EnrollmentsController(
     [HttpDelete("periods/{id:int}")]
     public async Task<IActionResult> DeletePeriod(int id, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         await admin.DeleteAsync(id, ct);
         return Ok(new { success = true, msg = "Período eliminado correctamente." });
     }
@@ -98,7 +106,8 @@ public class EnrollmentsController(
     [HttpGet("periods/{id:int}/report")]
     public async Task<IActionResult> GetPeriodReport(int id, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         var report = await admin.GetReportAsync(id, ct);
         return Ok(new { success = true, data = report });
     }
@@ -107,7 +116,8 @@ public class EnrollmentsController(
     [HttpDelete("periods/{id:int}/students/{studentId:long}")]
     public async Task<IActionResult> RemoveStudent(int id, long studentId, CancellationToken ct)
     {
-        if (CurrentUserId is null) return Unauthorized();
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
         await periods.RemoveStudentAsync(id, studentId, ct);
         return Ok(new { success = true, msg = "Inscripción eliminada correctamente." });
     }
@@ -151,6 +161,14 @@ public class EnrollmentsController(
 
         await createEnrollmentHandler.Handle(command, ct);
         return StatusCode(StatusCodes.Status201Created, new { success = true, msg = "Inscripción realizada correctamente." });
+    }
+
+    private IActionResult? RequireAdmin()
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        return CurrentUserRole == UserRole.Admin
+            ? null
+            : StatusCode(StatusCodes.Status403Forbidden);
     }
 }
 

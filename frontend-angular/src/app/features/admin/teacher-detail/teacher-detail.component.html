@@ -1,0 +1,119 @@
+<div class="detail-wrap">
+
+  <div class="page-header-row">
+    <button mat-stroked-button class="back-btn" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <h1>Legajo docente</h1>
+  </div>
+
+  <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+  <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+  <div class="loading-overlay" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="teacher as t">
+    <mat-card class="profile-card">
+      <mat-card-content>
+        <div class="profile-row">
+          <div>
+            <div class="teacher-name">{{ t.firstName }} {{ t.lastName }}</div>
+            <div class="teacher-email">{{ t.email }} <span *ngIf="t.dni">· DNI {{ t.dni }}</span></div>
+          </div>
+          <div class="profile-actions">
+            <span class="status-chip" [ngClass]="t.isActive ? 'status-chip--active' : 'status-chip--inactive'">
+              {{ t.isActive ? 'Activo' : 'Inactivo' }}
+            </span>
+            <button mat-stroked-button (click)="editTeacher()">
+              <mat-icon>edit</mat-icon> Editar
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <div><span class="label">Legajo</span> {{ t.employeeNumber }}</div>
+          <div><span class="label">Ingreso</span> {{ t.hireDate | date:'dd/MM/yyyy' }}</div>
+          <div><span class="label">Área</span> {{ t.department || '—' }}</div>
+          <div><span class="label">Especialidad</span> {{ t.specializationArea || '—' }}</div>
+          <div><span class="label">Teléfono</span> {{ t.phoneNumber || '—' }}</div>
+          <div><span class="label">Domicilio</span> {{ t.addressLine || '—' }}</div>
+          <div><span class="label">Ciudad</span> {{ t.city || '—' }}</div>
+          <div><span class="label">Provincia</span> {{ t.province || '—' }}</div>
+        </div>
+
+        <div class="profile-grid" *ngIf="t.emergencyContactName">
+          <div><span class="label">Contacto emergencia</span> {{ t.emergencyContactName }}</div>
+          <div><span class="label">Vínculo</span> {{ t.emergencyContactRelationship || '—' }}</div>
+          <div><span class="label">Teléfono</span> {{ t.emergencyContactPhone || '—' }}</div>
+        </div>
+
+        <div class="deactivation-info" *ngIf="!t.isActive">
+          <mat-icon>info</mat-icon>
+          Dado de baja el {{ t.deactivatedAt | date:'dd/MM/yyyy' }}<span *ngIf="t.deactivationReason">: {{ t.deactivationReason }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="assignments-card">
+      <mat-card-content>
+        <div class="assignments-header">
+          <h3>Designaciones</h3>
+          <div class="assignments-actions">
+            <button mat-stroked-button (click)="toggleIncludeEnded()">
+              {{ includeEnded ? 'Solo vigentes' : 'Ver historial' }}
+            </button>
+            <button mat-raised-button color="primary" [disabled]="!t.isActive" (click)="assignPosition()">
+              <mat-icon>add</mat-icon>
+              Asignar cargo
+            </button>
+          </div>
+        </div>
+
+        <table class="assignments-table">
+          <thead>
+            <tr>
+              <th>Materia — Comisión</th>
+              <th>Tipo</th>
+              <th>Ciclo</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of assignments">
+              <td>
+                <div class="course-name">{{ a.courseName }}</div>
+                <div class="commission-name">{{ a.commissionName }}</div>
+              </td>
+              <td>{{ a.positionType }}</td>
+              <td>{{ a.academicYear }} · {{ a.semester }}°</td>
+              <td>{{ a.startedOn }}</td>
+              <td>{{ a.endedOn || '—' }}</td>
+              <td>
+                <span class="status-chip" [ngClass]="a.isCurrent ? 'status-chip--active' : 'status-chip--inactive'">
+                  {{ a.isCurrent ? 'Vigente' : 'Finalizada' }}
+                </span>
+              </td>
+              <td>
+                <button *ngIf="a.isCurrent" mat-button class="end-btn" (click)="endAssignment(a)">
+                  Finalizar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="empty-state" *ngIf="assignments.length === 0">
+          <mat-icon>event_busy</mat-icon>
+          <p>Este docente no tiene designaciones.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+
+</div>

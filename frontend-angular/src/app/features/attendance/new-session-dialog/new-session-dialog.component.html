@@ -1,0 +1,45 @@
+<div class="dialog-header">
+  <mat-icon>event_available</mat-icon>
+  <span>Nuevo día de clase</span>
+</div>
+
+<div class="dialog-body">
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Fecha</mat-label>
+    <input matInput [matDatepicker]="picker" [(ngModel)]="sessionDate" [min]="minDate" [max]="maxDate">
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+    <mat-hint>Solo se puede cargar asistencia hasta 48hs después de la clase.</mat-hint>
+  </mat-form-field>
+
+  <div class="scope-row">
+    <mat-radio-group [(ngModel)]="scope" (ngModelChange)="onScopeChange()">
+      <mat-radio-button value="ClassHour">Hora cátedra</mat-radio-button>
+      <mat-radio-button value="FullDay">Día completo</mat-radio-button>
+    </mat-radio-group>
+  </div>
+
+  <div class="time-row" *ngIf="scope === 'ClassHour'">
+    <mat-form-field appearance="outline">
+      <mat-label>Hora inicio</mat-label>
+      <input matInput type="time" [(ngModel)]="startTime">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hora fin</mat-label>
+      <input matInput type="time" [(ngModel)]="endTime">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Unidades</mat-label>
+      <input matInput type="number" min="1" max="12" [(ngModel)]="units">
+    </mat-form-field>
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear día</button>
+</div>

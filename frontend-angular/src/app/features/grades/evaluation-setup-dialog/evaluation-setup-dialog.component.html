@@ -1,0 +1,43 @@
+<div class="dialog-header">
+  <mat-icon>fact_check</mat-icon>
+  <span>Configurar instancias de evaluación</span>
+</div>
+
+<div class="dialog-body">
+  <p class="hint">Definí las instancias de esta planilla. Los pesos deben sumar 100%.</p>
+
+  <div class="evaluation-row evaluation-row--header">
+    <span>Nombre</span>
+    <span>Peso %</span>
+    <span>Nota máx.</span>
+    <span></span>
+  </div>
+
+  <div class="evaluation-row" *ngFor="let e of evaluations; let i = index">
+    <mat-form-field appearance="outline">
+      <input matInput [(ngModel)]="e.name" maxlength="150" placeholder="Ej: 1era Instancia">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <input matInput type="number" min="0.01" max="100" step="0.01" [(ngModel)]="e.weightPercentage">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <input matInput type="number" min="0.01" max="100" step="0.01" [(ngModel)]="e.maximumScore">
+    </mat-form-field>
+    <button mat-icon-button color="warn" [disabled]="evaluations.length <= 1" (click)="removeEvaluation(i)">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+
+  <button mat-stroked-button class="add-btn" [disabled]="evaluations.length >= 20" (click)="addEvaluation()">
+    <mat-icon>add</mat-icon> Agregar instancia
+  </button>
+
+  <div class="weight-summary" [class.weight-summary--error]="totalWeight !== 100">
+    Suma de pesos: {{ totalWeight }}%
+  </div>
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear planilla</button>
+</div>

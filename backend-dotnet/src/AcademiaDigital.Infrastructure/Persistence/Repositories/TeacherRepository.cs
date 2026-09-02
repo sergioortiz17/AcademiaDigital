@@ -1,14 +1,18 @@
 using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
 
 public class TeacherRepository(AppDbContext db) : ITeacherRepository
 {
-    public async Task<IEnumerable<Teacher>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IEnumerable<Teacher>> GetAllAsync(bool includeInactive = false, CancellationToken ct = default)
         => await db.Teachers.AsNoTracking()
             .Include(t => t.User)
+            .Where(t => includeInactive || t.IsActive)
+            .OrderBy(t => t.EmployeeNumber)
             .ToListAsync(ct);
 
     public async Task<Teacher?> FindByIdAsync(long id, CancellationToken ct = default)
@@ -27,14 +31,28 @@ public class TeacherRepository(AppDbContext db) : ITeacherRepository
     public async Task<Teacher> CreateAsync(Teacher teacher, CancellationToken ct = default)
     {
         db.Teachers.Add(teacher);
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            throw DuplicateException(ex);
+        }
         return teacher;
     }
 
     public async Task<Teacher> UpdateAsync(Teacher teacher, CancellationToken ct = default)
     {
-        db.Teachers.Update(teacher);
-        await db.SaveChangesAsync(ct);
+        db.Entry(teacher).State = EntityState.Modified;
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            throw DuplicateException(ex);
+        }
         return teacher;
     }
 
@@ -42,5 +60,18 @@ public class TeacherRepository(AppDbContext db) : ITeacherRepository
     {
         db.Teachers.Remove(teacher);
         await db.SaveChangesAsync(ct);
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
+        => exception.InnerException is SqlException { Number: 2601 or 2627 }
+            || (exception.InnerException?.Message ?? exception.Message)
+                .Contains("unique", StringComparison.OrdinalIgnoreCase);
+
+    private static TeacherAlreadyExistsException DuplicateException(DbUpdateException exception)
+    {
+        var message = exception.InnerException?.Message ?? exception.Message;
+        return message.Contains("employee_number", StringComparison.OrdinalIgnoreCase)
+            ? new TeacherAlreadyExistsException("employee number")
+            : new TeacherAlreadyExistsException("user");
     }
 }
