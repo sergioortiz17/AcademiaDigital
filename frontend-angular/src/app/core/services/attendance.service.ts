@@ -107,6 +107,33 @@ export interface AttendanceSessionDetail {
   records: AttendanceRecord[];
 }
 
+export interface AttendanceSummaryItem {
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  commissionId: number;
+  commissionCode: string;
+  commissionName: string;
+  academicYear: number;
+  semester: number;
+  minimumAttendancePercentage: number | null;
+  earnedUnits: number;
+  possibleUnits: number;
+  attendancePercentage: number | null;
+  isAtRisk: boolean;
+  presentCount: number;
+  lateCount: number;
+  absentCount: number;
+  justifiedCount: number;
+}
+
+export interface StudentAttendanceSummary {
+  studentId: number;
+  studentName: string;
+  legajoNumber: string;
+  items: AttendanceSummaryItem[];
+}
+
 export interface AttendanceSessionFilters {
   academicYear?: number;
   courseId?: number;
@@ -180,6 +207,10 @@ export class AttendanceService {
       `${this.base}v1/attendance/records/${recordId}/justifications`,
       { category, reason, evidenceUrl: evidenceUrl || null }
     );
+  }
+
+  getMySummary(): Observable<StudentAttendanceSummary> {
+    return this.http.get<StudentAttendanceSummary>(`${this.base}v1/attendance/me/summary`);
   }
 
   exportSession(sessionId: number, format: 'csv' | 'pdf'): Observable<Blob> {
