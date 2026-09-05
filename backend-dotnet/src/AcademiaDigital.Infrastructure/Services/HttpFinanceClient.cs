@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Finance.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -42,14 +43,14 @@ public sealed class HttpFinanceClient(HttpClient http, IConfiguration configurat
         {
             using var message = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/api/v1/finance/debts/generate")
             {
-                Content = JsonContent.Create(new
-                {
-                    studentId = request.StudentId,
-                    careerId = request.CareerId,
-                    studentCareerId = request.StudentCareerId,
-                    academicYear = request.AcademicYear,
-                    billingPlanId = request.BillingPlanId
-                })
+                // Payload tipado por el contrato compartido (AcademiaDigital.Finance.Contracts),
+                // no un objeto anónimo: monolito y Finance comparten la MISMA forma del request.
+                Content = JsonContent.Create(new GenerateDebtRequest(
+                    StudentId: request.StudentId,
+                    CareerId: request.CareerId,
+                    StudentCareerId: request.StudentCareerId,
+                    BillingPlanId: request.BillingPlanId!.Value,
+                    AcademicYear: request.AcademicYear))
             };
             // Identidad forwardeada (Finance confía en el borde interno).
             message.Headers.Add("X-User-Id", request.ActorUserId.ToString());

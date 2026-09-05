@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\AcademiaDigital.Domain\AcademiaDigital.Domain.csproj" />
     <ProjectReference Include="..\AcademiaDigital.Application\AcademiaDigital.Application.csproj" />
+    <!-- Contratos del microservicio Finance (solo DTOs de transporte, ADR 0001). -->
+    <ProjectReference Include="..\..\..\services\AcademiaDigital.Finance.Contracts\AcademiaDigital.Finance.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

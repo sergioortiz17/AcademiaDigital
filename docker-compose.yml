@@ -28,7 +28,8 @@ services:
   backend:
     container_name: dotnet_backend
     build:
-      context: ./backend-dotnet
+      context: .
+      dockerfile: backend-dotnet/Dockerfile
     ports:
       - "8000:8000"
     depends_on:

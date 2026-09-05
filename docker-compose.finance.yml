@@ -15,7 +15,8 @@ services:
   finance_api:
     container_name: finance_api
     build:
-      context: ./services/AcademiaDigital.Finance
+      context: ./services
+      dockerfile: AcademiaDigital.Finance/Dockerfile
     ports:
       - "8091:8091"
     networks:

@@ -1,19 +1,25 @@
+# Build context = ./services (ver docker-compose.finance.yml), para poder incluir el
+# proyecto compartido AcademiaDigital.Finance.Contracts que vive fuera de la carpeta del
+# servicio pero dentro de services/.
+
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy project files first (layer cache for restore)
-COPY src/AcademiaDigital.Finance.Domain/AcademiaDigital.Finance.Domain.csproj                 ./src/AcademiaDigital.Finance.Domain/
-COPY src/AcademiaDigital.Finance.Application/AcademiaDigital.Finance.Application.csproj       ./src/AcademiaDigital.Finance.Application/
-COPY src/AcademiaDigital.Finance.Infrastructure/AcademiaDigital.Finance.Infrastructure.csproj ./src/AcademiaDigital.Finance.Infrastructure/
-COPY src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj                       ./src/AcademiaDigital.Finance.API/
+# Copy project files first (layer cache para restore)
+COPY AcademiaDigital.Finance.Contracts/AcademiaDigital.Finance.Contracts.csproj                              ./AcademiaDigital.Finance.Contracts/
+COPY AcademiaDigital.Finance/src/AcademiaDigital.Finance.Domain/AcademiaDigital.Finance.Domain.csproj         ./AcademiaDigital.Finance/src/AcademiaDigital.Finance.Domain/
+COPY AcademiaDigital.Finance/src/AcademiaDigital.Finance.Application/AcademiaDigital.Finance.Application.csproj ./AcademiaDigital.Finance/src/AcademiaDigital.Finance.Application/
+COPY AcademiaDigital.Finance/src/AcademiaDigital.Finance.Infrastructure/AcademiaDigital.Finance.Infrastructure.csproj ./AcademiaDigital.Finance/src/AcademiaDigital.Finance.Infrastructure/
+COPY AcademiaDigital.Finance/src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj               ./AcademiaDigital.Finance/src/AcademiaDigital.Finance.API/
 
-RUN dotnet restore src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj
+RUN dotnet restore AcademiaDigital.Finance/src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj
 
 # Copy sources and publish
-COPY src ./src
-RUN dotnet publish src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj \
-    -c Release -o /publish --no-restore
+COPY AcademiaDigital.Finance.Contracts/ ./AcademiaDigital.Finance.Contracts/
+COPY AcademiaDigital.Finance/src/ ./AcademiaDigital.Finance/src/
+RUN dotnet publish AcademiaDigital.Finance/src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj \
+    -c Release -o /publish
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

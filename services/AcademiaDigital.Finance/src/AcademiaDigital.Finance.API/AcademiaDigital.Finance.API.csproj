@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AcademiaDigital.Finance.Application\AcademiaDigital.Finance.Application.csproj" />
     <ProjectReference Include="..\AcademiaDigital.Finance.Infrastructure\AcademiaDigital.Finance.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\AcademiaDigital.Finance.Contracts\AcademiaDigital.Finance.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

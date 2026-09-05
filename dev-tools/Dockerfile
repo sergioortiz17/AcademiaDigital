@@ -12,6 +12,7 @@ COPY dev-tools/AcademiaDigital.DevTools/AcademiaDigital.DevTools.csproj dev-tool
 COPY backend-dotnet/src/AcademiaDigital.Domain/AcademiaDigital.Domain.csproj                 backend-dotnet/src/AcademiaDigital.Domain/
 COPY backend-dotnet/src/AcademiaDigital.Application/AcademiaDigital.Application.csproj       backend-dotnet/src/AcademiaDigital.Application/
 COPY backend-dotnet/src/AcademiaDigital.Infrastructure/AcademiaDigital.Infrastructure.csproj backend-dotnet/src/AcademiaDigital.Infrastructure/
+COPY services/AcademiaDigital.Finance.Contracts/AcademiaDigital.Finance.Contracts.csproj     services/AcademiaDigital.Finance.Contracts/
 
 RUN dotnet restore dev-tools/AcademiaDigital.DevTools/AcademiaDigital.DevTools.csproj
 
@@ -20,6 +21,7 @@ COPY dev-tools/AcademiaDigital.DevTools/ dev-tools/AcademiaDigital.DevTools/
 COPY backend-dotnet/src/AcademiaDigital.Domain/         backend-dotnet/src/AcademiaDigital.Domain/
 COPY backend-dotnet/src/AcademiaDigital.Application/     backend-dotnet/src/AcademiaDigital.Application/
 COPY backend-dotnet/src/AcademiaDigital.Infrastructure/  backend-dotnet/src/AcademiaDigital.Infrastructure/
+COPY services/AcademiaDigital.Finance.Contracts/         services/AcademiaDigital.Finance.Contracts/
 
 RUN dotnet publish dev-tools/AcademiaDigital.DevTools/AcademiaDigital.DevTools.csproj \
     -c Release -o /publish

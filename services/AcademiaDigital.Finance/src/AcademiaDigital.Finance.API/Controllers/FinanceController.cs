@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AcademiaDigital.Finance.API.Models;
 using AcademiaDigital.Finance.Application.UseCases.Finance;
+using AcademiaDigital.Finance.Contracts;
 using AcademiaDigital.Finance.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -111,29 +112,33 @@ public sealed class FinanceController(
     //   body: { studentId, careerId, studentCareerId, billingPlanId, academicYear, condition?, grantedScholarshipIds? }
     [HttpPost("debts/generate")]
     public async Task<IActionResult> GenerateDebts(
-        [FromBody] GenerateDebtsRequest request,
+        [FromBody] GenerateDebtRequest request,
         [FromHeader(Name = "Idempotency-Key"), Required] string idempotencyKey,
         CancellationToken ct)
     {
         var guard = RequireAdmin();
         if (guard is not null) return guard;
+
+        // El contrato transporta la condición como string (desacoplado del enum de dominio);
+        // acá se parsea al enum interno de Finance (default Regular si no viene o es inválido).
+        var condition = Enum.TryParse<StudentStatus>(request.Condition, ignoreCase: true, out var parsed)
+            ? parsed
+            : StudentStatus.Regular;
+
         var result = await generateDebtsHandler.Handle(new(
             request.BillingPlanId,
             request.StudentId,
             request.CareerId,
             request.StudentCareerId,
             request.AcademicYear,
-            request.Condition ?? StudentStatus.Regular,
+            condition,
             request.GrantedScholarshipIds ?? Array.Empty<int>(),
             idempotencyKey,
             CurrentUserId ?? 0), ct);
-        return Ok(new
-        {
-            batchId = result.BatchPublicId,
-            generatedDebtCount = result.GeneratedDebtCount,
-            totalAmount = result.GeneratedTotal,
-            result.Debts
-        });
+        return Ok(new GenerateDebtResponse(
+            result.BatchPublicId,
+            result.GeneratedDebtCount,
+            result.GeneratedTotal));
     }
 
     // GET /api/v1/finance/students/{studentId}/debts
@@ -152,7 +157,8 @@ public sealed class FinanceController(
     {
         var guard = RequireAdmin();
         if (guard is not null) return guard;
-        return Ok(await summaryQuery.Handle(studentId, ct));
+        var summary = await summaryQuery.Handle(studentId, ct);
+        return Ok(new StudentDebtStatusResponse(summary.StudentId, summary.TotalOwed, summary.OverdueCount));
     }
 
     [HttpGet("debts/me")]
@@ -176,15 +182,6 @@ public sealed class FinanceController(
         => new(id, request.ConceptId, request.CareerId, request.AcademicYear, request.StudentCondition,
             request.Amount, request.SurchargePercentage, request.IsActive);
 }
-
-public sealed record GenerateDebtsRequest(
-    [Range(1, long.MaxValue)] long StudentId,
-    [Range(1, int.MaxValue)] int CareerId,
-    [Range(1, long.MaxValue)] long StudentCareerId,
-    [Range(1, long.MaxValue)] long BillingPlanId,
-    [Range(2000, 2200)] int AcademicYear,
-    StudentStatus? Condition,
-    IReadOnlyCollection<int>? GrantedScholarshipIds);
 
 public sealed record FinancialConceptRequest(
     [Required, StringLength(30, MinimumLength = 2)] string Code,
