@@ -1,0 +1,27 @@
+# Finance microservice — se levanta junto al monolito (docker-compose.yml principal).
+# Reutiliza la MISMA instancia Postgres del monolito pero un SCHEMA propio 'finance'
+# (SearchPath=finance). Une la red externa creada por el compose principal.
+#
+#   docker compose -f docker-compose.finance.yml up --build
+#
+# Requiere que el compose principal ya haya creado la red 'academiadigital_app_network'
+# y el servicio 'db'.
+
+networks:
+  academiadigital_app_network:
+    external: true
+
+services:
+  finance_api:
+    container_name: finance_api
+    build:
+      context: ./services/AcademiaDigital.Finance
+    ports:
+      - "8091:8091"
+    networks:
+      - academiadigital_app_network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8091
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-AcademiaDigital};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!};SearchPath=finance
+      - Monolith__BaseUrl=http://backend:8000

@@ -51,9 +51,6 @@ public static class DependencyInjection
         services.AddScoped<ITeacherContestRepository, TeacherContestRepository>();
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
         services.AddScoped<ITeachingPositionRepository, TeachingPositionRepository>();
-        services.AddScoped<IFinanceRepository, FinanceRepository>();
-        services.AddScoped<IPaymentRepository, PaymentRepository>();
-        services.AddScoped<IReceiptRepository, ReceiptRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Servicios
@@ -70,7 +67,6 @@ public static class DependencyInjection
         services.AddSingleton<IAdmissionChallengeVerifier, ConfigurableAdmissionChallengeVerifier>();
         services.AddSingleton<IAttendanceReportGenerator, SimpleAttendanceReportGenerator>();
         services.AddSingleton<ICertificatePdfGenerator, SimpleCertificatePdfGenerator>();
-        services.AddSingleton<IReceiptPdfGenerator, SimpleReceiptPdfGenerator>();
 
         return services;
     }

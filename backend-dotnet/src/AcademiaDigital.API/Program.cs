@@ -5,9 +5,6 @@ using AcademiaDigital.Application.UseCases.Attendance;
 using AcademiaDigital.Application.UseCases.Admissions;
 using AcademiaDigital.Application.UseCases.Enrollments;
 using AcademiaDigital.Application.UseCases.Grades;
-using AcademiaDigital.Application.UseCases.Finance;
-using AcademiaDigital.Application.UseCases.Payments;
-using AcademiaDigital.Application.UseCases.Receipts;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Certificates;
 using AcademiaDigital.Application.UseCases.Careers;
@@ -88,30 +85,8 @@ builder.Services.AddScoped<IssueCertificateCommandHandler>();
 builder.Services.AddScoped<GetCertificateHistoryQueryHandler>();
 builder.Services.AddScoped<DownloadCertificateQueryHandler>();
 
-// Finance
-builder.Services.AddScoped<FinancePolicy>();
-builder.Services.AddScoped<GetFinancialConceptsQueryHandler>();
-builder.Services.AddScoped<CreateFinancialConceptCommandHandler>();
-builder.Services.AddScoped<UpdateFinancialConceptCommandHandler>();
-builder.Services.AddScoped<GetFinancialRatesQueryHandler>();
-builder.Services.AddScoped<UpsertFinancialRateCommandHandler>();
-builder.Services.AddScoped<GetFinancialBenefitsQueryHandler>();
-builder.Services.AddScoped<CreateFinancialBenefitCommandHandler>();
-builder.Services.AddScoped<GetBillingPlansQueryHandler>();
-builder.Services.AddScoped<CreateBillingPlanCommandHandler>();
-builder.Services.AddScoped<GenerateStudentDebtsCommandHandler>();
-builder.Services.AddScoped<GetStudentDebtsQueryHandler>();
-builder.Services.AddScoped<PaymentPolicy>();
-builder.Services.AddScoped<GetPaymentMethodsQueryHandler>();
-builder.Services.AddScoped<CreatePaymentCommandHandler>();
-builder.Services.AddScoped<ConfirmPaymentCommandHandler>();
-builder.Services.AddScoped<ReconcilePaymentCommandHandler>();
-builder.Services.AddScoped<ReversePaymentCommandHandler>();
-builder.Services.AddScoped<GetPaymentsQueryHandler>();
-builder.Services.AddScoped<ReceiptWorkflowService>();
-builder.Services.AddScoped<GetReceiptsQueryHandler>();
-builder.Services.AddScoped<GetReceiptQueryHandler>();
-builder.Services.AddScoped<DownloadReceiptQueryHandler>();
+// Finance module extracted to microservice (services/AcademiaDigital.Finance).
+// CareerService is NOT part of Finance; it stays in the monolith.
 builder.Services.AddScoped<CareerService>();
 
 // Academic module
