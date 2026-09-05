@@ -1,32 +1,19 @@
 using System.Globalization;
-using AcademiaDigital.Domain.Entities;
-using AcademiaDigital.Domain.Interfaces.Repositories;
-using AcademiaDigital.Domain.Services;
+using AcademiaDigital.Application.UseCases.StudyPlanImport;
 using CsvHelper;
 using CsvHelper.Configuration;
 
-namespace AcademiaDigital.Application.UseCases.StudyPlanImport;
+namespace AcademiaDigital.Infrastructure.Csv;
 
 /// <summary>
-/// Result of parsing + validating a study-plan CSV. Shared by the import handler (persists it) and
-/// the diff-preview handler (only diffs it against an existing plan, never persists it).
+/// Implementación de <see cref="IStudyPlanCsvParser"/> basada en CsvHelper. Es el ÚNICO lugar del
+/// backend que conoce CsvHelper: la capa Application depende solo de la interfaz, no del paquete.
+///
+/// Hace parseo sintáctico + validaciones de campo por fila (tipos, requeridos, longitudes, rangos).
+/// No conoce el dominio (course types, correlatividades): eso lo valida StudyPlanCsvValidator en
+/// Application sobre las filas que este parser devuelve.
 /// </summary>
-public sealed class StudyPlanCsvParseResult
-{
-    public IReadOnlyList<StudyPlanCsvRow> Rows { get; init; } = [];
-    public IReadOnlyList<CsvRowError> Errors { get; init; } = [];
-    public IReadOnlyDictionary<string, CourseType?> CourseTypeCache { get; init; } = new Dictionary<string, CourseType?>();
-    public IReadOnlyList<(string CourseCode, string PrerequisiteCode)> PrerequisitePairs { get; init; } = [];
-    public bool Success => Errors.Count == 0;
-}
-
-/// <summary>
-/// Parses and validates the "sort_order,course_code,name,year_number,semester,course_type_code,
-/// workload_hours,is_mandatory,prerequisites" CSV format used for study-plan imports and diff
-/// previews. Extracted from the original all-in-one career-import handler so both the import
-/// endpoint and the diff-preview endpoint reuse the exact same parsing/validation rules.
-/// </summary>
-public static class StudyPlanCsvParser
+public sealed class CsvHelperStudyPlanParser : IStudyPlanCsvParser
 {
     private static readonly string[] RequiredColumns =
     [
@@ -34,93 +21,7 @@ public static class StudyPlanCsvParser
         "course_type_code", "workload_hours", "is_mandatory", "prerequisites"
     ];
 
-    public static async Task<StudyPlanCsvParseResult> ParseAndValidateAsync(
-        Stream csvContent,
-        ICourseTypeRepository courseTypeRepository,
-        PrerequisiteCycleValidator cycleValidator,
-        CancellationToken ct = default)
-    {
-        var (rows, parseErrors) = await ParseAsync(csvContent, ct);
-        if (parseErrors.Count > 0)
-            return new StudyPlanCsvParseResult { Errors = parseErrors };
-
-        var errors = new List<CsvRowError>();
-
-        // course_code uniqueness within the file
-        var duplicateCodes = rows
-            .GroupBy(r => r.CourseCode)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToHashSet();
-        foreach (var row in rows.Where(r => duplicateCodes.Contains(r.CourseCode)))
-            errors.Add(new CsvRowError(row.RowNumber, $"course_code '{row.CourseCode}' está duplicado en el archivo."));
-
-        // course_type_code must exist in the shared CourseTypes catalog
-        var courseTypeCache = new Dictionary<string, CourseType?>();
-        foreach (var row in rows)
-        {
-            if (string.IsNullOrWhiteSpace(row.CourseTypeCode)) continue;
-            if (!courseTypeCache.TryGetValue(row.CourseTypeCode, out var courseType))
-            {
-                courseType = await courseTypeRepository.FindByCodeAsync(row.CourseTypeCode, ct);
-                courseTypeCache[row.CourseTypeCode] = courseType;
-            }
-            if (courseType is null)
-                errors.Add(new CsvRowError(row.RowNumber, $"course_type_code '{row.CourseTypeCode}' no existe en el catálogo de CourseTypes."));
-        }
-
-        // prerequisites: must reference other course_codes in the same file, no self-reference, no cycles
-        var codeToIndex = rows
-            .Where(r => !duplicateCodes.Contains(r.CourseCode))
-            .Select((r, i) => (r.CourseCode, Index: i))
-            .ToDictionary(x => x.CourseCode, x => x.Index);
-
-        var acceptedEdges = new List<CoursePrerequisite>();
-        var prerequisitePairs = new List<(string CourseCode, string PrerequisiteCode)>();
-
-        foreach (var row in rows)
-        {
-            if (duplicateCodes.Contains(row.CourseCode)) continue;
-
-            foreach (var prereqCode in row.PrerequisiteCourseCodes)
-            {
-                if (prereqCode == row.CourseCode)
-                {
-                    errors.Add(new CsvRowError(row.RowNumber, $"'{row.CourseCode}' no puede ser prerequisito de sí misma."));
-                    continue;
-                }
-
-                if (!codeToIndex.TryGetValue(prereqCode, out var prereqIndex))
-                {
-                    errors.Add(new CsvRowError(row.RowNumber, $"prerequisites: course_code '{prereqCode}' no existe en el archivo."));
-                    continue;
-                }
-
-                var courseIndex = codeToIndex[row.CourseCode];
-                if (cycleValidator.WouldCreateCycle(acceptedEdges, courseIndex, prereqIndex))
-                {
-                    errors.Add(new CsvRowError(row.RowNumber, $"prerequisites: '{prereqCode}' como prerequisito de '{row.CourseCode}' generaría un ciclo de correlatividades."));
-                    continue;
-                }
-
-                acceptedEdges.Add(new CoursePrerequisite { CourseId = courseIndex, PrerequisiteCourseId = prereqIndex, IsActive = true });
-                prerequisitePairs.Add((row.CourseCode, prereqCode));
-            }
-        }
-
-        if (errors.Count > 0)
-            return new StudyPlanCsvParseResult { Errors = errors };
-
-        return new StudyPlanCsvParseResult
-        {
-            Rows = rows,
-            Errors = [],
-            CourseTypeCache = courseTypeCache,
-            PrerequisitePairs = prerequisitePairs
-        };
-    }
-
-    private static async Task<(List<StudyPlanCsvRow> Rows, List<CsvRowError> Errors)> ParseAsync(Stream csvContent, CancellationToken ct)
+    public async Task<StudyPlanCsvParseOutcome> ParseAsync(Stream csvContent, CancellationToken ct = default)
     {
         var rows = new List<StudyPlanCsvRow>();
         var errors = new List<CsvRowError>();
@@ -139,7 +40,7 @@ public static class StudyPlanCsvParser
         if (!await csv.ReadAsync())
         {
             errors.Add(new CsvRowError(0, "El archivo CSV está vacío."));
-            return (rows, errors);
+            return new StudyPlanCsvParseOutcome { Errors = errors };
         }
         csv.ReadHeader();
         var header = csv.HeaderRecord ?? [];
@@ -147,7 +48,7 @@ public static class StudyPlanCsvParser
         if (missingColumns.Count > 0)
         {
             errors.Add(new CsvRowError(1, $"Faltan columnas obligatorias en el header: {string.Join(", ", missingColumns)}."));
-            return (rows, errors);
+            return new StudyPlanCsvParseOutcome { Errors = errors };
         }
 
         var rowNumber = 1;
@@ -231,7 +132,7 @@ public static class StudyPlanCsvParser
         if (rows.Count == 0 && errors.Count == 0)
             errors.Add(new CsvRowError(0, "El archivo CSV no contiene filas de datos."));
 
-        return (rows, errors);
+        return new StudyPlanCsvParseOutcome { Rows = rows, Errors = errors };
     }
 
     private static bool TryParseBool(string raw, out bool value)

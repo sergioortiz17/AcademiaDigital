@@ -116,6 +116,7 @@ builder.Services.AddScoped<CareerService>();
 
 // Academic module
 builder.Services.AddScoped<PrerequisiteCycleValidator>();
+builder.Services.AddScoped<StudyPlanCsvValidator>();
 builder.Services.AddScoped<CourseEligibilityService>();
 builder.Services.AddScoped<EnrollmentEligibilityPolicy>();
 builder.Services.AddScoped<EnrollmentCapacityPolicy>();

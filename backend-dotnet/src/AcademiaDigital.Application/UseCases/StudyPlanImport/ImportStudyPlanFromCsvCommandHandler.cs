@@ -32,6 +32,7 @@ public sealed class ImportStudyPlanFromCsvCommandHandler(
     ICoursePrerequisiteRepository prerequisiteRepository,
     ICourseTypeRepository courseTypeRepository,
     PrerequisiteCycleValidator cycleValidator,
+    StudyPlanCsvValidator csvValidator,
     IUnitOfWork unitOfWork)
 {
     public async Task<ImportStudyPlanCsvResult> Handle(ImportStudyPlanFromCsvCommand command, CancellationToken ct = default)
@@ -39,7 +40,7 @@ public sealed class ImportStudyPlanFromCsvCommandHandler(
         var career = await careerRepository.FindByIdAsync(command.CareerId, ct)
             ?? throw new KeyNotFoundException("Career not found.");
 
-        var parseResult = await StudyPlanCsvParser.ParseAndValidateAsync(command.CsvContent, courseTypeRepository, cycleValidator, ct);
+        var parseResult = await csvValidator.ParseAndValidateAsync(command.CsvContent, courseTypeRepository, cycleValidator, ct);
         if (!parseResult.Success)
             return ImportStudyPlanCsvResult.Failed(parseResult.Errors);
 

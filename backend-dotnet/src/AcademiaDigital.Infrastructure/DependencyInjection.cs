@@ -59,6 +59,10 @@ public static class DependencyInjection
         // Servicios
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        // Parser CSV de planes de estudio (impl con CsvHelper vive acá, en Infrastructure;
+        // Application solo conoce la interfaz IStudyPlanCsvParser).
+        services.AddScoped<AcademiaDigital.Application.UseCases.StudyPlanImport.IStudyPlanCsvParser,
+            AcademiaDigital.Infrastructure.Csv.CsvHelperStudyPlanParser>();
         services.AddScoped<IStudentManagementService, StudentManagementService>();
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IAdmissionAgreementPdfGenerator, SimpleAdmissionAgreementPdfGenerator>();

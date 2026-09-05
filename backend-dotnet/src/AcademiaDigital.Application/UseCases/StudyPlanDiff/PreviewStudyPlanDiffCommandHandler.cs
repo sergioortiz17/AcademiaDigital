@@ -18,7 +18,8 @@ public sealed class PreviewStudyPlanDiffCommandHandler(
     IStudyPlanCourseRepository studyPlanCourseRepository,
     ICoursePrerequisiteRepository prerequisiteRepository,
     ICourseTypeRepository courseTypeRepository,
-    PrerequisiteCycleValidator cycleValidator)
+    PrerequisiteCycleValidator cycleValidator,
+    StudyPlanCsvValidator csvValidator)
 {
     public async Task<PreviewStudyPlanDiffResult> Handle(PreviewStudyPlanDiffCommand command, CancellationToken ct = default)
     {
@@ -27,7 +28,7 @@ public sealed class PreviewStudyPlanDiffCommandHandler(
         if (plan.CareerId != command.CareerId)
             throw new KeyNotFoundException("Study plan not found in this career.");
 
-        var parseResult = await StudyPlanCsvParser.ParseAndValidateAsync(command.CsvContent, courseTypeRepository, cycleValidator, ct);
+        var parseResult = await csvValidator.ParseAndValidateAsync(command.CsvContent, courseTypeRepository, cycleValidator, ct);
         if (!parseResult.Success)
             return PreviewStudyPlanDiffResult.Failed(parseResult.Errors);
 

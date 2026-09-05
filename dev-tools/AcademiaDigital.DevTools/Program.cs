@@ -25,6 +25,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 // Use-cases / handlers reutilizados (mismos que usa la API real)
 builder.Services.AddScoped<RegisterUseCase>();
+builder.Services.AddScoped<StudyPlanCsvValidator>();
 builder.Services.AddScoped<ImportStudyPlanFromCsvCommandHandler>();
 builder.Services.AddScoped<AssignTeacherCommandHandler>();
 
