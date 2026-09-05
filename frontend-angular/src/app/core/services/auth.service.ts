@@ -33,7 +33,6 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {
-    console.log('📡 ACÁ SE MANDA EL LOGIN AL BACKEND (auth.service.ts)', `${this.baseURL}v1/users/login`);
     return this.http.post<AuthResponse>(`${this.baseURL}v1/users/login`, credentials);
   }
 

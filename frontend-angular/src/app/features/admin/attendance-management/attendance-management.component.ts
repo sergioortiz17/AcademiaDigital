@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
 import { CareerService, Career } from '../../../core/services/career.service';
 import { TeachingPositionService, TeachingPosition } from '../../../core/services/teaching-position.service';
 import {
@@ -36,7 +36,10 @@ interface StudentRow {
   styleUrls: ['./attendance-management.component.scss'],
   standalone: false
 })
-export class AttendanceManagementComponent implements OnInit {
+export class AttendanceManagementComponent implements OnInit, OnDestroy {
+  // Emite al destruirse el componente para cancelar las subscripciones HTTP en vuelo
+  // (evita que un 401 tardío de una request sin cancelar expulse al usuario tras navegar).
+  private readonly destroy$ = new Subject<void>();
   careers: Career[] = [];
   selectedCareerId: number | null = null;
   sedes = ['Sede Centro', 'Sede Norte'];
@@ -71,13 +74,13 @@ export class AttendanceManagementComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.careerService.getCareers().subscribe(careers => {
+    this.careerService.getCareers().pipe(takeUntil(this.destroy$)).subscribe(careers => {
       this.careers = careers;
       this.selectedCareerId = careers[0]?.id ?? null;
       this.cdr.detectChanges();
     });
 
-    this.teachingPositionService.getTeachingPositions({ includeInactive: false }).subscribe({
+    this.teachingPositionService.getTeachingPositions({ includeInactive: false }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (positions) => {
         this.positions = positions;
         this.cdr.detectChanges();
@@ -86,6 +89,11 @@ export class AttendanceManagementComponent implements OnInit {
         this.showError(err.message || 'No se pudieron cargar los cargos docentes.');
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private showError(message: string): void {
@@ -159,7 +167,7 @@ export class AttendanceManagementComponent implements OnInit {
       courseId: position.courseId,
       commissionId: position.commissionId ?? undefined,
       academicYear: position.academicYear
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (sessions) => {
         this.allSessions = sessions;
         this.loadAllDetails();
@@ -183,7 +191,7 @@ export class AttendanceManagementComponent implements OnInit {
       this.attendanceService.getSession(session.id).pipe(catchError(() => of(null)))
     );
 
-    forkJoin(calls).subscribe(details => {
+    forkJoin(calls).pipe(takeUntil(this.destroy$)).subscribe(details => {
       const rowsByEnrollment = new Map<number, StudentRow>();
 
       details.forEach((detail, index) => {
@@ -247,7 +255,7 @@ export class AttendanceManagementComponent implements OnInit {
     dialogRef.afterClosed().subscribe((reason: string | null) => {
       if (!reason) return;
       this.isProcessing = true;
-      this.attendanceService.reopenSession(session.id, reason).subscribe({
+      this.attendanceService.reopenSession(session.id, reason).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.isProcessing = false;
           this.loadSessions();
@@ -286,7 +294,7 @@ export class AttendanceManagementComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result: JustifyAttendanceDialogResult | null) => {
       if (!result) return;
       this.isProcessing = true;
-      this.attendanceService.justifyRecord(candidate.cell.recordId!, result.category, result.reason, result.evidenceUrl).subscribe({
+      this.attendanceService.justifyRecord(candidate.cell.recordId!, result.category, result.reason, result.evidenceUrl).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.isProcessing = false;
           this.successMsg = 'Ausencia justificada correctamente.';

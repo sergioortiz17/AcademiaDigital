@@ -32,10 +32,18 @@ export class AuthInterceptor implements HttpInterceptor {
             switchMap(() => this.doRequest(this.addAuth(request), next, attempt + 1))
           );
         }
-        // TEMPORAL: logout/redirect automático ante 401 deshabilitado por demo
-        // (2026-09-02) para no bloquear la navegación mientras se investiga el
-        // root cause (requests admin sin cancelar en ngOnDestroy que resuelven
-        // tarde con 401 tras navegar). Se reactiva en el fix de fondo (v3, tarea 8).
+        // Ante un 401 real (token inválido/expirado) se cierra la sesión y se redirige
+        // al login. El bug que motivó desactivar esto temporalmente (un 401 tardío de
+        // requests admin sin cancelar en ngOnDestroy expulsaba al usuario tras navegar)
+        // se resolvió de raíz agregando takeUntil(destroy$) en gradebook-management y
+        // attendance-management, que cancelan sus subscripciones al destruirse el componente.
+        if (error.status === 401) {
+          this.store.dispatch(logout());
+          localStorage.removeItem('academia-account');
+          if (this.router.url !== '/auth/signin') {
+            this.router.navigate(['/auth/signin']);
+          }
+        }
         const message = error.error?.msg || error.message || 'An error occurred';
         return throwError(() => new Error(message));
       })

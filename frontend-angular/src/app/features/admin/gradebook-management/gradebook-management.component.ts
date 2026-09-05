@@ -1,6 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { TeachingPositionService, TeachingPosition } from '../../../core/services/teaching-position.service';
 import { GradebookService, GradebookDetail, GradebookStudent } from '../../../core/services/gradebook.service';
 import { CareerService, Career } from '../../../core/services/career.service';
@@ -26,7 +27,10 @@ const STATUS_LABELS: Record<string, string> = {
   styleUrls: ['./gradebook-management.component.scss'],
   standalone: false
 })
-export class GradebookManagementComponent implements OnInit {
+export class GradebookManagementComponent implements OnInit, OnDestroy {
+  // Emite al destruirse el componente para cancelar las subscripciones HTTP en vuelo
+  // (evita que un 401 tardío de una request sin cancelar expulse al usuario tras navegar).
+  private readonly destroy$ = new Subject<void>();
   // Carrera/Sede/Año decorativos (sin datos reales del backend), consistentes con el mockup.
   careers: Career[] = [];
   selectedCareerId: number | null = null;
@@ -61,13 +65,13 @@ export class GradebookManagementComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.careerService.getCareers().subscribe(careers => {
+    this.careerService.getCareers().pipe(takeUntil(this.destroy$)).subscribe(careers => {
       this.careers = careers;
       this.selectedCareerId = careers[0]?.id ?? null;
       this.cdr.detectChanges();
     });
 
-    this.teachingPositionService.getTeachingPositions({ includeInactive: false }).subscribe({
+    this.teachingPositionService.getTeachingPositions({ includeInactive: false }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (positions) => {
         this.positions = positions;
         this.cdr.detectChanges();
@@ -77,6 +81,11 @@ export class GradebookManagementComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get selectedPosition(): TeachingPosition | undefined {
@@ -113,7 +122,7 @@ export class GradebookManagementComponent implements OnInit {
       courseId: position.courseId,
       commissionId: position.commissionId ?? undefined,
       academicYear: position.academicYear
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (gradebooks) => {
         if (gradebooks.length === 0) {
           this.noGradebookYet = true;
@@ -133,7 +142,7 @@ export class GradebookManagementComponent implements OnInit {
 
   loadDetail(id: number): void {
     this.isLoading = true;
-    this.gradebookService.getGradebook(id).subscribe({
+    this.gradebookService.getGradebook(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (detail) => {
         this.detail = detail;
         this.selectedStudent = detail.students.find(s => s.enrollmentId === this.selectedStudent?.enrollmentId) ?? detail.students[0] ?? null;
@@ -182,7 +191,7 @@ export class GradebookManagementComponent implements OnInit {
   private runTransition(request: Observable<unknown>, successText: string): void {
     this.isProcessing = true;
     this.errorMsg = '';
-    request.subscribe({
+    request.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.isProcessing = false;
         this.successMsg = successText;
