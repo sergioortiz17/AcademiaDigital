@@ -32,13 +32,10 @@ export class AuthInterceptor implements HttpInterceptor {
             switchMap(() => this.doRequest(this.addAuth(request), next, attempt + 1))
           );
         }
-        if (error.status === 401) {
-          this.store.dispatch(logout());
-          localStorage.removeItem('academia-account');
-          if (this.router.url !== '/auth/signin') {
-            this.router.navigate(['/auth/signin']);
-          }
-        }
+        // TEMPORAL: logout/redirect automático ante 401 deshabilitado por demo
+        // (2026-09-02) para no bloquear la navegación mientras se investiga el
+        // root cause (requests admin sin cancelar en ngOnDestroy que resuelven
+        // tarde con 401 tras navegar). Revertir antes de producción.
         const message = error.error?.msg || error.message || 'An error occurred';
         return throwError(() => new Error(message));
       })
