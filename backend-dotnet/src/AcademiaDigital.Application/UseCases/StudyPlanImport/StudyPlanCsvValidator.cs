@@ -100,7 +100,7 @@ public sealed class StudyPlanCsvValidator(IStudyPlanCsvParser parser)
                     continue;
                 }
 
-                acceptedEdges.Add(new CoursePrerequisite { CourseId = courseIndex, PrerequisiteCourseId = prereqIndex, IsActive = true });
+                acceptedEdges.Add(CoursePrerequisite.Edge(courseIndex, prereqIndex));
                 prerequisitePairs.Add((row.CourseCode, prereqCode));
             }
         }

@@ -7,7 +7,7 @@ namespace AcademiaDigital.Domain.UnitTests.Services;
 public sealed class AdmissionTargetPolicyTests
 {
     private readonly AdmissionTargetPolicy policy = new();
-    private readonly Career career = new() { Id = 10, IsActive = true };
+    private readonly Career career = DomainTestFactory.Career(id: 10, isActive: true);
 
     [Fact]
     public void Validate_accepts_a_general_form_without_capacity()

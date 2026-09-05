@@ -55,14 +55,12 @@ public sealed class AddCoursePrerequisiteCommandHandler(
         if (cycleValidator.WouldCreateCycle(currentPrerequisites, command.CourseId, command.Request.PrerequisiteCourseId))
             throw new InvalidOperationException("The prerequisite would create a cycle.");
 
-        var prerequisite = new CoursePrerequisite
-        {
-            StudyPlanId = command.StudyPlanId,
-            CourseId = command.CourseId,
-            PrerequisiteCourseId = command.Request.PrerequisiteCourseId,
-            PrerequisiteType = Enum.Parse<PrerequisiteType>(command.Request.PrerequisiteType, ignoreCase: true),
-            MinimumRequiredStatus = Enum.Parse<MinimumRequiredStatus>(command.Request.MinimumRequiredStatus, ignoreCase: true)
-        };
+        var prerequisite = CoursePrerequisite.Create(
+            command.StudyPlanId,
+            command.CourseId,
+            command.Request.PrerequisiteCourseId,
+            Enum.Parse<PrerequisiteType>(command.Request.PrerequisiteType, ignoreCase: true),
+            Enum.Parse<MinimumRequiredStatus>(command.Request.MinimumRequiredStatus, ignoreCase: true));
 
         var created = await prerequisiteRepository.CreateAsync(prerequisite, ct);
         var hydrated = (await prerequisiteRepository.GetByCourseAsync(command.StudyPlanId, command.CourseId, ct))

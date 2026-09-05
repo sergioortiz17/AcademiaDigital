@@ -46,20 +46,16 @@ public sealed class ImportStudyPlanFromCsvCommandHandler(
 
         return await unitOfWork.ExecuteInTransactionAsync(async transactionCt =>
         {
-            var studyPlan = await studyPlanRepository.CreateAsync(new StudyPlan
-            {
-                CareerId = career.Id,
-                Code = command.Code.Trim(),
-                Name = command.Name.Trim(),
-                VersionNumber = command.VersionNumber,
-                // Imported as Draft, not Active: GetActiveByCareerIdAsync assumes a single Active
-                // plan per career, and the existing POST .../study-plans/{id}/activate endpoint
-                // already handles archiving the previously active plan when the admin promotes
-                // this one. The very first plan for a career must still be activated explicitly.
-                Status = StudyPlanStatus.Draft,
-                EffectiveFrom = command.EffectiveFrom,
-                EffectiveTo = command.EffectiveTo
-            }, transactionCt);
+            // Imported as Draft, not Active: StudyPlan.Create nace en Draft. El endpoint
+            // POST .../study-plans/{id}/activate ya archiva el plan activo anterior cuando el
+            // admin promueve este. El primer plan de una carrera debe activarse explícitamente.
+            var studyPlan = await studyPlanRepository.CreateAsync(StudyPlan.Create(
+                career.Id,
+                command.Code,
+                command.Name,
+                command.VersionNumber,
+                command.EffectiveFrom,
+                command.EffectiveTo), transactionCt);
 
             var courseIdByCode = new Dictionary<string, int>();
             var coursesCreated = 0;
@@ -102,12 +98,10 @@ public sealed class ImportStudyPlanFromCsvCommandHandler(
             var prerequisitesCreated = 0;
             foreach (var (courseCode, prerequisiteCode) in parseResult.PrerequisitePairs)
             {
-                await prerequisiteRepository.CreateAsync(new CoursePrerequisite
-                {
-                    StudyPlanId = studyPlan.Id,
-                    CourseId = courseIdByCode[courseCode],
-                    PrerequisiteCourseId = courseIdByCode[prerequisiteCode]
-                }, transactionCt);
+                await prerequisiteRepository.CreateAsync(CoursePrerequisite.Create(
+                    studyPlan.Id,
+                    courseIdByCode[courseCode],
+                    courseIdByCode[prerequisiteCode]), transactionCt);
                 prerequisitesCreated++;
             }
 

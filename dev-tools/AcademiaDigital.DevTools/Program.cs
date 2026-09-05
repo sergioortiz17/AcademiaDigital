@@ -114,15 +114,11 @@ app.MapPost("/api/careers/import-plan", async (
             return Results.BadRequest(new { error = $"Ya existe una carrera con code '{code}' (id {existing.Id}). Usá careerId={existing.Id} para importar el plan sobre ella." });
 
         _ = int.TryParse(form["durationYears"].ToString(), out var durationYears);
-        var created = await careerRepo.CreateAsync(new Career
-        {
-            Code = code,
-            Name = name,
-            Description = form["careerDescription"].ToString(),
-            DurationYears = durationYears > 0 ? durationYears : 1,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        }, ct);
+        var created = await careerRepo.CreateAsync(Career.Create(
+            name,
+            code,
+            form["careerDescription"].ToString(),
+            durationYears > 0 ? durationYears : 1), ct);
         careerId = created.Id;
     }
 

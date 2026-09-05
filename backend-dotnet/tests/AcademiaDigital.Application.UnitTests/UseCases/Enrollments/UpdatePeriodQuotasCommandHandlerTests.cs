@@ -52,9 +52,9 @@ public sealed class UpdatePeriodQuotasCommandHandlerTests
         {
             Id = 10,
             CareerId = 1,
-            Career = new Career { Id = 1, Name = "Career" },
+            Career = DomainTestFactory.Career(id: 1, name: "Career"),
             StudyPlanId = 2,
-            StudyPlan = new StudyPlan { Id = 2, Name = "Plan" },
+            StudyPlan = DomainTestFactory.StudyPlan(id: 2, name: "Plan"),
             AcademicYear = 2026,
             Semester = 1,
             QuotasMorning = 1,

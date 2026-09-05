@@ -43,14 +43,12 @@ public class CareerService(
 
     public async Task<CareerDto> CreateAsync(CreateCareerDto dto, CancellationToken ct = default)
     {
-        var career = new Career
-        {
-            Name = dto.Name.Trim(),
-            Code = dto.Code.Trim(),
-            Description = dto.Description?.Trim(),
-            TotalCredits = dto.TotalCredits,
-            DurationYears = dto.DurationYears
-        };
+        var career = Career.Create(
+            dto.Name,
+            dto.Code,
+            dto.Description,
+            dto.DurationYears,
+            dto.TotalCredits);
 
         var created = await careerRepository.CreateAsync(career, ct);
         return Map(created);
@@ -61,11 +59,12 @@ public class CareerService(
         var career = await careerRepository.FindByIdAsync(id, ct);
         if (career is null) return false;
 
-        career.Name = dto.Name.Trim();
-        career.Code = dto.Code.Trim();
-        career.Description = dto.Description?.Trim();
-        career.TotalCredits = dto.TotalCredits;
-        career.DurationYears = dto.DurationYears;
+        career.Update(
+            dto.Name,
+            dto.Code,
+            dto.Description,
+            dto.DurationYears,
+            dto.TotalCredits);
 
         await careerRepository.UpdateAsync(career, ct);
         return true;

@@ -209,7 +209,7 @@ public sealed class AdmissionHandlersTests
         {
             Id = 10,
             CareerId = 20,
-            Career = new Career { Id = 20, Name = "Backend" },
+            Career = DomainTestFactory.Career(id: 20, name: "Backend"),
             Slug = "backend-2027",
             Title = "Ingreso Backend 2027",
             TermsText = "Terms",

@@ -137,15 +137,8 @@ public sealed class CreateEnrollmentCommandHandlerTests
     {
         var context = CreateContext(prerequisites:
         [
-            new CoursePrerequisite
-            {
-                StudyPlanId = StudyPlanId,
-                CourseId = 1,
-                PrerequisiteCourseId = 9,
-                PrerequisiteType = PrerequisiteType.Strict,
-                MinimumRequiredStatus = MinimumRequiredStatus.Approved,
-                IsActive = true
-            }
+            DomainTestFactory.Prerequisite(courseId: 1, prerequisiteCourseId: 9, studyPlanId: StudyPlanId,
+                type: PrerequisiteType.Strict, requiredStatus: MinimumRequiredStatus.Approved)
         ]);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -159,15 +152,8 @@ public sealed class CreateEnrollmentCommandHandlerTests
     {
         var context = CreateContext(prerequisites:
         [
-            new CoursePrerequisite
-            {
-                StudyPlanId = StudyPlanId,
-                CourseId = 1,
-                PrerequisiteCourseId = 9,
-                PrerequisiteType = PrerequisiteType.Soft,
-                MinimumRequiredStatus = MinimumRequiredStatus.Approved,
-                IsActive = true
-            }
+            DomainTestFactory.Prerequisite(courseId: 1, prerequisiteCourseId: 9, studyPlanId: StudyPlanId,
+                type: PrerequisiteType.Soft, requiredStatus: MinimumRequiredStatus.Approved)
         ]);
 
         await context.Handler.Handle(Command(), TestContext.Current.CancellationToken);

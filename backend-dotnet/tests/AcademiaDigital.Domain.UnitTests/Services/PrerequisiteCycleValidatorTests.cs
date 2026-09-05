@@ -54,10 +54,5 @@ public sealed class PrerequisiteCycleValidatorTests
         int courseId,
         int prerequisiteCourseId,
         bool isActive = true)
-        => new()
-        {
-            CourseId = courseId,
-            PrerequisiteCourseId = prerequisiteCourseId,
-            IsActive = isActive
-        };
+        => DomainTestFactory.Prerequisite(courseId, prerequisiteCourseId, isActive: isActive);
 }

@@ -42,15 +42,13 @@ public sealed class CreateStudyPlanCommandHandler(
         var career = await careerRepository.FindByIdAsync(command.CareerId, ct)
             ?? throw new KeyNotFoundException("Career not found.");
 
-        var studyPlan = new StudyPlan
-        {
-            CareerId = career.Id,
-            Code = command.Request.Code.Trim(),
-            Name = command.Request.Name.Trim(),
-            VersionNumber = command.Request.VersionNumber,
-            EffectiveFrom = command.Request.EffectiveFrom,
-            EffectiveTo = command.Request.EffectiveTo
-        };
+        var studyPlan = StudyPlan.Create(
+            career.Id,
+            command.Request.Code,
+            command.Request.Name,
+            command.Request.VersionNumber,
+            command.Request.EffectiveFrom,
+            command.Request.EffectiveTo);
 
         var created = await studyPlanRepository.CreateAsync(studyPlan, ct);
         return Map(created);
@@ -79,12 +77,12 @@ public sealed class UpdateStudyPlanCommandHandler(IStudyPlanRepository studyPlan
 
         if (studyPlan.CareerId != command.CareerId) throw new KeyNotFoundException("Study plan not found in this career.");
 
-        studyPlan.Code = command.Request.Code.Trim();
-        studyPlan.Name = command.Request.Name.Trim();
-        studyPlan.VersionNumber = command.Request.VersionNumber;
-        studyPlan.EffectiveFrom = command.Request.EffectiveFrom;
-        studyPlan.EffectiveTo = command.Request.EffectiveTo;
-        studyPlan.UpdatedAt = DateTime.UtcNow;
+        studyPlan.Update(
+            command.Request.Code,
+            command.Request.Name,
+            command.Request.VersionNumber,
+            command.Request.EffectiveFrom,
+            command.Request.EffectiveTo);
 
         await studyPlanRepository.UpdateAsync(studyPlan, ct);
     }
@@ -100,8 +98,10 @@ public sealed class ActivateStudyPlanCommandHandler(IStudyPlanRepository studyPl
 
         foreach (var studyPlan in studyPlans)
         {
-            studyPlan.Status = studyPlan.Id == target.Id ? StudyPlanStatus.Active : StudyPlanStatus.Archived;
-            studyPlan.UpdatedAt = DateTime.UtcNow;
+            if (studyPlan.Id == target.Id)
+                studyPlan.Activate();
+            else
+                studyPlan.Archive();
             await studyPlanRepository.UpdateAsync(studyPlan, ct);
         }
     }

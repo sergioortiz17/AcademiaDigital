@@ -31,7 +31,7 @@ public sealed class StudentRematriculationPolicyTests
     public void ValidateTarget_accepts_matching_active_entities()
         => policy.ValidateTarget(
             new StudentCareer { CareerId = 10, IsActive = true },
-            new StudyPlan { CareerId = 10, IsActive = true, Status = StudyPlanStatus.Active },
+            DomainTestFactory.StudyPlan(careerId: 10, status: StudyPlanStatus.Active),
             new Commission { CareerId = 10, AcademicYear = 2027, YearNumber = 2, IsActive = true },
             2027,
             2);
@@ -40,7 +40,7 @@ public sealed class StudentRematriculationPolicyTests
     public void ValidateTarget_rejects_an_incompatible_commission_cycle()
         => Assert.Throws<InvalidOperationException>(() => policy.ValidateTarget(
             new StudentCareer { CareerId = 10, IsActive = true },
-            new StudyPlan { CareerId = 10, IsActive = true, Status = StudyPlanStatus.Active },
+            DomainTestFactory.StudyPlan(careerId: 10, status: StudyPlanStatus.Active),
             new Commission { CareerId = 10, AcademicYear = 2026, YearNumber = 1, IsActive = true },
             2027,
             2));

@@ -55,15 +55,7 @@ public sealed class EnrollmentEligibilityPolicyTests
         int prerequisiteCourseId,
         PrerequisiteType type,
         MinimumRequiredStatus requiredStatus)
-        => new()
-        {
-            StudyPlanId = 7,
-            CourseId = courseId,
-            PrerequisiteCourseId = prerequisiteCourseId,
-            PrerequisiteType = type,
-            MinimumRequiredStatus = requiredStatus,
-            IsActive = true
-        };
+        => DomainTestFactory.Prerequisite(courseId, prerequisiteCourseId, type: type, requiredStatus: requiredStatus);
 
     private static Enrollment Enrollment(int courseId, EnrollmentStatus status)
         => new()

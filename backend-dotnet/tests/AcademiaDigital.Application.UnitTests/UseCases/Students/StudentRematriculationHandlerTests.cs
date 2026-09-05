@@ -113,14 +113,7 @@ public sealed class StudentRematriculationHandlerTests
             User = new User { Id = 100, IsActive = true }
         };
         var studentCareer = new StudentCareer { Id = 11, StudentId = 1, CareerId = 10, IsActive = true };
-        var plan = new StudyPlan
-        {
-            Id = 20,
-            CareerId = 10,
-            Name = "Plan 2027",
-            IsActive = true,
-            Status = StudyPlanStatus.Active
-        };
+        var plan = DomainTestFactory.StudyPlan(id: 20, careerId: 10, name: "Plan 2027", status: StudyPlanStatus.Active);
         var commission = new Commission
         {
             Id = 30,

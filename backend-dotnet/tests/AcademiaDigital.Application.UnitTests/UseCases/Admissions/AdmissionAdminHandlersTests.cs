@@ -19,7 +19,7 @@ public sealed class AdmissionAdminHandlersTests
         var repository = Substitute.For<IAdmissionRepository>();
         var careers = Substitute.For<ICareerRepository>();
         careers.FindByIdAsync(20, Arg.Any<CancellationToken>())
-            .Returns(new Career { Id = 20, Name = "Backend", IsActive = true });
+            .Returns(DomainTestFactory.Career(id: 20, name: "Backend", isActive: true));
         repository.CreateFormAsync(Arg.Any<AdmissionForm>(), Arg.Any<CancellationToken>())
             .Returns(call => call.Arg<AdmissionForm>());
         var commissions = Substitute.For<ICommissionRepository>();
@@ -46,7 +46,7 @@ public sealed class AdmissionAdminHandlersTests
         var repository = Substitute.For<IAdmissionRepository>();
         var careers = Substitute.For<ICareerRepository>();
         careers.FindByIdAsync(20, Arg.Any<CancellationToken>())
-            .Returns(new Career { Id = 20, Name = "Backend", IsActive = true });
+            .Returns(DomainTestFactory.Career(id: 20, name: "Backend", isActive: true));
         repository.FormSlugExistsAsync("backend-2027", Arg.Any<CancellationToken>()).Returns(true);
         var commissions = Substitute.For<ICommissionRepository>();
         var handler = new CreateAdmissionFormCommandHandler(
@@ -66,7 +66,7 @@ public sealed class AdmissionAdminHandlersTests
         var repository = Substitute.For<IAdmissionRepository>();
         var careers = Substitute.For<ICareerRepository>();
         var commissions = Substitute.For<ICommissionRepository>();
-        var career = new Career { Id = 20, Name = "Backend", IsActive = true };
+        var career = DomainTestFactory.Career(id: 20, name: "Backend", isActive: true);
         var commission = new Commission
         {
             Id = 30,
@@ -106,7 +106,7 @@ public sealed class AdmissionAdminHandlersTests
         var careers = Substitute.For<ICareerRepository>();
         var commissions = Substitute.For<ICommissionRepository>();
         careers.FindByIdAsync(20, Arg.Any<CancellationToken>())
-            .Returns(new Career { Id = 20, Name = "Backend", IsActive = true });
+            .Returns(DomainTestFactory.Career(id: 20, name: "Backend", isActive: true));
         commissions.FindByIdAsync(30, Arg.Any<CancellationToken>())
             .Returns(new Commission { Id = 30, CareerId = 20, IsActive = true });
         repository.CommissionTargetExistsAsync(30, Arg.Any<CancellationToken>()).Returns(true);
@@ -263,7 +263,7 @@ public sealed class AdmissionAdminHandlersTests
         {
             Id = 10,
             CareerId = 20,
-            Career = new Career { Id = 20, Name = "Backend" },
+            Career = DomainTestFactory.Career(id: 20, name: "Backend"),
             Slug = "backend-2027",
             Title = "Ingreso Backend",
             ReservationHours = 72
