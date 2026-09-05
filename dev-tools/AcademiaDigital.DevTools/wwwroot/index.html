@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AcademiaDigital · DevTools</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --muted:#94a3b8; --fg:#e2e8f0; --accent:#38bdf8; --danger:#ef4444; --ok:#22c55e; --border:#334155; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:16px 24px; background:#020617; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:999px; background:#7c2d12; color:#fed7aa; }
+  .target { font-size:12px; color:var(--muted); margin-left:auto; }
+  main { max-width:1100px; margin:0 auto; padding:24px; display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .card h2 { font-size:15px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+  input, select { width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:#0b1220; color:var(--fg); font-size:14px; }
+  button { cursor:pointer; border:none; border-radius:8px; padding:9px 14px; font-size:14px; font-weight:600; color:#04121f; background:var(--accent); margin-top:12px; }
+  button.danger { background:var(--danger); color:#fff; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  .out { margin-top:12px; font-size:12px; white-space:pre-wrap; word-break:break-word; background:#0b1220; border:1px solid var(--border); border-radius:8px; padding:10px; max-height:220px; overflow:auto; }
+  .ok { color:var(--ok); } .err { color:var(--danger); }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th,td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; }
+  .full { grid-column:1/-1; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:10; }
+  .modal { background:var(--card); border:1px solid var(--danger); border-radius:12px; padding:22px; max-width:460px; }
+  .modal h3 { margin:0 0 10px; color:var(--danger); }
+  .modal p { font-size:14px; color:var(--fg); line-height:1.5; }
+  .modal .actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+  .modal .actions button { margin:0; }
+  .muted { color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠️ AcademiaDigital · DevTools</h1>
+  <span class="badge">solo desarrollo / testing</span>
+  <span class="target" id="target">objetivo: …</span>
+</header>
+
+<main>
+  <!-- (1) Reset -->
+  <section class="card">
+    <h2>♻️ Reset completo + reseed</h2>
+    <p class="muted">Borra TODA la base, recrea el esquema (migraciones) y recarga los 3 seeds (DS2023, Enfermería, usuarios demo). Irreversible.</p>
+    <button class="danger" id="btnReset">Resetear base…</button>
+    <div class="out" id="outReset" style="display:none"></div>
+  </section>
+
+  <!-- (2) Carrera + Plan CSV -->
+  <section class="card">
+    <h2>📚 Carrera + Plan de estudios (CSV)</h2>
+    <p class="muted">Importá un plan a una carrera existente, o creá una carrera nueva y luego el plan.</p>
+    <label>Carrera existente (opcional)</label>
+    <select id="impCareer"><option value="">— crear carrera nueva —</option></select>
+    <div id="newCareerFields">
+      <div class="row">
+        <div><label>Código carrera</label><input id="impCareerCode" placeholder="EJ2025" /></div>
+        <div><label>Años duración</label><input id="impDuration" type="number" min="1" value="3" /></div>
+      </div>
+      <label>Nombre carrera</label><input id="impCareerName" placeholder="Nombre de la carrera" />
+    </div>
+    <div class="row">
+      <div><label>Código plan</label><input id="impPlanCode" placeholder="PLAN-2025" /></div>
+      <div><label>Nombre plan</label><input id="impPlanName" placeholder="Plan 2025" /></div>
+    </div>
+    <label>Archivo CSV del plan</label><input id="impFile" type="file" accept=".csv" />
+    <button id="btnImport">Importar plan</button>
+    <div class="out" id="outImport" style="display:none"></div>
+  </section>
+
+  <!-- (3) Usuarios -->
+  <section class="card">
+    <h2>👤 Alta de usuario</h2>
+    <div class="row">
+      <div><label>Nombre</label><input id="uName" placeholder="Nombre" /></div>
+      <div><label>Apellido</label><input id="uLast" placeholder="Apellido" /></div>
+    </div>
+    <label>Email</label><input id="uEmail" type="email" placeholder="mail@dominio.com" />
+    <div class="row">
+      <div><label>Password</label><input id="uPass" placeholder="Password123!" /></div>
+      <div><label>DNI</label><input id="uDni" placeholder="12345678" /></div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Rol</label>
+        <select id="uRole"><option value="1">Alumno</option><option value="2">Profesor</option><option value="3">Admin</option></select>
+      </div>
+      <div id="uCareerWrap">
+        <label>Carrera (alumno)</label>
+        <select id="uCareer"></select>
+      </div>
+    </div>
+    <button id="btnUser">Crear usuario</button>
+    <div class="out" id="outUser" style="display:none"></div>
+  </section>
+
+  <!-- (4) Asignar materia a profesor -->
+  <section class="card">
+    <h2>🎓 Asignar materia a profesor</h2>
+    <label>Profesor</label><select id="aTeacher"></select>
+    <label>Carrera</label><select id="aCareer"></select>
+    <label>Materia</label><select id="aCourse"></select>
+    <div class="row">
+      <div><label>Año académico</label><input id="aYear" type="number" placeholder="2026" /></div>
+      <div><label>Cuatrimestre</label><select id="aSem"><option value="1">1</option><option value="2">2</option></select></div>
+    </div>
+    <button id="btnAssign">Asignar</button>
+    <div class="out" id="outAssign" style="display:none"></div>
+  </section>
+
+  <!-- (5) Listado -->
+  <section class="card full">
+    <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
+    <div id="overview" class="muted">Cargando…</div>
+  </section>
+</main>
+
+<!-- Modal confirmación reset -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>⚠️ Confirmar reset destructivo</h3>
+    <p>Esto <b>borra TODA la base</b> de <b id="modalTarget"></b>, recrea el esquema y recarga los seeds. <b>No se puede deshacer.</b></p>
+    <p>Escribí <b>RESET</b> para confirmar:</p>
+    <input id="modalInput" placeholder="RESET" autocomplete="off" />
+    <div class="actions">
+      <button id="modalCancel" style="background:#475569;color:#fff">Cancelar</button>
+      <button id="modalConfirm" class="danger" disabled>Resetear ahora</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = (p, o) => fetch(p, o).then(async r => ({ ok: r.ok, body: await r.json().catch(() => ({})) }));
+function show(el, res) {
+  el.style.display = 'block';
+  const ok = res.ok && res.body.success !== false;
+  el.className = 'out ' + (ok ? 'ok' : 'err');
+  el.textContent = JSON.stringify(res.body, null, 2);
+}
+
+async function loadTarget() {
+  const { body } = await api('/api/info');
+  $('#target').textContent = 'objetivo: ' + (body.target || '?');
+  $('#modalTarget').textContent = body.target || '?';
+}
+
+async function fillCareers() {
+  const { body } = await api('/api/careers');
+  const opts = (body || []).map(c => `<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+  $('#impCareer').innerHTML = '<option value="">— crear carrera nueva —</option>' + opts;
+  $('#uCareer').innerHTML = opts;
+  $('#aCareer').innerHTML = opts;
+  if (body && body.length) loadCoursesFor($('#aCareer').value);
+}
+
+async function fillTeachers() {
+  const { body } = await api('/api/teachers');
+  $('#aTeacher').innerHTML = (body || []).map(t => `<option value="${t.id}">${t.name} (${t.email})</option>`).join('');
+}
+
+async function loadCoursesFor(careerId) {
+  if (!careerId) { $('#aCourse').innerHTML = ''; return; }
+  const { body } = await api(`/api/careers/${careerId}/courses`);
+  $('#aCourse').innerHTML = (body || []).map(c => `<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+}
+
+async function loadOverview() {
+  const { body } = await api('/api/overview');
+  const careers = (body.careers || []).map(c => `<tr><td>${c.id}</td><td>${c.code}</td><td>${c.name}</td><td>${c.isActive ? 'sí' : 'no'}</td></tr>`).join('');
+  const roles = (body.usersByRole || []).map(r => `${r.role}: ${r.count}`).join(' · ');
+  const users = (body.users || []).map(u => `<tr><td>${u.id}</td><td>${u.email}</td><td>${u.username} ${u.lastName || ''}</td><td>${u.role}</td></tr>`).join('');
+  const asg = (body.assignments || []).map(a => `<tr><td>${a.teacher}</td><td>${a.courseCode} · ${a.courseName}</td><td>${a.academicYear}/${a.semester}</td><td>${a.positionType}</td></tr>`).join('');
+  $('#overview').innerHTML = `
+    <div class="muted" style="margin-bottom:8px">Usuarios por rol → ${roles || '—'}</div>
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      <div><b>Carreras</b><table><tr><th>id</th><th>code</th><th>nombre</th><th>activa</th></tr>${careers || '<tr><td colspan=4>—</td></tr>'}</table></div>
+      <div><b>Usuarios</b> <span class="muted">(máx 200)</span><table><tr><th>id</th><th>email</th><th>nombre</th><th>rol</th></tr>${users || '<tr><td colspan=4>—</td></tr>'}</table></div>
+      <div><b>Asignaciones vigentes</b><table><tr><th>profesor</th><th>materia</th><th>año/cuat</th><th>cargo</th></tr>${asg || '<tr><td colspan=4>—</td></tr>'}</table></div>
+    </div>`;
+}
+
+// (2) mostrar/ocultar campos de carrera nueva
+$('#impCareer').addEventListener('change', e => {
+  $('#newCareerFields').style.display = e.target.value ? 'none' : 'block';
+});
+// (3) mostrar carrera solo si rol = Alumno
+$('#uRole').addEventListener('change', e => {
+  $('#uCareerWrap').style.display = e.target.value === '1' ? 'block' : 'none';
+});
+$('#aCareer').addEventListener('change', e => loadCoursesFor(e.target.value));
+
+// (1) Reset con modal + palabra clave
+$('#btnReset').addEventListener('click', () => { $('#modalInput').value=''; $('#modalConfirm').disabled=true; $('#modalBg').style.display='flex'; });
+$('#modalCancel').addEventListener('click', () => $('#modalBg').style.display='none');
+$('#modalInput').addEventListener('input', e => { $('#modalConfirm').disabled = e.target.value.trim() !== 'RESET'; });
+$('#modalConfirm').addEventListener('click', async () => {
+  $('#modalBg').style.display='none';
+  const btn = $('#btnReset'); btn.disabled=true; btn.textContent='Reseteando…';
+  const res = await api('/api/reset', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ confirm:true }) });
+  show($('#outReset'), res);
+  btn.disabled=false; btn.textContent='Resetear base…';
+  await refreshAll();
+});
+
+// (2) Import
+$('#btnImport').addEventListener('click', async () => {
+  const f = $('#impFile').files[0];
+  if (!f) { show($('#outImport'), { ok:false, body:{ success:false, error:'Elegí un archivo CSV.' } }); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  const careerId = $('#impCareer').value;
+  if (careerId) fd.append('careerId', careerId);
+  else {
+    fd.append('careerCode', $('#impCareerCode').value);
+    fd.append('careerName', $('#impCareerName').value);
+    fd.append('durationYears', $('#impDuration').value);
+  }
+  fd.append('planCode', $('#impPlanCode').value);
+  fd.append('planName', $('#impPlanName').value);
+  const btn = $('#btnImport'); btn.disabled=true;
+  show($('#outImport'), await api('/api/careers/import-plan', { method:'POST', body: fd }));
+  btn.disabled=false; await fillCareers(); await loadOverview();
+});
+
+// (3) Usuario
+$('#btnUser').addEventListener('click', async () => {
+  const payload = {
+    name: $('#uName').value, lastName: $('#uLast').value, email: $('#uEmail').value,
+    password: $('#uPass').value, dni: $('#uDni').value, role: parseInt($('#uRole').value,10),
+    careerId: $('#uRole').value === '1' ? parseInt($('#uCareer').value,10) : null
+  };
+  const btn=$('#btnUser'); btn.disabled=true;
+  show($('#outUser'), await api('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }));
+  btn.disabled=false; await loadOverview();
+});
+
+// (4) Asignar
+$('#btnAssign').addEventListener('click', async () => {
+  const payload = {
+    teacherId: parseInt($('#aTeacher').value,10), courseId: parseInt($('#aCourse').value,10),
+    academicYear: parseInt($('#aYear').value,10)||0, semester: parseInt($('#aSem').value,10),
+    maxStudents: 0, reason: 'Asignado desde DevTools'
+  };
+  const btn=$('#btnAssign'); btn.disabled=true;
+  show($('#outAssign'), await api('/api/teacher-assignments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }));
+  btn.disabled=false; await loadOverview();
+});
+
+$('#btnRefresh').addEventListener('click', loadOverview);
+
+async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); }
+loadTarget(); refreshAll();
+</script>
+</body>
+</html>
