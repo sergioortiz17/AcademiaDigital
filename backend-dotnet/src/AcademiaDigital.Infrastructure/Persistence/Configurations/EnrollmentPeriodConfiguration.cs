@@ -24,7 +24,13 @@ public class EnrollmentPeriodConfiguration : IEntityTypeConfiguration<Enrollment
         builder.Property(ep => ep.EndDate).HasColumnName("end_date");
         builder.Property(ep => ep.CreatedAt).HasColumnName("created_at");
         builder.Property(ep => ep.UpdatedAt).HasColumnName("updated_at");
-        builder.Property(ep => ep.RowVersion).HasColumnName("row_version").IsRowVersion();
+        // Postgres no tiene un tipo "rowversion" auto-incremental como SQL Server.
+        // Se usa la columna de sistema `xmin` (siempre presente en Postgres) como
+        // concurrency token nativo en vez de mapear la propiedad RowVersion a una
+        // columna real: la propiedad queda sin mapear (Ignore) y el shadow property
+        // "xmin" cubre el optimistic concurrency check automáticamente.
+        builder.Ignore(ep => ep.RowVersion);
+        builder.UseXminAsConcurrencyToken();
 
         builder.HasOne(ep => ep.Career)
             .WithMany()

@@ -22,7 +22,7 @@ public class StudentStudyPlanConfiguration : IEntityTypeConfiguration<StudentStu
 
         builder.HasIndex(ssp => ssp.StudentCareerId)
             .IsUnique()
-            .HasFilter("[is_current] = 1");
+            .HasFilter("is_current = true");
 
         builder.HasOne(ssp => ssp.Student)
             .WithMany()

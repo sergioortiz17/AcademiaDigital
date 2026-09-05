@@ -17,13 +17,16 @@ export const initialAccountState: AccountState = {
 
 export const accountReducer = createReducer(
   initialAccountState,
-  on(accountInitialize, (state, { isLoggedIn, user, token }) => ({
-    ...state,
-    isLoggedIn,
-    isInitialized: true,
-    token,
-    user
-  })),
+  on(accountInitialize, (state, { isLoggedIn, user, token }) => {
+    console.log('📦 ACÁ EL STORE REGISTRA QUE TE LOGUEASTE (account.reducer.ts)', { isLoggedIn, user });
+    return {
+      ...state,
+      isLoggedIn,
+      isInitialized: true,
+      token,
+      user
+    };
+  }),
   on(login, (state, { user, token }) => ({
     ...state,
     isLoggedIn: true,

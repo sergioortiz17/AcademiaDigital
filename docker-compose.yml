@@ -6,23 +6,21 @@ services:
 
   # ── Base de datos ─────────────────────────────────────────────────────────
   db:
-    container_name: sqlserver
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: postgres
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${SA_PASSWORD:-Admin1234!}"
-      MSSQL_PID: Developer
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Admin1234!}"
+      POSTGRES_DB: "${POSTGRES_DB:-AcademiaDigital}"
     volumes:
-      - sqlserver_data:/var/opt/mssql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "1433:1433"
+      - "5432:5432"
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd",
-             "-S", "localhost", "-U", "sa", "-P", "${SA_PASSWORD:-Admin1234!}",
-             "-Q", "SELECT 1", "-No"]
-      interval: 15s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-AcademiaDigital}"]
+      interval: 10s
       retries: 6
-      start_period: 30s
+      start_period: 15s
     networks:
       - app_network
 
@@ -40,7 +38,7 @@ services:
       - app_network
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=AcademiaDigital;User Id=sa;Password=${SA_PASSWORD:-Admin1234!};TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-AcademiaDigital};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!}
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__ExpirationDays=7
       - Cors__AllowedOrigins__0=http://localhost:4200
@@ -58,4 +56,4 @@ services:
       - app_network
 
 volumes:
-  sqlserver_data:
+  postgres_data:

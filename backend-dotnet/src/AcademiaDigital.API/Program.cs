@@ -27,6 +27,7 @@ using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -317,7 +318,11 @@ var app = builder.Build();
 // verification URL fails fast instead of weakening the first public request.
 _ = app.Services.GetRequiredService<IAdmissionChallengeVerifier>();
 
-// Aplicar migraciones al iniciar con reintentos para tolerar el startup de SQL Server en Docker
+// Aplicar migraciones al iniciar con reintentos.
+// Aunque docker-compose usa "depends_on: condition: service_healthy" con pg_isready,
+// eso solo garantiza que Postgres acepta conexiones, no que la primera conexión desde
+// el pool de Npgsql no falle por una condición de carrera al arrancar todos los
+// contenedores juntos. Se mantiene un reintento acotado por las dudas.
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -331,28 +336,20 @@ await using (var scope = app.Services.CreateAsyncScope())
             await db.Database.MigrateAsync();
             break;
         }
-        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+        catch (PostgresException ex) when (ex.SqlState is PostgresErrorCodes.DuplicateTable or PostgresErrorCodes.DuplicateObject)
         {
-            // Error 1801: el motor SQL Server aún está recuperando la DB en Docker.
-            // MigrateAsync intentó crearla porque no pudo conectarse aún. Reintentar.
-            if (attempt == maxAttempts) throw;
-            startupLogger.LogWarning(ex, "SQL Server no está listo (intento {Attempt}/{Max}), reintentando en 3s...", attempt, maxAttempts);
-            await Task.Delay(3000);
-        }
-        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Message.Contains("already an object named"))
-        {
-            // La DB fue creada con EnsureCreated sin historial de migraciones.
+            // La DB fue creada con EnsureCreated sin historial de migraciones (los objetos ya existen).
             // Se elimina y recrea limpiamente con todas las migraciones aplicadas.
-            startupLogger.LogWarning(ex, "DB creada con EnsureCreated detectada, recreando con migraciones...");
+            startupLogger.LogWarning(ex, "DB creada sin historial de migraciones detectada, recreando con migraciones...");
             await db.Database.EnsureDeletedAsync();
             await db.Database.MigrateAsync();
             break;
         }
-        catch (Microsoft.Data.SqlClient.SqlException ex) when (attempt < maxAttempts
-            && (ex.Number == -2 || ex.Number == 53 || ex.Number == 40 || ex.Message.Contains("connection")))
+        catch (Exception ex) when (attempt < maxAttempts
+            && (ex is NpgsqlException or TimeoutException or System.Net.Sockets.SocketException))
         {
-            // SQL Server todavía no acepta conexiones (arranque Docker).
-            startupLogger.LogWarning(ex, "Sin conexión a SQL Server (intento {Attempt}/{Max}), reintentando en 3s...", attempt, maxAttempts);
+            // Postgres todavía no acepta conexiones (arranque Docker).
+            startupLogger.LogWarning(ex, "Sin conexión a PostgreSQL (intento {Attempt}/{Max}), reintentando en 3s...", attempt, maxAttempts);
             await Task.Delay(3000);
         }
     }
