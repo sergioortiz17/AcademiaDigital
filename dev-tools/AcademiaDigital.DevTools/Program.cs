@@ -1,4 +1,6 @@
 using AcademiaDigital.Application.UseCases.Authentication;
+using AcademiaDigital.Application.UseCases.Enrollments;
+using AcademiaDigital.Application.UseCases.Grades;
 using AcademiaDigital.Application.UseCases.StudyPlanImport;
 using AcademiaDigital.Application.UseCases.Teachers;
 using AcademiaDigital.Domain.Entities;
@@ -31,6 +33,28 @@ builder.Services.AddScoped<AssignTeacherCommandHandler>();
 
 // Servicio propio de la herramienta (reset+reseed + listados)
 builder.Services.AddScoped<DevToolsService>();
+
+// ── Escenario "correlativa bloqueante" ───────────────────────────────────────
+// Policies + servicios de dominio que el escenario necesita (los repos vienen de AddInfrastructure).
+builder.Services.AddScoped<GradebookPolicy>();
+builder.Services.AddScoped<ExamTablePolicy>();
+builder.Services.AddScoped<CourseEligibilityService>();
+builder.Services.AddScoped<EnrollmentEligibilityPolicy>();
+builder.Services.AddScoped<EnrollmentCapacityPolicy>();
+// Handlers reales reutilizados por el escenario (cursada + mesa de examen + inscripción).
+builder.Services.AddScoped<CreateEnrollmentCommandHandler>();
+builder.Services.AddScoped<CreateGradebookCommandHandler>();
+builder.Services.AddScoped<SaveGradeEntriesCommandHandler>();
+builder.Services.AddScoped<SubmitGradebookCommandHandler>();
+builder.Services.AddScoped<ApproveGradebookCommandHandler>();
+builder.Services.AddScoped<PublishGradebookCommandHandler>();
+builder.Services.AddScoped<CloseGradebookCommandHandler>();
+builder.Services.AddScoped<CreateExamTableCommandHandler>();
+builder.Services.AddScoped<RegisterForExamCommandHandler>();
+builder.Services.AddScoped<StartExamGradingCommandHandler>();
+builder.Services.AddScoped<SaveExamResultsCommandHandler>();
+builder.Services.AddScoped<PublishExamTableCommandHandler>();
+builder.Services.AddScoped<CorrelativaScenarioService>();
 
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
@@ -76,6 +100,17 @@ app.MapPost("/api/reset", async (ResetRequest req, DevToolsService svc, Cancella
     {
         return Results.Problem(title: "Reset falló", detail: ex.Message, statusCode: 500);
     }
+});
+
+// ── Escenario end-to-end: "correlativa bloqueante" ───────────────────────────
+// Ejercita cursada + mesa de examen reales sobre DS2023 y verifica que la inscripción a
+// Programación II se bloquee por la correlativa Programación I (sin aprobar). Devuelve
+// { result: PASS|FAIL, summary, steps[] } con reporte paso a paso para diagnóstico.
+app.MapPost("/api/scenario/correlativa-bloqueante", async (CorrelativaScenarioService scenario, CancellationToken ct) =>
+{
+    var report = await scenario.RunAsync(ct);
+    // 200 siempre: el resultado del escenario (PASS/FAIL) va en el body; un FAIL no es un error HTTP.
+    return Results.Ok(report);
 });
 
 // ── (2) Crear Carrera + importar Plan de Estudios por CSV ────────────────────

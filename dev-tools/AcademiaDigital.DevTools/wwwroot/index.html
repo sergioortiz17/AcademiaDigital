@@ -114,6 +114,20 @@
     <div class="out" id="outAssign" style="display:none"></div>
   </section>
 
+  <!-- Escenario: correlativa bloqueante -->
+  <section class="card full">
+    <h2>🧪 Escenario: correlativa bloqueante (DS2023)</h2>
+    <p class="muted">
+      Ejercita end-to-end el control de correlativas: inscribe un alumno de prueba en Programación I
+      y Base de Datos, deja Programación I <b>sin aprobar</b> y Base de Datos <b>aprobada</b> (cursada + final),
+      y verifica que la inscripción a Programación II se <b>bloquee</b> por la correlativa Programación I.
+      Requiere haber corrido el reset+reseed de DS2023.
+    </p>
+    <button id="btnScenario">Ejecutar escenario</button>
+    <div id="scenarioVerdict" style="display:none;margin-top:12px;font-weight:700;font-size:15px"></div>
+    <div id="scenarioSteps" style="display:none;margin-top:10px"></div>
+  </section>
+
   <!-- (5) Listado -->
   <section class="card full">
     <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
@@ -254,6 +268,34 @@ $('#btnAssign').addEventListener('click', async () => {
 });
 
 $('#btnRefresh').addEventListener('click', loadOverview);
+
+// Escenario: correlativa bloqueante
+$('#btnScenario').addEventListener('click', async () => {
+  const btn = $('#btnScenario'); btn.disabled = true; btn.textContent = 'Ejecutando…';
+  const verdict = $('#scenarioVerdict'); const stepsBox = $('#scenarioSteps');
+  verdict.style.display = 'none'; stepsBox.style.display = 'none';
+  try {
+    const { body } = await api('/api/scenario/correlativa-bloqueante', { method: 'POST' });
+    const pass = body.result === 'PASS';
+    verdict.style.display = 'block';
+    verdict.className = pass ? 'ok' : 'err';
+    verdict.textContent = (pass ? '✅ ' : '❌ ') + (body.summary || body.result);
+    const rows = (body.steps || []).map(s => {
+      const icon = s.status === 'ok' ? '✔️' : (s.status === 'warn' ? '⚠️' : '✖️');
+      const color = s.status === 'ok' ? 'var(--ok)' : (s.status === 'warn' ? '#f59e0b' : 'var(--danger)');
+      const data = s.data ? `<div class="muted" style="white-space:pre-wrap">${JSON.stringify(s.data)}</div>` : '';
+      return `<tr><td>${s.order}</td><td style="color:${color}">${icon}</td><td>${s.step}<div class="muted">${s.detail || ''}</div>${data}</td></tr>`;
+    }).join('');
+    stepsBox.style.display = 'block';
+    stepsBox.innerHTML = `<table><tr><th>#</th><th>estado</th><th>paso</th></tr>${rows}</table>`;
+  } catch (e) {
+    verdict.style.display = 'block'; verdict.className = 'err';
+    verdict.textContent = '❌ Error ejecutando el escenario: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Ejecutar escenario';
+    await loadOverview();
+  }
+});
 
 async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); }
 loadTarget(); refreshAll();
