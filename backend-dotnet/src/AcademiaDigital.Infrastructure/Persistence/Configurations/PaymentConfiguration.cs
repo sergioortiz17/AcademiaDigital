@@ -54,7 +54,7 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.HasIndex(item => item.PublicId).IsUnique();
         builder.HasIndex(item => item.ConfirmationIdempotencyKey)
             .IsUnique()
-            .HasFilter("[confirmation_idempotency_key] IS NOT NULL");
+            .HasFilter("confirmation_idempotency_key IS NOT NULL");
         builder.HasIndex(item => new { item.StudentId, item.CreatedAt });
         builder.HasIndex(item => new { item.Status, item.CreatedAt });
         builder.HasOne(item => item.Student).WithMany().HasForeignKey(item => item.StudentId).OnDelete(DeleteBehavior.Restrict);

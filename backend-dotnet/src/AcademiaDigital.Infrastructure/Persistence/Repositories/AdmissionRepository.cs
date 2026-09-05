@@ -1,7 +1,7 @@
 using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
@@ -54,7 +54,7 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
             return form;
         }
         catch (DbUpdateException exception) when (
-            exception.InnerException is SqlException { Number: 2601 or 2627 })
+            exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
             if (form.CommissionId.HasValue
                 && exception.InnerException.Message.Contains("commission_id", StringComparison.OrdinalIgnoreCase))
@@ -97,7 +97,7 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
             return application;
         }
         catch (DbUpdateException exception) when (
-            exception.InnerException is SqlException { Number: 2601 or 2627 })
+            exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
             throw new AdmissionApplicationAlreadyExistsException();
         }

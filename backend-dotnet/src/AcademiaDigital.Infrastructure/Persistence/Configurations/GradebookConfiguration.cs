@@ -82,7 +82,7 @@ public sealed class GradeEntryRevisionConfiguration : IEntityTypeConfiguration<G
         builder.Property(item => item.CreatedAt).HasColumnName("created_at");
         builder.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
         builder.HasIndex(item => new { item.EvaluationId, item.EnrollmentId, item.Version }).IsUnique();
-        builder.HasIndex(item => new { item.EvaluationId, item.EnrollmentId }).IsUnique().HasFilter("[is_current] = 1");
+        builder.HasIndex(item => new { item.EvaluationId, item.EnrollmentId }).IsUnique().HasFilter("is_current");
         builder.HasIndex(item => new { item.GradebookId, item.StudentId });
         builder.HasOne(item => item.Gradebook).WithMany(item => item.GradeRevisions).HasForeignKey(item => item.GradebookId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(item => item.Evaluation).WithMany(item => item.GradeRevisions).HasForeignKey(item => item.EvaluationId).OnDelete(DeleteBehavior.NoAction);

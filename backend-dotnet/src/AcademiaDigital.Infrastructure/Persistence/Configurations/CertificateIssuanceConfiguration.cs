@@ -16,7 +16,7 @@ public sealed class CertificateIssuanceConfiguration : IEntityTypeConfiguration<
         builder.Property(item => item.CertificateRequestId).HasColumnName("certificate_request_id");
         builder.Property(item => item.SequenceNumber).HasColumnName("sequence_number");
         builder.Property(item => item.CertificateNumber).HasColumnName("certificate_number").HasMaxLength(30);
-        builder.Property(item => item.SnapshotJson).HasColumnName("snapshot_json").HasColumnType("nvarchar(max)");
+        builder.Property(item => item.SnapshotJson).HasColumnName("snapshot_json").HasColumnType("text");
         builder.Property(item => item.Status).HasColumnName("status").HasConversion<int>();
         builder.Property(item => item.FileName).HasColumnName("file_name").HasMaxLength(150);
         builder.Property(item => item.ContentType).HasColumnName("content_type").HasMaxLength(100);

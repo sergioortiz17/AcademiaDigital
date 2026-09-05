@@ -1,7 +1,7 @@
 using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
@@ -63,7 +63,7 @@ public class TeacherRepository(AppDbContext db) : ITeacherRepository
     }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)
-        => exception.InnerException is SqlException { Number: 2601 or 2627 }
+        => exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }
             || (exception.InnerException?.Message ?? exception.Message)
                 .Contains("unique", StringComparison.OrdinalIgnoreCase);
 

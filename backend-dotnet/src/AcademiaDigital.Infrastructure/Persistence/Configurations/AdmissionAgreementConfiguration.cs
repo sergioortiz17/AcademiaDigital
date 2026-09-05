@@ -13,7 +13,7 @@ public sealed class AdmissionAgreementConfiguration : IEntityTypeConfiguration<A
         builder.Property(agreement => agreement.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(agreement => agreement.AdmissionApplicationId).HasColumnName("admission_application_id");
         builder.Property(agreement => agreement.AgreementNumber).HasColumnName("agreement_number").HasMaxLength(80).IsRequired();
-        builder.Property(agreement => agreement.SnapshotJson).HasColumnName("snapshot_json").HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(agreement => agreement.SnapshotJson).HasColumnName("snapshot_json").HasColumnType("text").IsRequired();
         builder.Property(agreement => agreement.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20);
         builder.Property(agreement => agreement.StorageKey).HasColumnName("storage_key").HasMaxLength(500);
         builder.Property(agreement => agreement.FileName).HasColumnName("file_name").HasMaxLength(255).IsRequired();

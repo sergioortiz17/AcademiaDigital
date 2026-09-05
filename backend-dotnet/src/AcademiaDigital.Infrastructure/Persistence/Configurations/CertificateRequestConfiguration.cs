@@ -26,7 +26,7 @@ public class CertificateRequestConfiguration : IEntityTypeConfiguration<Certific
 
         builder.HasIndex(c => new { c.UserId, c.StudentCareerId, c.Kind, c.ExamRegistrationId })
             .IsUnique()
-            .HasFilter("[status] IN (0, 1, 3)");
+            .HasFilter("status IN (0, 1, 3)");
         builder.HasIndex(c => new { c.StudentCareerId, c.Status, c.CreatedAt });
 
         builder.HasOne(c => c.User)

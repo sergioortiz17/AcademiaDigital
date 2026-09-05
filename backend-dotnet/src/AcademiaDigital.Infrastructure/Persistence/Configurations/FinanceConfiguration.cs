@@ -41,11 +41,11 @@ public sealed class FinancialRateConfiguration : IEntityTypeConfiguration<Financ
         builder.Property(item => item.UpdatedAt).HasColumnName("updated_at");
         builder.HasIndex(item => new { item.FinancialConceptId, item.CareerId, item.AcademicYear, item.StudentCondition })
             .IsUnique()
-            .HasFilter("[student_condition] IS NOT NULL");
+            .HasFilter("student_condition IS NOT NULL");
         builder.HasIndex(item => new { item.FinancialConceptId, item.CareerId, item.AcademicYear })
             .IsUnique()
             .HasDatabaseName("UX_FinancialRates_Default")
-            .HasFilter("[student_condition] IS NULL");
+            .HasFilter("student_condition IS NULL");
         builder.HasOne(item => item.FinancialConcept).WithMany().HasForeignKey(item => item.FinancialConceptId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.Career).WithMany().HasForeignKey(item => item.CareerId).OnDelete(DeleteBehavior.Restrict);
     }
@@ -167,7 +167,7 @@ public sealed class StudentDebtConfiguration : IEntityTypeConfiguration<StudentD
         builder.Property(item => item.Status).HasColumnName("status").HasConversion<int>();
         builder.Property(item => item.FinancialRateId).HasColumnName("financial_rate_id");
         builder.Property(item => item.AppliedBenefitId).HasColumnName("applied_benefit_id");
-        builder.Property(item => item.CalculationSnapshotJson).HasColumnName("calculation_snapshot_json").HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(item => item.CalculationSnapshotJson).HasColumnName("calculation_snapshot_json").HasColumnType("text").IsRequired();
         builder.Property(item => item.CreatedAt).HasColumnName("created_at");
         builder.HasIndex(item => item.PublicId).IsUnique();
         builder.HasIndex(item => new { item.DebtGenerationBatchId, item.StudentCareerId, item.BillingPlanItemId }).IsUnique();

@@ -25,7 +25,7 @@ public sealed class TeacherAssignmentConfiguration : IEntityTypeConfiguration<Te
 
         builder.HasIndex(assignment => assignment.TeachingPositionId)
             .IsUnique()
-            .HasFilter("[is_current] = 1");
+            .HasFilter("is_current");
         builder.HasIndex(assignment => new { assignment.TeacherId, assignment.IsCurrent });
 
         builder.HasOne(assignment => assignment.TeachingPosition)

@@ -18,7 +18,7 @@ public sealed class ReceiptConfiguration : IEntityTypeConfiguration<Receipt>
         builder.Property(item => item.PaymentId).HasColumnName("payment_id");
         builder.Property(item => item.SequenceNumber).HasColumnName("sequence_number");
         builder.Property(item => item.ReceiptNumber).HasColumnName("receipt_number").HasMaxLength(20).IsRequired();
-        builder.Property(item => item.SnapshotJson).HasColumnName("snapshot_json").HasColumnType("nvarchar(max)").IsRequired();
+        builder.Property(item => item.SnapshotJson).HasColumnName("snapshot_json").HasColumnType("text").IsRequired();
         builder.Property(item => item.Status).HasColumnName("status").HasConversion<int>();
         builder.Property(item => item.FileName).HasColumnName("file_name").HasMaxLength(150).IsRequired();
         builder.Property(item => item.ContentType).HasColumnName("content_type").HasMaxLength(100).IsRequired();

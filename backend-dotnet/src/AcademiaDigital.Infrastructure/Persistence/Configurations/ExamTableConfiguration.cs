@@ -49,7 +49,7 @@ public sealed class ExamTribunalMemberConfiguration : IEntityTypeConfiguration<E
         builder.Property(item => item.TeacherId).HasColumnName("teacher_id");
         builder.Property(item => item.Role).HasColumnName("role").HasConversion<int>();
         builder.HasIndex(item => new { item.ExamTableId, item.TeacherId }).IsUnique();
-        builder.HasIndex(item => new { item.ExamTableId, item.Role }).IsUnique().HasFilter("[role] = 0");
+        builder.HasIndex(item => new { item.ExamTableId, item.Role }).IsUnique().HasFilter("role = 0");
         builder.HasOne(item => item.ExamTable).WithMany(item => item.TribunalMembers).HasForeignKey(item => item.ExamTableId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(item => item.Teacher).WithMany().HasForeignKey(item => item.TeacherId).OnDelete(DeleteBehavior.Restrict);
     }
@@ -98,7 +98,7 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
         builder.Property(item => item.CreatedAt).HasColumnName("created_at");
         builder.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
         builder.HasIndex(item => new { item.ExamRegistrationId, item.Version }).IsUnique();
-        builder.HasIndex(item => item.ExamRegistrationId).IsUnique().HasFilter("[is_current] = 1");
+        builder.HasIndex(item => item.ExamRegistrationId).IsUnique().HasFilter("is_current");
         builder.HasOne(item => item.ExamRegistration).WithMany(item => item.GradeRevisions).HasForeignKey(item => item.ExamRegistrationId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(item => item.CreatedByUser).WithMany().HasForeignKey(item => item.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
     }

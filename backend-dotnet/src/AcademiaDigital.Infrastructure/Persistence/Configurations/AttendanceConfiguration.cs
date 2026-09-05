@@ -90,7 +90,7 @@ public sealed class AttendanceJustificationConfiguration : IEntityTypeConfigurat
         builder.Property(justification => justification.IsCurrent).HasColumnName("is_current");
         builder.Property(justification => justification.CreatedAt).HasColumnName("created_at");
         builder.Property(justification => justification.CreatedByUserId).HasColumnName("created_by_user_id");
-        builder.HasIndex(justification => justification.AttendanceRecordId).IsUnique().HasFilter("[is_current] = 1");
+        builder.HasIndex(justification => justification.AttendanceRecordId).IsUnique().HasFilter("is_current");
         builder.HasOne(justification => justification.AttendanceRecord).WithMany(record => record.Justifications).HasForeignKey(justification => justification.AttendanceRecordId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(justification => justification.CreatedByUser).WithMany().HasForeignKey(justification => justification.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
