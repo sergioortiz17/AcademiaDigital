@@ -33,15 +33,15 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
         CancellationToken ct = default)
     {
         var position = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM [TeachingPositions] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {assignment.TeachingPositionId}")
+            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {assignment.TeachingPositionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teaching position not found.");
         var teacher = await db.Teachers
-            .FromSqlInterpolated($"SELECT * FROM [Teachers] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {assignment.TeacherId}")
+            .FromSqlInterpolated($"SELECT * FROM \"Teachers\" WHERE id = {assignment.TeacherId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teacher not found.");
         var teacherUser = await db.Users
-            .FromSqlInterpolated($"SELECT * FROM [Users] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {teacher.UserId}")
+            .FromSqlInterpolated($"SELECT * FROM \"Users\" WHERE id = {teacher.UserId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teacher user not found.");
         if (!position.IsActive || !position.IsVacant || position.TeacherId.HasValue)
@@ -67,7 +67,7 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
         CancellationToken ct = default)
     {
         var assignment = await db.TeacherAssignments
-            .FromSqlInterpolated($"SELECT * FROM [TeacherAssignments] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {assignmentId}")
+            .FromSqlInterpolated($"SELECT * FROM \"TeacherAssignments\" WHERE id = {assignmentId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teacher assignment not found.");
         if (assignment.TeacherId != teacherId)
@@ -76,7 +76,7 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
             throw new InvalidOperationException("The teacher assignment is already closed.");
 
         var position = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM [TeachingPositions] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {assignment.TeachingPositionId}")
+            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {assignment.TeachingPositionId} FOR UPDATE")
             .SingleAsync(ct);
         if (position.IsVacant || position.TeacherId != teacherId)
             throw new InvalidOperationException("Teaching position and current assignment are inconsistent.");

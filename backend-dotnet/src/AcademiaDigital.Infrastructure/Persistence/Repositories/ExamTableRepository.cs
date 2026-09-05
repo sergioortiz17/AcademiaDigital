@@ -39,7 +39,7 @@ public sealed class ExamTableRepository(AppDbContext db) : IExamTableRepository
 
     public async Task<ExamTable?> FindForUpdateAsync(long examTableId, CancellationToken ct = default)
         => await db.ExamTables
-            .FromSqlInterpolated($"SELECT * FROM [ExamTables] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {examTableId}")
+            .FromSqlInterpolated($"SELECT * FROM \"ExamTables\" WHERE id = {examTableId} FOR UPDATE")
             .Include(item => item.TribunalMembers).ThenInclude(item => item.Teacher).ThenInclude(item => item.User)
             .Include(item => item.Registrations).ThenInclude(item => item.Enrollment).ThenInclude(item => item.StudyPlanCourse)!.ThenInclude(item => item!.ApprovalRule)
             .Include(item => item.Registrations).ThenInclude(item => item.GradeRevisions)
@@ -49,7 +49,7 @@ public sealed class ExamTableRepository(AppDbContext db) : IExamTableRepository
     public async Task<(ExamTable ExamTable, bool Created)> CreateIdempotentAsync(ExamTable examTable, CancellationToken ct = default)
     {
         _ = await db.Courses
-            .FromSqlInterpolated($"SELECT * FROM [Courses] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {examTable.CourseId}")
+            .FromSqlInterpolated($"SELECT * FROM \"Courses\" WHERE id = {examTable.CourseId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Course not found.");
         var existing = await db.ExamTables.AsNoTracking()
@@ -81,7 +81,7 @@ public sealed class ExamTableRepository(AppDbContext db) : IExamTableRepository
 
     public async Task<Enrollment?> FindEnrollmentForUpdateAsync(long enrollmentId, CancellationToken ct = default)
         => await db.Enrollments
-            .FromSqlInterpolated($"SELECT * FROM [Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {enrollmentId}")
+            .FromSqlInterpolated($"SELECT * FROM \"Enrollments\" WHERE id = {enrollmentId} FOR UPDATE")
             .Include(item => item.Student).ThenInclude(item => item.User)
             .Include(item => item.StudyPlanCourse)!.ThenInclude(item => item!.ApprovalRule)
             .SingleOrDefaultAsync(ct);

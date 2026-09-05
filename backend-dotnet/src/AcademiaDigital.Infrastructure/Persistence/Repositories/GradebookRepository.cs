@@ -45,7 +45,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
 
     public async Task<Gradebook?> FindForUpdateAsync(long gradebookId, CancellationToken ct = default)
         => await db.Gradebooks
-            .FromSqlInterpolated($"SELECT * FROM [Gradebooks] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {gradebookId}")
+            .FromSqlInterpolated($"SELECT * FROM \"Gradebooks\" WHERE id = {gradebookId} FOR UPDATE")
             .Include(item => item.Evaluations)
             .Include(item => item.GradeRevisions).ThenInclude(item => item.Evaluation)
             .Include(item => item.GradeRevisions).ThenInclude(item => item.Enrollment)
@@ -56,7 +56,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
     public async Task<(Gradebook Gradebook, bool Created)> CreateIdempotentAsync(Gradebook gradebook, CancellationToken ct = default)
     {
         _ = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM [TeachingPositions] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {gradebook.TeachingPositionId}")
+            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {gradebook.TeachingPositionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teaching position not found.");
         var existing = await db.Gradebooks.AsNoTracking()
@@ -130,7 +130,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         foreach (var result in results)
         {
             var enrollment = await db.Enrollments
-                .FromSqlInterpolated($"SELECT * FROM [Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {result.EnrollmentId}")
+                .FromSqlInterpolated($"SELECT * FROM \"Enrollments\" WHERE id = {result.EnrollmentId} FOR UPDATE")
                 .SingleAsync(ct);
             enrollment.FinalGrade = result.Average;
             enrollment.Status = result.Status;

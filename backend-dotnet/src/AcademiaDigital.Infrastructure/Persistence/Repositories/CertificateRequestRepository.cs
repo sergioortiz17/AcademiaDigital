@@ -48,7 +48,7 @@ public class CertificateRequestRepository(AppDbContext db) : ICertificateRequest
 
     public async Task<CertificateRequest?> FindForUpdateAsync(long id, CancellationToken ct = default)
         => await db.CertificateRequests
-            .FromSqlInterpolated($"SELECT * FROM [CertificateRequests] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {id}")
+            .FromSqlInterpolated($"SELECT * FROM \"CertificateRequests\" WHERE id = {id} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
 
     public Task<bool> HasActiveRequestAsync(
@@ -119,7 +119,7 @@ public class CertificateRequestRepository(AppDbContext db) : ICertificateRequest
 
     public Task<CertificateSequence> LockSequenceAsync(CancellationToken ct = default)
         => db.CertificateSequences
-            .FromSqlRaw("SELECT * FROM [CertificateSequences] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = 1")
+            .FromSqlRaw("SELECT * FROM \"CertificateSequences\" WHERE id = 1 FOR UPDATE")
             .SingleAsync(ct);
 
     public Task<CertificateIssuance?> FindIssuanceByRequestAsync(long requestId, bool tracking, CancellationToken ct = default)

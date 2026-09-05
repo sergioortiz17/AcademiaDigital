@@ -13,7 +13,7 @@ public sealed class RematriculationRepository(AppDbContext db) : IRematriculatio
         int careerId,
         CancellationToken ct = default)
         => db.StudentCareers
-            .FromSqlInterpolated($"SELECT * FROM [StudentCareers] WITH (UPDLOCK, HOLDLOCK) WHERE [StudentId] = {studentId} AND [CareerId] = {careerId} AND [IsActive] = 1")
+            .FromSqlInterpolated($"SELECT * FROM \"StudentCareers\" WHERE \"StudentId\" = {studentId} AND \"CareerId\" = {careerId} AND \"IsActive\" = true FOR UPDATE")
             .SingleOrDefaultAsync(ct);
 
     public Task<StudentRematriculation?> FindByCycleAsync(

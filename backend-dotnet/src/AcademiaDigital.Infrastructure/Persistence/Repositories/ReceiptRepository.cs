@@ -8,7 +8,7 @@ public sealed class ReceiptRepository(AppDbContext db) : IReceiptRepository
 {
     public Task<ReceiptSequence> LockSequenceAsync(CancellationToken ct = default)
         => db.ReceiptSequences
-            .FromSqlRaw("SELECT * FROM [ReceiptSequences] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = 1")
+            .FromSqlRaw("SELECT * FROM \"ReceiptSequences\" WHERE id = 1 FOR UPDATE")
             .SingleAsync(ct);
 
     public Task<Receipt?> FindByPaymentAsync(long paymentId, bool tracking, CancellationToken ct = default)

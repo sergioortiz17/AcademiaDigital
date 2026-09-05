@@ -74,7 +74,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
 
     public async Task<AttendanceSession?> FindSessionForUpdateAsync(long sessionId, CancellationToken ct = default)
         => await db.AttendanceSessions
-            .FromSqlInterpolated($"SELECT * FROM [AttendanceSessions] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {sessionId}")
+            .FromSqlInterpolated($"SELECT * FROM \"AttendanceSessions\" WHERE id = {sessionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
 
     public async Task<(AttendanceSession Session, bool Created)> CreateIdempotentAsync(
@@ -82,7 +82,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         CancellationToken ct = default)
     {
         _ = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM [TeachingPositions] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {session.TeachingPositionId}")
+            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {session.TeachingPositionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teaching position not found.");
         var existing = await db.AttendanceSessions.AsNoTracking()
@@ -174,7 +174,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
     public async Task<AttendanceRecord?> FindRecordForUpdateAsync(long recordId, CancellationToken ct = default)
     {
         var record = await db.AttendanceRecords
-            .FromSqlInterpolated($"SELECT * FROM [AttendanceRecords] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {recordId}")
+            .FromSqlInterpolated($"SELECT * FROM \"AttendanceRecords\" WHERE id = {recordId} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
         if (record is not null)
             await db.Entry(record).Reference(item => item.AttendanceSession).LoadAsync(ct);

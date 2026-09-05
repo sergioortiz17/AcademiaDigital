@@ -27,7 +27,7 @@ public class EnrollmentPeriodRepository(AppDbContext db) : IEnrollmentPeriodRepo
 
     public Task<EnrollmentPeriod?> LockForEnrollmentAsync(int id, CancellationToken ct = default)
         => db.EnrollmentPeriods
-            .FromSqlInterpolated($"SELECT * FROM [EnrollmentPeriods] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {id}")
+            .FromSqlInterpolated($"SELECT * FROM \"EnrollmentPeriods\" WHERE id = {id} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
 
     public async Task<(int Morning, int Afternoon, int Evening)> GetEnrolledShiftCountsAsync(int periodId, CancellationToken ct = default)

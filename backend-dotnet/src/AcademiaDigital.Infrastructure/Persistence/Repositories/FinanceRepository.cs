@@ -67,7 +67,7 @@ public sealed class FinanceRepository(AppDbContext db) : IFinanceRepository
 
     public Task<BillingPlan?> FindPlanForGenerationAsync(long id, CancellationToken ct = default)
         => db.BillingPlans
-            .FromSqlInterpolated($"SELECT * FROM [BillingPlans] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {id} AND [is_active] = 1")
+            .FromSqlInterpolated($"SELECT * FROM \"BillingPlans\" WHERE \"Id\" = {id} AND is_active = true FOR UPDATE")
             .Include(item => item.Items).ThenInclude(item => item.FinancialConcept)
             .SingleOrDefaultAsync(ct);
 
@@ -81,7 +81,7 @@ public sealed class FinanceRepository(AppDbContext db) : IFinanceRepository
 
     public Task<DebtGenerationBatch?> FindBatchForUpdateAsync(string idempotencyKey, CancellationToken ct = default)
         => db.DebtGenerationBatches
-            .FromSqlInterpolated($"SELECT * FROM [DebtGenerationBatches] WITH (UPDLOCK, HOLDLOCK) WHERE [idempotency_key] = {idempotencyKey}")
+            .FromSqlInterpolated($"SELECT * FROM \"DebtGenerationBatches\" WHERE idempotency_key = {idempotencyKey} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
 
     public async Task<IReadOnlyList<FinanceStudentTarget>> GetGenerationTargetsAsync(int careerId, int academicYear, DateOnly calculationDate, CancellationToken ct = default)

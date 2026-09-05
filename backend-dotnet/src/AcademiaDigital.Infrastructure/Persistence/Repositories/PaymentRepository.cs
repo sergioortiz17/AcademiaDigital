@@ -22,18 +22,18 @@ public sealed class PaymentRepository(AppDbContext db) : IPaymentRepository
 
     public Task<Payment?> FindByConfirmationKeyForUpdateAsync(string idempotencyKey, CancellationToken ct = default)
         => Graph(db.Payments
-            .FromSqlInterpolated($"SELECT * FROM [Payments] WITH (UPDLOCK, HOLDLOCK) WHERE [confirmation_idempotency_key] = {idempotencyKey}"))
+            .FromSqlInterpolated($"SELECT * FROM \"Payments\" WHERE confirmation_idempotency_key = {idempotencyKey} FOR UPDATE"))
             .SingleOrDefaultAsync(ct);
 
     public Task<Payment?> FindForUpdateAsync(Guid publicId, CancellationToken ct = default)
         => Graph(db.Payments
-            .FromSqlInterpolated($"SELECT * FROM [Payments] WITH (UPDLOCK, HOLDLOCK) WHERE [public_id] = {publicId}"))
+            .FromSqlInterpolated($"SELECT * FROM \"Payments\" WHERE public_id = {publicId} FOR UPDATE"))
             .SingleOrDefaultAsync(ct);
 
     public async Task<IReadOnlyList<StudentDebt>> LockDebtsForPaymentAsync(long paymentId, CancellationToken ct = default)
     {
         var debts = await db.StudentDebts
-            .FromSqlInterpolated($"SELECT d.* FROM [StudentDebts] d WITH (UPDLOCK, HOLDLOCK) WHERE EXISTS (SELECT 1 FROM [PaymentAllocations] a WHERE a.[payment_id] = {paymentId} AND a.[student_debt_id] = d.[Id])")
+            .FromSqlInterpolated($"SELECT d.* FROM \"StudentDebts\" d WHERE EXISTS (SELECT 1 FROM \"PaymentAllocations\" a WHERE a.payment_id = {paymentId} AND a.student_debt_id = d.\"Id\") FOR UPDATE OF d")
             .OrderBy(item => item.Id)
             .ToArrayAsync(ct);
         foreach (var debt in debts) await db.Entry(debt).ReloadAsync(ct);

@@ -32,7 +32,7 @@ public sealed class TeacherDocumentRepository(AppDbContext db) : ITeacherDocumen
         CancellationToken ct = default)
     {
         var teacher = await db.Teachers
-            .FromSqlInterpolated($"SELECT * FROM [Teachers] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = {document.TeacherId}")
+            .FromSqlInterpolated($"SELECT * FROM \"Teachers\" WHERE id = {document.TeacherId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teacher not found.");
         if (!teacher.IsActive)
