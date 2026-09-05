@@ -10,7 +10,7 @@ public sealed class AdmissionFormConfiguration : IEntityTypeConfiguration<Admiss
     {
         builder.ToTable("AdmissionForms", table => table.HasCheckConstraint(
             "CK_AdmissionForms_Capacity",
-            "[capacity] IS NULL OR ([capacity] >= 1 AND [capacity] <= 100000)"));
+            "capacity IS NULL OR (capacity >= 1 AND capacity <= 100000)"));
         builder.HasKey(form => form.Id);
         builder.Property(form => form.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(form => form.CareerId).HasColumnName("career_id").IsRequired();

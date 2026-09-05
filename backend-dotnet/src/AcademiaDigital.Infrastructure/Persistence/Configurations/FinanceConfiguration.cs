@@ -26,8 +26,8 @@ public sealed class FinancialRateConfiguration : IEntityTypeConfiguration<Financ
     {
         builder.ToTable("FinancialRates", table =>
         {
-            table.HasCheckConstraint("CK_FinancialRates_Amount", "[amount] > 0");
-            table.HasCheckConstraint("CK_FinancialRates_Surcharge", "[surcharge_percentage] >= 0 AND [surcharge_percentage] <= 100");
+            table.HasCheckConstraint("CK_FinancialRates_Amount", "amount > 0");
+            table.HasCheckConstraint("CK_FinancialRates_Surcharge", "surcharge_percentage >= 0 AND surcharge_percentage <= 100");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.FinancialConceptId).HasColumnName("financial_concept_id");
@@ -57,9 +57,9 @@ public sealed class FinancialBenefitConfiguration : IEntityTypeConfiguration<Fin
     {
         builder.ToTable("FinancialBenefits", table =>
         {
-            table.HasCheckConstraint("CK_FinancialBenefits_Percentage", "[percentage] > 0 AND [percentage] <= 100");
-            table.HasCheckConstraint("CK_FinancialBenefits_Scholarship", "([kind] = 0 AND [scholarship_id] IS NULL) OR ([kind] = 1 AND [scholarship_id] IS NOT NULL)");
-            table.HasCheckConstraint("CK_FinancialBenefits_Validity", "[valid_from] IS NULL OR [valid_to] IS NULL OR [valid_to] >= [valid_from]");
+            table.HasCheckConstraint("CK_FinancialBenefits_Percentage", "percentage > 0 AND percentage <= 100");
+            table.HasCheckConstraint("CK_FinancialBenefits_Scholarship", "(kind = 0 AND scholarship_id IS NULL) OR (kind = 1 AND scholarship_id IS NOT NULL)");
+            table.HasCheckConstraint("CK_FinancialBenefits_Validity", "valid_from IS NULL OR valid_to IS NULL OR valid_to >= valid_from");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Code).HasColumnName("code").HasMaxLength(30).IsRequired();
@@ -104,7 +104,7 @@ public sealed class BillingPlanItemConfiguration : IEntityTypeConfiguration<Bill
 {
     public void Configure(EntityTypeBuilder<BillingPlanItem> builder)
     {
-        builder.ToTable("BillingPlanItems", table => table.HasCheckConstraint("CK_BillingPlanItems_Installment", "[installment_number] > 0"));
+        builder.ToTable("BillingPlanItems", table => table.HasCheckConstraint("CK_BillingPlanItems_Installment", "installment_number > 0"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.BillingPlanId).HasColumnName("billing_plan_id");
         builder.Property(item => item.FinancialConceptId).HasColumnName("financial_concept_id");
@@ -123,8 +123,8 @@ public sealed class DebtGenerationBatchConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("DebtGenerationBatches", table =>
         {
-            table.HasCheckConstraint("CK_DebtGenerationBatches_Count", "[generated_debt_count] >= 0");
-            table.HasCheckConstraint("CK_DebtGenerationBatches_Total", "[generated_total] >= 0");
+            table.HasCheckConstraint("CK_DebtGenerationBatches_Count", "generated_debt_count >= 0");
+            table.HasCheckConstraint("CK_DebtGenerationBatches_Total", "generated_total >= 0");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PublicId).HasColumnName("public_id");
@@ -147,8 +147,8 @@ public sealed class StudentDebtConfiguration : IEntityTypeConfiguration<StudentD
     {
         builder.ToTable("StudentDebts", table =>
         {
-            table.HasCheckConstraint("CK_StudentDebts_Amounts", "[base_amount] > 0 AND [surcharge_amount] >= 0 AND [discount_amount] >= 0 AND [total_amount] >= 0 AND [paid_amount] >= 0 AND [paid_amount] <= [total_amount]");
-            table.HasCheckConstraint("CK_StudentDebts_Currency", "[currency] = 'ARS'");
+            table.HasCheckConstraint("CK_StudentDebts_Amounts", "base_amount > 0 AND surcharge_amount >= 0 AND discount_amount >= 0 AND total_amount >= 0 AND paid_amount >= 0 AND paid_amount <= total_amount");
+            table.HasCheckConstraint("CK_StudentDebts_Currency", "currency = 'ARS'");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PublicId).HasColumnName("public_id");

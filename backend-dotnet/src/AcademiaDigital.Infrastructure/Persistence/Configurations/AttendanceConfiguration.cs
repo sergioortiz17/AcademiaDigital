@@ -10,8 +10,8 @@ public sealed class AttendanceSessionConfiguration : IEntityTypeConfiguration<At
     {
         builder.ToTable("AttendanceSessions", table =>
         {
-            table.HasCheckConstraint("CK_AttendanceSessions_Units", "[units] >= 1 AND [units] <= 12");
-            table.HasCheckConstraint("CK_AttendanceSessions_TimeRange", "([scope] = 0 AND [start_time] IS NOT NULL AND [end_time] IS NOT NULL AND [end_time] > [start_time]) OR ([scope] = 1 AND [start_time] IS NULL AND [end_time] IS NULL AND [units] = 1)");
+            table.HasCheckConstraint("CK_AttendanceSessions_Units", "units >= 1 AND units <= 12");
+            table.HasCheckConstraint("CK_AttendanceSessions_TimeRange", "(scope = 0 AND start_time IS NOT NULL AND end_time IS NOT NULL AND end_time > start_time) OR (scope = 1 AND start_time IS NULL AND end_time IS NULL AND units = 1)");
         });
         builder.HasKey(session => session.Id);
         builder.Property(session => session.Id).HasColumnName("id").ValueGeneratedOnAdd();

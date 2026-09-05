@@ -47,8 +47,8 @@ public sealed class GradebookEvaluationConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("GradebookEvaluations", table =>
         {
-            table.HasCheckConstraint("CK_GradebookEvaluations_Weight", "[weight_percentage] > 0 AND [weight_percentage] <= 100");
-            table.HasCheckConstraint("CK_GradebookEvaluations_Maximum", "[maximum_score] > 0 AND [maximum_score] <= 100");
+            table.HasCheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage > 0 AND weight_percentage <= 100");
+            table.HasCheckConstraint("CK_GradebookEvaluations_Maximum", "maximum_score > 0 AND maximum_score <= 100");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
@@ -68,7 +68,7 @@ public sealed class GradeEntryRevisionConfiguration : IEntityTypeConfiguration<G
     public void Configure(EntityTypeBuilder<GradeEntryRevision> builder)
     {
         builder.ToTable("GradeEntryRevisions", table =>
-            table.HasCheckConstraint("CK_GradeEntryRevisions_Score", "[score] >= 0 AND [score] <= 100"));
+            table.HasCheckConstraint("CK_GradeEntryRevisions_Score", "score >= 0 AND score <= 100"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(item => item.GradebookId).HasColumnName("gradebook_id");

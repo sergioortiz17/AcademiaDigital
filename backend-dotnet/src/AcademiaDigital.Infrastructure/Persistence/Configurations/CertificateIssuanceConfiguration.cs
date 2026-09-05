@@ -9,7 +9,7 @@ public sealed class CertificateIssuanceConfiguration : IEntityTypeConfiguration<
     public void Configure(EntityTypeBuilder<CertificateIssuance> builder)
     {
         builder.ToTable("CertificateIssuances", table => table.HasCheckConstraint(
-            "CK_CertificateIssuances_Sequence", "[sequence_number] > 0"));
+            "CK_CertificateIssuances_Sequence", "sequence_number > 0"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(item => item.PublicId).HasColumnName("public_id");
@@ -44,7 +44,7 @@ public sealed class CertificateSequenceConfiguration : IEntityTypeConfiguration<
     public void Configure(EntityTypeBuilder<CertificateSequence> builder)
     {
         builder.ToTable("CertificateSequences", table => table.HasCheckConstraint(
-            "CK_CertificateSequences_Singleton", "[id] = 1 AND [last_value] >= 0"));
+            "CK_CertificateSequences_Singleton", "id = 1 AND last_value >= 0"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(item => item.LastValue).HasColumnName("last_value");

@@ -10,8 +10,8 @@ public sealed class ReceiptConfiguration : IEntityTypeConfiguration<Receipt>
     {
         builder.ToTable("Receipts", table =>
         {
-            table.HasCheckConstraint("CK_Receipts_Sequence", "[sequence_number] > 0");
-            table.HasCheckConstraint("CK_Receipts_Status", "[status] >= 0 AND [status] <= 2");
+            table.HasCheckConstraint("CK_Receipts_Sequence", "sequence_number > 0");
+            table.HasCheckConstraint("CK_Receipts_Status", "status >= 0 AND status <= 2");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PublicId).HasColumnName("public_id");
@@ -47,7 +47,7 @@ public sealed class ReceiptSequenceConfiguration : IEntityTypeConfiguration<Rece
     public void Configure(EntityTypeBuilder<ReceiptSequence> builder)
     {
         builder.ToTable("ReceiptSequences", table => table.HasCheckConstraint(
-            "CK_ReceiptSequences_Singleton", "[id] = 1 AND [last_value] >= 0"));
+            "CK_ReceiptSequences_Singleton", "id = 1 AND last_value >= 0"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(item => item.LastValue).HasColumnName("last_value");

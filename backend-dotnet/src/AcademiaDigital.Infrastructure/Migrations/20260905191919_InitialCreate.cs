@@ -64,7 +64,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CertificateSequences", x => x.id);
-                    table.CheckConstraint("CK_CertificateSequences_Singleton", "[id] = 1 AND [last_value] >= 0");
+                    table.CheckConstraint("CK_CertificateSequences_Singleton", "id = 1 AND last_value >= 0");
                 });
 
             migrationBuilder.CreateTable(
@@ -189,7 +189,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ReceiptSequences", x => x.id);
-                    table.CheckConstraint("CK_ReceiptSequences_Singleton", "[id] = 1 AND [last_value] >= 0");
+                    table.CheckConstraint("CK_ReceiptSequences_Singleton", "id = 1 AND last_value >= 0");
                 });
 
             migrationBuilder.CreateTable(
@@ -361,8 +361,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FinancialRates", x => x.Id);
-                    table.CheckConstraint("CK_FinancialRates_Amount", "[amount] > 0");
-                    table.CheckConstraint("CK_FinancialRates_Surcharge", "[surcharge_percentage] >= 0 AND [surcharge_percentage] <= 100");
+                    table.CheckConstraint("CK_FinancialRates_Amount", "amount > 0");
+                    table.CheckConstraint("CK_FinancialRates_Surcharge", "surcharge_percentage >= 0 AND surcharge_percentage <= 100");
                     table.ForeignKey(
                         name: "FK_FinancialRates_Careers_career_id",
                         column: x => x.career_id,
@@ -399,9 +399,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FinancialBenefits", x => x.Id);
-                    table.CheckConstraint("CK_FinancialBenefits_Percentage", "[percentage] > 0 AND [percentage] <= 100");
-                    table.CheckConstraint("CK_FinancialBenefits_Scholarship", "([kind] = 0 AND [scholarship_id] IS NULL) OR ([kind] = 1 AND [scholarship_id] IS NOT NULL)");
-                    table.CheckConstraint("CK_FinancialBenefits_Validity", "[valid_from] IS NULL OR [valid_to] IS NULL OR [valid_to] >= [valid_from]");
+                    table.CheckConstraint("CK_FinancialBenefits_Percentage", "percentage > 0 AND percentage <= 100");
+                    table.CheckConstraint("CK_FinancialBenefits_Scholarship", "(kind = 0 AND scholarship_id IS NULL) OR (kind = 1 AND scholarship_id IS NOT NULL)");
+                    table.CheckConstraint("CK_FinancialBenefits_Validity", "valid_from IS NULL OR valid_to IS NULL OR valid_to >= valid_from");
                     table.ForeignKey(
                         name: "FK_FinancialBenefits_Careers_career_id",
                         column: x => x.career_id,
@@ -611,7 +611,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AdmissionForms", x => x.id);
-                    table.CheckConstraint("CK_AdmissionForms_Capacity", "[capacity] IS NULL OR ([capacity] >= 1 AND [capacity] <= 100000)");
+                    table.CheckConstraint("CK_AdmissionForms_Capacity", "capacity IS NULL OR (capacity >= 1 AND capacity <= 100000)");
                     table.ForeignKey(
                         name: "FK_AdmissionForms_Careers_career_id",
                         column: x => x.career_id,
@@ -650,8 +650,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ExamTables", x => x.id);
-                    table.CheckConstraint("CK_ExamTables_CallNumber", "[call_number] >= 1 AND [call_number] <= 10");
-                    table.CheckConstraint("CK_ExamTables_Deadline", "[registration_deadline_utc] <= [exam_date_utc]");
+                    table.CheckConstraint("CK_ExamTables_CallNumber", "call_number >= 1 AND call_number <= 10");
+                    table.CheckConstraint("CK_ExamTables_Deadline", "registration_deadline_utc <= exam_date_utc");
                     table.ForeignKey(
                         name: "FK_ExamTables_Courses_course_id",
                         column: x => x.course_id,
@@ -845,7 +845,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BillingPlanItems", x => x.Id);
-                    table.CheckConstraint("CK_BillingPlanItems_Installment", "[installment_number] > 0");
+                    table.CheckConstraint("CK_BillingPlanItems_Installment", "installment_number > 0");
                     table.ForeignKey(
                         name: "FK_BillingPlanItems_BillingPlans_billing_plan_id",
                         column: x => x.billing_plan_id,
@@ -877,8 +877,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DebtGenerationBatches", x => x.Id);
-                    table.CheckConstraint("CK_DebtGenerationBatches_Count", "[generated_debt_count] >= 0");
-                    table.CheckConstraint("CK_DebtGenerationBatches_Total", "[generated_total] >= 0");
+                    table.CheckConstraint("CK_DebtGenerationBatches_Count", "generated_debt_count >= 0");
+                    table.CheckConstraint("CK_DebtGenerationBatches_Total", "generated_total >= 0");
                     table.ForeignKey(
                         name: "FK_DebtGenerationBatches_BillingPlans_billing_plan_id",
                         column: x => x.billing_plan_id,
@@ -918,9 +918,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Payments", x => x.Id);
-                    table.CheckConstraint("CK_Payments_Amount", "[amount] > 0");
-                    table.CheckConstraint("CK_Payments_Currency", "[currency] = 'ARS'");
-                    table.CheckConstraint("CK_Payments_Status", "[status] >= 0 AND [status] <= 4");
+                    table.CheckConstraint("CK_Payments_Amount", "amount > 0");
+                    table.CheckConstraint("CK_Payments_Currency", "currency = 'ARS'");
+                    table.CheckConstraint("CK_Payments_Status", "status >= 0 AND status <= 4");
                     table.ForeignKey(
                         name: "FK_Payments_PaymentMethods_payment_method_id",
                         column: x => x.payment_method_id,
@@ -1177,8 +1177,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     max_students = table.Column<int>(type: "integer", nullable: false),
                     is_vacant = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
                     deactivated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     deactivated_by_user_id = table.Column<long>(type: "bigint", nullable: true),
                     deactivation_reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
@@ -1189,7 +1189,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TeachingPositions", x => x.id);
-                    table.CheckConstraint("CK_TeachingPositions_AssignmentState", "([is_vacant] = 1 AND [teacher_id] IS NULL) OR ([is_vacant] = 0 AND [teacher_id] IS NOT NULL)");
+                    table.CheckConstraint("CK_TeachingPositions_AssignmentState", "(is_vacant AND teacher_id IS NULL) OR (NOT is_vacant AND teacher_id IS NOT NULL)");
                     table.ForeignKey(
                         name: "FK_TeachingPositions_Commissions_commission_id",
                         column: x => x.commission_id,
@@ -1373,7 +1373,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CourseApprovalRules", x => x.id);
-                    table.CheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "[minimum_final_exam_grade] >= 1 AND [minimum_final_exam_grade] <= 10");
+                    table.CheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "minimum_final_exam_grade >= 1 AND minimum_final_exam_grade <= 10");
                     table.ForeignKey(
                         name: "FK_CourseApprovalRules_StudyPlanCourses_study_plan_course_id",
                         column: x => x.study_plan_course_id,
@@ -1397,7 +1397,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PaymentReconciliations", x => x.Id);
-                    table.CheckConstraint("CK_PaymentReconciliations_Decision", "[decision] IN (0, 1)");
+                    table.CheckConstraint("CK_PaymentReconciliations_Decision", "decision IN (0, 1)");
                     table.ForeignKey(
                         name: "FK_PaymentReconciliations_Payments_payment_id",
                         column: x => x.payment_id,
@@ -1428,7 +1428,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PaymentReversals", x => x.Id);
-                    table.CheckConstraint("CK_PaymentReversals_Amount", "[amount] > 0");
+                    table.CheckConstraint("CK_PaymentReversals_Amount", "amount > 0");
                     table.ForeignKey(
                         name: "FK_PaymentReversals_Payments_payment_id",
                         column: x => x.payment_id,
@@ -1469,8 +1469,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Receipts", x => x.Id);
-                    table.CheckConstraint("CK_Receipts_Sequence", "[sequence_number] > 0");
-                    table.CheckConstraint("CK_Receipts_Status", "[status] >= 0 AND [status] <= 2");
+                    table.CheckConstraint("CK_Receipts_Sequence", "sequence_number > 0");
+                    table.CheckConstraint("CK_Receipts_Status", "status >= 0 AND status <= 2");
                     table.ForeignKey(
                         name: "FK_Receipts_Payments_payment_id",
                         column: x => x.payment_id,
@@ -1573,8 +1573,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StudentDebts", x => x.Id);
-                    table.CheckConstraint("CK_StudentDebts_Amounts", "[base_amount] > 0 AND [surcharge_amount] >= 0 AND [discount_amount] >= 0 AND [total_amount] >= 0 AND [paid_amount] >= 0 AND [paid_amount] <= [total_amount]");
-                    table.CheckConstraint("CK_StudentDebts_Currency", "[currency] = 'ARS'");
+                    table.CheckConstraint("CK_StudentDebts_Amounts", "base_amount > 0 AND surcharge_amount >= 0 AND discount_amount >= 0 AND total_amount >= 0 AND paid_amount >= 0 AND paid_amount <= total_amount");
+                    table.CheckConstraint("CK_StudentDebts_Currency", "currency = 'ARS'");
                     table.ForeignKey(
                         name: "FK_StudentDebts_BillingPlanItems_billing_plan_item_id",
                         column: x => x.billing_plan_item_id,
@@ -1742,8 +1742,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AttendanceSessions", x => x.id);
-                    table.CheckConstraint("CK_AttendanceSessions_TimeRange", "([scope] = 0 AND [start_time] IS NOT NULL AND [end_time] IS NOT NULL AND [end_time] > [start_time]) OR ([scope] = 1 AND [start_time] IS NULL AND [end_time] IS NULL AND [units] = 1)");
-                    table.CheckConstraint("CK_AttendanceSessions_Units", "[units] >= 1 AND [units] <= 12");
+                    table.CheckConstraint("CK_AttendanceSessions_TimeRange", "(scope = 0 AND start_time IS NOT NULL AND end_time IS NOT NULL AND end_time > start_time) OR (scope = 1 AND start_time IS NULL AND end_time IS NULL AND units = 1)");
+                    table.CheckConstraint("CK_AttendanceSessions_Units", "units >= 1 AND units <= 12");
                     table.ForeignKey(
                         name: "FK_AttendanceSessions_Commissions_commission_id",
                         column: x => x.commission_id,
@@ -2073,7 +2073,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PaymentAllocations", x => x.Id);
-                    table.CheckConstraint("CK_PaymentAllocations_Amount", "[amount] > 0");
+                    table.CheckConstraint("CK_PaymentAllocations_Amount", "amount > 0");
                     table.ForeignKey(
                         name: "FK_PaymentAllocations_Payments_payment_id",
                         column: x => x.payment_id,
@@ -2178,7 +2178,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ExamRegistrations", x => x.id);
-                    table.CheckConstraint("CK_ExamRegistrations_Attempt", "[attempt_number] >= 1");
+                    table.CheckConstraint("CK_ExamRegistrations_Attempt", "attempt_number >= 1");
                     table.ForeignKey(
                         name: "FK_ExamRegistrations_Enrollments_enrollment_id",
                         column: x => x.enrollment_id,
@@ -2220,8 +2220,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_GradebookEvaluations", x => x.id);
-                    table.CheckConstraint("CK_GradebookEvaluations_Maximum", "[maximum_score] > 0 AND [maximum_score] <= 100");
-                    table.CheckConstraint("CK_GradebookEvaluations_Weight", "[weight_percentage] > 0 AND [weight_percentage] <= 100");
+                    table.CheckConstraint("CK_GradebookEvaluations_Maximum", "maximum_score > 0 AND maximum_score <= 100");
+                    table.CheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage > 0 AND weight_percentage <= 100");
                     table.ForeignKey(
                         name: "FK_GradebookEvaluations_Gradebooks_gradebook_id",
                         column: x => x.gradebook_id,
@@ -2356,7 +2356,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ExamGradeRevisions", x => x.id);
-                    table.CheckConstraint("CK_ExamGradeRevisions_Grade", "[grade] IS NULL OR ([grade] >= 0 AND [grade] <= 10)");
+                    table.CheckConstraint("CK_ExamGradeRevisions_Grade", "grade IS NULL OR (grade >= 0 AND grade <= 10)");
                     table.ForeignKey(
                         name: "FK_ExamGradeRevisions_ExamRegistrations_exam_registration_id",
                         column: x => x.exam_registration_id,
@@ -2391,7 +2391,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_GradeEntryRevisions", x => x.id);
-                    table.CheckConstraint("CK_GradeEntryRevisions_Score", "[score] >= 0 AND [score] <= 100");
+                    table.CheckConstraint("CK_GradeEntryRevisions_Score", "score >= 0 AND score <= 100");
                     table.ForeignKey(
                         name: "FK_GradeEntryRevisions_Enrollments_enrollment_id",
                         column: x => x.enrollment_id,
@@ -2447,7 +2447,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CertificateIssuances", x => x.id);
-                    table.CheckConstraint("CK_CertificateIssuances_Sequence", "[sequence_number] > 0");
+                    table.CheckConstraint("CK_CertificateIssuances_Sequence", "sequence_number > 0");
                     table.ForeignKey(
                         name: "FK_CertificateIssuances_CertificateRequests_certificate_reques~",
                         column: x => x.certificate_request_id,

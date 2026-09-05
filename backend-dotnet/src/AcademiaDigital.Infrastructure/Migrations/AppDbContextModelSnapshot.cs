@@ -492,7 +492,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("AdmissionForms", null, t =>
                         {
-                            t.HasCheckConstraint("CK_AdmissionForms_Capacity", "[capacity] IS NULL OR ([capacity] >= 1 AND [capacity] <= 100000)");
+                            t.HasCheckConstraint("CK_AdmissionForms_Capacity", "capacity IS NULL OR (capacity >= 1 AND capacity <= 100000)");
                         });
                 });
 
@@ -751,9 +751,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("AttendanceSessions", null, t =>
                         {
-                            t.HasCheckConstraint("CK_AttendanceSessions_TimeRange", "([scope] = 0 AND [start_time] IS NOT NULL AND [end_time] IS NOT NULL AND [end_time] > [start_time]) OR ([scope] = 1 AND [start_time] IS NULL AND [end_time] IS NULL AND [units] = 1)");
+                            t.HasCheckConstraint("CK_AttendanceSessions_TimeRange", "(scope = 0 AND start_time IS NOT NULL AND end_time IS NOT NULL AND end_time > start_time) OR (scope = 1 AND start_time IS NULL AND end_time IS NULL AND units = 1)");
 
-                            t.HasCheckConstraint("CK_AttendanceSessions_Units", "[units] >= 1 AND [units] <= 12");
+                            t.HasCheckConstraint("CK_AttendanceSessions_Units", "units >= 1 AND units <= 12");
                         });
                 });
 
@@ -879,7 +879,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("BillingPlanItems", null, t =>
                         {
-                            t.HasCheckConstraint("CK_BillingPlanItems_Installment", "[installment_number] > 0");
+                            t.HasCheckConstraint("CK_BillingPlanItems_Installment", "installment_number > 0");
                         });
                 });
 
@@ -1038,7 +1038,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("CertificateIssuances", null, t =>
                         {
-                            t.HasCheckConstraint("CK_CertificateIssuances_Sequence", "[sequence_number] > 0");
+                            t.HasCheckConstraint("CK_CertificateIssuances_Sequence", "sequence_number > 0");
                         });
                 });
 
@@ -1129,7 +1129,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("CertificateSequences", null, t =>
                         {
-                            t.HasCheckConstraint("CK_CertificateSequences_Singleton", "[id] = 1 AND [last_value] >= 0");
+                            t.HasCheckConstraint("CK_CertificateSequences_Singleton", "id = 1 AND last_value >= 0");
                         });
 
                     b.HasData(
@@ -1458,7 +1458,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("CourseApprovalRules", null, t =>
                         {
-                            t.HasCheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "[minimum_final_exam_grade] >= 1 AND [minimum_final_exam_grade] <= 10");
+                            t.HasCheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "minimum_final_exam_grade >= 1 AND minimum_final_exam_grade <= 10");
                         });
                 });
 
@@ -1655,9 +1655,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("DebtGenerationBatches", null, t =>
                         {
-                            t.HasCheckConstraint("CK_DebtGenerationBatches_Count", "[generated_debt_count] >= 0");
+                            t.HasCheckConstraint("CK_DebtGenerationBatches_Count", "generated_debt_count >= 0");
 
-                            t.HasCheckConstraint("CK_DebtGenerationBatches_Total", "[generated_total] >= 0");
+                            t.HasCheckConstraint("CK_DebtGenerationBatches_Total", "generated_total >= 0");
                         });
                 });
 
@@ -1923,7 +1923,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("ExamGradeRevisions", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ExamGradeRevisions_Grade", "[grade] IS NULL OR ([grade] >= 0 AND [grade] <= 10)");
+                            t.HasCheckConstraint("CK_ExamGradeRevisions_Grade", "grade IS NULL OR (grade >= 0 AND grade <= 10)");
                         });
                 });
 
@@ -1987,7 +1987,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("ExamRegistrations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ExamRegistrations_Attempt", "[attempt_number] >= 1");
+                            t.HasCheckConstraint("CK_ExamRegistrations_Attempt", "attempt_number >= 1");
                         });
                 });
 
@@ -2076,9 +2076,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("ExamTables", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ExamTables_CallNumber", "[call_number] >= 1 AND [call_number] <= 10");
+                            t.HasCheckConstraint("CK_ExamTables_CallNumber", "call_number >= 1 AND call_number <= 10");
 
-                            t.HasCheckConstraint("CK_ExamTables_Deadline", "[registration_deadline_utc] <= [exam_date_utc]");
+                            t.HasCheckConstraint("CK_ExamTables_Deadline", "registration_deadline_utc <= exam_date_utc");
                         });
                 });
 
@@ -2225,11 +2225,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("FinancialBenefits", null, t =>
                         {
-                            t.HasCheckConstraint("CK_FinancialBenefits_Percentage", "[percentage] > 0 AND [percentage] <= 100");
+                            t.HasCheckConstraint("CK_FinancialBenefits_Percentage", "percentage > 0 AND percentage <= 100");
 
-                            t.HasCheckConstraint("CK_FinancialBenefits_Scholarship", "([kind] = 0 AND [scholarship_id] IS NULL) OR ([kind] = 1 AND [scholarship_id] IS NOT NULL)");
+                            t.HasCheckConstraint("CK_FinancialBenefits_Scholarship", "(kind = 0 AND scholarship_id IS NULL) OR (kind = 1 AND scholarship_id IS NOT NULL)");
 
-                            t.HasCheckConstraint("CK_FinancialBenefits_Validity", "[valid_from] IS NULL OR [valid_to] IS NULL OR [valid_to] >= [valid_from]");
+                            t.HasCheckConstraint("CK_FinancialBenefits_Validity", "valid_from IS NULL OR valid_to IS NULL OR valid_to >= valid_from");
                         });
                 });
 
@@ -2339,9 +2339,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("FinancialRates", null, t =>
                         {
-                            t.HasCheckConstraint("CK_FinancialRates_Amount", "[amount] > 0");
+                            t.HasCheckConstraint("CK_FinancialRates_Amount", "amount > 0");
 
-                            t.HasCheckConstraint("CK_FinancialRates_Surcharge", "[surcharge_percentage] >= 0 AND [surcharge_percentage] <= 100");
+                            t.HasCheckConstraint("CK_FinancialRates_Surcharge", "surcharge_percentage >= 0 AND surcharge_percentage <= 100");
                         });
                 });
 
@@ -2415,7 +2415,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("GradeEntryRevisions", null, t =>
                         {
-                            t.HasCheckConstraint("CK_GradeEntryRevisions_Score", "[score] >= 0 AND [score] <= 100");
+                            t.HasCheckConstraint("CK_GradeEntryRevisions_Score", "score >= 0 AND score <= 100");
                         });
                 });
 
@@ -2566,9 +2566,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("GradebookEvaluations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_GradebookEvaluations_Maximum", "[maximum_score] > 0 AND [maximum_score] <= 100");
+                            t.HasCheckConstraint("CK_GradebookEvaluations_Maximum", "maximum_score > 0 AND maximum_score <= 100");
 
-                            t.HasCheckConstraint("CK_GradebookEvaluations_Weight", "[weight_percentage] > 0 AND [weight_percentage] <= 100");
+                            t.HasCheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage > 0 AND weight_percentage <= 100");
                         });
                 });
 
@@ -2786,11 +2786,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("Payments", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Payments_Amount", "[amount] > 0");
+                            t.HasCheckConstraint("CK_Payments_Amount", "amount > 0");
 
-                            t.HasCheckConstraint("CK_Payments_Currency", "[currency] = 'ARS'");
+                            t.HasCheckConstraint("CK_Payments_Currency", "currency = 'ARS'");
 
-                            t.HasCheckConstraint("CK_Payments_Status", "[status] >= 0 AND [status] <= 4");
+                            t.HasCheckConstraint("CK_Payments_Status", "status >= 0 AND status <= 4");
                         });
                 });
 
@@ -2824,7 +2824,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("PaymentAllocations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_PaymentAllocations_Amount", "[amount] > 0");
+                            t.HasCheckConstraint("CK_PaymentAllocations_Amount", "amount > 0");
                         });
                 });
 
@@ -2947,7 +2947,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("PaymentReconciliations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_PaymentReconciliations_Decision", "[decision] IN (0, 1)");
+                            t.HasCheckConstraint("CK_PaymentReconciliations_Decision", "decision IN (0, 1)");
                         });
                 });
 
@@ -2998,7 +2998,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("PaymentReversals", null, t =>
                         {
-                            t.HasCheckConstraint("CK_PaymentReversals_Amount", "[amount] > 0");
+                            t.HasCheckConstraint("CK_PaymentReversals_Amount", "amount > 0");
                         });
                 });
 
@@ -3106,9 +3106,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("Receipts", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Receipts_Sequence", "[sequence_number] > 0");
+                            t.HasCheckConstraint("CK_Receipts_Sequence", "sequence_number > 0");
 
-                            t.HasCheckConstraint("CK_Receipts_Status", "[status] >= 0 AND [status] <= 2");
+                            t.HasCheckConstraint("CK_Receipts_Status", "status >= 0 AND status <= 2");
                         });
                 });
 
@@ -3126,7 +3126,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("ReceiptSequences", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ReceiptSequences_Singleton", "[id] = 1 AND [last_value] >= 0");
+                            t.HasCheckConstraint("CK_ReceiptSequences_Singleton", "id = 1 AND last_value >= 0");
                         });
 
                     b.HasData(
@@ -3503,9 +3503,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("StudentDebts", null, t =>
                         {
-                            t.HasCheckConstraint("CK_StudentDebts_Amounts", "[base_amount] > 0 AND [surcharge_amount] >= 0 AND [discount_amount] >= 0 AND [total_amount] >= 0 AND [paid_amount] >= 0 AND [paid_amount] <= [total_amount]");
+                            t.HasCheckConstraint("CK_StudentDebts_Amounts", "base_amount > 0 AND surcharge_amount >= 0 AND discount_amount >= 0 AND total_amount >= 0 AND paid_amount >= 0 AND paid_amount <= total_amount");
 
-                            t.HasCheckConstraint("CK_StudentDebts_Currency", "[currency] = 'ARS'");
+                            t.HasCheckConstraint("CK_StudentDebts_Currency", "currency = 'ARS'");
                         });
                 });
 
@@ -4268,7 +4268,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTime?>("DeactivatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -4315,7 +4315,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
+                        .HasDefaultValueSql("now()");
 
                     b.HasKey("Id");
 
@@ -4331,7 +4331,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.ToTable("TeachingPositions", null, t =>
                         {
-                            t.HasCheckConstraint("CK_TeachingPositions_AssignmentState", "([is_vacant] = 1 AND [teacher_id] IS NULL) OR ([is_vacant] = 0 AND [teacher_id] IS NOT NULL)");
+                            t.HasCheckConstraint("CK_TeachingPositions_AssignmentState", "(is_vacant AND teacher_id IS NULL) OR (NOT is_vacant AND teacher_id IS NOT NULL)");
                         });
                 });
 

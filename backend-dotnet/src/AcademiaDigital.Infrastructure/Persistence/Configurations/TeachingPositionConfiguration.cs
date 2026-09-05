@@ -18,8 +18,8 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
         builder.Property(tp => tp.MaxStudents).HasColumnName("max_students");
         builder.Property(tp => tp.IsVacant).HasColumnName("is_vacant").HasDefaultValue(true);
         builder.Property(tp => tp.IsActive).HasColumnName("is_active").HasDefaultValue(true);
-        builder.Property(tp => tp.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("SYSUTCDATETIME()");
-        builder.Property(tp => tp.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("SYSUTCDATETIME()");
+        builder.Property(tp => tp.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
+        builder.Property(tp => tp.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("now()");
         builder.Property(tp => tp.DeactivatedAt).HasColumnName("deactivated_at");
         builder.Property(tp => tp.DeactivatedByUserId).HasColumnName("deactivated_by_user_id");
         builder.Property(tp => tp.DeactivationReason).HasColumnName("deactivation_reason").HasMaxLength(500);
@@ -31,7 +31,7 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
         builder.HasIndex(tp => new { tp.CommissionId, tp.CourseId });
         builder.ToTable(table => table.HasCheckConstraint(
             "CK_TeachingPositions_AssignmentState",
-            "([is_vacant] = 1 AND [teacher_id] IS NULL) OR ([is_vacant] = 0 AND [teacher_id] IS NOT NULL)"));
+            "(is_vacant AND teacher_id IS NULL) OR (NOT is_vacant AND teacher_id IS NOT NULL)"));
 
         builder.HasOne(tp => tp.Course)
             .WithMany()

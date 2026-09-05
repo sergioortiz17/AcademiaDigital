@@ -10,8 +10,8 @@ public sealed class ExamTableConfiguration : IEntityTypeConfiguration<ExamTable>
     {
         builder.ToTable("ExamTables", table =>
         {
-            table.HasCheckConstraint("CK_ExamTables_CallNumber", "[call_number] >= 1 AND [call_number] <= 10");
-            table.HasCheckConstraint("CK_ExamTables_Deadline", "[registration_deadline_utc] <= [exam_date_utc]");
+            table.HasCheckConstraint("CK_ExamTables_CallNumber", "call_number >= 1 AND call_number <= 10");
+            table.HasCheckConstraint("CK_ExamTables_Deadline", "registration_deadline_utc <= exam_date_utc");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
@@ -60,7 +60,7 @@ public sealed class ExamRegistrationConfiguration : IEntityTypeConfiguration<Exa
     public void Configure(EntityTypeBuilder<ExamRegistration> builder)
     {
         builder.ToTable("ExamRegistrations", table =>
-            table.HasCheckConstraint("CK_ExamRegistrations_Attempt", "[attempt_number] >= 1"));
+            table.HasCheckConstraint("CK_ExamRegistrations_Attempt", "attempt_number >= 1"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(item => item.ExamTableId).HasColumnName("exam_table_id");
@@ -86,7 +86,7 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
     public void Configure(EntityTypeBuilder<ExamGradeRevision> builder)
     {
         builder.ToTable("ExamGradeRevisions", table =>
-            table.HasCheckConstraint("CK_ExamGradeRevisions_Grade", "[grade] IS NULL OR ([grade] >= 0 AND [grade] <= 10)"));
+            table.HasCheckConstraint("CK_ExamGradeRevisions_Grade", "grade IS NULL OR (grade >= 0 AND grade <= 10)"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(item => item.ExamRegistrationId).HasColumnName("exam_registration_id");

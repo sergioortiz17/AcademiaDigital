@@ -31,9 +31,9 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
     {
         builder.ToTable("Payments", table =>
         {
-            table.HasCheckConstraint("CK_Payments_Amount", "[amount] > 0");
-            table.HasCheckConstraint("CK_Payments_Currency", "[currency] = 'ARS'");
-            table.HasCheckConstraint("CK_Payments_Status", "[status] >= 0 AND [status] <= 4");
+            table.HasCheckConstraint("CK_Payments_Amount", "amount > 0");
+            table.HasCheckConstraint("CK_Payments_Currency", "currency = 'ARS'");
+            table.HasCheckConstraint("CK_Payments_Status", "status >= 0 AND status <= 4");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PublicId).HasColumnName("public_id");
@@ -69,7 +69,7 @@ public sealed class PaymentAllocationConfiguration : IEntityTypeConfiguration<Pa
 {
     public void Configure(EntityTypeBuilder<PaymentAllocation> builder)
     {
-        builder.ToTable("PaymentAllocations", table => table.HasCheckConstraint("CK_PaymentAllocations_Amount", "[amount] > 0"));
+        builder.ToTable("PaymentAllocations", table => table.HasCheckConstraint("CK_PaymentAllocations_Amount", "amount > 0"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PaymentId).HasColumnName("payment_id");
         builder.Property(item => item.StudentDebtId).HasColumnName("student_debt_id");
@@ -86,7 +86,7 @@ public sealed class PaymentReconciliationConfiguration : IEntityTypeConfiguratio
     public void Configure(EntityTypeBuilder<PaymentReconciliation> builder)
     {
         builder.ToTable("PaymentReconciliations", table =>
-            table.HasCheckConstraint("CK_PaymentReconciliations_Decision", "[decision] IN (0, 1)"));
+            table.HasCheckConstraint("CK_PaymentReconciliations_Decision", "decision IN (0, 1)"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PaymentId).HasColumnName("payment_id");
         builder.Property(item => item.Decision).HasColumnName("decision").HasConversion<int>();
@@ -103,7 +103,7 @@ public sealed class PaymentReversalConfiguration : IEntityTypeConfiguration<Paym
 {
     public void Configure(EntityTypeBuilder<PaymentReversal> builder)
     {
-        builder.ToTable("PaymentReversals", table => table.HasCheckConstraint("CK_PaymentReversals_Amount", "[amount] > 0"));
+        builder.ToTable("PaymentReversals", table => table.HasCheckConstraint("CK_PaymentReversals_Amount", "amount > 0"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.PublicId).HasColumnName("public_id");
         builder.Property(item => item.PaymentId).HasColumnName("payment_id");

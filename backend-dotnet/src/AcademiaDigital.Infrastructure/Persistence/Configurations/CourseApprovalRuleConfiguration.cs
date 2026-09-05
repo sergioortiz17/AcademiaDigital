@@ -9,7 +9,7 @@ public class CourseApprovalRuleConfiguration : IEntityTypeConfiguration<CourseAp
     public void Configure(EntityTypeBuilder<CourseApprovalRule> builder)
     {
         builder.ToTable("CourseApprovalRules", table =>
-            table.HasCheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "[minimum_final_exam_grade] >= 1 AND [minimum_final_exam_grade] <= 10"));
+            table.HasCheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "minimum_final_exam_grade >= 1 AND minimum_final_exam_grade <= 10"));
 
         builder.HasKey(car => car.Id);
         builder.Property(car => car.Id).HasColumnName("id").ValueGeneratedOnAdd();
