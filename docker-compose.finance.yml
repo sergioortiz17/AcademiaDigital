@@ -23,5 +23,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8091
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-AcademiaDigital};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!};SearchPath=finance
+      # Finance vive en su PROPIA base (academiadigital_finance) dentro de la MISMA instancia
+      # Postgres. Aislamiento real: el monolito no puede tocar los datos de Finance. La base se
+      # crea sola al arrancar el servicio (bootstrap) si no existe.
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=academiadigital_finance;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!}
       - Monolith__BaseUrl=http://backend:8000

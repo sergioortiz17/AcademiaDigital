@@ -59,6 +59,14 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// ── Bootstrap: asegurar que la BASE de datos propia de Finance existe ────────
+// Finance vive en su PROPIA base (academiadigital_finance) dentro de la misma instancia
+// Postgres que el monolito. Esto garantiza aislamiento REAL: el monolito y Finance no
+// comparten base, así una recreación del esquema del monolito jamás puede tocar los datos
+// de Finance (ADR 0001). Como POSTGRES_DB solo crea una base al iniciar el contenedor,
+// creamos la de Finance acá si falta, conectándonos a la base de mantenimiento 'postgres'.
+await EnsureFinanceDatabaseExistsAsync(builder.Configuration, app.Services);
+
 // ── Migrate on startup with Npgsql retries (Docker startup race) ─────────────
 await using (var scope = app.Services.CreateAsyncScope())
 {
@@ -70,18 +78,9 @@ await using (var scope = app.Services.CreateAsyncScope())
     {
         try
         {
-            // El schema 'finance' debe existir ANTES de migrar: con SearchPath=finance +
-            // HasDefaultSchema("finance"), EF busca finance.__EFMigrationsHistory y falla con
-            // 42P01 si el schema no está creado. Lo creamos de forma idempotente primero.
+            // El schema 'finance' debe existir antes de migrar (HasDefaultSchema + MigrationsHistoryTable
+            // apuntan a 'finance'); se crea idempotente.
             await db.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS finance;");
-            await db.Database.MigrateAsync();
-            await SeedPaymentMethodsAsync(db);
-            break;
-        }
-        catch (PostgresException ex) when (ex.SqlState is PostgresErrorCodes.DuplicateTable or PostgresErrorCodes.DuplicateObject)
-        {
-            startupLogger.LogWarning(ex, "Finance DB creada sin historial de migraciones detectada, recreando con migraciones...");
-            await db.Database.EnsureDeletedAsync();
             await db.Database.MigrateAsync();
             await SeedPaymentMethodsAsync(db);
             break;
@@ -92,6 +91,7 @@ await using (var scope = app.Services.CreateAsyncScope())
             startupLogger.LogWarning(ex, "Sin conexión a PostgreSQL (intento {Attempt}/{Max}), reintentando en 3s...", attempt, maxAttempts);
             await Task.Delay(3000);
         }
+        // NO hay fallback destructivo (EnsureDeleted): en producción nunca auto-borramos datos.
     }
 }
 
@@ -109,6 +109,47 @@ app.MapScalarApiReference("/scalar", options =>
 app.MapControllers();
 
 await app.RunAsync();
+
+// Crea la base de datos propia de Finance si no existe, conectándose a la base de
+// mantenimiento 'postgres' de la misma instancia. Idempotente y tolerante a que Postgres
+// todavía no acepte conexiones (reintenta). No usa EF (CREATE DATABASE no va en transacción).
+static async Task EnsureFinanceDatabaseExistsAsync(IConfiguration config, IServiceProvider services)
+{
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var connString = config.GetConnectionString("DefaultConnection")!;
+    var target = new NpgsqlConnectionStringBuilder(connString);
+    var dbName = target.Database!;
+
+    var admin = new NpgsqlConnectionStringBuilder(connString) { Database = "postgres" };
+
+    for (var attempt = 1; attempt <= 10; attempt++)
+    {
+        try
+        {
+            await using var conn = new NpgsqlConnection(admin.ConnectionString);
+            await conn.OpenAsync();
+            await using (var check = new NpgsqlCommand("SELECT 1 FROM pg_database WHERE datname = @n", conn))
+            {
+                check.Parameters.AddWithValue("n", dbName);
+                if (await check.ExecuteScalarAsync() is not null) return; // ya existe
+            }
+            // CREATE DATABASE no admite parámetros ni transacción; el nombre viene de config, no de input externo.
+            await using (var create = new NpgsqlCommand($"CREATE DATABASE \"{dbName}\"", conn))
+                await create.ExecuteNonQueryAsync();
+            logger.LogInformation("Finance: base de datos '{Db}' creada.", dbName);
+            return;
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.DuplicateDatabase)
+        {
+            return; // otra instancia la creó primero (carrera de arranque)
+        }
+        catch (Exception ex) when (attempt < 10 && ex is NpgsqlException or TimeoutException or System.Net.Sockets.SocketException)
+        {
+            logger.LogWarning("Finance: esperando Postgres para bootstrap de la base (intento {Attempt}/10)...", attempt);
+            await Task.Delay(3000);
+        }
+    }
+}
 
 // Idempotent seed of the 4 catalogue payment methods. The migration seeds them via HasData;
 // this is a safety net so a manually-created/empty schema still ends up with the catalogue.
