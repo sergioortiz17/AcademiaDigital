@@ -35,7 +35,7 @@ export class AuthInterceptor implements HttpInterceptor {
         // TEMPORAL: logout/redirect automático ante 401 deshabilitado por demo
         // (2026-09-02) para no bloquear la navegación mientras se investiga el
         // root cause (requests admin sin cancelar en ngOnDestroy que resuelven
-        // tarde con 401 tras navegar). Revertir antes de producción.
+        // tarde con 401 tras navegar). Se reactiva en el fix de fondo (v3, tarea 8).
         const message = error.error?.msg || error.message || 'An error occurred';
         return throwError(() => new Error(message));
       })

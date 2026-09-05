@@ -9,6 +9,7 @@ import { TeacherManagementComponent } from './teacher-management/teacher-managem
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
+import { CareerManagementComponent } from './career-management/career-management.component';
 import { RoleGuard } from '../../core/guards/role.guard';
 import { UserRole } from '../../store/account/account.actions';
 
@@ -46,6 +47,12 @@ const routes: Routes = [
   {
     path: 'attendance',
     component: AttendanceManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'careers',
+    component: CareerManagementComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

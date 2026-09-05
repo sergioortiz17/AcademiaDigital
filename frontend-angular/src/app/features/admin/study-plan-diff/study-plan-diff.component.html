@@ -1,0 +1,94 @@
+<ng-container *ngIf="dialogRef">
+  <h2 mat-dialog-title>Comparar planes de estudio</h2>
+</ng-container>
+
+<div [class.dialog-content]="!!dialogRef">
+
+  <div *ngIf="isPickerMode" class="picker">
+    <mat-form-field appearance="outline">
+      <mat-label>Plan A (base)</mat-label>
+      <mat-select [(ngModel)]="planAId" (selectionChange)="loadDiff()">
+        <mat-option *ngFor="let sp of studyPlans" [value]="sp.id">
+          {{ sp.code }} — {{ sp.name }} (v{{ sp.versionNumber }})
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-icon class="arrow">arrow_forward</mat-icon>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Plan B (nuevo)</mat-label>
+      <mat-select [(ngModel)]="planBId" (selectionChange)="loadDiff()">
+        <mat-option *ngFor="let sp of studyPlans" [value]="sp.id">
+          {{ sp.code }} — {{ sp.name }} (v{{ sp.versionNumber }})
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div *ngIf="errorMsg" class="msg msg--error">
+    <mat-icon>error</mat-icon> {{ errorMsg }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+
+  <div *ngIf="diff && !isLoading" class="diff-result">
+
+    <div class="diff-summary">
+      <span class="chip chip--added" *ngIf="diff.addedCourses.length">{{ diff.addedCourses.length }} agregada(s)</span>
+      <span class="chip chip--removed" *ngIf="diff.removedCourses.length">{{ diff.removedCourses.length }} quitada(s)</span>
+      <span class="chip chip--modified" *ngIf="diff.modifiedCourses.length">{{ diff.modifiedCourses.length }} modificada(s)</span>
+      <span class="chip chip--unchanged">{{ diff.unchangedCourseCount }} sin cambios</span>
+    </div>
+
+    <div class="no-changes" *ngIf="!hasChanges">
+      No hay diferencias entre los dos planes de estudio.
+    </div>
+
+    <div class="diff-block" *ngFor="let c of diff.removedCourses">
+      <div class="diff-line diff-removed">
+        <span class="diff-marker">−</span>
+        <span class="diff-code">{{ c.courseCode }}</span>
+        <span class="diff-name">{{ c.name }}</span>
+        <span class="diff-meta">Año {{ c.yearNumber }} · Cuatrimestre {{ c.semester }}</span>
+      </div>
+    </div>
+
+    <div class="diff-block" *ngFor="let c of diff.addedCourses">
+      <div class="diff-line diff-added">
+        <span class="diff-marker">+</span>
+        <span class="diff-code">{{ c.courseCode }}</span>
+        <span class="diff-name">{{ c.name }}</span>
+        <span class="diff-meta">Año {{ c.yearNumber }} · Cuatrimestre {{ c.semester }}</span>
+      </div>
+    </div>
+
+    <div class="diff-block diff-block--modified" *ngFor="let c of diff.modifiedCourses">
+      <div class="diff-line diff-modified-header">
+        <span class="diff-marker">~</span>
+        <span class="diff-code">{{ c.courseCode }}</span>
+        <span class="diff-name">{{ c.name }}</span>
+      </div>
+
+      <div class="field-change" *ngFor="let fc of c.fieldChanges">
+        <span class="field-label">{{ fieldLabel(fc.field) }}:</span>
+        <span class="diff-line diff-removed diff-inline">{{ fc.oldValue ?? '—' }}</span>
+        <span class="diff-line diff-added diff-inline">{{ fc.newValue ?? '—' }}</span>
+      </div>
+
+      <div class="field-change" *ngIf="c.prerequisiteChanges as pc">
+        <span class="field-label">Correlativas:</span>
+        <span class="diff-line diff-removed diff-inline" *ngFor="let p of pc.removed">− {{ p }}</span>
+        <span class="diff-line diff-added diff-inline" *ngFor="let p of pc.added">+ {{ p }}</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<mat-dialog-actions align="end" *ngIf="dialogRef">
+  <button type="button" mat-button (click)="close()">Cerrar</button>
+</mat-dialog-actions>

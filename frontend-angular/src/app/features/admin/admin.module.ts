@@ -21,6 +21,10 @@ import { TeachingPositionManagementComponent } from './teaching-position-managem
 import { TeachingPositionFormDialogComponent } from './teaching-position-management/teaching-position-form-dialog/teaching-position-form-dialog.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
 import { ReopenGradebookDialogComponent } from './gradebook-management/reopen-gradebook-dialog/reopen-gradebook-dialog.component';
+import { StudyPlanImportComponent } from './study-plan-import/study-plan-import.component';
+import { CareerCreateComponent } from './career-create/career-create.component';
+import { StudyPlanDiffComponent } from './study-plan-diff/study-plan-diff.component';
+import { CareerManagementComponent } from './career-management/career-management.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 
 @NgModule({
@@ -43,7 +47,11 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     TeachingPositionManagementComponent,
     TeachingPositionFormDialogComponent,
     GradebookManagementComponent,
-    ReopenGradebookDialogComponent
+    ReopenGradebookDialogComponent,
+    StudyPlanImportComponent,
+    CareerCreateComponent,
+    StudyPlanDiffComponent,
+    CareerManagementComponent
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })

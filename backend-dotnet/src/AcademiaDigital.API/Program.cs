@@ -15,12 +15,15 @@ using AcademiaDigital.Application.UseCases.Courses;
 using AcademiaDigital.Application.UseCases.Prerequisites;
 using AcademiaDigital.Application.UseCases.Students;
 using AcademiaDigital.Application.UseCases.StudyPlanCourses;
+using AcademiaDigital.Application.UseCases.StudyPlanDiff;
+using AcademiaDigital.Application.UseCases.StudyPlanImport;
 using AcademiaDigital.Application.UseCases.StudyPlans;
 using AcademiaDigital.Application.UseCases.Teachers;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
+using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
@@ -125,6 +128,9 @@ builder.Services.AddScoped<CreateStudyPlanCommandHandler>();
 builder.Services.AddScoped<UpdateStudyPlanCommandHandler>();
 builder.Services.AddScoped<ActivateStudyPlanCommandHandler>();
 builder.Services.AddScoped<GetCareerStudyPlanGroupedQueryHandler>();
+builder.Services.AddScoped<ImportStudyPlanFromCsvCommandHandler>();
+builder.Services.AddScoped<GetStudyPlanDiffQueryHandler>();
+builder.Services.AddScoped<PreviewStudyPlanDiffCommandHandler>();
 builder.Services.AddScoped<GetStudyPlanCoursesQueryHandler>();
 builder.Services.AddScoped<AddCourseToStudyPlanCommandHandler>();
 builder.Services.AddScoped<UpdateStudyPlanCourseCommandHandler>();
@@ -358,6 +364,12 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "AcademiaDigital API v1");
     c.RoutePrefix = "swagger";
+});
+
+// Scalar convive con Swagger durante la migración del equipo: reutiliza el mismo swagger.json
+app.MapScalarApiReference("/scalar", options =>
+{
+    options.OpenApiRoutePattern = "/swagger/v1/swagger.json";
 });
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────
