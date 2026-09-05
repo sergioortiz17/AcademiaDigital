@@ -49,7 +49,7 @@ public sealed class ExamTableRepository(AppDbContext db) : IExamTableRepository
     public async Task<(ExamTable ExamTable, bool Created)> CreateIdempotentAsync(ExamTable examTable, CancellationToken ct = default)
     {
         _ = await db.Courses
-            .FromSqlInterpolated($"SELECT * FROM \"Courses\" WHERE id = {examTable.CourseId} FOR UPDATE")
+            .FromSqlInterpolated($"SELECT *, xmin FROM \"Courses\" WHERE id = {examTable.CourseId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Course not found.");
         var existing = await db.ExamTables.AsNoTracking()

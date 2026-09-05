@@ -36,7 +36,7 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
 
     public Task<AdmissionForm?> LockFormForCapacityAsync(int id, CancellationToken ct = default)
         => db.AdmissionForms
-            .FromSqlInterpolated($"SELECT * FROM \"AdmissionForms\" WHERE id = {id} FOR UPDATE")
+            .FromSqlInterpolated($"SELECT *, xmin FROM \"AdmissionForms\" WHERE id = {id} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
 
     public Task<bool> FormSlugExistsAsync(string slug, CancellationToken ct = default)
