@@ -49,6 +49,7 @@ public sealed class CreateStudentCommandHandler(
     IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
     IStudentManagementService management,
+    IFinanceClient financeClient,
     IUnitOfWork unitOfWork)
 {
     public async Task<StudentDto> Handle(CreateStudentCommand command, CancellationToken ct = default)
@@ -99,7 +100,7 @@ public sealed class CreateStudentCommandHandler(
                 EmergencyContactPhone = request.EmergencyContactPhone?.Trim()
             }, transactionCt);
 
-            await studentCareerRepository.CreateAsync(new StudentCareer
+            var studentCareer = await studentCareerRepository.CreateAsync(new StudentCareer
             {
                 StudentId = student.Id,
                 CareerId = career.Id,
@@ -113,12 +114,26 @@ public sealed class CreateStudentCommandHandler(
                     request.AcademicYear!.Value, request.YearNumber!.Value, request.StudyPlanMigrationReason),
                     command.ActorId, transactionCt);
             }
-            return student;
+            return (student, studentCareer);
         }, ct);
 
-        created.User = user;
-        created.Career = career;
-        return await StudentDtoMapper.MapAsync(created, studentCareerRepository, studentAcademicRepository, ct);
+        var createdStudent = created.student;
+
+        // Finance (ADR 0001): registrar la deuda de matriculación es fire-and-forget y NUNCA
+        // bloquea. Se llama DESPUÉS de commitear la matriculación; si Finance falla, se ignora.
+        // BillingPlanId va null: hoy el flujo de alta de alumno no resuelve un plan de facturación,
+        // así que el cliente loguea y omite (el seam queda cableado para cuando exista un plan).
+        await financeClient.TryGenerateMatriculationDebtsAsync(new GenerateMatriculationDebtsRequest(
+            StudentId: createdStudent.Id,
+            CareerId: career.Id,
+            StudentCareerId: created.studentCareer.Id,
+            AcademicYear: request.AcademicYear ?? DateTime.UtcNow.Year,
+            BillingPlanId: null,
+            ActorUserId: command.ActorId), ct);
+
+        createdStudent.User = user;
+        createdStudent.Career = career;
+        return await StudentDtoMapper.MapAsync(createdStudent, studentCareerRepository, studentAcademicRepository, ct);
     }
 }
 

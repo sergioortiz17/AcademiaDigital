@@ -42,6 +42,9 @@ services:
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__ExpirationDays=7
       - Cors__AllowedOrigins__0=http://localhost:4200
+      # Microservicio Finance (ADR 0001). Fire-and-forget: si no está disponible, la matriculación
+      # no se bloquea. finance_api se levanta con docker-compose.finance.yml en la misma red.
+      - Finance__BaseUrl=http://finance_api:8091
 
   # ── Frontend Angular ──────────────────────────────────────────────────────
   frontend:

@@ -109,13 +109,32 @@ datos, solo presentación.
 - Finance→monolito (nombres) degradado a id ante falla.
 - Ninguna transacción cruza servicios. Consistencia eventual aceptada para la deuda.
 
-## Cómo se levanta (a completar en implementación)
+## Cómo se levanta
 
 ```bash
 # el monolito + su Postgres ya corriendo (docker-compose.yml principal)
+docker compose up -d db backend
+# el servicio Finance (reusa la misma instancia Postgres, schema 'finance')
 docker compose -f docker-compose.finance.yml up --build
-# crea el schema 'finance' + rol, aplica migraciones, siembra PaymentMethods, expone la API
 ```
 
-Puerto previsto: **8091** (monolito 8000, frontend 4200, dev-tools 8090). Reutiliza la
-instancia Postgres del `.env`; usa credenciales/rol propios de Finance.
+- Puerto **8091** (monolito 8000, frontend 4200, dev-tools 8090).
+- Al arrancar: crea el schema `finance` (idempotente), aplica su migración `InitialCreate`
+  y siembra los 4 `PaymentMethods` de catálogo. Verificado end-to-end.
+- **Swagger** http://localhost:8091/swagger · **Scalar** http://localhost:8091/scalar/
+
+### Autenticación entre servicios
+
+Finance es un servicio interno: **no re-autentica JWT**. Confía en la identidad que el
+monolito/gateway le reenvía por headers `X-User-Id` y `X-User-Role` en el borde interno.
+Los endpoints de admin exigen `X-User-Role: Admin`. `debts/generate` además exige un
+header `Idempotency-Key` (el monolito usa `matricula-{studentCareerId}-{academicYear}`).
+
+### Nota sobre generación de deuda en la matriculación
+
+El monolito llama a `POST /debts/generate` de forma **fire-and-forget** al matricular un
+alumno (`CreateStudentCommandHandler` → `IFinanceClient`, timeout 5s, errores logueados y
+nunca propagados: la matriculación jamás se bloquea). Hoy ese llamado pasa
+`billingPlanId = null` porque el alta de alumno todavía no resuelve un plan de facturación;
+en ese caso el cliente **loguea y omite** (el seam queda cableado). Para generar deuda real,
+un admin debe crear antes un `BillingPlan` en Finance y disparar la generación con ese id.

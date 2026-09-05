@@ -56,6 +56,12 @@ public static class DependencyInjection
         // Servicios
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+        // Cliente HTTP del microservicio Finance (ADR 0001). Fire-and-forget: nunca bloquea.
+        services.AddHttpClient<IFinanceClient, HttpFinanceClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5); // corto: no queremos demorar la matriculación
+        });
         // Parser CSV de planes de estudio (impl con CsvHelper vive acá, en Infrastructure;
         // Application solo conoce la interfaz IStudyPlanCsvParser).
         services.AddScoped<AcademiaDigital.Application.UseCases.StudyPlanImport.IStudyPlanCsvParser,
