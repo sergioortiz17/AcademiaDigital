@@ -34,12 +34,14 @@ ya no tiene las entidades/handlers/repos/config/controller de Finance.
 
 ## Base de datos
 
-- Schema Postgres **`finance`** en la **misma instancia** que el monolito, con **rol
-  propio `finance_user`** restringido a ese schema. Aislamiento lógico real: **no hay FK
-  cruzando** al schema del monolito.
-- `FinanceDbContext` propio + migraciones propias (`InitialCreate` del servicio). Se
-  configura el schema por defecto con `modelBuilder.HasDefaultSchema("finance")`.
-- **Sin migración de datos**: las tablas de Finance están vacías hoy (verificado); solo se
+- Finance usa una **base de datos propia (`academiadigital_finance`) en la misma instancia**
+  Postgres que el monolito (`AcademiaDigital`). Base separada = aislamiento real: una
+  recreación del esquema del monolito nunca puede tocar los datos de Finance.
+- Dentro de su base, las tablas van en el schema `finance` (`HasDefaultSchema("finance")` +
+  `MigrationsHistoryTable` en ese schema). La base se crea sola al arrancar (bootstrap
+  idempotente contra la base de mantenimiento `postgres`).
+- `FinanceDbContext` propio + migraciones propias (`InitialCreate`).
+- **Sin migración de datos**: las tablas de Finance estaban vacías (verificado); solo se
   re-siembran los **4 PaymentMethods** de catálogo.
 - Migrable a instancia separada en el futuro cambiando solo la connection string.
 

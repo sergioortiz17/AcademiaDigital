@@ -55,13 +55,25 @@ Factores concretos del contexto:
 
 ## Aislamiento de datos
 
-- Finance usa un **schema Postgres separado (`finance`) en la misma instancia**, con su
-  **propio rol** (`finance_user`) restringido a ese schema. Esto da aislamiento **lógico
-  real**: no puede existir una FK cruzando entre el schema del monolito y el de Finance.
+- Finance usa una **base de datos propia (`academiadigital_finance`) en la misma instancia
+  Postgres** que el monolito (que usa `AcademiaDigital`). Base separada, no un schema
+  compartido: da aislamiento **real**. El monolito no puede tocar los datos de Finance ni
+  siquiera por accidente — clave porque el arranque del monolito tiene un fallback que puede
+  recrear su base; con bases separadas eso jamás afecta a Finance.
+- Dentro de su base, Finance organiza sus tablas en el schema `finance` (con
+  `HasDefaultSchema("finance")` + `MigrationsHistoryTable` en ese schema). La base se crea
+  sola al arrancar el servicio (bootstrap idempotente contra la base de mantenimiento).
 - No es una instancia física separada (no se justifica en una sola máquina de OCI), pero
   el diseño permite migrar a instancia separada **cambiando solo la connection string**,
   sin tocar código, porque no hay dependencias cruzadas a nivel de datos.
-- Finance tiene su propio `FinanceDbContext` y sus propias migraciones EF.
+- Finance tiene su propio `FinanceDbContext` y sus propias migraciones EF. Ningún servicio
+  hace `EnsureDeleted`/drop destructivo automático en producción.
+
+> Nota histórica: la primera implementación usó un schema `finance` dentro de la base del
+> monolito. Al probar el stack completo se detectó que el fallback de recreación del monolito
+> borraba esa base y se llevaba el schema de Finance — el acoplamiento oculto que este ADR
+> busca evitar. Se corrigió moviendo Finance a su base propia. Es exactamente el tipo de
+> acoplamiento por base compartida que un microservicio debe rechazar.
 
 ## Comunicación
 
