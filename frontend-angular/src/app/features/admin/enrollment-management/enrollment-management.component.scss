@@ -243,12 +243,25 @@
     padding-left: 18px;
 
     li {
-      margin: 2px 0;
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
+
+    .gap-create-btn {
+      line-height: 28px;
+      min-width: 0;
+      padding: 0 10px;
+    }
+  }
+
+  .coverage-nav-btn {
+    flex: 0 0 auto;
+    align-self: flex-start;
   }
 
   button {
     flex: 0 0 auto;
-    align-self: center;
   }
 }

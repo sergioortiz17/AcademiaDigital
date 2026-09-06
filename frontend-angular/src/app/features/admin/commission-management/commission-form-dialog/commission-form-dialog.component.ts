@@ -4,8 +4,10 @@ import { Commission, UpsertCommissionRequest } from '../../../../core/services/c
 
 export interface CommissionFormDialogData {
   commission: Commission | null;
-  /** Año académico precargado al crear (viene del atajo de cobertura de la Parte 11). */
+  /** Precargas al crear (atajo desde el aviso de cobertura de la Parte 11 / 13). */
   presetAcademicYear?: number | null;
+  presetYearNumber?: number | null;
+  presetShift?: string | null;
 }
 
 /**
@@ -19,6 +21,13 @@ const SHIFTS = [
   { value: 'Tarde', label: 'Tarde' },
   { value: 'Noche', label: 'Noche' }
 ];
+
+// AcademicYear es AÑO CALENDARIO real (2024, 2025, ...), NO un número de ciclo (1,2,3).
+// Es la convención única del sistema: todos los DTOs del backend validan [Range(2000, 2100)] y el
+// auto-match de la Parte 6 compara Period.AcademicYear == Commission.AcademicYear por año calendario.
+// Este rango coincide con esa validación del backend (no es un número arbitrario).
+const MIN_ACADEMIC_YEAR = 2000;
+const MAX_ACADEMIC_YEAR = 2100;
 
 @Component({
   selector: 'app-commission-form-dialog',
@@ -50,6 +59,10 @@ export class CommissionFormDialogComponent {
     } else if (data.presetAcademicYear) {
       this.academicYear = data.presetAcademicYear;
     }
+    if (!data.commission) {
+      if (data.presetYearNumber) this.yearNumber = data.presetYearNumber;
+      if (data.presetShift && SHIFTS.some(s => s.value === data.presetShift)) this.shift = data.presetShift!;
+    }
   }
 
   static shiftLabel(shift: string): string {
@@ -59,7 +72,7 @@ export class CommissionFormDialogComponent {
   get isValid(): boolean {
     return !!this.code.trim()
       && !!this.name.trim()
-      && this.academicYear >= 2000 && this.academicYear <= 2100
+      && this.academicYear >= MIN_ACADEMIC_YEAR && this.academicYear <= MAX_ACADEMIC_YEAR
       && this.yearNumber >= 1 && this.yearNumber <= 20
       && SHIFTS.some(s => s.value === this.shift);
   }

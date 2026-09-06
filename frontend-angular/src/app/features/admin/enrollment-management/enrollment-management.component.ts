@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import {
   EnrollmentService,
   EnrollmentPeriodDto,
@@ -9,6 +10,11 @@ import {
 } from '../../../core/services/enrollment. service';
 import { CareerService, Career } from '../../../core/services/career.service';
 import { SubjectService, StudyPlan } from '../../../core/services/subject.service';
+import { CommissionService, UpsertCommissionRequest } from '../../../core/services/commission.service';
+import {
+  CommissionFormDialogComponent,
+  CommissionFormDialogData
+} from '../commission-management/commission-form-dialog/commission-form-dialog.component';
 
 @Component({
   selector: 'app-enrollment-management',
@@ -49,6 +55,8 @@ export class EnrollmentManagementComponent implements OnInit {
     private readonly enrollmentService: EnrollmentService,
     private readonly careerService: CareerService,
     private readonly subjectService: SubjectService,
+    private readonly commissionService: CommissionService,
+    private readonly dialog: MatDialog,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -105,6 +113,49 @@ export class EnrollmentManagementComponent implements OnInit {
   goToCreateCommission(period: EnrollmentPeriodDto): void {
     this.router.navigate(['/app/admin/commissions'], {
       queryParams: { careerId: period.careerId, academicYear: period.academicYear }
+    });
+  }
+
+  /**
+   * Parte 13: crear la comisión faltante SIN salir de la pantalla. Abre el mismo
+   * CommissionFormDialogComponent como modal, precargando carrera+año del período y
+   * año-del-plan+turno del gap puntual clickeado (un solo click para tapar ese hueco). Al
+   * confirmar, crea la comisión y refresca la cobertura del período en el momento.
+   */
+  createCommissionForGap(period: EnrollmentPeriodDto, gap: CommissionCoverageGap): void {
+    const data: CommissionFormDialogData = {
+      commission: null,
+      presetAcademicYear: period.academicYear,
+      presetYearNumber: gap.yearNumber,
+      presetShift: gap.shift
+    };
+    this.openCommissionDialog(period, data);
+  }
+
+  /** Crear una comisión para el período sin precargar un gap específico (desde el alta). */
+  createCommissionForPeriod(period: EnrollmentPeriodDto): void {
+    this.openCommissionDialog(period, { commission: null, presetAcademicYear: period.academicYear });
+  }
+
+  private openCommissionDialog(period: EnrollmentPeriodDto, data: CommissionFormDialogData): void {
+    const ref = this.dialog.open(CommissionFormDialogComponent, {
+      width: '520px', maxWidth: '95vw', disableClose: true, data
+    });
+    ref.afterClosed().subscribe((request: UpsertCommissionRequest | null) => {
+      if (!request) return;
+      this.commissionService.createCommission(period.careerId, request).subscribe({
+        next: () => {
+          this.successMsg = `Comisión "${request.code}" creada para ${period.careerName}.`;
+          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+          // Refrescar cobertura del período en el momento (sin recargar la página).
+          this.loadCoverage(period.id);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la comisión.';
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 
