@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
-import { logout } from '../../../store/account/account.actions';
+import { Observable } from 'rxjs';
+import { logout, UserModel } from '../../../store/account/account.actions';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
-import { selectToken } from '../../../store/account/account.selectors';
+import { selectToken, selectUser } from '../../../store/account/account.selectors';
 import { take } from 'rxjs/operators';
 
 @Component({
@@ -16,24 +16,15 @@ import { take } from 'rxjs/operators';
 })
 export class NavRightComponent {
   profileOpen = false;
-  langOpen = false;
+  user$: Observable<UserModel | null>;
 
   constructor(
     private readonly store: Store,
     private readonly router: Router,
-    private readonly translate: TranslateService,
     private readonly authService: AuthService,
     readonly themeService: ThemeService
-  ) {}
-
-  get currentLang(): string {
-    return this.translate.currentLang ?? 'es';
-  }
-
-  changeLanguage(lang: string): void {
-    this.translate.use(lang);
-    localStorage.setItem('i18nextLng', lang);
-    this.langOpen = false;
+  ) {
+    this.user$ = this.store.select(selectUser);
   }
 
   handleLogout(): void {
@@ -51,16 +42,9 @@ export class NavRightComponent {
 
   toggleProfile(): void {
     this.profileOpen = !this.profileOpen;
-    this.langOpen = false;
-  }
-
-  toggleLang(): void {
-    this.langOpen = !this.langOpen;
-    this.profileOpen = false;
   }
 
   closeAll(): void {
     this.profileOpen = false;
-    this.langOpen = false;
   }
 }

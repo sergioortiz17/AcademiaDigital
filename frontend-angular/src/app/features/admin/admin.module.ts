@@ -9,6 +9,23 @@ import { UserDetailsDialogComponent } from '../../shared/user-details-dialog/use
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
+import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
+import { ReopenSessionDialogComponent } from './attendance-management/reopen-session-dialog/reopen-session-dialog.component';
+import { JustifyAttendanceDialogComponent } from './attendance-management/justify-attendance-dialog/justify-attendance-dialog.component';
+import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
+import { TeacherFormDialogComponent } from './teacher-management/teacher-form-dialog/teacher-form-dialog.component';
+import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
+import { AssignPositionDialogComponent } from './teacher-detail/assign-position-dialog/assign-position-dialog.component';
+import { EndAssignmentDialogComponent } from './teacher-detail/end-assignment-dialog/end-assignment-dialog.component';
+import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
+import { TeachingPositionFormDialogComponent } from './teaching-position-management/teaching-position-form-dialog/teaching-position-form-dialog.component';
+import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
+import { ReopenGradebookDialogComponent } from './gradebook-management/reopen-gradebook-dialog/reopen-gradebook-dialog.component';
+import { StudyPlanImportComponent } from './study-plan-import/study-plan-import.component';
+import { CareerCreateComponent } from './career-create/career-create.component';
+import { StudyPlanDiffComponent } from './study-plan-diff/study-plan-diff.component';
+import { CareerManagementComponent } from './career-management/career-management.component';
+import { StudentCommissionAssignmentComponent } from './student-commission-assignment/student-commission-assignment.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 
 @NgModule({
@@ -19,7 +36,24 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     EnrollmentManagementComponent,
     EnrolledStudentsComponent,
     EnrollmentReportsComponent,
-    SumCountPipe
+    SumCountPipe,
+    AttendanceManagementComponent,
+    ReopenSessionDialogComponent,
+    JustifyAttendanceDialogComponent,
+    TeacherManagementComponent,
+    TeacherFormDialogComponent,
+    TeacherDetailComponent,
+    AssignPositionDialogComponent,
+    EndAssignmentDialogComponent,
+    TeachingPositionManagementComponent,
+    TeachingPositionFormDialogComponent,
+    GradebookManagementComponent,
+    ReopenGradebookDialogComponent,
+    StudyPlanImportComponent,
+    CareerCreateComponent,
+    StudyPlanDiffComponent,
+    CareerManagementComponent,
+    StudentCommissionAssignmentComponent
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })

@@ -37,7 +37,7 @@ public sealed class GetStudentByIdQueryHandler(
     public async Task<StudentDto> Handle(GetStudentByIdQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
-            ?? throw new KeyNotFoundException("Student not found.");
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
         return await StudentDtoMapper.MapAsync(student, studentCareerRepository, studentAcademicRepository, ct);
     }
 }
@@ -49,6 +49,7 @@ public sealed class CreateStudentCommandHandler(
     IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
     IStudentManagementService management,
+    IFinanceClient financeClient,
     IUnitOfWork unitOfWork)
 {
     public async Task<StudentDto> Handle(CreateStudentCommand command, CancellationToken ct = default)
@@ -62,23 +63,23 @@ public sealed class CreateStudentCommandHandler(
             request.YearNumber.HasValue
         };
         if (academicValues.Any(x => x) && !academicValues.All(x => x))
-            throw new ArgumentException("StudyPlanId, CommissionId, AcademicYear and YearNumber must be provided together.");
+            throw new ArgumentException("StudyPlanId, CommissionId, AcademicYear y YearNumber deben proporcionarse juntos.");
 
         var user = await userRepository.FindByIdAsync(request.UserId, ct)
-            ?? throw new KeyNotFoundException("User not found.");
+            ?? throw new KeyNotFoundException("Usuario no encontrado.");
         if (user.Role != UserRole.Alumno)
-            throw new InvalidOperationException("Only users with Alumno role can be linked as students.");
+            throw new InvalidOperationException("Solo los usuarios con rol Alumno pueden vincularse como estudiantes.");
 
         var career = await careerRepository.FindByIdAsync(request.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
-        if (!career.IsActive) throw new InvalidOperationException("Career is inactive.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
+        if (!career.IsActive) throw new InvalidOperationException("La carrera está inactiva.");
 
         if (await studentRepository.FindByUserIdAsync(user.Id, ct) is not null)
-            throw new InvalidOperationException("User is already linked to a student.");
+            throw new InvalidOperationException("El usuario ya está vinculado a un alumno.");
 
         var legajo = request.LegajoNumber.Trim();
         if (await studentRepository.FindByLegajoAsync(legajo, ct) is not null)
-            throw new InvalidOperationException("Legajo number already exists.");
+            throw new InvalidOperationException("El número de legajo ya existe.");
 
         var status = Enum.Parse<StudentStatus>(request.Status, ignoreCase: true);
         var created = await unitOfWork.ExecuteInTransactionAsync(async transactionCt =>
@@ -99,7 +100,7 @@ public sealed class CreateStudentCommandHandler(
                 EmergencyContactPhone = request.EmergencyContactPhone?.Trim()
             }, transactionCt);
 
-            await studentCareerRepository.CreateAsync(new StudentCareer
+            var studentCareer = await studentCareerRepository.CreateAsync(new StudentCareer
             {
                 StudentId = student.Id,
                 CareerId = career.Id,
@@ -113,12 +114,26 @@ public sealed class CreateStudentCommandHandler(
                     request.AcademicYear!.Value, request.YearNumber!.Value, request.StudyPlanMigrationReason),
                     command.ActorId, transactionCt);
             }
-            return student;
+            return (student, studentCareer);
         }, ct);
 
-        created.User = user;
-        created.Career = career;
-        return await StudentDtoMapper.MapAsync(created, studentCareerRepository, studentAcademicRepository, ct);
+        var createdStudent = created.student;
+
+        // Finance (ADR 0001): registrar la deuda de matriculación es fire-and-forget y NUNCA
+        // bloquea. Se llama DESPUÉS de commitear la matriculación; si Finance falla, se ignora.
+        // BillingPlanId va null: hoy el flujo de alta de alumno no resuelve un plan de facturación,
+        // así que el cliente loguea y omite (el seam queda cableado para cuando exista un plan).
+        await financeClient.TryGenerateMatriculationDebtsAsync(new GenerateMatriculationDebtsRequest(
+            StudentId: createdStudent.Id,
+            CareerId: career.Id,
+            StudentCareerId: created.studentCareer.Id,
+            AcademicYear: request.AcademicYear ?? DateTime.UtcNow.Year,
+            BillingPlanId: null,
+            ActorUserId: command.ActorId), ct);
+
+        createdStudent.User = user;
+        createdStudent.Career = career;
+        return await StudentDtoMapper.MapAsync(createdStudent, studentCareerRepository, studentAcademicRepository, ct);
     }
 }
 

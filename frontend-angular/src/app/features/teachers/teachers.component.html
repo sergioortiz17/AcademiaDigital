@@ -1,12 +1,59 @@
 <div class="page-header">
-  <h1>{{ 'pages.teachers.title' | translate }}</h1>
-  <p>{{ 'pages.teachers.description' | translate }}</p>
+  <h1>Mis asignaciones</h1>
+  <p>Materias y comisiones a tu cargo.</p>
 </div>
 
-<mat-card class="coming-soon-card">
+<div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+<mat-card class="assignments-card">
   <mat-card-content>
-    <mat-icon>group</mat-icon>
-    <h2>Próximamente</h2>
-    <p>{{ 'pages.teachers.comingSoon' | translate }}</p>
+
+    <div class="toolbar">
+      <button mat-stroked-button (click)="toggleIncludeEnded()">
+        {{ includeEnded ? 'Solo vigentes' : 'Ver historial completo' }}
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <table class="assignments-table">
+        <thead>
+          <tr>
+            <th>Materia — Comisión</th>
+            <th>Tipo</th>
+            <th>Ciclo</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of assignments">
+            <td>
+              <div class="course-name">{{ a.courseName }}</div>
+              <div class="commission-name">{{ a.commissionName }}</div>
+            </td>
+            <td>{{ a.positionType }}</td>
+            <td>{{ a.academicYear }} · {{ a.semester }}°</td>
+            <td>{{ a.startedOn }}</td>
+            <td>{{ a.endedOn || '—' }}</td>
+            <td>
+              <span class="status-chip" [ngClass]="a.isCurrent ? 'status-chip--active' : 'status-chip--inactive'">
+                {{ a.isCurrent ? 'Vigente' : 'Finalizada' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty-state" *ngIf="!isLoading && assignments.length === 0">
+        <mat-icon>event_busy</mat-icon>
+        <p>No tenés asignaciones registradas.</p>
+      </div>
+    </div>
+
   </mat-card-content>
 </mat-card>

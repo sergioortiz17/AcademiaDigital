@@ -1,0 +1,63 @@
+<div class="assign-page">
+  <h1>Asignar comisión a alumno</h1>
+  <p class="subtitle">
+    Elegí un alumno y una comisión de su carrera. El plan de estudios, el año académico y el
+    año del plan se derivan automáticamente de la comisión y del plan actual del alumno.
+  </p>
+
+  <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+  <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+
+  <div class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Carrera</mat-label>
+      <mat-select [(ngModel)]="selectedCareerId" (selectionChange)="onCareerChange()">
+        <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.code }} · {{ c.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Alumno</mat-label>
+      <mat-select [(ngModel)]="selectedStudentId" (selectionChange)="onStudentChange()" [disabled]="!selectedCareerId || isLoading">
+        <mat-option *ngFor="let s of students" [value]="s.id">
+          {{ s.fullName }} · legajo {{ s.legajoNumber }}{{ s.dni ? (' · DNI ' + s.dni) : '' }}
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="selectedCareerId && !isLoading && students.length === 0">No hay alumnos en esta carrera.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Comisión</mat-label>
+      <mat-select [(ngModel)]="selectedCommissionId" [disabled]="!selectedCareerId">
+        <mat-option *ngFor="let cm of commissions" [value]="cm.id">
+          {{ cm.code }} · {{ cm.name }} (año {{ cm.academicYear }}, {{ cm.yearNumber }}° año)
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="selectedCareerId && commissions.length === 0">No hay comisiones activas en esta carrera.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Motivo (opcional)</mat-label>
+      <input matInput [(ngModel)]="reason" maxlength="500" placeholder="Ej: cambio de comisión" />
+    </mat-form-field>
+  </div>
+
+  <!-- Resumen de lo que se va a asignar (derivado, solo lectura) -->
+  <div class="derived" *ngIf="selectedStudent && selectedCommission">
+    <h3>Se va a asignar</h3>
+    <ul>
+      <li><b>Alumno:</b> {{ selectedStudent.userName }} (plan actual: {{ selectedStudent.currentStudyPlanName || '—' }})</li>
+      <li><b>Comisión:</b> {{ selectedCommission.code }} · {{ selectedCommission.name }}</li>
+      <li><b>Año académico:</b> {{ selectedCommission.academicYear }} · <b>Año del plan:</b> {{ selectedCommission.yearNumber }}°</li>
+    </ul>
+    <p class="warn" *ngIf="!selectedStudent.currentStudyPlanId">
+      ⚠️ El alumno no tiene un plan de estudios actual asignado; no se puede vincular la comisión.
+    </p>
+  </div>
+
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
+      {{ isSubmitting ? 'Asignando…' : 'Asignar comisión' }}
+    </button>
+  </div>
+</div>

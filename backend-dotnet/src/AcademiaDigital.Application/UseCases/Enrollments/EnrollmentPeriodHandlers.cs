@@ -1,5 +1,7 @@
 using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Interfaces.Repositories;
+using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.Enrollments;
 
@@ -81,7 +83,7 @@ public sealed class GetEnrolledStudentsQueryHandler(
     public async Task<(int Total, IReadOnlyList<EnrolledStudentDto> Students)> Handle(GetEnrolledStudentsQuery query, CancellationToken ct = default)
     {
         _ = await periodRepository.FindByIdAsync(query.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         // One SQL query projecting only needed columns
         var rows = await enrollmentRepository.GetStudentRowsByPeriodAsync(query.PeriodId, ct);
@@ -114,19 +116,26 @@ public sealed class GetEnrolledStudentsQueryHandler(
 public sealed class OpenEnrollmentPeriodCommandHandler(
     IEnrollmentPeriodRepository repository,
     ICareerRepository careerRepository,
-    IStudyPlanRepository studyPlanRepository)
+    IStudyPlanRepository studyPlanRepository,
+    EnrollmentCapacityPolicy capacityPolicy,
+    TimeProvider timeProvider)
 {
     public async Task<EnrollmentPeriodDto> Handle(OpenEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
+        capacityPolicy.EnsureValidQuotas(
+            command.QuotasMorning,
+            command.QuotasAfternoon,
+            command.QuotasEvening);
+
         _ = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
 
         _ = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
         var existing = await repository.GetActiveByCareerAsync(command.CareerId, ct);
         if (existing is not null && existing.AcademicYear == command.AcademicYear && existing.Semester == command.Semester)
-            throw new InvalidOperationException("There is already an active enrollment period for this career, year and semester.");
+            throw new InvalidOperationException("Ya existe un período de inscripción activo para esta carrera, año y cuatrimestre.");
 
         var period = new EnrollmentPeriod
         {
@@ -138,7 +147,7 @@ public sealed class OpenEnrollmentPeriodCommandHandler(
             QuotasAfternoon = command.QuotasAfternoon,
             QuotasEvening = command.QuotasEvening,
             IsActive = true,
-            StartDate = DateTime.UtcNow
+            StartDate = timeProvider.GetUtcNow().UtcDateTime
         };
 
         var created = await repository.CreateAsync(period, ct);
@@ -151,7 +160,7 @@ public sealed class CloseEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposit
     public async Task Handle(CloseEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
         var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         period.IsActive = false;
         period.EndDate = DateTime.UtcNow;
@@ -167,22 +176,42 @@ public sealed record ActivateEnrollmentPeriodCommand(int PeriodId);
 public sealed record DeleteEnrollmentPeriodCommand(int PeriodId);
 public sealed record GetPeriodReportQuery(int PeriodId);
 
-public sealed class UpdatePeriodQuotasCommandHandler(IEnrollmentPeriodRepository repository)
+public sealed class UpdatePeriodQuotasCommandHandler(
+    IEnrollmentPeriodRepository repository,
+    EnrollmentCapacityPolicy capacityPolicy,
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider)
 {
     public async Task<EnrollmentPeriodDto> Handle(UpdatePeriodQuotasCommand command, CancellationToken ct = default)
     {
-        var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+        capacityPolicy.EnsureValidQuotas(
+            command.QuotasMorning,
+            command.QuotasAfternoon,
+            command.QuotasEvening);
 
-        period.QuotasMorning = command.QuotasMorning;
-        period.QuotasAfternoon = command.QuotasAfternoon;
-        period.QuotasEvening = command.QuotasEvening;
-        period.UpdatedAt = DateTime.UtcNow;
+        await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
+        {
+            var period = await repository.LockForEnrollmentAsync(command.PeriodId, transactionCt)
+                ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
+            var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, transactionCt);
+            capacityPolicy.EnsureQuotasCoverCurrentEnrollment(
+                counts,
+                command.QuotasMorning,
+                command.QuotasAfternoon,
+                command.QuotasEvening);
 
-        await repository.UpdateAsync(period, ct);
+            period.QuotasMorning = command.QuotasMorning;
+            period.QuotasAfternoon = command.QuotasAfternoon;
+            period.QuotasEvening = command.QuotasEvening;
+            period.UpdatedAt = timeProvider.GetUtcNow().UtcDateTime;
+            await repository.UpdateAsync(period, transactionCt);
+            return true;
+        }, ct);
 
-        var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, ct);
-        return Mapper.Map(period, counts);
+        var updated = await repository.FindByIdAsync(command.PeriodId, ct)
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
+        var updatedCounts = await repository.GetEnrolledShiftCountsAsync(updated.Id, ct);
+        return Mapper.Map(updated, updatedCounts);
     }
 }
 
@@ -238,7 +267,7 @@ public sealed class RemoveStudentFromPeriodCommandHandler(
     public async Task Handle(RemoveStudentFromPeriodCommand command, CancellationToken ct = default)
     {
         _ = await periodRepository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         await enrollmentRepository.DeleteByStudentAndPeriodAsync(command.StudentId, command.PeriodId, ct);
     }
@@ -249,7 +278,7 @@ public sealed class ActivateEnrollmentPeriodCommandHandler(IEnrollmentPeriodRepo
     public async Task Handle(ActivateEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
         var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         period.IsActive = true;
         period.EndDate = null;

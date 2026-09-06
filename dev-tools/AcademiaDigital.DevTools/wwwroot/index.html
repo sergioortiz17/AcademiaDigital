@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AcademiaDigital · DevTools</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --muted:#94a3b8; --fg:#e2e8f0; --accent:#38bdf8; --danger:#ef4444; --ok:#22c55e; --border:#334155; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:16px 24px; background:#020617; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:999px; background:#7c2d12; color:#fed7aa; }
+  .target { font-size:12px; color:var(--muted); margin-left:auto; }
+  main { max-width:1100px; margin:0 auto; padding:24px; display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .card h2 { font-size:15px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+  input, select { width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:#0b1220; color:var(--fg); font-size:14px; }
+  button { cursor:pointer; border:none; border-radius:8px; padding:9px 14px; font-size:14px; font-weight:600; color:#04121f; background:var(--accent); margin-top:12px; }
+  button.danger { background:var(--danger); color:#fff; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  .out { margin-top:12px; font-size:12px; white-space:pre-wrap; word-break:break-word; background:#0b1220; border:1px solid var(--border); border-radius:8px; padding:10px; max-height:220px; overflow:auto; }
+  .ok { color:var(--ok); } .err { color:var(--danger); }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th,td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; }
+  .full { grid-column:1/-1; }
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:10; }
+  .modal { background:var(--card); border:1px solid var(--danger); border-radius:12px; padding:22px; max-width:460px; }
+  .modal h3 { margin:0 0 10px; color:var(--danger); }
+  .modal p { font-size:14px; color:var(--fg); line-height:1.5; }
+  .modal .actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+  .modal .actions button { margin:0; }
+  .muted { color:var(--muted); font-size:12px; }
+  /* Tabs */
+  .tabbar { display:flex; gap:4px; flex-wrap:wrap; max-width:1100px; margin:16px auto 0; padding:0 24px; }
+  .tabbar button { margin:0; background:var(--card); color:var(--muted); border:1px solid var(--border); border-bottom:none;
+    border-radius:8px 8px 0 0; padding:9px 16px; font-size:14px; font-weight:600; }
+  .tabbar button.active { background:var(--bg); color:var(--accent); border-color:var(--accent); border-bottom:2px solid var(--bg); position:relative; top:1px; }
+  .tabpanel { display:none; }
+  .tabpanel.active { display:grid; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠️ AcademiaDigital · DevTools</h1>
+  <span class="badge">solo desarrollo / testing</span>
+  <span class="target" id="target">objetivo: …</span>
+</header>
+
+<div class="tabbar" id="tabbar">
+  <button data-tab="datos" class="active">📦 Datos base</button>
+  <button data-tab="usuarios">👥 Usuarios</button>
+  <button data-tab="flujo">🧩 Pruebas de flujo</button>
+  <button data-tab="escenarios">🧪 Escenarios</button>
+  <button data-tab="estado">📋 Estado actual</button>
+</div>
+
+<main>
+  <div class="tabpanel active" data-panel="datos" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+  <!-- (1) Reset -->
+  <section class="card">
+    <h2>♻️ Reset completo + reseed</h2>
+    <p class="muted">Borra TODA la base, recrea el esquema (migraciones) y recarga los 3 seeds (DS2023, Enfermería, usuarios demo). Irreversible.</p>
+    <button class="danger" id="btnReset">Resetear base…</button>
+    <div class="out" id="outReset" style="display:none"></div>
+  </section>
+
+  <!-- (2) Carrera + Plan CSV -->
+  <section class="card">
+    <h2>📚 Carrera + Plan de estudios (CSV)</h2>
+    <p class="muted">Importá un plan a una carrera existente, o creá una carrera nueva y luego el plan.</p>
+    <label>Carrera existente (opcional)</label>
+    <select id="impCareer"><option value="">— crear carrera nueva —</option></select>
+    <div id="newCareerFields">
+      <div class="row">
+        <div><label>Código carrera</label><input id="impCareerCode" placeholder="EJ2025" /></div>
+        <div><label>Años duración</label><input id="impDuration" type="number" min="1" value="3" /></div>
+      </div>
+      <label>Nombre carrera</label><input id="impCareerName" placeholder="Nombre de la carrera" />
+    </div>
+    <div class="row">
+      <div><label>Código plan</label><input id="impPlanCode" placeholder="PLAN-2025" /></div>
+      <div><label>Nombre plan</label><input id="impPlanName" placeholder="Plan 2025" /></div>
+    </div>
+    <label>Archivo CSV del plan</label><input id="impFile" type="file" accept=".csv" />
+    <button id="btnImport">Importar plan</button>
+    <div class="out" id="outImport" style="display:none"></div>
+  </section>
+  </div><!-- /datos -->
+
+  <div class="tabpanel" data-panel="usuarios" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+  <!-- (3) Usuarios -->
+  <section class="card">
+    <h2>👤 Alta de usuario</h2>
+    <div class="row">
+      <div><label>Nombre</label><input id="uName" placeholder="Nombre" /></div>
+      <div><label>Apellido</label><input id="uLast" placeholder="Apellido" /></div>
+    </div>
+    <label>Email</label><input id="uEmail" type="email" placeholder="mail@dominio.com" />
+    <div class="row">
+      <div><label>Password</label><input id="uPass" placeholder="Password123!" /></div>
+      <div><label>DNI</label><input id="uDni" placeholder="12345678" /></div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Rol</label>
+        <select id="uRole"><option value="1">Alumno</option><option value="2">Profesor</option><option value="3">Admin</option></select>
+      </div>
+      <div id="uCareerWrap">
+        <label>Carrera (alumno)</label>
+        <select id="uCareer"></select>
+      </div>
+    </div>
+    <button id="btnUser">Crear usuario</button>
+    <div class="out" id="outUser" style="display:none"></div>
+  </section>
+
+  <!-- (4) Asignar materia a profesor -->
+  <section class="card">
+    <h2>🎓 Asignar materia a profesor</h2>
+    <label>Profesor</label><select id="aTeacher"></select>
+    <label>Carrera</label><select id="aCareer"></select>
+    <label>Materia</label><select id="aCourse"></select>
+    <div class="row">
+      <div><label>Año académico</label><input id="aYear" type="number" placeholder="2026" /></div>
+      <div><label>Cuatrimestre</label><select id="aSem"><option value="1">1</option><option value="2">2</option></select></div>
+    </div>
+    <button id="btnAssign">Asignar</button>
+    <div class="out" id="outAssign" style="display:none"></div>
+  </section>
+
+  <!-- Atajo A: alumno de 1° año completo -->
+  <section class="card full">
+    <h2>⚡ Atajo: crear alumno de 1° año completo (con notas)</h2>
+    <p class="muted">Crea el alumno, lo inscribe en TODAS las materias de 1° año y las califica hasta condición final (nota ≥6 → cursada + final → Aprobada; &lt;6 → Libre). Ideal para preparar correlativas de 2° año.</p>
+    <div class="row" style="max-width:760px">
+      <div><label>Nombre</label><input id="fyName"/></div>
+      <div><label>Apellido</label><input id="fyLast"/></div>
+      <div><label>Email</label><input id="fyEmail" type="email"/></div>
+    </div>
+    <div class="row" style="max-width:760px">
+      <div><label>Password</label><input id="fyPass" value="Alumno123!"/></div>
+      <div><label>DNI (opcional)</label><input id="fyDni" placeholder="auto"/></div>
+      <div><label>Carrera</label><select id="fyCareer"></select></div>
+    </div>
+    <label>Notas de 1° año (editables)</label>
+    <div id="fyGrades" class="muted" style="display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">Elegí una carrera…</div>
+    <button id="fyRun">Crear alumno con 1° año completo</button>
+    <div class="out" id="fyOut" style="display:none"></div>
+  </section>
+
+  <!-- Atajo B: profesor con materias -->
+  <section class="card full">
+    <h2>⚡ Atajo: crear profesor con sus materias</h2>
+    <p class="muted">Crea el profesor y le asigna cada materia elegida, creando/reusando la comisión y el cargo (nunca queda un cargo sin comisión).</p>
+    <div class="row" style="max-width:760px">
+      <div><label>Nombre</label><input id="tpName"/></div>
+      <div><label>Apellido</label><input id="tpLast"/></div>
+      <div><label>Email</label><input id="tpEmail" type="email"/></div>
+    </div>
+    <div class="row" style="max-width:760px">
+      <div><label>Password</label><input id="tpPass" value="Profe123!"/></div>
+      <div><label>DNI (opcional)</label><input id="tpDni" placeholder="auto"/></div>
+      <div><label>Carrera</label><select id="tpCareer"></select></div>
+    </div>
+    <div class="row" style="max-width:520px">
+      <div><label>Año académico</label><input id="tpYear" type="number" placeholder="2026"/></div>
+      <div><label>Cuatrimestre</label><select id="tpSem"><option value="1">1</option><option value="2">2</option></select></div>
+    </div>
+    <label>Materias (multi-selección)</label>
+    <select id="tpCourses" multiple size="6" style="height:auto"></select>
+    <button id="tpRun">Crear profesor con materias</button>
+    <div class="out" id="tpOut" style="display:none"></div>
+  </section>
+  </div><!-- /usuarios -->
+
+  <div class="tabpanel" data-panel="escenarios" style="grid-template-columns:1fr">
+  <!-- Escenario: correlativa bloqueante -->
+  <section class="card full">
+    <h2>🧪 Escenario: correlativa bloqueante (DS2023)</h2>
+    <p class="muted">
+      Ejercita end-to-end el control de correlativas: inscribe un alumno de prueba en Programación I
+      y Base de Datos, deja Programación I <b>sin aprobar</b> y Base de Datos <b>aprobada</b> (cursada + final),
+      y verifica que la inscripción a Programación II se <b>bloquee</b> por la correlativa Programación I.
+      Requiere haber corrido el reset+reseed de DS2023.
+    </p>
+    <button id="btnScenario">Ejecutar escenario</button>
+    <div id="scenarioVerdict" style="display:none;margin-top:12px;font-weight:700;font-size:15px"></div>
+    <div id="scenarioSteps" style="display:none;margin-top:10px"></div>
+  </section>
+  </div><!-- /escenarios -->
+
+  <div class="tabpanel" data-panel="flujo" style="grid-template-columns:1fr">
+  <!-- Línea de tiempo del alumno (Parte 5) -->
+  <section class="card full">
+    <h2>🕒 Línea de tiempo del alumno</h2>
+    <p class="muted">Elegí un alumno para ver su avance por año. En cada año podés inscribir materias, cargar notas (con un profesor real) y rendir finales; al intentar inscribir una materia con correlativa no aprobada, el bloqueo se muestra claramente en el paso.</p>
+    <div class="row" style="align-items:flex-end;max-width:640px">
+      <div><label>Alumno</label><select id="tlStudent"></select></div>
+      <div><label>Profesor (para planillas)</label><select id="tlTeacher"></select></div>
+      <div style="flex:0 0 auto"><button id="tlLoad" style="width:100%">Cargar línea de tiempo</button></div>
+    </div>
+    <div id="tlProgress" class="muted" style="margin-top:8px"></div>
+    <div id="tlSteps" style="display:flex;gap:12px;overflow-x:auto;margin-top:12px;padding-bottom:8px"></div>
+    <div id="tlOut" class="out" style="display:none"></div>
+  </section>
+
+  <!-- Acciones académicas ad-hoc -->
+  <section class="card full">
+    <h2>🧩 Acciones académicas ad-hoc</h2>
+    <p class="muted">Piezas sueltas para armar casos de prueba a mano (reusan los handlers reales; Commission+cargo se auto-crean/reusan detrás de escena y se reportan). No es el escenario fijo.</p>
+
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <!-- Alumno -->
+      <div>
+        <h3 style="font-size:13px;margin:0 0 6px">1 · Alumno</h3>
+        <label>Carrera (para filtrar/crear)</label><select id="aaCareer"></select>
+        <label>Alumno</label>
+        <div class="row" style="align-items:flex-end">
+          <select id="aaStudent"></select>
+          <button id="aaReloadStudents" style="flex:0 0 auto;margin:0;padding:8px 10px">↻</button>
+        </div>
+        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">crear alumno nuevo</summary>
+          <div class="row"><div><label>Nombre</label><input id="aaNewName"/></div><div><label>Apellido</label><input id="aaNewLast"/></div></div>
+          <label>Email</label><input id="aaNewEmail" type="email"/>
+          <div class="row"><div><label>Password</label><input id="aaNewPass" value="Alumno123!"/></div><div><label>DNI</label><input id="aaNewDni"/></div></div>
+          <button id="aaCreateStudent">Crear alumno</button>
+        </details>
+      </div>
+
+      <!-- Inscribir -->
+      <div>
+        <h3 style="font-size:13px;margin:0 0 6px">2 · Inscribir en materia</h3>
+        <label>Plan de estudios</label><select id="aaPlan"></select>
+        <label>Materia(s) del plan</label>
+        <select id="aaCourses" multiple size="5" style="height:auto"></select>
+        <div class="row">
+          <div><label>Año académico</label><input id="aaYear" type="number" value="1"/></div>
+          <div><label>Cuatrimestre</label><select id="aaSem"><option value="1">1</option><option value="2">2</option></select></div>
+        </div>
+        <button id="aaEnroll">Inscribir</button>
+      </div>
+
+      <!-- Notas / Mesa -->
+      <div>
+        <h3 style="font-size:13px;margin:0 0 6px">3/4 · Notas y mesa de examen</h3>
+        <p class="muted">Usá el enrollmentId que devuelve la inscripción o la vista de estado.</p>
+        <label>Enrollment ID</label><input id="aaEnrollmentId" type="number" placeholder="123"/>
+        <div class="row">
+          <div><label>Nota cursada (gradebook)</label><input id="aaGrade" type="number" step="0.1" value="8"/></div>
+          <div style="align-self:flex-end"><button id="aaGradebook" style="width:100%">Cargar cursada</button></div>
+        </div>
+        <p class="muted" style="margin:6px 0 0">Cursada ≥6 → Regularized. Luego mesa → Approved.</p>
+        <div class="row">
+          <div><label>Nota final (mesa)</label><input id="aaExamGrade" type="number" step="0.1" value="8"/></div>
+          <div style="align-self:flex-end"><button id="aaExam" style="width:100%">Rendir final (mesa)</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="aaOut" class="out" style="display:none"></div>
+
+    <!-- Estado académico -->
+    <div style="margin-top:16px">
+      <h3 style="font-size:13px;margin:0 0 6px">5 · Estado académico y elegibilidad <button id="aaState" style="margin:0 0 0 8px;padding:3px 10px;font-size:12px">Ver estado del alumno</button></h3>
+      <div id="aaStateOut" class="muted">Elegí un alumno y tocá "Ver estado".</div>
+    </div>
+  </section>
+
+  <!-- (5) Listado -->
+  </div><!-- /flujo -->
+
+  <div class="tabpanel" data-panel="estado" style="grid-template-columns:1fr">
+  <section class="card full">
+    <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
+    <div id="overview" class="muted">Cargando…</div>
+  </section>
+  </div><!-- /estado -->
+</main>
+
+<!-- Modal confirmación reset -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>⚠️ Confirmar reset destructivo</h3>
+    <p>Esto <b>borra TODA la base</b> de <b id="modalTarget"></b>, recrea el esquema y recarga los seeds. <b>No se puede deshacer.</b></p>
+    <p>Escribí <b>RESET</b> para confirmar:</p>
+    <input id="modalInput" placeholder="RESET" autocomplete="off" />
+    <div class="actions">
+      <button id="modalCancel" style="background:#475569;color:#fff">Cancelar</button>
+      <button id="modalConfirm" class="danger" disabled>Resetear ahora</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = (p, o) => fetch(p, o).then(async r => ({ ok: r.ok, body: await r.json().catch(() => ({})) }));
+function show(el, res) {
+  el.style.display = 'block';
+  const ok = res.ok && res.body.success !== false;
+  el.className = 'out ' + (ok ? 'ok' : 'err');
+  el.textContent = JSON.stringify(res.body, null, 2);
+}
+
+async function loadTarget() {
+  const { body } = await api('/api/info');
+  $('#target').textContent = 'objetivo: ' + (body.target || '?');
+  $('#modalTarget').textContent = body.target || '?';
+}
+
+async function fillCareers() {
+  const { body } = await api('/api/careers');
+  const opts = (body || []).map(c => `<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+  $('#impCareer').innerHTML = '<option value="">— crear carrera nueva —</option>' + opts;
+  $('#uCareer').innerHTML = opts;
+  $('#aCareer').innerHTML = opts;
+  if (body && body.length) loadCoursesFor($('#aCareer').value);
+}
+
+async function fillTeachers() {
+  const { body } = await api('/api/teachers');
+  $('#aTeacher').innerHTML = (body || []).map(t => `<option value="${t.id}">${t.name} (${t.email})</option>`).join('');
+}
+
+async function loadCoursesFor(careerId) {
+  if (!careerId) { $('#aCourse').innerHTML = ''; return; }
+  const { body } = await api(`/api/careers/${careerId}/courses`);
+  $('#aCourse').innerHTML = (body || []).map(c => `<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+}
+
+async function loadOverview() {
+  const { body } = await api('/api/overview');
+  const careers = (body.careers || []).map(c => `<tr><td>${c.id}</td><td>${c.code}</td><td>${c.name}</td><td>${c.isActive ? 'sí' : 'no'}</td></tr>`).join('');
+  const roles = (body.usersByRole || []).map(r => `${r.role}: ${r.count}`).join(' · ');
+  const users = (body.users || []).map(u => `<tr><td>${u.id}</td><td>${u.email}</td><td>${u.username} ${u.lastName || ''}</td><td>${u.role}</td></tr>`).join('');
+  const asg = (body.assignments || []).map(a => `<tr><td>${a.teacher}</td><td>${a.courseCode} · ${a.courseName}</td><td>${a.academicYear}/${a.semester}</td><td>${a.positionType}</td></tr>`).join('');
+  $('#overview').innerHTML = `
+    <div class="muted" style="margin-bottom:8px">Usuarios por rol → ${roles || '—'}</div>
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      <div><b>Carreras</b><table><tr><th>id</th><th>code</th><th>nombre</th><th>activa</th></tr>${careers || '<tr><td colspan=4>—</td></tr>'}</table></div>
+      <div><b>Usuarios</b> <span class="muted">(máx 200)</span><table><tr><th>id</th><th>email</th><th>nombre</th><th>rol</th></tr>${users || '<tr><td colspan=4>—</td></tr>'}</table></div>
+      <div><b>Asignaciones vigentes</b><table><tr><th>profesor</th><th>materia</th><th>año/cuat</th><th>cargo</th></tr>${asg || '<tr><td colspan=4>—</td></tr>'}</table></div>
+    </div>`;
+}
+
+// (2) mostrar/ocultar campos de carrera nueva
+$('#impCareer').addEventListener('change', e => {
+  $('#newCareerFields').style.display = e.target.value ? 'none' : 'block';
+});
+// (3) mostrar carrera solo si rol = Alumno
+$('#uRole').addEventListener('change', e => {
+  $('#uCareerWrap').style.display = e.target.value === '1' ? 'block' : 'none';
+});
+$('#aCareer').addEventListener('change', e => loadCoursesFor(e.target.value));
+
+// (1) Reset con modal + palabra clave
+$('#btnReset').addEventListener('click', () => { $('#modalInput').value=''; $('#modalConfirm').disabled=true; $('#modalBg').style.display='flex'; });
+$('#modalCancel').addEventListener('click', () => $('#modalBg').style.display='none');
+$('#modalInput').addEventListener('input', e => { $('#modalConfirm').disabled = e.target.value.trim() !== 'RESET'; });
+$('#modalConfirm').addEventListener('click', async () => {
+  $('#modalBg').style.display='none';
+  const btn = $('#btnReset'); btn.disabled=true; btn.textContent='Reseteando…';
+  const res = await api('/api/reset', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ confirm:true }) });
+  show($('#outReset'), res);
+  btn.disabled=false; btn.textContent='Resetear base…';
+  await refreshAll();
+});
+
+// (2) Import
+$('#btnImport').addEventListener('click', async () => {
+  const f = $('#impFile').files[0];
+  if (!f) { show($('#outImport'), { ok:false, body:{ success:false, error:'Elegí un archivo CSV.' } }); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  const careerId = $('#impCareer').value;
+  if (careerId) fd.append('careerId', careerId);
+  else {
+    fd.append('careerCode', $('#impCareerCode').value);
+    fd.append('careerName', $('#impCareerName').value);
+    fd.append('durationYears', $('#impDuration').value);
+  }
+  fd.append('planCode', $('#impPlanCode').value);
+  fd.append('planName', $('#impPlanName').value);
+  const btn = $('#btnImport'); btn.disabled=true;
+  show($('#outImport'), await api('/api/careers/import-plan', { method:'POST', body: fd }));
+  btn.disabled=false; await fillCareers(); await loadOverview();
+});
+
+// (3) Usuario
+$('#btnUser').addEventListener('click', async () => {
+  const payload = {
+    name: $('#uName').value, lastName: $('#uLast').value, email: $('#uEmail').value,
+    password: $('#uPass').value, dni: $('#uDni').value, role: parseInt($('#uRole').value,10),
+    careerId: $('#uRole').value === '1' ? parseInt($('#uCareer').value,10) : null
+  };
+  const btn=$('#btnUser'); btn.disabled=true;
+  show($('#outUser'), await api('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }));
+  btn.disabled=false; await loadOverview();
+});
+
+// (4) Asignar
+$('#btnAssign').addEventListener('click', async () => {
+  const payload = {
+    teacherId: parseInt($('#aTeacher').value,10), courseId: parseInt($('#aCourse').value,10),
+    academicYear: parseInt($('#aYear').value,10)||0, semester: parseInt($('#aSem').value,10),
+    maxStudents: 0, reason: 'Asignado desde DevTools'
+  };
+  const btn=$('#btnAssign'); btn.disabled=true;
+  show($('#outAssign'), await api('/api/teacher-assignments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }));
+  btn.disabled=false; await loadOverview();
+});
+
+$('#btnRefresh').addEventListener('click', loadOverview);
+
+// Escenario: correlativa bloqueante
+$('#btnScenario').addEventListener('click', async () => {
+  const btn = $('#btnScenario'); btn.disabled = true; btn.textContent = 'Ejecutando…';
+  const verdict = $('#scenarioVerdict'); const stepsBox = $('#scenarioSteps');
+  verdict.style.display = 'none'; stepsBox.style.display = 'none';
+  try {
+    const { body } = await api('/api/scenario/correlativa-bloqueante', { method: 'POST' });
+    const pass = body.result === 'PASS';
+    verdict.style.display = 'block';
+    verdict.className = pass ? 'ok' : 'err';
+    verdict.textContent = (pass ? '✅ ' : '❌ ') + (body.summary || body.result);
+    const rows = (body.steps || []).map(s => {
+      const icon = s.status === 'ok' ? '✔️' : (s.status === 'warn' ? '⚠️' : '✖️');
+      const color = s.status === 'ok' ? 'var(--ok)' : (s.status === 'warn' ? '#f59e0b' : 'var(--danger)');
+      const data = s.data ? `<div class="muted" style="white-space:pre-wrap">${JSON.stringify(s.data)}</div>` : '';
+      return `<tr><td>${s.order}</td><td style="color:${color}">${icon}</td><td>${s.step}<div class="muted">${s.detail || ''}</div>${data}</td></tr>`;
+    }).join('');
+    stepsBox.style.display = 'block';
+    stepsBox.innerHTML = `<table><tr><th>#</th><th>estado</th><th>paso</th></tr>${rows}</table>`;
+  } catch (e) {
+    verdict.style.display = 'block'; verdict.className = 'err';
+    verdict.textContent = '❌ Error ejecutando el escenario: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Ejecutar escenario';
+    await loadOverview();
+  }
+});
+
+// ── Acciones académicas ad-hoc ──────────────────────────────────────────────
+function aaShow(res) {
+  const el = $('#aaOut'); el.style.display = 'block';
+  const ok = res.ok && (res.body.success !== false);
+  el.className = 'out ' + (ok ? 'ok' : 'err');
+  const b = res.body;
+  let txt = (b.summary ? ((ok?'✅ ':'❌ ')+b.summary+'\n\n') : '');
+  if (Array.isArray(b.steps)) {
+    txt += b.steps.map(s => {
+      const ic = s.status==='ok'?'✔️':(s.status==='warn'?'⚠️':'✖️');
+      return `${ic} ${s.step}: ${s.detail||''}` + (s.data?('\n     '+JSON.stringify(s.data)):'');
+    }).join('\n');
+  } else { txt += JSON.stringify(b, null, 2); }
+  el.textContent = txt;
+}
+
+async function aaFillCareers() {
+  const { body } = await api('/api/careers');
+  $('#aaCareer').innerHTML = (body||[]).map(c => `<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+  if (body && body.length) { await aaFillStudents(); await aaFillPlans(); }
+}
+async function aaFillStudents() {
+  const cid = $('#aaCareer').value;
+  const { body } = await api('/api/actions/students?careerId=' + cid);
+  $('#aaStudent').innerHTML = (body||[]).map(s => `<option value="${s.studentId}">#${s.studentId} · ${s.name||s.email||('legajo '+s.legajo)}</option>`).join('') || '<option value="">(sin alumnos)</option>';
+}
+async function aaFillPlans() {
+  const cid = $('#aaCareer').value;
+  const { body } = await api(`/api/actions/careers/${cid}/study-plans`);
+  $('#aaPlan').innerHTML = (body||[]).map(p => `<option value="${p.id}">${p.code} · ${p.name} (${p.status})</option>`).join('');
+  if (body && body.length) await aaFillCourses();
+}
+async function aaFillCourses() {
+  const pid = $('#aaPlan').value; if (!pid) { $('#aaCourses').innerHTML=''; return; }
+  const { body } = await api(`/api/actions/study-plans/${pid}/courses`);
+  $('#aaCourses').innerHTML = (body||[]).map(c => `<option value="${c.studyPlanCourseId}">${c.code} · ${c.name} (año ${c.year}/${c.semester})</option>`).join('');
+}
+$('#aaCareer').addEventListener('change', async () => { await aaFillStudents(); await aaFillPlans(); });
+$('#aaPlan').addEventListener('change', aaFillCourses);
+$('#aaReloadStudents').addEventListener('click', aaFillStudents);
+
+$('#aaCreateStudent').addEventListener('click', async () => {
+  const payload = { name:$('#aaNewName').value, lastName:$('#aaNewLast').value, email:$('#aaNewEmail').value,
+    password:$('#aaNewPass').value, dni:$('#aaNewDni').value, role:1, careerId:parseInt($('#aaCareer').value,10) };
+  const btn=$('#aaCreateStudent'); btn.disabled=true;
+  aaShow(await api('/api/actions/students', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false; await aaFillStudents();
+});
+
+$('#aaEnroll').addEventListener('click', async () => {
+  const ids = [...$('#aaCourses').selectedOptions].map(o => parseInt(o.value,10));
+  if (ids.length === 0) { aaShow({ ok:false, body:{ success:false, summary:'Elegí al menos una materia.' } }); return; }
+  const payload = { studentId: parseInt($('#aaStudent').value,10), studyPlanCourseIds: ids,
+    academicYear: parseInt($('#aaYear').value,10)||1, semester: parseInt($('#aaSem').value,10) };
+  const btn=$('#aaEnroll'); btn.disabled=true;
+  aaShow(await api('/api/actions/enroll', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false;
+});
+
+$('#aaGradebook').addEventListener('click', async () => {
+  const payload = { enrollmentId: parseInt($('#aaEnrollmentId').value,10), score: parseFloat($('#aaGrade').value) };
+  if (!payload.enrollmentId) { aaShow({ ok:false, body:{ success:false, summary:'Ingresá el enrollmentId.' } }); return; }
+  const btn=$('#aaGradebook'); btn.disabled=true;
+  aaShow(await api('/api/actions/gradebook', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false;
+});
+
+$('#aaExam').addEventListener('click', async () => {
+  const payload = { enrollmentId: parseInt($('#aaEnrollmentId').value,10), grade: parseFloat($('#aaExamGrade').value) };
+  if (!payload.enrollmentId) { aaShow({ ok:false, body:{ success:false, summary:'Ingresá el enrollmentId.' } }); return; }
+  const btn=$('#aaExam'); btn.disabled=true;
+  aaShow(await api('/api/actions/exam', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false;
+});
+
+$('#aaState').addEventListener('click', async () => {
+  const sid = $('#aaStudent').value; if (!sid) return;
+  const { body } = await api(`/api/actions/students/${sid}/academic-state`);
+  const p = body.progress || {}; const elig = body.eligible || [];
+  const statusColor = s => s==='Approved'||s==='Promoted'?'var(--ok)':(s==='Regularized'?'#38bdf8':(s==='Failed'?'var(--danger)':'var(--muted)'));
+  const courses = (p.courses||[]).map(c => `<tr><td>${c.code}</td><td>${c.name}</td><td>${c.yearNumber}/${c.semester}</td><td style="color:${statusColor(c.academicStatus)}">${c.academicStatus}</td><td>${c.finalGrade??''}</td></tr>`).join('');
+  const eligRows = elig.map(e => {
+    const miss = (e.missingPrerequisites||[]).map(m => `${m.code} (req ${m.requiredStatus}, tiene ${m.currentStatus||'—'})`).join('; ');
+    const col = e.eligibilityStatus==='Eligible'?'var(--ok)':'var(--danger)';
+    return `<tr><td>${e.code}</td><td>${e.name}</td><td>${e.yearNumber}/${e.semester}</td><td style="color:${col}">${e.eligibilityStatus}</td><td class="muted">${miss}</td></tr>`;
+  }).join('');
+  $('#aaStateOut').innerHTML = `
+    <div class="muted" style="margin-bottom:6px">${p.careerName||''} · plan ${p.studyPlanName||''} · progreso ${p.progressPercentage??0}% (aprob ${p.approvedCourses}/${p.totalCourses}, en curso ${p.inProgressCourses}, pend ${p.pendingCourses})</div>
+    <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div><b>Materias (estado)</b><table><tr><th>cód</th><th>materia</th><th>año/c</th><th>estado</th><th>nota</th></tr>${courses||'<tr><td colspan=5>—</td></tr>'}</table></div>
+      <div><b>Elegibilidad para cursar</b><table><tr><th>cód</th><th>materia</th><th>año/c</th><th>puede?</th><th>correlativas faltantes</th></tr>${eligRows||'<tr><td colspan=5>—</td></tr>'}</table></div>
+    </div>`;
+});
+
+// Tabs
+document.querySelectorAll('#tabbar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tabpanel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+  });
+});
+
+// ── Línea de tiempo del alumno (Parte 5) ────────────────────────────────────
+const tl = { studentId: null, careerId: null, maxYear: 1, state: null };
+
+function tlMsg(text, kind) {
+  const el = $('#tlOut'); el.style.display = 'block';
+  el.className = 'out ' + (kind || ''); el.textContent = text;
+}
+async function tlFillSelectors() {
+  const st = await api('/api/actions/students');
+  $('#tlStudent').innerHTML = (st.body||[]).map(s => `<option value="${s.studentId}" data-career="${s.careerId}">#${s.studentId} · ${s.name||s.email}</option>`).join('') || '<option value="">(sin alumnos)</option>';
+  const tt = await api('/api/teachers');
+  $('#tlTeacher').innerHTML = (tt.body||[]).map(t => `<option value="${t.id}">${t.name} (${t.email})</option>`).join('') || '<option value="">(sin profesores)</option>';
+}
+const STATUS_COLOR = s => ({Approved:'var(--ok)',Promoted:'var(--ok)',Regularized:'#38bdf8',Failed:'var(--danger)',InProgress:'#f59e0b',Enrolled:'#f59e0b'})[s] || 'var(--muted)';
+
+async function tlReload() {
+  if (!tl.studentId) return;
+  const { body } = await api(`/api/actions/students/${tl.studentId}/academic-state`);
+  tl.state = body;
+  const p = body.progress || {};
+  tl.careerId = p.careerId;
+  $('#tlProgress').textContent = `${p.careerName||''} · plan ${p.studyPlanName||''} · aprobadas ${p.approvedCourses}/${p.totalCourses} · en curso ${p.inProgressCourses} · pendientes ${p.pendingCourses}`;
+  // Año máximo a mostrar: el mayor entre años con materias y el maxYear elegido al avanzar.
+  const courseYears = (p.courses||[]).map(c => c.yearNumber);
+  const eligYears = (body.eligible||[]).map(e => e.yearNumber);
+  tl.maxYear = Math.max(tl.maxYear, 1, ...courseYears, ...eligYears.filter(() => false)); // materias ya cursadas definen años vistos
+  tlRender();
+}
+
+function tlRender() {
+  const p = tl.state.progress || {}; const elig = tl.state.eligible || [];
+  const coursesByYear = {}; (p.courses||[]).forEach(c => (coursesByYear[c.yearNumber] ??= []).push(c));
+  const eligByYear = {}; elig.forEach(e => (eligByYear[e.yearNumber] ??= []).push(e));
+  const years = [];
+  for (let y = 1; y <= tl.maxYear; y++) years.push(y);
+
+  $('#tlSteps').innerHTML = years.map(y => {
+    const cs = (coursesByYear[y]||[]).map(c =>
+      `<div style="display:flex;justify-content:space-between;gap:8px"><span>${c.code} ${c.name.slice(0,22)}</span><span style="color:${STATUS_COLOR(c.academicStatus)}">${c.academicStatus}${c.finalGrade!=null?(' '+c.finalGrade):''}</span></div>`).join('') || '<span class="muted">sin materias cursadas</span>';
+    // materias que puede inscribir este año (eligibles) y las bloqueadas con su motivo
+    const eligible = (eligByYear[y]||[]).filter(e => e.eligibilityStatus==='Eligible');
+    const blocked = (eligByYear[y]||[]).filter(e => e.eligibilityStatus!=='Eligible');
+    const opts = eligible.map(e => `<option value="${e.studyPlanCourseId}">${e.code} · ${e.name.slice(0,24)}</option>`).join('');
+    const blockedHtml = blocked.map(e => {
+      const miss = (e.missingPrerequisites||[]).map(m => `${m.code} (${m.currentStatus||'sin cursar'}, requiere ${m.requiredStatus})`).join(', ');
+      return `<div class="muted" style="color:var(--danger);font-size:11px">🔒 ${e.code}: ${miss||e.eligibilityStatus}</div>`;
+    }).join('');
+    return `<div class="card" style="min-width:280px;max-width:300px;flex:0 0 auto">
+      <h3 style="margin:0 0 8px;font-size:14px">Año ${y}</h3>
+      <div style="font-size:12px;display:grid;gap:3px">${cs}</div>
+      <hr style="border-color:var(--border);margin:10px 0"/>
+      <label style="font-size:11px">Inscribir materia (elegibles)</label>
+      <select data-tl-course="${y}" style="font-size:12px">${opts||'<option value="">(ninguna elegible)</option>'}</select>
+      <button data-tl-enroll="${y}" style="padding:5px 10px;font-size:12px;margin-top:6px" ${eligible.length?'':'disabled'}>Inscribir</button>
+      ${blockedHtml ? `<div style="margin-top:8px">${blockedHtml}</div>` : ''}
+      <div data-tl-stepout="${y}" style="margin-top:8px;font-size:12px"></div>
+    </div>`;
+  }).join('') + `<div style="flex:0 0 auto;display:flex;align-items:center"><button id="tlAdvance" style="padding:8px 14px">➕ Avanzar al año ${tl.maxYear+1}</button></div>`;
+
+  // wire per-step enroll buttons
+  document.querySelectorAll('[data-tl-enroll]').forEach(btn => btn.addEventListener('click', () => tlEnroll(parseInt(btn.dataset.tlEnroll,10))));
+  $('#tlAdvance').addEventListener('click', () => { tl.maxYear++; tlRender(); });
+}
+
+async function tlEnroll(year) {
+  const sel = document.querySelector(`[data-tl-course="${year}"]`);
+  const spcId = parseInt(sel.value,10);
+  const out = document.querySelector(`[data-tl-stepout="${year}"]`);
+  if (!spcId) { out.innerHTML = '<span class="err">Elegí una materia.</span>'; return; }
+  const { body } = await api('/api/actions/enroll', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ studentId: tl.studentId, studyPlanCourseIds:[spcId], academicYear: year, semester: 1 }) });
+  if (body.success) {
+    const enr = (body.steps||[]).find(s => Array.isArray(s.data));
+    const eid = enr?.data?.[0]?.enrollmentId;
+    out.innerHTML = `<span class="ok">✅ Inscripto${eid?(' (enrollmentId '+eid+')'):''}. Cargá nota abajo.</span>` + tlGradeControls(year, eid);
+    wireGradeControls(year);
+  } else {
+    // Bloqueo por correlativa u otra razón: mostrar legible
+    const reason = body.summary || '';
+    const m = reason.match(/correlativas obligatorias[^.]*/i) || reason.match(/prerequisit[^.]*/i);
+    out.innerHTML = `<span class="err">❌ Bloqueado: ${m ? m[0] : reason}</span>`;
+  }
+  tlReload();
+}
+
+function tlGradeControls(year, enrollmentId) {
+  if (!enrollmentId) return '';
+  return `<div style="margin-top:6px;display:grid;gap:4px" data-tl-grade="${year}" data-eid="${enrollmentId}">
+    <div class="row"><input type="number" step="0.1" value="8" data-tl-gradeval placeholder="nota"/><button data-tl-cursada style="margin:0;padding:5px 8px;font-size:12px">Cursada</button></div>
+    <div class="row"><input type="number" step="0.1" value="8" data-tl-examval placeholder="nota final"/><button data-tl-final style="margin:0;padding:5px 8px;font-size:12px">Final (mesa)</button></div>
+  </div>`;
+}
+function wireGradeControls(year) {
+  const box = document.querySelector(`[data-tl-grade="${year}"]`); if (!box) return;
+  const eid = parseInt(box.dataset.eid,10);
+  const out = document.querySelector(`[data-tl-stepout="${year}"]`);
+  box.querySelector('[data-tl-cursada]').addEventListener('click', async () => {
+    const score = parseFloat(box.querySelector('[data-tl-gradeval]').value);
+    const { body } = await api('/api/actions/gradebook', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ enrollmentId: eid, score, teacherId: parseInt($('#tlTeacher').value,10) }) });
+    out.insertAdjacentHTML('beforeend', `<div class="${body.success?'ok':'err'}">${body.success?'✅':'❌'} Cursada: ${body.summary}</div>`);
+    tlReload();
+  });
+  box.querySelector('[data-tl-final]').addEventListener('click', async () => {
+    const grade = parseFloat(box.querySelector('[data-tl-examval]').value);
+    const { body } = await api('/api/actions/exam', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ enrollmentId: eid, grade }) });
+    out.insertAdjacentHTML('beforeend', `<div class="${body.success?'ok':'err'}">${body.success?'✅':'❌'} Final: ${body.summary}</div>`);
+    tlReload();
+  });
+}
+
+$('#tlLoad').addEventListener('click', async () => {
+  tl.studentId = parseInt($('#tlStudent').value,10);
+  tl.maxYear = 1;
+  if (!tl.studentId) return;
+  await tlReload();
+});
+
+// ── Atajos (combos) ─────────────────────────────────────────────────────────
+function outShow(elId, res){ const el=$(elId); el.style.display='block'; const ok=res.ok&&res.body.success!==false; el.className='out '+(ok?'ok':'err');
+  const b=res.body; let t=(b.summary?((ok?'✅ ':'❌ ')+b.summary+'\n\n'):'');
+  if(Array.isArray(b.steps)) t+=b.steps.map(s=>{const ic=s.status==='ok'?'✔️':(s.status==='warn'?'⚠️':'✖️'); return `${ic} ${s.step}: ${s.detail||''}`+(s.data?('\n     '+JSON.stringify(s.data)):'');}).join('\n'); else t+=JSON.stringify(b,null,2);
+  el.textContent=t; }
+
+async function shortcutFillCareers(){
+  const { body } = await api('/api/careers');
+  const opts=(body||[]).map(c=>`<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+  $('#fyCareer').innerHTML=opts; $('#tpCareer').innerHTML=opts;
+  if(body&&body.length){ await fyLoadCourses(); await tpLoadCourses(); }
+}
+async function planCoursesFor(careerId){
+  const plans=await api(`/api/actions/careers/${careerId}/study-plans`);
+  const pid=(plans.body||[])[0]?.id; if(!pid) return [];
+  return (await api(`/api/actions/study-plans/${pid}/courses`)).body||[];
+}
+async function fyLoadCourses(){
+  const courses=await planCoursesFor($('#fyCareer').value);
+  const y1=courses.filter(c=>c.year===1);
+  $('#fyGrades').innerHTML = y1.length ? y1.map(c=>`<label style="color:var(--fg)">${c.code} · ${c.name.slice(0,26)}<input type="number" step="0.1" value="8" data-fy-spc="${c.id}" style="margin-top:2px"/></label>`).join('') : '<span>Esta carrera no tiene materias de 1° año.</span>';
+}
+async function tpLoadCourses(){
+  const courses=await planCoursesFor($('#tpCareer').value);
+  $('#tpCourses').innerHTML=courses.map(c=>`<option value="${c.courseId}">${c.code} · ${c.name.slice(0,30)} (año ${c.year})</option>`).join('');
+}
+$('#fyCareer').addEventListener('change', fyLoadCourses);
+$('#tpCareer').addEventListener('change', tpLoadCourses);
+
+$('#fyRun').addEventListener('click', async ()=>{
+  const careerId = parseInt($('#fyCareer').value,10);
+  if (!careerId) {                       // selector vacío (carreras no cargadas / ninguna elegida)
+    if (!$('#fyCareer').options.length) await shortcutFillCareers();
+    outShow('#fyOut', { ok:false, body:{ success:false, summary:'Elegí una carrera (si el selector está vacío, corré el reset+reseed en Datos base y recargá).' } });
+    return;
+  }
+  if (!$('#fyName').value.trim() || !$('#fyEmail').value.trim() || !$('#fyPass').value.trim()) {
+    outShow('#fyOut', { ok:false, body:{ success:false, summary:'Completá nombre, email y password.' } });
+    return;
+  }
+  const grades=[...document.querySelectorAll('[data-fy-spc]')].map(i=>{ const v=parseFloat(i.value); return { studyPlanCourseId:parseInt(i.dataset.fySpc,10), score: Number.isFinite(v)?v:8 }; });
+  const payload={ name:$('#fyName').value, lastName:$('#fyLast').value, email:$('#fyEmail').value, password:$('#fyPass').value, dni:$('#fyDni').value||null, careerId, grades };
+  const btn=$('#fyRun'); btn.disabled=true; btn.textContent='Procesando…';
+  outShow('#fyOut', await api('/api/actions/setup-first-year-student',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
+  btn.disabled=false; btn.textContent='Crear alumno con 1° año completo'; await Promise.all([loadOverview(), tlFillSelectors&&tlFillSelectors()]);
+});
+
+$('#tpRun').addEventListener('click', async ()=>{
+  const courseIds=[...$('#tpCourses').selectedOptions].map(o=>parseInt(o.value,10));
+  if(courseIds.length===0){ outShow('#tpOut',{ok:false,body:{success:false,summary:'Elegí al menos una materia.'}}); return; }
+  const payload={ name:$('#tpName').value, lastName:$('#tpLast').value, email:$('#tpEmail').value, password:$('#tpPass').value, dni:$('#tpDni').value||null, careerId:parseInt($('#tpCareer').value,10), courseIds, academicYear:parseInt($('#tpYear').value,10)||0, semester:parseInt($('#tpSem').value,10) };
+  const btn=$('#tpRun'); btn.disabled=true; btn.textContent='Procesando…';
+  outShow('#tpOut', await api('/api/actions/setup-teacher-with-courses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
+  btn.disabled=false; btn.textContent='Crear profesor con materias'; await Promise.all([loadOverview(), fillTeachers()]);
+});
+
+async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); await tlFillSelectors(); await shortcutFillCareers(); }
+loadTarget(); refreshAll();
+</script>
+</body>
+</html>

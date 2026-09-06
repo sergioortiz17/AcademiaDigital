@@ -17,8 +17,8 @@ public class RegisterUseCase(IUserRepository userRepository, IStudentRepository 
         var normalizedDni = dni.Trim();
 
         var career = await careerRepository.FindByIdAsync(careerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
-        if (!career.IsActive) throw new InvalidOperationException("Career is inactive.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
+        if (!career.IsActive) throw new InvalidOperationException("La carrera está inactiva.");
 
         var existingEmail = await userRepository.FindByEmailAsync(normalizedEmail, ct);
         if (existingEmail != null)

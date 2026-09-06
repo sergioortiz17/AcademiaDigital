@@ -1,0 +1,72 @@
+<div class="dialog-header">
+  <mat-icon>work</mat-icon>
+  <span>{{ isEdit ? 'Editar cargo' : 'Nuevo cargo' }}</span>
+</div>
+
+<div class="dialog-body">
+
+  <ng-container *ngIf="!isEdit; else readonlyOffer">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Carrera</mat-label>
+      <mat-select [(ngModel)]="selectedCareerId" (selectionChange)="onCareerChange()">
+        <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Materia</mat-label>
+      <mat-select [(ngModel)]="courseId" [disabled]="!selectedCareerId">
+        <mat-option *ngFor="let c of courses" [value]="c.id">{{ c.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Comisión</mat-label>
+      <mat-select [(ngModel)]="commissionId" [disabled]="!selectedCareerId">
+        <mat-option *ngFor="let c of commissions" [value]="c.id">{{ c.name }} ({{ c.shift }})</mat-option>
+      </mat-select>
+      <mat-hint *ngIf="selectedCareerId && commissions.length === 0">Esta carrera no tiene comisiones creadas.</mat-hint>
+    </mat-form-field>
+  </ng-container>
+
+  <ng-template #readonlyOffer>
+    <p class="readonly-offer">
+      <strong>{{ data.position?.courseName }}</strong> — {{ data.position?.commissionName }}
+    </p>
+  </ng-template>
+
+  <div class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Año académico</mat-label>
+      <input matInput type="number" [(ngModel)]="academicYear">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Semestre</mat-label>
+      <mat-select [(ngModel)]="semester">
+        <mat-option [value]="1">1°</mat-option>
+        <mat-option [value]="2">2°</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo de cargo</mat-label>
+      <mat-select [(ngModel)]="positionType">
+        <mat-option *ngFor="let t of positionTypes" [value]="t.value">{{ t.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Cupo máximo</mat-label>
+      <input matInput type="number" min="1" [(ngModel)]="maxStudents">
+    </mat-form-field>
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">
+    {{ isEdit ? 'Guardar cambios' : 'Crear cargo' }}
+  </button>
+</div>

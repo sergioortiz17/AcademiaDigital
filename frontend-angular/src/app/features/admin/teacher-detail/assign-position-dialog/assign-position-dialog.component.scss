@@ -1,0 +1,61 @@
+:host {
+  display: block;
+}
+
+.dialog-header {
+  background: #b8cfe3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #045797;
+
+  mat-icon {
+    color: #045797;
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+.dialog-body {
+  padding: 24px;
+  min-width: 400px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.loading-row {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 24px 24px;
+}
+
+.cancel-btn.mat-mdc-flat-button {
+  background-color: #045797 !important;
+  color: white !important;
+  border-radius: 8px;
+}
+
+.confirm-btn.mat-mdc-stroked-button {
+  border: 2px solid #045797 !important;
+  color: #045797 !important;
+  background: white !important;
+  border-radius: 8px;
+}
+
+.confirm-btn.mat-mdc-stroked-button:hover:not(:disabled) {
+  background-color: #045797 !important;
+  color: white !important;
+}

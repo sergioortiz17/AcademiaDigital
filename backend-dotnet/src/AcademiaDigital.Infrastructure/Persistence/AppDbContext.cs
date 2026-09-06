@@ -18,7 +18,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StudentStudyPlan> StudentStudyPlans => Set<StudentStudyPlan>();
     public DbSet<Student> Students => Set<Student>();
     public DbSet<StudentCareer> StudentCareers => Set<StudentCareer>();
+    public DbSet<StudentRematriculation> StudentRematriculations => Set<StudentRematriculation>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
+    public DbSet<TeacherDocument> TeacherDocuments => Set<TeacherDocument>();
+    public DbSet<TeacherAssignment> TeacherAssignments => Set<TeacherAssignment>();
+    public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<AttendanceJustification> AttendanceJustifications => Set<AttendanceJustification>();
+    public DbSet<AttendanceSessionReopening> AttendanceSessionReopenings => Set<AttendanceSessionReopening>();
+    public DbSet<Gradebook> Gradebooks => Set<Gradebook>();
+    public DbSet<GradebookEvaluation> GradebookEvaluations => Set<GradebookEvaluation>();
+    public DbSet<GradeEntryRevision> GradeEntryRevisions => Set<GradeEntryRevision>();
+    public DbSet<GradebookReopening> GradebookReopenings => Set<GradebookReopening>();
+    public DbSet<ExamTable> ExamTables => Set<ExamTable>();
+    public DbSet<ExamTribunalMember> ExamTribunalMembers => Set<ExamTribunalMember>();
+    public DbSet<ExamRegistration> ExamRegistrations => Set<ExamRegistration>();
+    public DbSet<ExamGradeRevision> ExamGradeRevisions => Set<ExamGradeRevision>();
+    public DbSet<ExamTableReopening> ExamTableReopenings => Set<ExamTableReopening>();
     public DbSet<Administrative> Administratives => Set<Administrative>();
     public DbSet<CooperativeEntity> CooperativeEntities => Set<CooperativeEntity>();
     public DbSet<Communication> Communications => Set<Communication>();
@@ -27,6 +43,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
     public DbSet<TeachingPosition> TeachingPositions => Set<TeachingPosition>();
     public DbSet<CertificateRequest> CertificateRequests => Set<CertificateRequest>();
+    public DbSet<CertificateIssuance> CertificateIssuances => Set<CertificateIssuance>();
+    public DbSet<CertificateSequence> CertificateSequences => Set<CertificateSequence>();
     public DbSet<EnrollmentPeriod> EnrollmentPeriods => Set<EnrollmentPeriod>();
     public DbSet<AcademicEvent> AcademicEvents => Set<AcademicEvent>();
     public DbSet<StudentStatusHistory> StudentStatusHistory => Set<StudentStatusHistory>();
@@ -38,11 +56,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StudentScholarship> StudentScholarships => Set<StudentScholarship>();
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     public DbSet<StudentCustomFieldValue> StudentCustomFieldValues => Set<StudentCustomFieldValue>();
+    public DbSet<AdmissionForm> AdmissionForms => Set<AdmissionForm>();
+    public DbSet<AdmissionFormField> AdmissionFormFields => Set<AdmissionFormField>();
+    public DbSet<AdmissionApplication> AdmissionApplications => Set<AdmissionApplication>();
+    public DbSet<AdmissionApplicationStatusHistory> AdmissionApplicationStatusHistory => Set<AdmissionApplicationStatusHistory>();
+    public DbSet<AdmissionApplicationDocument> AdmissionApplicationDocuments => Set<AdmissionApplicationDocument>();
+    public DbSet<AdmissionAgreement> AdmissionAgreements => Set<AdmissionAgreement>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ActiveSessionConfiguration());
         modelBuilder.ApplyConfiguration(new CertificateRequestConfiguration());
+        modelBuilder.ApplyConfiguration(new CertificateIssuanceConfiguration());
+        modelBuilder.ApplyConfiguration(new CertificateSequenceConfiguration());
         modelBuilder.ApplyConfiguration(new CareerConfiguration());
         modelBuilder.ApplyConfiguration(new CourseConfiguration());
         modelBuilder.ApplyConfiguration(new StudyPlanConfiguration());
@@ -53,7 +80,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new StudentStudyPlanConfiguration());
         modelBuilder.ApplyConfiguration(new StudentConfiguration());
         modelBuilder.ApplyConfiguration(new StudentCareerConfiguration());
+        modelBuilder.ApplyConfiguration(new StudentRematriculationConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherConfiguration());
+        modelBuilder.ApplyConfiguration(new TeacherDocumentConfiguration());
+        modelBuilder.ApplyConfiguration(new TeacherAssignmentConfiguration());
+        modelBuilder.ApplyConfiguration(new AttendanceSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new AttendanceRecordConfiguration());
+        modelBuilder.ApplyConfiguration(new AttendanceJustificationConfiguration());
+        modelBuilder.ApplyConfiguration(new AttendanceSessionReopeningConfiguration());
+        modelBuilder.ApplyConfiguration(new GradebookConfiguration());
+        modelBuilder.ApplyConfiguration(new GradebookEvaluationConfiguration());
+        modelBuilder.ApplyConfiguration(new GradeEntryRevisionConfiguration());
+        modelBuilder.ApplyConfiguration(new GradebookReopeningConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamTableConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamTribunalMemberConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamRegistrationConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamGradeRevisionConfiguration());
+        modelBuilder.ApplyConfiguration(new ExamTableReopeningConfiguration());
         modelBuilder.ApplyConfiguration(new AdministrativeConfiguration());
         modelBuilder.ApplyConfiguration(new CooperativeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CommunicationConfiguration());
@@ -71,6 +114,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new StudentScholarshipConfiguration());
         modelBuilder.ApplyConfiguration(new CustomFieldDefinitionConfiguration());
         modelBuilder.ApplyConfiguration(new StudentCustomFieldValueConfiguration());
+        modelBuilder.ApplyConfiguration(new AdmissionFormConfiguration());
+        modelBuilder.ApplyConfiguration(new AdmissionFormFieldConfiguration());
+        modelBuilder.ApplyConfiguration(new AdmissionApplicationConfiguration());
+        modelBuilder.ApplyConfiguration(new AdmissionApplicationStatusHistoryConfiguration());
+        modelBuilder.ApplyConfiguration(new AdmissionApplicationDocumentConfiguration());
+        modelBuilder.ApplyConfiguration(new AdmissionAgreementConfiguration());
+        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }

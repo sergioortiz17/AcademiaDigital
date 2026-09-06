@@ -169,7 +169,11 @@
 </div>
 
 <div class="documents-section">
-  <div class="documents-card">
+  <mat-expansion-panel class="documents-card">
+    <mat-expansion-panel-header>
+      <mat-panel-title>Documentación requerida para la matrícula</mat-panel-title>
+    </mat-expansion-panel-header>
+
     <div class="documents-message">
       PARA QUE SU MATRÍCULA SE REALICE, DEBERÁ PRESENTARSE EN RÍO NEGRO 77
       DE 18:30 A 20 CON LA SIGUIENTE DOCUMENTACIÓN.
@@ -181,7 +185,7 @@
       <span>{{ document.label }}</span>
       <mat-checkbox [checked]="document.checked" disabled></mat-checkbox>
     </div>
-  </div>
+  </mat-expansion-panel>
 </div>
 
 <div class="documents-footer">
@@ -193,6 +197,6 @@
     (click)="submitEnrollment()"
     [disabled]="!canSubmit() || isSubmitting">
     <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-    <span *ngIf="!isSubmitting">ENVIAR</span>
+    <span *ngIf="!isSubmitting">Solicitar inscripción</span>
   </button>
 </div>

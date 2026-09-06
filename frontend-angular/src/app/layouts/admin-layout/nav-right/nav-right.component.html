@@ -1,20 +1,11 @@
 <div class="topbar-actions">
 <!-- Dark mode toggle: hidden until implemented -->
 
-
-<!-- Language selector -->
-<button mat-icon-button class="action-btn" [matMenuTriggerFor]="langMenu" matTooltip="Idioma">
-  <mat-icon>language</mat-icon>
-</button>
-
-<mat-menu #langMenu="matMenu">
-  <button mat-menu-item (click)="changeLanguage('es')"> <!--- [class.font-weight-bold]="currentLang === 'es'" -->
-    <mat-icon>flag</mat-icon> Español
-  </button>
-  <button mat-menu-item (click)="changeLanguage('en')"><!--- [class.font-weight-bold]="currentLang === 'en'"-->
-    <mat-icon>flag</mat-icon> English
-  </button>
-</mat-menu>
+<!-- Usuario logueado -->
+<div class="session-user" *ngIf="user$ | async as user">
+  <span class="session-user-name">{{ user.username }} {{ user.lastName }}</span>
+  <span class="session-user-dni" *ngIf="user.dni">DNI {{ user.dni }}</span>
+</div>
 
 <!-- User menu -->
 <button mat-icon-button class="action-btn profile-btn" [matMenuTriggerFor]="userMenu" matTooltip="Mi cuenta">
