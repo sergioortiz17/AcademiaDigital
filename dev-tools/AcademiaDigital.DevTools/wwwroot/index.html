@@ -131,6 +131,50 @@
     <button id="btnAssign">Asignar</button>
     <div class="out" id="outAssign" style="display:none"></div>
   </section>
+
+  <!-- Atajo A: alumno de 1° año completo -->
+  <section class="card full">
+    <h2>⚡ Atajo: crear alumno de 1° año completo (con notas)</h2>
+    <p class="muted">Crea el alumno, lo inscribe en TODAS las materias de 1° año y las califica hasta condición final (nota ≥6 → cursada + final → Aprobada; &lt;6 → Libre). Ideal para preparar correlativas de 2° año.</p>
+    <div class="row" style="max-width:760px">
+      <div><label>Nombre</label><input id="fyName"/></div>
+      <div><label>Apellido</label><input id="fyLast"/></div>
+      <div><label>Email</label><input id="fyEmail" type="email"/></div>
+    </div>
+    <div class="row" style="max-width:760px">
+      <div><label>Password</label><input id="fyPass" value="Alumno123!"/></div>
+      <div><label>DNI (opcional)</label><input id="fyDni" placeholder="auto"/></div>
+      <div><label>Carrera</label><select id="fyCareer"></select></div>
+    </div>
+    <label>Notas de 1° año (editables)</label>
+    <div id="fyGrades" class="muted" style="display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">Elegí una carrera…</div>
+    <button id="fyRun">Crear alumno con 1° año completo</button>
+    <div class="out" id="fyOut" style="display:none"></div>
+  </section>
+
+  <!-- Atajo B: profesor con materias -->
+  <section class="card full">
+    <h2>⚡ Atajo: crear profesor con sus materias</h2>
+    <p class="muted">Crea el profesor y le asigna cada materia elegida, creando/reusando la comisión y el cargo (nunca queda un cargo sin comisión).</p>
+    <div class="row" style="max-width:760px">
+      <div><label>Nombre</label><input id="tpName"/></div>
+      <div><label>Apellido</label><input id="tpLast"/></div>
+      <div><label>Email</label><input id="tpEmail" type="email"/></div>
+    </div>
+    <div class="row" style="max-width:760px">
+      <div><label>Password</label><input id="tpPass" value="Profe123!"/></div>
+      <div><label>DNI (opcional)</label><input id="tpDni" placeholder="auto"/></div>
+      <div><label>Carrera</label><select id="tpCareer"></select></div>
+    </div>
+    <div class="row" style="max-width:520px">
+      <div><label>Año académico</label><input id="tpYear" type="number" placeholder="2026"/></div>
+      <div><label>Cuatrimestre</label><select id="tpSem"><option value="1">1</option><option value="2">2</option></select></div>
+    </div>
+    <label>Materias (multi-selección)</label>
+    <select id="tpCourses" multiple size="6" style="height:auto"></select>
+    <button id="tpRun">Crear profesor con materias</button>
+    <div class="out" id="tpOut" style="display:none"></div>
+  </section>
   </div><!-- /usuarios -->
 
   <div class="tabpanel" data-panel="escenarios" style="grid-template-columns:1fr">
@@ -621,7 +665,53 @@ $('#tlLoad').addEventListener('click', async () => {
   await tlReload();
 });
 
-async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); await tlFillSelectors(); }
+// ── Atajos (combos) ─────────────────────────────────────────────────────────
+function outShow(elId, res){ const el=$(elId); el.style.display='block'; const ok=res.ok&&res.body.success!==false; el.className='out '+(ok?'ok':'err');
+  const b=res.body; let t=(b.summary?((ok?'✅ ':'❌ ')+b.summary+'\n\n'):'');
+  if(Array.isArray(b.steps)) t+=b.steps.map(s=>{const ic=s.status==='ok'?'✔️':(s.status==='warn'?'⚠️':'✖️'); return `${ic} ${s.step}: ${s.detail||''}`+(s.data?('\n     '+JSON.stringify(s.data)):'');}).join('\n'); else t+=JSON.stringify(b,null,2);
+  el.textContent=t; }
+
+async function shortcutFillCareers(){
+  const { body } = await api('/api/careers');
+  const opts=(body||[]).map(c=>`<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+  $('#fyCareer').innerHTML=opts; $('#tpCareer').innerHTML=opts;
+  if(body&&body.length){ await fyLoadCourses(); await tpLoadCourses(); }
+}
+async function planCoursesFor(careerId){
+  const plans=await api(`/api/actions/careers/${careerId}/study-plans`);
+  const pid=(plans.body||[])[0]?.id; if(!pid) return [];
+  return (await api(`/api/actions/study-plans/${pid}/courses`)).body||[];
+}
+async function fyLoadCourses(){
+  const courses=await planCoursesFor($('#fyCareer').value);
+  const y1=courses.filter(c=>c.year===1);
+  $('#fyGrades').innerHTML = y1.length ? y1.map(c=>`<label style="color:var(--fg)">${c.code} · ${c.name.slice(0,26)}<input type="number" step="0.1" value="8" data-fy-spc="${c.id}" style="margin-top:2px"/></label>`).join('') : '<span>Esta carrera no tiene materias de 1° año.</span>';
+}
+async function tpLoadCourses(){
+  const courses=await planCoursesFor($('#tpCareer').value);
+  $('#tpCourses').innerHTML=courses.map(c=>`<option value="${c.courseId}">${c.code} · ${c.name.slice(0,30)} (año ${c.year})</option>`).join('');
+}
+$('#fyCareer').addEventListener('change', fyLoadCourses);
+$('#tpCareer').addEventListener('change', tpLoadCourses);
+
+$('#fyRun').addEventListener('click', async ()=>{
+  const grades=[...document.querySelectorAll('[data-fy-spc]')].map(i=>({ studyPlanCourseId:parseInt(i.dataset.fySpc,10), score:parseFloat(i.value) }));
+  const payload={ name:$('#fyName').value, lastName:$('#fyLast').value, email:$('#fyEmail').value, password:$('#fyPass').value, dni:$('#fyDni').value||null, careerId:parseInt($('#fyCareer').value,10), grades };
+  const btn=$('#fyRun'); btn.disabled=true; btn.textContent='Procesando…';
+  outShow('#fyOut', await api('/api/actions/setup-first-year-student',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
+  btn.disabled=false; btn.textContent='Crear alumno con 1° año completo'; await Promise.all([loadOverview(), tlFillSelectors&&tlFillSelectors()]);
+});
+
+$('#tpRun').addEventListener('click', async ()=>{
+  const courseIds=[...$('#tpCourses').selectedOptions].map(o=>parseInt(o.value,10));
+  if(courseIds.length===0){ outShow('#tpOut',{ok:false,body:{success:false,summary:'Elegí al menos una materia.'}}); return; }
+  const payload={ name:$('#tpName').value, lastName:$('#tpLast').value, email:$('#tpEmail').value, password:$('#tpPass').value, dni:$('#tpDni').value||null, careerId:parseInt($('#tpCareer').value,10), courseIds, academicYear:parseInt($('#tpYear').value,10)||0, semester:parseInt($('#tpSem').value,10) };
+  const btn=$('#tpRun'); btn.disabled=true; btn.textContent='Procesando…';
+  outShow('#tpOut', await api('/api/actions/setup-teacher-with-courses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
+  btn.disabled=false; btn.textContent='Crear profesor con materias'; await Promise.all([loadOverview(), fillTeachers()]);
+});
+
+async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); await tlFillSelectors(); await shortcutFillCareers(); }
 loadTarget(); refreshAll();
 </script>
 </body>

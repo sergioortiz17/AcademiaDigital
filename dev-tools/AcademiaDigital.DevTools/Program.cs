@@ -400,6 +400,33 @@ app.MapGet("/api/actions/students/{studentId:long}/academic-state", async (long 
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// Atajo A: crear alumno de 1° año completo (con notas)
+app.MapPost("/api/actions/setup-first-year-student", async (SetupFirstYearRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || string.IsNullOrWhiteSpace(req.Email) || req.CareerId <= 0)
+        return Results.BadRequest(new { error = "Se requieren name, email, password y careerId." });
+    try
+    {
+        var grades = (req.Grades ?? []).ToDictionary(g => g.StudyPlanCourseId, g => g.Score);
+        return Results.Ok(await svc.SetupFirstYearStudentAsync(req.Name, req.LastName ?? "", req.Email, req.Password, req.Dni, req.CareerId, grades, ct));
+    }
+    catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Alta 1° año", status = "fail", detail = ex.Message }])); }
+});
+
+// Atajo B: crear profesor con sus materias
+app.MapPost("/api/actions/setup-teacher-with-courses", async (SetupTeacherRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || string.IsNullOrWhiteSpace(req.Email) || req.CareerId <= 0 || req.CourseIds is null || req.CourseIds.Count == 0)
+        return Results.BadRequest(new { error = "Se requieren name, email, password, careerId y al menos una materia." });
+    try
+    {
+        var year = req.AcademicYear > 0 ? req.AcademicYear : DateTime.UtcNow.Year;
+        var sem = req.Semester is 1 or 2 ? req.Semester : 1;
+        return Results.Ok(await svc.SetupTeacherWithCoursesAsync(req.Name, req.LastName ?? "", req.Email, req.Password, req.Dni, req.CareerId, req.CourseIds, year, sem, ct));
+    }
+    catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Alta profesor", status = "fail", detail = ex.Message }])); }
+});
+
 app.Run();
 
 // ── DTOs de request ──────────────────────────────────────────────────────────
@@ -408,4 +435,7 @@ internal sealed record CreateUserRequest(string Name, string? LastName, string E
 internal sealed record EnrollActionRequest(long StudentId, IReadOnlyList<int> StudyPlanCourseIds, int AcademicYear, int Semester);
 internal sealed record GradebookActionRequest(long EnrollmentId, decimal Score, long? TeacherId);
 internal sealed record ExamActionRequest(long EnrollmentId, decimal Grade);
+internal sealed record CourseGradeInput(int StudyPlanCourseId, decimal Score);
+internal sealed record SetupFirstYearRequest(string Name, string? LastName, string Email, string Password, string? Dni, int CareerId, IReadOnlyList<CourseGradeInput>? Grades);
+internal sealed record SetupTeacherRequest(string Name, string? LastName, string Email, string Password, string? Dni, int CareerId, IReadOnlyList<int> CourseIds, int AcademicYear, int Semester);
 internal sealed record AssignRequest(long TeacherId, int CourseId, int AcademicYear, int Semester, int MaxStudents, string? Reason);
