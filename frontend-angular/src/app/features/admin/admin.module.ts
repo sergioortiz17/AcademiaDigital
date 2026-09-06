@@ -26,6 +26,8 @@ import { CareerCreateComponent } from './career-create/career-create.component';
 import { StudyPlanDiffComponent } from './study-plan-diff/study-plan-diff.component';
 import { CareerManagementComponent } from './career-management/career-management.component';
 import { StudentCommissionAssignmentComponent } from './student-commission-assignment/student-commission-assignment.component';
+import { CommissionManagementComponent } from './commission-management/commission-management.component';
+import { CommissionFormDialogComponent } from './commission-management/commission-form-dialog/commission-form-dialog.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 
 @NgModule({
@@ -53,7 +55,9 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     CareerCreateComponent,
     StudyPlanDiffComponent,
     CareerManagementComponent,
-    StudentCommissionAssignmentComponent
+    StudentCommissionAssignmentComponent,
+    CommissionManagementComponent,
+    CommissionFormDialogComponent
   ],
   imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
 })

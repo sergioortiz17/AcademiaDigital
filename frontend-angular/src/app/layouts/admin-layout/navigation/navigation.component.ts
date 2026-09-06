@@ -40,7 +40,9 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'teachers',    title: 'Docentes',           icon: 'group',
     children: [
       { id: 'teacher-list',       title: '• Legajos', url: '/app/admin/teachers',           icon: '' },
-      { id: 'teaching-positions', title: '• Cargos',  url: '/app/admin/teaching-positions',  icon: '' }
+      { id: 'teaching-positions', title: '• Cargos',  url: '/app/admin/teaching-positions',  icon: '' },
+      { id: 'commissions',        title: '• Comisiones', url: '/app/admin/commissions',      icon: '' },
+      { id: 'student-commission', title: '• Asignar comisión a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
     ]
   },
   { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
