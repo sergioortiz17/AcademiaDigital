@@ -78,7 +78,7 @@ public sealed class AdmissionHandlersTests
                 },
                 TestContext.Current.CancellationToken));
 
-        Assert.Equal("Admission challenge verification failed.", exception.Message);
+        Assert.Equal("Falló la verificación del desafío de admisión.", exception.Message);
         await repository.DidNotReceive().FindActiveFormBySlugAsync(
             Arg.Any<string>(), Arg.Any<CancellationToken>());
     }

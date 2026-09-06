@@ -78,7 +78,7 @@ test('rematriculacion al siguiente ciclo lectivo @m4 @rematriculation @critical 
       shift: 'Evening',
       notes: 'Rematriculacion E2E'
     });
-    expect(problemSchema.parse(conflictCall.body).msg).toContain('already has a rematriculation');
+    expect(problemSchema.parse(conflictCall.body).msg).toContain('ya tiene una rematriculación');
     expect(await db.countStudentRematriculations(student.id)).toBe(1);
     expect(await db.getCurrentAcademicAssignment(student.id)).toEqual({
       academicYear: 2027,

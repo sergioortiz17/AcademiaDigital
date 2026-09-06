@@ -52,11 +52,11 @@ test('formulario público y solicitud de admisión @m4 @admissions @critical @re
 
     const missingChallenge = await anonymous.admissions.createApplication(body, null);
     expect(missingChallenge.response.status()).toBe(403);
-    expect(problemSchema.parse(missingChallenge.body).msg).toContain('challenge verification failed');
+    expect(problemSchema.parse(missingChallenge.body).msg).toContain('verificación del desafío');
 
     const invalidChallenge = await anonymous.admissions.createApplication(body, 'invalid-challenge');
     expect(invalidChallenge.response.status()).toBe(403);
-    expect(problemSchema.parse(invalidChallenge.body).msg).toContain('challenge verification failed');
+    expect(problemSchema.parse(invalidChallenge.body).msg).toContain('verificación del desafío');
     expect(await db.countAdmissionApplications(seeded.formId)).toBe(0);
 
     const createdCall = await anonymous.admissions.createApplication(body);
@@ -70,7 +70,7 @@ test('formulario público y solicitud de admisión @m4 @admissions @critical @re
 
     const duplicate = await anonymous.admissions.createApplication(body);
     expect(duplicate.response.status()).toBe(409);
-    expect(problemSchema.parse(duplicate.body).msg).toContain('already exists');
+    expect(problemSchema.parse(duplicate.body).msg).toContain('Ya existe una solicitud de admisión');
     expect(await db.countAdmissionApplications(seeded.formId)).toBe(1);
 
     const missingTerms = await anonymous.admissions.createApplication({ ...body, acceptedTerms: false });
@@ -153,7 +153,7 @@ test('cupo aislado por comision y turno @m4 @admissions @critical @regression', 
     const duplicateTarget = await admin.admissions.createForm(
       formBody(morning.id, `morning-duplicate-${suffix}`, `Ingreso duplicado ${suffix}`));
     expect(duplicateTarget.response.status()).toBe(409);
-    expect(problemSchema.parse(duplicateTarget.body).msg).toContain('already has an admission form');
+    expect(problemSchema.parse(duplicateTarget.body).msg).toContain('ya tiene un formulario de admisión');
 
     const eveningFormCall = await admin.admissions.createForm(
       formBody(evening.id, `evening-${suffix}`, `Ingreso noche ${suffix}`));
@@ -451,7 +451,7 @@ test('administración y transición auditada de admisiones @m4 @admissions @auth
 
     const invalidTransition = await admin.admissions.changeApplicationStatus(application.publicId, 1);
     expect(invalidTransition.response.status()).toBe(409);
-    expect(problemSchema.parse(invalidTransition.body).msg).toContain('cannot transition');
+    expect(problemSchema.parse(invalidTransition.body).msg).toContain('no puede transicionar');
 
     const deactivateCall = await admin.admissions.setFormActive(form.id, false);
     expect(deactivateCall.response.status()).toBe(200);

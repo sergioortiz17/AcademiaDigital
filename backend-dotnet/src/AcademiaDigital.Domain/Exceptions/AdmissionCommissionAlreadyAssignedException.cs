@@ -1,4 +1,4 @@
 namespace AcademiaDigital.Domain.Exceptions;
 
 public sealed class AdmissionCommissionAlreadyAssignedException(int commissionId)
-    : Exception($"Commission {commissionId} already has an admission form.");
+    : Exception($"La comisión {commissionId} ya tiene un formulario de admisión.");

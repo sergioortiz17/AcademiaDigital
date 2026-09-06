@@ -74,7 +74,7 @@ test('cargos, vacantes e historial aislado de asignaciones docentes @m5 @critica
 
     const invalidPosition = await admin.teachingPositions.create({ ...positionBody, academicYear: 2027 });
     expect(invalidPosition.response.status()).toBe(400);
-    expect(problemSchema.parse(invalidPosition.body).msg).toContain('academic year');
+    expect(problemSchema.parse(invalidPosition.body).msg).toContain('año académico');
 
     const createPositionCall = await admin.teachingPositions.create(positionBody);
     expect(createPositionCall.response.status()).toBe(201);

@@ -1,4 +1,4 @@
 namespace AcademiaDigital.Domain.Exceptions;
 
 public sealed class AdmissionFormSlugAlreadyExistsException(string slug)
-    : Exception($"An admission form with slug '{slug}' already exists.");
+    : Exception($"Ya existe un formulario de admisión con el slug '{slug}'.");

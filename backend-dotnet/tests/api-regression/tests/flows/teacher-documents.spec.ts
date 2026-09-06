@@ -62,7 +62,7 @@ test('versionado, revisión y autorización de documentos docentes @m5 @critical
       status: 'Rejected'
     });
     expect(invalidReview.response.status()).toBe(400);
-    expect(problemSchema.parse(invalidReview.body).msg?.toLowerCase()).toContain('observation');
+    expect(problemSchema.parse(invalidReview.body).msg?.toLowerCase()).toContain('observación');
 
     const approvedCall = await admin.teachers.reviewDocument(teacherId, first.id, {
       status: 'Approved', observation: 'Antecedentes verificados por E2E'

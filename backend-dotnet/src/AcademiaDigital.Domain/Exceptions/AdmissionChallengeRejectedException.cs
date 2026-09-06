@@ -1,4 +1,4 @@
 namespace AcademiaDigital.Domain.Exceptions;
 
 public sealed class AdmissionChallengeRejectedException()
-    : Exception("Admission challenge verification failed.");
+    : Exception("Falló la verificación del desafío de admisión.");

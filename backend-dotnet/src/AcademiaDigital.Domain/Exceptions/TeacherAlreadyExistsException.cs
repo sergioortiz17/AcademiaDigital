@@ -1,4 +1,4 @@
 namespace AcademiaDigital.Domain.Exceptions;
 
 public sealed class TeacherAlreadyExistsException(string field)
-    : Exception($"A teacher is already registered with this {field}.");
+    : Exception($"Ya existe un docente registrado con este {field}.");

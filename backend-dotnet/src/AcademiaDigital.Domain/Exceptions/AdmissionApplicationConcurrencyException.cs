@@ -1,4 +1,4 @@
 namespace AcademiaDigital.Domain.Exceptions;
 
 public sealed class AdmissionApplicationConcurrencyException()
-    : Exception("The admission application was modified by another operation. Reload it and retry.");
+    : Exception("La solicitud de admisión fue modificada por otra operación. Recargala y volvé a intentar.");
