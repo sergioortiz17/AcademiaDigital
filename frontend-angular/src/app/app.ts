@@ -18,10 +18,12 @@ export class App implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Setup i18n
-    const savedLang = localStorage.getItem('i18nextLng') || 'es';
+    // La app es siempre en español, sin selector de idioma. Se ignora
+    // (y se limpia) cualquier preferencia vieja guardada en localStorage
+    // de cuando existía el selector de inglés.
+    localStorage.removeItem('i18nextLng');
     this.translate.setDefaultLang('es');
-    this.translate.use(savedLang);
+    this.translate.use('es');
 
     // Restore persisted auth session
     try {

@@ -74,9 +74,9 @@ public class LoginUseCase(
         return new LoginResult(
             Success: true,
             Token: token,
-            User: new UserDto(user.Id, user.Username, user.Email, user.Role));
+            User: new UserDto(user.Id, user.Username, user.LastName, user.Dni, user.Email, user.Role));
     }
 }
 
 public record LoginResult(bool Success, string Token, UserDto User);
-public record UserDto(long Id, string Username, string Email, UserRole Role);
+public record UserDto(long Id, string Username, string LastName, string? Dni, string Email, UserRole Role);
