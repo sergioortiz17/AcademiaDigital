@@ -303,18 +303,18 @@ public sealed class CorrelativaScenarioService(
             .Where(e => e.StudentId == studentId && e.CourseId == courseId && e.EnrollmentPeriodId == periodId)
             .OrderByDescending(e => e.Id).FirstAsync(ct);
 
-    /// <summary>Crea una Commission + TeachingPosition (vía DbContext directo) y corre la cadena
+    /// <summary>Crea una Division + CourseSection (vía DbContext directo) y corre la cadena
     /// completa del gradebook hasta Close, dejando el enrollment Regularized (nota>=6) o Failed.</summary>
     private async Task RunGradebookAsync(StudyPlanCourse spc, int careerId, Enrollment enrollment, Teacher teacher, long actorUserId, decimal score, CancellationToken ct)
     {
-        // La TeachingPosition/gradebook deben usar el MISMO AcademicYear/Semester que el enrollment:
+        // La CourseSection/gradebook deben usar el MISMO AcademicYear/Semester que el enrollment:
         // el roster del gradebook matchea enrollments por CourseId+AcademicYear+Semester.
         var position = await EnsureTeachingPositionAsync(spc, careerId, teacher, enrollment.AcademicYear, enrollment.Semester, ct);
 
-        // El enrollment que crea CreateEnrollmentCommandHandler no tiene TeachingPositionId; el roster
-        // del gradebook incluye al alumno si su enrollment apunta a esa TeachingPosition. Se lo linkeamos.
+        // El enrollment que crea CreateEnrollmentCommandHandler no tiene CourseSectionId; el roster
+        // del gradebook incluye al alumno si su enrollment apunta a esa CourseSection. Se lo linkeamos.
         var trackedEnrollment = await db.Enrollments.FirstAsync(e => e.Id == enrollment.Id, ct);
-        trackedEnrollment.TeachingPositionId = position.Id;
+        trackedEnrollment.CourseSectionId = position.Id;
         await db.SaveChangesAsync(ct);
 
         var idem = $"gb-scn-{spc.CourseId}-{enrollment.Id}";
@@ -358,14 +358,14 @@ public sealed class CorrelativaScenarioService(
         await publishExamTable.Handle(new PublishExamTableCommand(table.Id, actorUserId), ct);
     }
 
-    private async Task<TeachingPosition> EnsureTeachingPositionAsync(StudyPlanCourse spc, int careerId, Teacher teacher, int academicYear, int semester, CancellationToken ct)
+    private async Task<CourseSection> EnsureTeachingPositionAsync(StudyPlanCourse spc, int careerId, Teacher teacher, int academicYear, int semester, CancellationToken ct)
     {
-        // Commission (no hay repo Create -> DbContext directo). Buscar-o-crear por code fijo.
+        // Division (no hay repo Create -> DbContext directo). Buscar-o-crear por code fijo.
         var commissionCode = $"COM-SCN-{spc.CourseId}-{academicYear}";
-        var commission = await db.Set<Commission>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
+        var commission = await db.Set<Division>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
         if (commission is null)
         {
-            commission = new Commission
+            commission = new Division
             {
                 CareerId = careerId,
                 Code = commissionCode,
@@ -378,15 +378,15 @@ public sealed class CorrelativaScenarioService(
             await db.SaveChangesAsync(ct);
         }
 
-        var position = await db.Set<TeachingPosition>()
-            .FirstOrDefaultAsync(p => p.CourseId == spc.CourseId && p.CommissionId == commission.Id, ct);
+        var position = await db.Set<CourseSection>()
+            .FirstOrDefaultAsync(p => p.CourseId == spc.CourseId && p.DivisionId == commission.Id, ct);
         if (position is null)
         {
             var now = DateTime.UtcNow;
-            position = new TeachingPosition
+            position = new CourseSection
             {
                 CourseId = spc.CourseId,
-                CommissionId = commission.Id,
+                DivisionId = commission.Id,
                 AcademicYear = academicYear,
                 Semester = semester,
                 PositionType = PositionType.Titular,

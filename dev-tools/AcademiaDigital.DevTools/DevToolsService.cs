@@ -114,12 +114,12 @@ public sealed class DevToolsService(AppDbContext db, IConfiguration config, ILog
             {
                 a.Id,
                 Teacher = a.Teacher.User.Username + " " + a.Teacher.User.LastName,
-                a.TeachingPosition.CourseId,
-                CourseCode = a.TeachingPosition.Course.Code,
-                CourseName = a.TeachingPosition.Course.Name,
-                a.TeachingPosition.AcademicYear,
-                a.TeachingPosition.Semester,
-                PositionType = a.TeachingPosition.PositionType.ToString(),
+                a.CourseSection.CourseId,
+                CourseCode = a.CourseSection.Course.Code,
+                CourseName = a.CourseSection.Course.Name,
+                a.CourseSection.AcademicYear,
+                a.CourseSection.Semester,
+                PositionType = a.CourseSection.PositionType.ToString(),
                 a.StartedOn
             })
             .ToListAsync(ct);
