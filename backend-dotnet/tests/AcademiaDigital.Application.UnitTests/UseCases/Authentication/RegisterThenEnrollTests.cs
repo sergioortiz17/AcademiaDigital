@@ -127,6 +127,7 @@ public sealed class RegisterThenEnrollTests
         var studentCareerRepository = Substitute.For<IStudentCareerRepository>();
         var studentAcademicRepository = Substitute.For<IStudentAcademicRepository>();
         var commissionRepository = Substitute.For<IDivisionRepository>();
+        var courseSectionRepository = Substitute.For<ICourseSectionRepository>();
         var unitOfWork = Substitute.For<IUnitOfWork>();
 
         var period = new EnrollmentPeriod
@@ -157,6 +158,9 @@ public sealed class RegisterThenEnrollTests
         commissionRepository.FindMatchingActiveAsync(
                 Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Division>>([]));
+        courseSectionRepository.FindActiveByCourseTermAsync(
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<CourseSection>>([]));
         enrollmentRepository.GetByEnrollmentPeriodAsync(PeriodId, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<Enrollment>>([]));
         studyPlanCourseRepository.GetByIdsAsync(Arg.Any<IReadOnlyList<int>>(), Arg.Any<CancellationToken>())
@@ -170,7 +174,7 @@ public sealed class RegisterThenEnrollTests
 
         return new CreateEnrollmentCommandHandler(
             periodRepository, enrollmentRepository, studyPlanCourseRepository, studentCareerRepository,
-            studentAcademicRepository, commissionRepository,
+            studentAcademicRepository, commissionRepository, courseSectionRepository,
             new EnrollmentEligibilityPolicy(new CourseEligibilityService()),
             new EnrollmentCapacityPolicy(), unitOfWork, TimeProvider.System);
     }

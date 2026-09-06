@@ -270,6 +270,73 @@ public sealed class CreateEnrollmentCommandHandlerTests
         Assert.Empty(context.CreatedAssignments);   // no pisar una asignación manual existente
     }
 
+    // ── Nivel 2: auto-link de la CourseSection por materia (sin filtrar por división) ─────────
+
+    [Fact]
+    public async Task Handle_links_the_course_section_when_exactly_one_matches_the_course_term()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            sectionsByCourseId: new Dictionary<int, int[]> { [1] = [77] });
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var enrollment = Assert.Single(context.CreatedEnrollments);
+        Assert.Equal(77, enrollment.CourseSectionId);
+    }
+
+    [Fact]
+    public async Task Handle_does_not_link_a_section_when_none_matches()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            sectionsByCourseId: new Dictionary<int, int[]>()); // 0 secciones
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var enrollment = Assert.Single(context.CreatedEnrollments);
+        Assert.Null(enrollment.CourseSectionId);
+    }
+
+    [Fact]
+    public async Task Handle_does_not_link_a_section_when_two_or_more_match()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            sectionsByCourseId: new Dictionary<int, int[]> { [1] = [77, 78] }); // ambiguo
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var enrollment = Assert.Single(context.CreatedEnrollments);
+        Assert.Null(enrollment.CourseSectionId);
+    }
+
+    [Fact]
+    public async Task Handle_links_a_recursante_to_the_section_of_a_course_from_another_year()
+    {
+        // Recursante: alumno cuya división es de 2° año, pero inscribe una materia de 1° (courseId 9,
+        // yearNumber 1) que debe. El match de nivel 2 NO filtra por división, así que igual encuentra
+        // y linkea la sección de esa materia. (La división de nivel 1 no aplica acá: multi-año.)
+        var context = CreateContext(
+            studyPlanCourses:
+            [
+                PlanCourse(id: 201, courseId: 20, yearNumber: 2),  // materia de su año
+                PlanCourse(id: 109, courseId: 9, yearNumber: 1)    // materia recursada de 1°
+            ],
+            sectionsByCourseId: new Dictionary<int, int[]> { [20] = [88], [9] = [91] });
+
+        await context.Handler.Handle(Command(courseIds: [201, 109], shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, context.CreatedEnrollments.Count);
+        var recursada = context.CreatedEnrollments.Single(e => e.CourseId == 9);
+        Assert.Equal(91, recursada.CourseSectionId);   // la materia de OTRO año quedó linkeada
+        var regular = context.CreatedEnrollments.Single(e => e.CourseId == 20);
+        Assert.Equal(88, regular.CourseSectionId);
+        // Nivel 1 (división) no se asigna porque las materias son de años distintos (ambiguo),
+        // pero el nivel 2 igual linkeó cada sección — que es el punto del recursante.
+        Assert.Empty(context.CreatedAssignments);
+    }
+
     private static HandlerTestContext CreateContext(
         EnrollmentPeriod? period = null,
         bool hasActiveMembership = true,
@@ -280,7 +347,8 @@ public sealed class CreateEnrollmentCommandHandlerTests
         IReadOnlyList<Enrollment>? enrollmentHistory = null,
         (int Morning, int Afternoon, int Evening)? enrolledShiftCounts = null,
         IReadOnlyList<Division>? matchingCommissions = null,
-        bool hasCurrentAssignment = false)
+        bool hasCurrentAssignment = false,
+        IReadOnlyDictionary<int, int[]>? sectionsByCourseId = null)
     {
         var periodRepository = Substitute.For<IEnrollmentPeriodRepository>();
         var enrollmentRepository = Substitute.For<IEnrollmentRepository>();
@@ -288,6 +356,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var studentCareerRepository = Substitute.For<IStudentCareerRepository>();
         var studentAcademicRepository = Substitute.For<IStudentAcademicRepository>();
         var commissionRepository = Substitute.For<IDivisionRepository>();
+        var courseSectionRepository = Substitute.For<ICourseSectionRepository>();
         var unitOfWork = Substitute.For<IUnitOfWork>();
         var createdEnrollments = new List<Enrollment>();
         var createdAssignments = new List<StudentAcademicAssignment>();
@@ -328,6 +397,16 @@ public sealed class CreateEnrollmentCommandHandlerTests
         commissionRepository.FindMatchingActiveAsync(
                 Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(matchingCommissions ?? (IReadOnlyList<Division>)[]));
+        courseSectionRepository.FindActiveByCourseTermAsync(
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var courseId = call.ArgAt<int>(0);
+                var list = (sectionsByCourseId is not null && sectionsByCourseId.TryGetValue(courseId, out var ids))
+                    ? ids.Select(id => new CourseSection { Id = id }).ToList()
+                    : new List<CourseSection>();
+                return Task.FromResult<IReadOnlyList<CourseSection>>(list);
+            });
         enrollmentRepository.GetByEnrollmentPeriodAsync(PeriodId, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<Enrollment>>(existingEnrollments));
         studyPlanCourseRepository.GetByIdsAsync(Arg.Any<IReadOnlyList<int>>(), Arg.Any<CancellationToken>())
@@ -348,6 +427,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
             studentCareerRepository,
             studentAcademicRepository,
             commissionRepository,
+            courseSectionRepository,
             new EnrollmentEligibilityPolicy(new CourseEligibilityService()),
             new EnrollmentCapacityPolicy(),
             unitOfWork,

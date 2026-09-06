@@ -54,6 +54,15 @@ public class CourseSectionRepository(AppDbContext db) : ICourseSectionRepository
         => await Details()
             .FirstOrDefaultAsync(tp => tp.Id == id, ct);
 
+    public async Task<IReadOnlyList<CourseSection>> FindActiveByCourseTermAsync(
+        int courseId, int academicYear, int semester, bool isAnnual, CancellationToken ct = default)
+        => await db.CourseSections.AsNoTracking()
+            .Where(section => section.IsActive
+                && section.CourseId == courseId
+                && section.AcademicYear == academicYear
+                && (isAnnual ? section.IsAnnual : (!section.IsAnnual && section.Semester == semester)))
+            .ToListAsync(ct);
+
     public async Task<CourseSection> CreateAsync(CourseSection position, CancellationToken ct = default)
     {
         db.CourseSections.Add(position);

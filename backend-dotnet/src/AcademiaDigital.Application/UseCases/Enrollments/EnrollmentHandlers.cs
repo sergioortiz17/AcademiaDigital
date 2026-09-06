@@ -19,6 +19,7 @@ public sealed class CreateEnrollmentCommandHandler(
     IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
     IDivisionRepository commissionRepository,
+    ICourseSectionRepository courseSectionRepository,
     EnrollmentEligibilityPolicy eligibilityPolicy,
     EnrollmentCapacityPolicy capacityPolicy,
     IUnitOfWork unitOfWork,
@@ -59,12 +60,26 @@ public sealed class CreateEnrollmentCommandHandler(
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
+        // Auto-match NIVEL 2 (por materia): para cada materia inscripta, buscar su CourseSection
+        // (sección de esa materia en este ciclo/cuatrimestre) SIN filtrar por división del alumno.
+        // Esto vincula al recursante — que cursa una materia fuera de su división — a la sección
+        // correcta. Si hay exactamente una sección activa, se linkea; 0 o 2+ → queda sin sección
+        // (manual), sin bloquear la inscripción.
+        var sectionByStudyPlanCourseId = new Dictionary<int, int?>();
+        foreach (var spc in studyPlanCourses)
+        {
+            var sections = await courseSectionRepository.FindActiveByCourseTermAsync(
+                spc.CourseId, period.AcademicYear, period.Semester, spc.IsAnnual, ct);
+            sectionByStudyPlanCourseId[spc.Id] = sections.Count == 1 ? sections[0].Id : null;
+        }
+
         var enrollments = studyPlanCourses.Select(spc => new Enrollment
         {
             StudentId = command.StudentId,
             StudentCareerId = membership.Id,
             CourseId = spc.CourseId,
             StudyPlanCourseId = spc.Id,
+            CourseSectionId = sectionByStudyPlanCourseId[spc.Id],
             EnrollmentPeriodId = command.EnrollmentPeriodId,
             Shift = command.Shift,
             AcademicYear = period.AcademicYear,
