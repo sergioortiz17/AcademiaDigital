@@ -1,6 +1,6 @@
 <div class="page-header">
-  <h1>Cargos docentes</h1>
-  <p>Catálogo de cargos y vacantes por materia y comisión.</p>
+  <h1>Comisiones</h1>
+  <p>Catálogo de comisiones por materia: cada comisión es la sección real de una materia (con su división, cuatrimestre y docente).</p>
 </div>
 
 <mat-card class="positions-card">
@@ -24,7 +24,7 @@
 
       <button mat-raised-button color="primary" (click)="openCreateDialog()">
         <mat-icon>add</mat-icon>
-        Nuevo cargo
+        Nueva comisión
       </button>
     </div>
 
@@ -91,7 +91,7 @@
 
       <div class="empty-state" *ngIf="!isLoading && positions.length === 0">
         <mat-icon>work_off</mat-icon>
-        <p>No hay cargos para este filtro.</p>
+        <p>No hay comisiones para este filtro.</p>
       </div>
     </div>
 

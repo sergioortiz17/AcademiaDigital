@@ -145,14 +145,14 @@ export class EnrollmentManagementComponent implements OnInit {
       if (!request) return;
       this.commissionService.createCommission(period.careerId, request).subscribe({
         next: () => {
-          this.successMsg = `Comisión "${request.code}" creada para ${period.careerName}.`;
+          this.successMsg = `División "${request.code}" creada para ${period.careerName}.`;
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
           // Refrescar cobertura del período en el momento (sin recargar la página).
           this.loadCoverage(period.id);
           this.cdr.detectChanges();
         },
         error: (err) => {
-          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la comisión.';
+          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la división.';
           this.cdr.detectChanges();
         }
       });
@@ -249,8 +249,8 @@ export class EnrollmentManagementComponent implements OnInit {
         this.coverageByPeriod[period.id] = res.data.gaps;
         if (res.data.gaps.length > 0) {
           const detalle = res.data.gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
-          this.errorMsg = `⚠️ Faltan comisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos ` +
-            `van a quedar sin comisión hasta que las crees o los asignes a mano.`;
+          this.errorMsg = `⚠️ Faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos ` +
+            `van a quedar sin división hasta que las crees o los asignes a mano.`;
         }
         this.cdr.detectChanges();
       },

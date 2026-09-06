@@ -43,7 +43,7 @@ export class TeachingPositionManagementComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.errorMsg = 'Error al cargar los cargos.';
+        this.errorMsg = 'Error al cargar las comisiones.';
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -71,12 +71,12 @@ export class TeachingPositionManagementComponent implements OnInit {
       if (!request) return;
       this.teachingPositionService.createTeachingPosition(request).subscribe({
         next: () => {
-          this.successMsg = 'Cargo creado correctamente.';
+          this.successMsg = 'Comisión creada correctamente.';
           this.loadPositions();
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.message || 'Error al crear el cargo.';
+          this.errorMsg = err.message || 'Error al crear la comisión.';
           this.cdr.detectChanges();
         }
       });
@@ -94,12 +94,12 @@ export class TeachingPositionManagementComponent implements OnInit {
       if (!request) return;
       this.teachingPositionService.updateTeachingPosition(position.id, request).subscribe({
         next: () => {
-          this.successMsg = 'Cargo actualizado correctamente.';
+          this.successMsg = 'Comisión actualizada correctamente.';
           this.loadPositions();
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.message || 'Error al actualizar el cargo.';
+          this.errorMsg = err.message || 'Error al actualizar la comisión.';
           this.cdr.detectChanges();
         }
       });
@@ -107,7 +107,7 @@ export class TeachingPositionManagementComponent implements OnInit {
   }
 
   deactivatePosition(position: TeachingPosition): void {
-    if (!confirm(`¿Dar de baja el cargo de ${position.courseName} — ${position.commissionName}?`)) return;
+    if (!confirm(`¿Dar de baja la comisión de ${position.courseName} — ${position.commissionName}?`)) return;
     let reason = prompt('Motivo de la baja (mínimo 3 caracteres):');
     if (reason === null) return;
     reason = reason.trim();
@@ -121,7 +121,7 @@ export class TeachingPositionManagementComponent implements OnInit {
         this.loadPositions();
       },
       error: (err) => {
-        this.errorMsg = err.message || 'Error al dar de baja el cargo.';
+        this.errorMsg = err.message || 'Error al dar de baja la comisión.';
         this.cdr.detectChanges();
       }
     });

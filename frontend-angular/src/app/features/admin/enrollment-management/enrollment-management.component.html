@@ -130,12 +130,12 @@
         </div>
       </div>
 
-      <!-- Parte 11/13: aviso persistente de comisiones faltantes (solo períodos activos) -->
+      <!-- Parte 11/13: aviso persistente de divisiones faltantes (solo períodos activos) -->
       <div class="coverage-warning" *ngIf="p.isActive && gapsFor(p.id).length > 0">
         <mat-icon>warning</mat-icon>
         <div class="coverage-text">
-          <strong>Faltan comisiones para este período.</strong>
-          Los alumnos que se inscriban en estos turnos van a quedar sin comisión hasta que las crees o los asignes a mano.
+          <strong>Faltan divisiones para este período.</strong>
+          Los alumnos que se inscriban en estos turnos van a quedar sin división hasta que las crees o los asignes a mano.
           Podés crear cada una acá mismo, sin salir de esta pantalla:
           <ul class="coverage-gaps">
             <li *ngFor="let g of gapsFor(p.id)">
@@ -146,9 +146,9 @@
             </li>
           </ul>
         </div>
-        <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de comisiones">
+        <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de divisiones">
           <mat-icon>open_in_new</mat-icon>
-          Gestionar comisiones
+          Gestionar divisiones
         </button>
       </div>
 

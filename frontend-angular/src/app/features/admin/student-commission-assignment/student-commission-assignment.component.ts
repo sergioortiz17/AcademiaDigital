@@ -99,7 +99,7 @@ export class StudentCommissionAssignmentComponent implements OnInit {
     const commission = this.selectedCommission;
     if (!student || !commission) return;
     if (!student.currentStudyPlanId) {
-      this.errorMsg = 'El alumno no tiene un plan de estudios actual asignado. No se puede vincular la comisión.';
+      this.errorMsg = 'El alumno no tiene un plan de estudios actual asignado. No se puede vincular la división.';
       return;
     }
 
@@ -114,7 +114,7 @@ export class StudentCommissionAssignmentComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.successMsg = `Comisión "${commission.code}" asignada al alumno correctamente ` +
+        this.successMsg = `División "${commission.code}" asignada al alumno correctamente ` +
           `(año ${commission.academicYear}, ${commission.yearNumber}° año del plan).`;
         this.reason = '';
         this.cdr.detectChanges();

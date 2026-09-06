@@ -1,6 +1,6 @@
 <div class="dialog-header">
   <mat-icon>work</mat-icon>
-  <span>{{ isEdit ? 'Editar cargo' : 'Nuevo cargo' }}</span>
+  <span>{{ isEdit ? 'Editar comisión' : 'Nueva comisión' }}</span>
 </div>
 
 <div class="dialog-body">
@@ -26,7 +26,7 @@
         <mat-option *ngFor="let c of commissions" [value]="c.id">{{ c.name }} ({{ c.shift }})</mat-option>
       </mat-select>
       <mat-hint *ngIf="selectedCareerId && commissions.length === 0" class="warn-hint">
-        Esta carrera no tiene comisiones creadas. Creá una en "Comisiones" antes de crear el cargo.
+        Esta carrera no tiene divisiones creadas. Creá una en "Divisiones" antes de crear la comisión.
       </mat-hint>
     </mat-form-field>
   </ng-container>
@@ -52,7 +52,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Tipo de cargo</mat-label>
+      <mat-label>Tipo de cargo docente</mat-label>
       <mat-select [(ngModel)]="positionType">
         <mat-option *ngFor="let t of positionTypes" [value]="t.value">{{ t.label }}</mat-option>
       </mat-select>
@@ -69,6 +69,6 @@
 <div class="dialog-actions">
   <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
   <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">
-    {{ isEdit ? 'Guardar cambios' : 'Crear cargo' }}
+    {{ isEdit ? 'Guardar cambios' : 'Crear comisión' }}
   </button>
 </div>

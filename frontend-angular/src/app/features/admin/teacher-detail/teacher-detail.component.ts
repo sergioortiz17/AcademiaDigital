@@ -109,12 +109,12 @@ export class TeacherDetailComponent implements OnInit {
       if (!result) return;
       this.teacherService.assignTeacher(this.teacherId, result.teachingPositionId, result.startedOn, result.reason).subscribe({
         next: () => {
-          this.successMsg = 'Cargo asignado correctamente.';
+          this.successMsg = 'Comisión asignada correctamente.';
           this.loadAssignments();
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
-          this.errorMsg = err.message || 'Error al asignar el cargo.';
+          this.errorMsg = err.message || 'Error al asignar la comisión.';
           this.cdr.detectChanges();
         }
       });

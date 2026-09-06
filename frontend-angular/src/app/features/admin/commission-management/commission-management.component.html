@@ -1,6 +1,6 @@
 <div class="page-header">
-  <h1>Comisiones</h1>
-  <p>Administrá las comisiones reales de cada carrera. Son el prerequisito para crear cargos docentes y asignar profesores.</p>
+  <h1>Divisiones</h1>
+  <p>Administrá las divisiones (grupos de cursada) de cada carrera. Son el grupo al que se asigna un alumno; sobre ellas se crean las comisiones de cada materia.</p>
 </div>
 
 <mat-card class="commissions-card">
@@ -21,7 +21,7 @@
 
       <button mat-raised-button color="primary" [disabled]="!selectedCareerId" (click)="openCreateDialog()">
         <mat-icon>add</mat-icon>
-        Nueva comisión
+        Nueva división
       </button>
     </div>
 
@@ -84,13 +84,13 @@
 
       <div class="empty-state" *ngIf="!isLoading && commissions.length === 0">
         <mat-icon>groups</mat-icon>
-        <p>Esta carrera todavía no tiene comisiones. Usá "Nueva comisión" para crear la primera.</p>
+        <p>Esta carrera todavía no tiene divisiones. Usá "Nueva división" para crear la primera.</p>
       </div>
     </div>
 
     <div class="empty-state" *ngIf="!selectedCareerId">
       <mat-icon>school</mat-icon>
-      <p>Elegí una carrera para ver y administrar sus comisiones.</p>
+      <p>Elegí una carrera para ver y administrar sus divisiones.</p>
     </div>
 
   </mat-card-content>

@@ -1,8 +1,8 @@
 <div class="assign-page">
-  <h1>Asignar comisión a alumno</h1>
+  <h1>Asignar división a alumno</h1>
   <p class="subtitle">
-    Elegí un alumno y una comisión de su carrera. El plan de estudios, el año académico y el
-    año del plan se derivan automáticamente de la comisión y del plan actual del alumno.
+    Elegí un alumno y una división de su carrera. El plan de estudios, el año académico y el
+    año del plan se derivan automáticamente de la división y del plan actual del alumno.
   </p>
 
   <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
@@ -27,7 +27,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Comisión</mat-label>
+      <mat-label>División</mat-label>
       <mat-select [(ngModel)]="selectedCommissionId" [disabled]="!selectedCareerId">
         <mat-option *ngFor="let cm of commissions" [value]="cm.id">
           {{ cm.code }} · {{ cm.name }} (año {{ cm.academicYear }}, {{ cm.yearNumber }}° año)
@@ -38,7 +38,7 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Motivo (opcional)</mat-label>
-      <input matInput [(ngModel)]="reason" maxlength="500" placeholder="Ej: cambio de comisión" />
+      <input matInput [(ngModel)]="reason" maxlength="500" placeholder="Ej: cambio de división" />
     </mat-form-field>
   </div>
 
@@ -47,17 +47,17 @@
     <h3>Se va a asignar</h3>
     <ul>
       <li><b>Alumno:</b> {{ selectedStudent.userName }} (plan actual: {{ selectedStudent.currentStudyPlanName || '—' }})</li>
-      <li><b>Comisión:</b> {{ selectedCommission.code }} · {{ selectedCommission.name }}</li>
+      <li><b>División:</b> {{ selectedCommission.code }} · {{ selectedCommission.name }}</li>
       <li><b>Año académico:</b> {{ selectedCommission.academicYear }} · <b>Año del plan:</b> {{ selectedCommission.yearNumber }}°</li>
     </ul>
     <p class="warn" *ngIf="!selectedStudent.currentStudyPlanId">
-      ⚠️ El alumno no tiene un plan de estudios actual asignado; no se puede vincular la comisión.
+      ⚠️ El alumno no tiene un plan de estudios actual asignado; no se puede vincular la división.
     </p>
   </div>
 
   <div class="actions">
     <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
-      {{ isSubmitting ? 'Asignando…' : 'Asignar comisión' }}
+      {{ isSubmitting ? 'Asignando…' : 'Asignar división' }}
     </button>
   </div>
 </div>
