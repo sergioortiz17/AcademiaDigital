@@ -10,6 +10,7 @@ import { TeacherDetailComponent } from './teacher-detail/teacher-detail.componen
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
 import { CareerManagementComponent } from './career-management/career-management.component';
+import { StudentCommissionAssignmentComponent } from './student-commission-assignment/student-commission-assignment.component';
 import { RoleGuard } from '../../core/guards/role.guard';
 import { UserRole } from '../../store/account/account.actions';
 
@@ -53,6 +54,12 @@ const routes: Routes = [
   {
     path: 'careers',
     component: CareerManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'student-commission-assignment',
+    component: StudentCommissionAssignmentComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },
