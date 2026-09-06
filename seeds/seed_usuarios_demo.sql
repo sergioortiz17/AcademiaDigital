@@ -11,6 +11,9 @@
 --     vn@vn.com   / Qwerty123. / Admin
 --     jaz@jaz.com / Qwerty123. / Profesor (con Teacher real, asignable a materias)
 --     vn2@vn.com  / Qwerty123. / Alumno (inscripto en DS2023, con plan actual)
+--     profe@profe.com / Qwerty123. / Profesor "full" (User+Teacher; sus
+--       asignaciones de TODA la carrera DS2023 las aplica setup-teacher-full
+--       desde reset_and_reseed.sh, no este seed)
 --
 -- Los hashes de abajo son BCrypt (mismo algoritmo que usa
 -- PasswordHasher.Hash / RegisterUseCase en el backend, vía
@@ -91,8 +94,8 @@ BEGIN
         )
         RETURNING id INTO v_student_pk;
 
-        INSERT INTO "StudentCareers" ("StudentId", "CareerId", "EnrollmentDate", "IsActive", "CreatedAt", "UpdatedAt")
-        VALUES (v_student_pk, v_career_id, v_enrolled_at, true, v_enrolled_at, v_enrolled_at)
+        INSERT INTO "StudentCareers" ("StudentId", "CareerId", "EnrollmentDate", "AdmissionYear", "IsActive", "CreatedAt", "UpdatedAt")
+        VALUES (v_student_pk, v_career_id, v_enrolled_at, extract(year from v_enrolled_at)::int, true, v_enrolled_at, v_enrolled_at)
         RETURNING "Id" INTO v_student_career_id;
 
         -- Plan de estudios "actual" del alumno: sin esta fila, el módulo de
@@ -148,6 +151,31 @@ BEGIN
         RAISE NOTICE 'jaz@jaz.com ya existe, no se recrea.';
     END IF;
 
+    -- profe@profe.com: Profesor de referencia MÍNIMO (solo User + Teacher).
+    -- Las asignaciones de TODAS las materias de DS2023 NO se hacen acá: las aplica el atajo
+    -- POST /api/actions/setup-teacher-full (dev-tools), invocado como paso final de
+    -- scripts/reset_and_reseed.sh. Así la lógica de resolver/crear CourseSection vive en UN solo
+    -- lugar (C#), no duplicada en SQL.
+    IF NOT EXISTS (SELECT 1 FROM "Users" WHERE email = 'profe@profe.com') THEN
+        DECLARE v_full_user_id BIGINT;
+        BEGIN
+            INSERT INTO "Users" (username, last_name, email, password, dni, is_active, date_joined, role, failed_login_attempts)
+            VALUES (
+                'profe.full', 'Full', 'profe@profe.com',
+                '$2a$11$N/d5SpRx79mR3qoOdoku5evKnSaa/ob9mTZsBF8LKmDp9aSlStQHK', -- Qwerty123.
+                '10000004', true, v_enrolled_at, 2, 0 -- UserRole.Profesor
+            )
+            RETURNING id INTO v_full_user_id;
+
+            INSERT INTO "Teachers" (employee_number, hire_date, is_active, user_id)
+            VALUES ('T-10000004', v_enrolled_at, true, v_full_user_id);
+
+            RAISE NOTICE 'profe@profe.com creado (user_id=%, con Teacher). Corré setup-teacher-full para asignarle DS2023.', v_full_user_id;
+        END;
+    ELSE
+        RAISE NOTICE 'profe@profe.com ya existe, no se recrea.';
+    END IF;
+
     IF NOT EXISTS (SELECT 1 FROM "Users" WHERE email = 'vn2@vn.com') THEN
         DECLARE
             v_vn2_user_id BIGINT;
@@ -177,8 +205,8 @@ BEGIN
             )
             RETURNING id INTO v_vn2_student_pk;
 
-            INSERT INTO "StudentCareers" ("StudentId", "CareerId", "EnrollmentDate", "IsActive", "CreatedAt", "UpdatedAt")
-            VALUES (v_vn2_student_pk, v_vn2_career_id, v_enrolled_at, true, v_enrolled_at, v_enrolled_at)
+            INSERT INTO "StudentCareers" ("StudentId", "CareerId", "EnrollmentDate", "AdmissionYear", "IsActive", "CreatedAt", "UpdatedAt")
+            VALUES (v_vn2_student_pk, v_vn2_career_id, v_enrolled_at, extract(year from v_enrolled_at)::int, true, v_enrolled_at, v_enrolled_at)
             RETURNING "Id" INTO v_vn2_student_career_id;
 
             INSERT INTO "StudentStudyPlans" (student_id, student_career_id, study_plan_id, is_current, assigned_at)

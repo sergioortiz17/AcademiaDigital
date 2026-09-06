@@ -175,6 +175,33 @@
     <button id="tpRun">Crear profesor con materias</button>
     <div class="out" id="tpOut" style="display:none"></div>
   </section>
+
+  <!-- Atajo: profesor full (todas las materias/comisiones de una carrera) -->
+  <section class="card full">
+    <h2>⚡ Atajo: profesor "full" (todas las materias de una carrera)</h2>
+    <p class="muted">Asigna al profesor TODAS las materias del plan Active de la carrera de una vez (año actual, 1er cuatrimestre). Por cada materia: reusa la comisión si ya es de este profe, usa una vacante si hay, o crea una comisión extra si las existentes tienen otro docente (no pisa otras pruebas). Ideal para loguearte y probar carga de notas de cualquier materia.</p>
+    <div class="row" style="max-width:520px">
+      <div>
+        <label>Modo</label>
+        <select id="pfMode">
+          <option value="new">Crear profesor nuevo</option>
+          <option value="existing">Usar profesor existente</option>
+        </select>
+      </div>
+      <div><label>Carrera</label><select id="pfCareer"></select></div>
+    </div>
+    <div class="row" id="pfExistingRow" style="max-width:520px;display:none">
+      <div><label>Profesor existente</label><select id="pfTeacher"></select></div>
+    </div>
+    <div class="row" id="pfNewRow" style="max-width:760px">
+      <div><label>Nombre</label><input id="pfName"/></div>
+      <div><label>Apellido</label><input id="pfLast"/></div>
+      <div><label>Email</label><input id="pfEmail" type="email"/></div>
+      <div><label>Password</label><input id="pfPass" value="Profe123!"/></div>
+    </div>
+    <button id="pfRun">Armar profesor full</button>
+    <div class="out" id="pfOut" style="display:none"></div>
+  </section>
   </div><!-- /usuarios -->
 
   <div class="tabpanel" data-panel="escenarios" style="grid-template-columns:1fr">
@@ -674,7 +701,7 @@ function outShow(elId, res){ const el=$(elId); el.style.display='block'; const o
 async function shortcutFillCareers(){
   const { body } = await api('/api/careers');
   const opts=(body||[]).map(c=>`<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
-  $('#fyCareer').innerHTML=opts; $('#tpCareer').innerHTML=opts;
+  $('#fyCareer').innerHTML=opts; $('#tpCareer').innerHTML=opts; $('#pfCareer').innerHTML=opts;
   if(body&&body.length){ await fyLoadCourses(); await tpLoadCourses(); }
 }
 async function planCoursesFor(careerId){
@@ -719,6 +746,40 @@ $('#tpRun').addEventListener('click', async ()=>{
   const btn=$('#tpRun'); btn.disabled=true; btn.textContent='Procesando…';
   outShow('#tpOut', await api('/api/actions/setup-teacher-with-courses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
   btn.disabled=false; btn.textContent='Crear profesor con materias'; await Promise.all([loadOverview(), fillTeachers()]);
+});
+
+// ── Atajo: profesor full ──────────────────────────────────────────────────
+async function pfFillTeachers(){
+  const { body } = await api('/api/teachers');
+  $('#pfTeacher').innerHTML = (body || []).map(t => `<option value="${t.id}">${t.name} (${t.email})</option>`).join('')
+    || '<option value="">(no hay profesores)</option>';
+}
+function pfSyncMode(){
+  const existing = $('#pfMode').value === 'existing';
+  $('#pfExistingRow').style.display = existing ? '' : 'none';
+  $('#pfNewRow').style.display = existing ? 'none' : '';
+  if (existing) pfFillTeachers();
+}
+$('#pfMode').addEventListener('change', pfSyncMode);
+
+$('#pfRun').addEventListener('click', async ()=>{
+  const careerId = parseInt($('#pfCareer').value,10);
+  if(!careerId){ outShow('#pfOut',{ok:false,body:{success:false,summary:'Elegí una carrera (si el selector está vacío, corré el reset+reseed y recargá).'}}); return; }
+  const mode = $('#pfMode').value;
+  const payload = { mode, careerId };
+  if (mode === 'existing') {
+    const tid = parseInt($('#pfTeacher').value,10);
+    if(!tid){ outShow('#pfOut',{ok:false,body:{success:false,summary:'Elegí un profesor existente.'}}); return; }
+    payload.teacherId = tid;
+  } else {
+    if(!$('#pfName').value.trim() || !$('#pfEmail').value.trim() || !$('#pfPass').value.trim()){
+      outShow('#pfOut',{ok:false,body:{success:false,summary:'Completá nombre, email y password (profesor nuevo).'}}); return;
+    }
+    payload.name=$('#pfName').value; payload.lastName=$('#pfLast').value; payload.email=$('#pfEmail').value; payload.password=$('#pfPass').value;
+  }
+  const btn=$('#pfRun'); btn.disabled=true; btn.textContent='Procesando…';
+  outShow('#pfOut', await api('/api/actions/setup-teacher-full',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
+  btn.disabled=false; btn.textContent='Armar profesor full'; await Promise.all([loadOverview(), fillTeachers(), pfFillTeachers()]);
 });
 
 async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); await tlFillSelectors(); await shortcutFillCareers(); }

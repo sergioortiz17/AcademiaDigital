@@ -15,7 +15,7 @@ namespace AcademiaDigital.DevTools;
 /// Son las mismas piezas ya probadas en CorrelativaScenarioService (el escenario fijo), pero
 /// reutilizables para CUALQUIER alumno/carrera/materia/año, reutilizando los MISMOS handlers reales.
 ///
-/// Opción A: la Commission y la TeachingPosition necesarias para notas/mesa se auto-crean o reusan
+/// Opción A: la Division y la CourseSection necesarias para notas/mesa se auto-crean o reusan
 /// detrás de escena (con un profesor de prueba), y cada acción reporta qué comisión/cargo usó, para
 /// que no sea una caja negra al diagnosticar.
 ///
@@ -146,11 +146,11 @@ public sealed class AcademicActionsService(
 
         var position = await ResolveOrCreateTeachingPositionAsync(spc, enrollment.CourseId, enrollment.AcademicYear, enrollment.Semester, enrollment.StudentId, teacher, steps, ct);
 
-        // Linkear el enrollment a la TeachingPosition (el roster del gradebook lo requiere).
+        // Linkear el enrollment a la CourseSection (el roster del gradebook lo requiere).
         var tracked = await db.Enrollments.FirstAsync(e => e.Id == enrollmentId, ct);
-        if (tracked.TeachingPositionId != position.Id)
+        if (tracked.CourseSectionId != position.Id)
         {
-            tracked.TeachingPositionId = position.Id;
+            tracked.CourseSectionId = position.Id;
             await db.SaveChangesAsync(ct);
             steps.Add(new { step = "Vincular enrollment ↔ cargo", status = "ok", detail = $"enrollment {enrollmentId} → teachingPosition {position.Id}." });
         }
@@ -245,7 +245,7 @@ public sealed class AcademicActionsService(
         long studentId = created.studentId;
         long actorUserId = created.userId;
         // AcademicYear = año calendario real (convención única del sistema: DTOs validan 2000-2100,
-        // el auto-match de la Parte 6 compara Period.AcademicYear == Commission.AcademicYear).
+        // el auto-match de la Parte 6 compara Period.AcademicYear == Division.AcademicYear).
         var academicYear = DateTime.UtcNow.Year;
         steps.Add(new { step = "Crear alumno", status = "ok", detail = $"Alumno #{studentId} creado en carrera {careerId}.", data = new { studentId } });
 
@@ -311,7 +311,7 @@ public sealed class AcademicActionsService(
 
     /// <summary>
     /// Crea un profesor (User Profesor + Teacher) y le asigna cada materia elegida, creando/reusando
-    /// la Commission + TeachingPosition CON comisión (mismo criterio que el fix de la Parte 3: nunca
+    /// la Division + CourseSection CON comisión (mismo criterio que el fix de la Parte 3: nunca
     /// un cargo sin comisión).
     /// </summary>
     public async Task<ActionResult> SetupTeacherWithCoursesAsync(
@@ -352,30 +352,157 @@ public sealed class AcademicActionsService(
         return new ActionResult(true, $"Profesor #{teacher.Id} con {courseIds.Distinct().Count()} materia(s).", steps);
     }
 
-    /// <summary>Crea/reusa Commission + TeachingPosition CON comisión para asignar un profesor (atajo B).</summary>
+    // ── Atajo "Profesor full": TODAS las materias/comisiones de una carrera ───────────────────
+
+    /// <summary>
+    /// Arma un profesor con TODAS las materias del plan Active de una carrera asignadas de una vez.
+    /// mode="new": crea User(Profesor)+Teacher. mode="existing": usa un teacherId ya existente.
+    ///
+    /// Por cada StudyPlanCourse del plan Active, resuelve la CourseSection (comisión de materia) del
+    /// ciclo actual (año calendario, 1er cuatrimestre) con la regla (b)+matiz:
+    ///   - Si ya hay una sección de esa materia asignada a ESTE profe (vigente) → la reusa (idempotente).
+    ///   - Si hay una sección VACANTE → asigna al profe ahí.
+    ///   - Si todas las secciones existentes tienen OTRO docente vigente → crea una sección NUEVA
+    ///     (paralela) para este profe, para no pisar asignaciones de otros tests.
+    /// La asignación pasa por AssignTeacherCommandHandler (que además auto-crea el TeacherCareer).
+    /// Es la ÚNICA implementación de esta lógica (el seed/reset la invoca vía HTTP, no la duplica).
+    /// </summary>
+    public async Task<ActionResult> SetupTeacherFullAsync(
+        string mode, long? teacherId, string? name, string? lastName, string? email, string? password,
+        int careerId, CancellationToken ct)
+    {
+        var steps = new List<object>();
+        var year = DateTime.UtcNow.Year;
+        const int semester = 1;
+
+        // 1. Resolver el profesor (nuevo o existente).
+        Teacher teacher;
+        if (string.Equals(mode, "existing", StringComparison.OrdinalIgnoreCase))
+        {
+            if (teacherId is not > 0) throw new InvalidOperationException("Elegí un profesor existente (teacherId).");
+            teacher = await teacherRepository.FindByIdAsync(teacherId.Value, ct)
+                ?? throw new InvalidOperationException("Profesor no encontrado.");
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(name))
+                throw new InvalidOperationException("Para un profesor nuevo se requieren name, email y password.");
+            var dni = $"7{DateTime.UtcNow.Ticks % 100000000:D8}"[..8];
+            var user = await userRepository.FindByEmailAsync(email.Trim(), ct)
+                ?? await userRepository.CreateAsync(email.Trim(), name, lastName ?? "", password, dni, UserRole.Profesor, ct);
+            teacher = await teacherRepository.FindByUserIdAsync(user.Id, ct)
+                ?? await teacherRepository.CreateAsync(new Teacher { UserId = user.Id, EmployeeNumber = $"DOC-{user.Id:D5}", HireDate = DateTime.UtcNow.Date, IsActive = true }, ct);
+        }
+        steps.Add(new { step = "Profesor", status = "ok", detail = $"Profesor #{teacher.Id} (user {teacher.UserId}).", data = new { teacherId = teacher.Id } });
+
+        // 2. Plan Active de la carrera + sus materias.
+        var plan = await studyPlanRepository.GetActiveByCareerIdAsync(careerId, ct)
+            ?? throw new InvalidOperationException("La carrera no tiene un plan de estudios Active.");
+        var planCourses = await studyPlanCourseRepository.GetByStudyPlanIdAsync(plan.Id, ct);
+        if (planCourses.Count == 0) throw new InvalidOperationException("El plan Active no tiene materias.");
+
+        // 3. Por cada materia, resolver/crear la sección y asignar (regla b + matiz).
+        var results = new List<object>();
+        var okCount = 0;
+        foreach (var spc in planCourses)
+        {
+            var course = await courseRepository.FindByIdAsync(spc.CourseId, ct);
+            if (course is null) { results.Add(new { spc.CourseId, status = "fail", detail = "Materia no encontrada." }); continue; }
+
+            var sections = await db.Set<CourseSection>()
+                .Where(s => s.CourseId == spc.CourseId && s.AcademicYear == year && s.Semester == semester && s.IsActive)
+                .ToListAsync(ct);
+
+            // ¿Alguna ya asignada a ESTE profe (vigente)? -> reusar.
+            var mineIds = await db.Set<TeacherAssignment>()
+                .Where(a => a.TeacherId == teacher.Id && a.IsCurrent)
+                .Select(a => a.CourseSectionId).ToListAsync(ct);
+            var alreadyMine = sections.FirstOrDefault(s => mineIds.Contains(s.Id));
+            if (alreadyMine is not null)
+            {
+                okCount++;
+                results.Add(new { code = course.Code, status = "ok", action = "reusada (ya asignada a este profe)", courseSectionId = alreadyMine.Id });
+                continue;
+            }
+
+            // ¿Alguna vacante? -> asignar ahí. Si no, crear una nueva para este profe.
+            var target = sections.FirstOrDefault(s => s.IsVacant && !s.TeacherId.HasValue);
+            string action;
+            if (target is not null)
+            {
+                action = "asignado a sección vacante existente";
+            }
+            else
+            {
+                target = await CreateSectionForTeacherFullAsync(spc.CourseId, course.Code, careerId, year, semester, spc.YearNumber, teacher.Id, ct);
+                action = sections.Count == 0 ? "sección creada (no existía)" : "sección extra creada (las existentes tienen otro docente)";
+            }
+
+            try
+            {
+                await assignTeacher.Handle(new AcademiaDigital.Application.UseCases.Teachers.AssignTeacherCommand(
+                    teacher.Id, target.Id, DateOnly.FromDateTime(DateTime.UtcNow), "Profesor full (dev-tools)", teacher.UserId), ct);
+                okCount++;
+                results.Add(new { code = course.Code, status = "ok", action, courseSectionId = target.Id });
+            }
+            catch (Exception ex)
+            {
+                results.Add(new { code = course.Code, status = "warn", action, courseSectionId = target.Id, detail = ex.Message });
+            }
+        }
+
+        steps.Add(new { step = "Asignar todas las materias del plan", status = "ok", detail = $"{okCount}/{planCourses.Count} materia(s).", data = results });
+        return new ActionResult(true, $"Profesor #{teacher.Id}: {okCount}/{planCourses.Count} materias de la carrera asignadas.", steps);
+    }
+
+    /// <summary>Crea una CourseSection VACANTE nueva para "Profesor full" (con su Division), cuando
+    /// las secciones existentes de la materia ya tienen otro docente. Code por-profesor para no
+    /// colisionar con la sección compartida del atajo B.</summary>
+    private async Task<CourseSection> CreateSectionForTeacherFullAsync(
+        int courseId, string courseCode, int careerId, int academicYear, int semester, int yearNumber, long teacherId, CancellationToken ct)
+    {
+        var divisionCode = $"COM-FULL-{courseId}-{academicYear}-T{teacherId}";
+        var division = await db.Set<Division>().FirstOrDefaultAsync(d => d.Code == divisionCode, ct);
+        if (division is null)
+        {
+            division = new Division { CareerId = careerId, Code = divisionCode, Name = $"Comisión full {courseCode} {academicYear} (profe {teacherId})", AcademicYear = academicYear, YearNumber = yearNumber, IsActive = true };
+            db.Add(division); await db.SaveChangesAsync(ct);
+        }
+        var section = await db.Set<CourseSection>()
+            .FirstOrDefaultAsync(s => s.CourseId == courseId && s.DivisionId == division.Id && s.IsActive && s.IsVacant, ct);
+        if (section is null)
+        {
+            var now = DateTime.UtcNow;
+            section = new CourseSection { CourseId = courseId, DivisionId = division.Id, AcademicYear = academicYear, Semester = semester, PositionType = PositionType.Titular, MaxStudents = 100, IsVacant = true, IsActive = true, CreatedAt = now, UpdatedAt = now };
+            db.Add(section); await db.SaveChangesAsync(ct);
+        }
+        return section;
+    }
+
+    /// <summary>Crea/reusa Division + CourseSection CON comisión para asignar un profesor (atajo B).</summary>
     private async Task<(int PositionId, string CommissionCode, bool CommissionReused)> ResolveOrCreateTeachingPositionForTeacherAsync(
         int courseId, string courseCode, int careerId, int academicYear, int semester, int yearNumber, Teacher teacher, CancellationToken ct)
     {
         var commissionCode = $"COM-DEV-{courseId}-{academicYear}";
-        var commission = await db.Set<Commission>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
+        var commission = await db.Set<Division>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
         var reused = commission is not null;
         if (commission is null)
         {
-            commission = new Commission { CareerId = careerId, Code = commissionCode, Name = $"Comisión dev {courseCode} {academicYear}", AcademicYear = academicYear, YearNumber = yearNumber, IsActive = true };
+            commission = new Division { CareerId = careerId, Code = commissionCode, Name = $"Comisión dev {courseCode} {academicYear}", AcademicYear = academicYear, YearNumber = yearNumber, IsActive = true };
             db.Add(commission); await db.SaveChangesAsync(ct);
         }
-        var position = await db.Set<TeachingPosition>()
-            .FirstOrDefaultAsync(p => p.CourseId == courseId && p.CommissionId == commission.Id && p.IsActive && p.IsVacant, ct);
+        var position = await db.Set<CourseSection>()
+            .FirstOrDefaultAsync(p => p.CourseId == courseId && p.DivisionId == commission.Id && p.IsActive && p.IsVacant, ct);
         if (position is null)
         {
             var now = DateTime.UtcNow;
-            position = new TeachingPosition { CourseId = courseId, CommissionId = commission.Id, AcademicYear = academicYear, Semester = semester, PositionType = PositionType.Titular, MaxStudents = 100, IsVacant = true, IsActive = true, CreatedAt = now, UpdatedAt = now };
+            position = new CourseSection { CourseId = courseId, DivisionId = commission.Id, AcademicYear = academicYear, Semester = semester, PositionType = PositionType.Titular, MaxStudents = 100, IsVacant = true, IsActive = true, CreatedAt = now, UpdatedAt = now };
             db.Add(position); await db.SaveChangesAsync(ct);
         }
         return (position.Id, commission.Code, reused);
     }
 
-    // ── Helpers (auto-crear/reusar Commission + TeachingPosition, con reporte) ────────────────
+    // ── Helpers (auto-crear/reusar Division + CourseSection, con reporte) ────────────────
 
     private async Task<EnrollmentPeriod> ResolveOrCreatePeriodAsync(int careerId, int studyPlanId, int academicYear, int semester, List<object> steps, CancellationToken ct)
     {
@@ -396,18 +523,18 @@ public sealed class AcademicActionsService(
         return created;
     }
 
-    /// <summary>Auto-crea o reusa Commission + TeachingPosition para la materia/año/cuatri, y lo reporta.</summary>
-    private async Task<TeachingPosition> ResolveOrCreateTeachingPositionAsync(
+    /// <summary>Auto-crea o reusa Division + CourseSection para la materia/año/cuatri, y lo reporta.</summary>
+    private async Task<CourseSection> ResolveOrCreateTeachingPositionAsync(
         StudyPlanCourse spc, int courseId, int academicYear, int semester, long studentId, Teacher teacher, List<object> steps, CancellationToken ct)
     {
         // Per-student offering: cada alumno tiene su propia comisión/cargo para que el gradebook
         // (único por course-offering) no colisione al correr el atajo para más de un alumno.
         var commissionCode = $"COM-ADHOC-{courseId}-{academicYear}-S{studentId}";
-        var commission = await db.Set<Commission>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
+        var commission = await db.Set<Division>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
         var commissionReused = commission is not null;
         if (commission is null)
         {
-            commission = new Commission
+            commission = new Division
             {
                 CareerId = spc.CareerIdOrFallback(),
                 Code = commissionCode,
@@ -422,15 +549,15 @@ public sealed class AcademicActionsService(
             await db.SaveChangesAsync(ct);
         }
 
-        var position = await db.Set<TeachingPosition>()
-            .FirstOrDefaultAsync(p => p.CourseId == courseId && p.CommissionId == commission.Id, ct);
+        var position = await db.Set<CourseSection>()
+            .FirstOrDefaultAsync(p => p.CourseId == courseId && p.DivisionId == commission.Id, ct);
         var positionReused = position is not null;
         if (position is null)
         {
             var now = DateTime.UtcNow;
-            position = new TeachingPosition
+            position = new CourseSection
             {
-                CourseId = courseId, CommissionId = commission.Id, AcademicYear = academicYear, Semester = semester,
+                CourseId = courseId, DivisionId = commission.Id, AcademicYear = academicYear, Semester = semester,
                 PositionType = PositionType.Titular, MaxStudents = 100, IsVacant = false, IsActive = true,
                 TeacherId = teacher.Id, CreatedAt = now, UpdatedAt = now
             };

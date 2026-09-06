@@ -248,11 +248,11 @@ app.MapPost("/api/users", async (
 });
 
 // ── (4) Asignar materia (curso) a un profesor ────────────────────────────────
-// Crea/elige una TeachingPosition para el curso y luego el TeacherAssignment.
+// Crea/elige una CourseSection para el curso y luego el TeacherAssignment.
 app.MapPost("/api/teacher-assignments", async (
     AssignRequest req,
     ITeacherRepository teacherRepo,
-    ITeachingPositionRepository positionRepo,
+    ICourseSectionRepository positionRepo,
     AssignTeacherCommandHandler assignHandler,
     ICourseRepository courseRepo,
     AppDbContext db,
@@ -273,14 +273,14 @@ app.MapPost("/api/teacher-assignments", async (
     try
     {
         // Un cargo docente SIN comisión rompe después 'Crear planilla' (el gradebook exige
-        // CommissionId). Por eso acá SIEMPRE se garantiza una comisión: se auto-crea o reusa una
+        // DivisionId). Por eso acá SIEMPRE se garantiza una comisión: se auto-crea o reusa una
         // para la materia/año, y se linkea al cargo. Solo se reusa un cargo que YA tenga comisión.
         var commissionCode = $"COM-DEV-{req.CourseId}-{academicYear}";
-        var commission = await db.Set<Commission>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
+        var commission = await db.Set<Division>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
         var commissionReused = commission is not null;
         if (commission is null)
         {
-            commission = new Commission
+            commission = new Division
             {
                 CareerId = course.CareerId,
                 Code = commissionCode,
@@ -293,19 +293,19 @@ app.MapPost("/api/teacher-assignments", async (
             await db.SaveChangesAsync(ct);
         }
 
-        // Reusar una TeachingPosition vacante del curso CON comisión para ese período, o crear una nueva CON comisión.
+        // Reusar una CourseSection vacante del curso CON comisión para ese período, o crear una nueva CON comisión.
         var positions = await positionRepo.GetByCourseAsync(req.CourseId, ct);
         var position = positions.FirstOrDefault(p =>
-            p.IsActive && p.IsVacant && p.CommissionId == commission.Id
+            p.IsActive && p.IsVacant && p.DivisionId == commission.Id
             && p.AcademicYear == academicYear && p.Semester == semester);
 
         if (position is null)
         {
             var now = DateTime.UtcNow;
-            position = await positionRepo.CreateAsync(new TeachingPosition
+            position = await positionRepo.CreateAsync(new CourseSection
             {
                 CourseId = req.CourseId,
-                CommissionId = commission.Id,
+                DivisionId = commission.Id,
                 AcademicYear = academicYear,
                 Semester = semester,
                 PositionType = PositionType.Titular,
@@ -427,6 +427,23 @@ app.MapPost("/api/actions/setup-teacher-with-courses", async (SetupTeacherReques
     catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Alta profesor", status = "fail", detail = ex.Message }])); }
 });
 
+// Profesor full: TODAS las materias/comisiones de una carrera de una vez (modo new | existing)
+app.MapPost("/api/actions/setup-teacher-full", async (SetupTeacherFullRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || req.CareerId <= 0)
+        return Results.BadRequest(new { error = "Se requiere careerId." });
+    var mode = string.IsNullOrWhiteSpace(req.Mode) ? "new" : req.Mode.Trim().ToLowerInvariant();
+    if (mode == "existing" && !(req.TeacherId > 0))
+        return Results.BadRequest(new { error = "Modo 'existing' requiere teacherId." });
+    if (mode == "new" && (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password) || string.IsNullOrWhiteSpace(req.Name)))
+        return Results.BadRequest(new { error = "Modo 'new' requiere name, email y password." });
+    try
+    {
+        return Results.Ok(await svc.SetupTeacherFullAsync(mode, req.TeacherId, req.Name, req.LastName, req.Email, req.Password, req.CareerId, ct));
+    }
+    catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Profesor full", status = "fail", detail = ex.Message }])); }
+});
+
 app.Run();
 
 // ── DTOs de request ──────────────────────────────────────────────────────────
@@ -438,4 +455,5 @@ internal sealed record ExamActionRequest(long EnrollmentId, decimal Grade);
 internal sealed record CourseGradeInput(int StudyPlanCourseId, decimal? Score);
 internal sealed record SetupFirstYearRequest(string Name, string? LastName, string Email, string Password, string? Dni, int CareerId, IReadOnlyList<CourseGradeInput>? Grades);
 internal sealed record SetupTeacherRequest(string Name, string? LastName, string Email, string Password, string? Dni, int CareerId, IReadOnlyList<int> CourseIds, int AcademicYear, int Semester);
+internal sealed record SetupTeacherFullRequest(string? Mode, long? TeacherId, string? Name, string? LastName, string? Email, string? Password, int CareerId);
 internal sealed record AssignRequest(long TeacherId, int CourseId, int AcademicYear, int Semester, int MaxStudents, string? Reason);
