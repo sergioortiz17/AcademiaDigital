@@ -157,7 +157,8 @@ public class EnrollmentsController(
             student.Id,
             request.EnrollmentPeriodId,
             request.Shift,
-            request.StudyPlanCourseIds);
+            request.StudyPlanCourseIds,
+            CurrentUserId.Value);
 
         await createEnrollmentHandler.Handle(command, ct);
         return StatusCode(StatusCodes.Status201Created, new { success = true, msg = "Inscripción realizada correctamente." });

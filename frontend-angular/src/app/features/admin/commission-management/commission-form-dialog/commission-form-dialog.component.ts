@@ -7,15 +7,15 @@ export interface CommissionFormDialogData {
 }
 
 /**
- * Turnos: el VALUE que se guarda es la convención del backend (Morning/Afternoon/Evening,
- * que es lo que valida y normaliza SaveCommissionAsync). El LABEL es en español para la UI.
- * OJO: Enrollment.Shift usa español (Mañana/Tarde/Noche) — esa discrepancia se resuelve en la
- * Parte 6, no acá; acá se respeta la convención actual de Commission para no romper nada.
+ * Turnos: el VALUE guardado ahora es en español (Mañana/Tarde/Noche), unificado con
+ * Enrollment.Shift y con las constantes de dominio EnrollmentCapacityPolicy. Esto es lo que
+ * permite el matching automático de comisión al inscribirse (Parte 6): antes Commission.Shift
+ * se guardaba en inglés y nunca coincidía con el turno de la inscripción.
  */
 const SHIFTS = [
-  { value: 'Morning', label: 'Mañana' },
-  { value: 'Afternoon', label: 'Tarde' },
-  { value: 'Evening', label: 'Noche' }
+  { value: 'Mañana', label: 'Mañana' },
+  { value: 'Tarde', label: 'Tarde' },
+  { value: 'Noche', label: 'Noche' }
 ];
 
 @Component({
@@ -32,7 +32,7 @@ export class CommissionFormDialogComponent {
   name = '';
   academicYear = new Date().getFullYear();
   yearNumber = 1;
-  shift = 'Morning';
+  shift = 'Mañana';
 
   constructor(
     public dialogRef: MatDialogRef<CommissionFormDialogComponent>,

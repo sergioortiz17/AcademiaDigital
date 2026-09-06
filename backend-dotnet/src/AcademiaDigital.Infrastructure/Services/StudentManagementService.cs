@@ -1,6 +1,7 @@
 using AcademiaDigital.Application.Dtos;
 using AcademiaDigital.Application.Services;
 using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text.Json;
@@ -10,7 +11,11 @@ namespace AcademiaDigital.Infrastructure.Services;
 
 public sealed class StudentManagementService(Persistence.AppDbContext db) : IStudentManagementService
 {
-    private static readonly string[] Shifts = ["Morning", "Afternoon", "Evening"];
+    // Fuente única de verdad para los turnos: las constantes de dominio de EnrollmentCapacityPolicy
+    // (Mañana/Tarde/Noche). Antes acá había una lista propia en inglés (Morning/Afternoon/Evening),
+    // que nunca matcheaba con Enrollment.Shift (español) — se unifica a español.
+    private static readonly string[] Shifts =
+        [EnrollmentCapacityPolicy.MorningShift, EnrollmentCapacityPolicy.AfternoonShift, EnrollmentCapacityPolicy.EveningShift];
     private static readonly string[] ContentTypes = ["application/pdf", "image/jpeg", "image/png"];
 
     public async Task<PagedResult<StudentListItemDto>> SearchStudentsAsync(string? search, int? careerId,

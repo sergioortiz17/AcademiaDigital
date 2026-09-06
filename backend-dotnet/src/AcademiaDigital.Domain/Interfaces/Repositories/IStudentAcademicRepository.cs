@@ -13,4 +13,12 @@ public interface IStudentAcademicRepository
     Task<IReadOnlyList<StudyPlanCourse>> GetStudyPlanCoursesAsync(int studyPlanId, CancellationToken ct = default);
     Task<IReadOnlyList<CoursePrerequisite>> GetPrerequisitesAsync(int studyPlanId, CancellationToken ct = default);
     Task<StudentStudyPlan> AssignStudyPlanAsync(StudentStudyPlan studentStudyPlan, CancellationToken ct = default);
+
+    /// <summary>¿El alumno ya tiene una asignación académica vigente para esta membresía de carrera?
+    /// Se usa para NO pisar una asignación manual existente (Parte 2) al auto-asignar comisión.</summary>
+    Task<bool> HasCurrentAcademicAssignmentAsync(long studentCareerId, CancellationToken ct = default);
+
+    /// <summary>Agrega una asignación académica (comisión) reutilizando el DbContext compartido, para
+    /// que participe de la transacción en curso del alta de inscripción (sin abrir una anidada).</summary>
+    Task AddAcademicAssignmentAsync(StudentAcademicAssignment assignment, CancellationToken ct = default);
 }

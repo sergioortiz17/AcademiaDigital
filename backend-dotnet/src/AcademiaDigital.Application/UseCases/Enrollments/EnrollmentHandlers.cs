@@ -9,7 +9,8 @@ public sealed record CreateEnrollmentCommand(
     long StudentId,
     int EnrollmentPeriodId,
     string Shift,
-    IReadOnlyList<int> StudyPlanCourseIds);
+    IReadOnlyList<int> StudyPlanCourseIds,
+    long ActorUserId);
 
 public sealed class CreateEnrollmentCommandHandler(
     IEnrollmentPeriodRepository periodRepository,
@@ -17,6 +18,7 @@ public sealed class CreateEnrollmentCommandHandler(
     IStudyPlanCourseRepository studyPlanCourseRepository,
     IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
+    ICommissionRepository commissionRepository,
     EnrollmentEligibilityPolicy eligibilityPolicy,
     EnrollmentCapacityPolicy capacityPolicy,
     IUnitOfWork unitOfWork,
@@ -94,7 +96,62 @@ public sealed class CreateEnrollmentCommandHandler(
 
             foreach (var enrollment in enrollments)
                 await enrollmentRepository.CreateAsync(enrollment, transactionCt);
+
+            await TryAutoAssignCommissionAsync(command, period, membership, studyPlanCourses, now, transactionCt);
             return true;
+        }, ct);
+    }
+
+    /// <summary>
+    /// Asignación automática de comisión al inscribirse (caso común, mínima intervención del admin).
+    ///
+    /// Criterio de "coincidencia clara" (si no se cumple, NO se asigna y la inscripción igual queda
+    /// hecha, para que un admin la resuelva a mano — comportamiento idéntico al de antes):
+    ///  - Todas las materias inscriptas son del MISMO año del plan (YearNumber). Si abarcan varios
+    ///    años → ambiguo (una comisión es por un año), no se asigna.
+    ///  - Existe EXACTAMENTE UNA comisión activa que matchea Carrera + Año académico + ese YearNumber
+    ///    + el mismo Turno elegido. Cero o 2+ → ambiguo, no se asigna.
+    ///  - El alumno no tiene ya una asignación vigente para esta membresía (no pisar una manual).
+    ///
+    /// El Shift se compara directo porque Commission.Shift y Enrollment.Shift ya están unificados en
+    /// español (Mañana/Tarde/Noche) — ver migración NormalizeCommissionShiftToSpanish.
+    /// </summary>
+    private async Task TryAutoAssignCommissionAsync(
+        CreateEnrollmentCommand command,
+        EnrollmentPeriod period,
+        StudentCareer membership,
+        IReadOnlyList<StudyPlanCourse> studyPlanCourses,
+        DateTime now,
+        CancellationToken ct)
+    {
+        var distinctYears = studyPlanCourses.Select(spc => spc.YearNumber).Distinct().ToList();
+        if (distinctYears.Count != 1)
+            return; // materias de varios años → ambiguo
+
+        var yearNumber = distinctYears[0];
+
+        if (await studentAcademicRepository.HasCurrentAcademicAssignmentAsync(membership.Id, ct))
+            return; // ya tiene una asignación vigente (p. ej. manual, Parte 2)
+
+        var matches = await commissionRepository.FindMatchingActiveAsync(
+            period.CareerId, period.AcademicYear, yearNumber, command.Shift, ct);
+        if (matches.Count != 1)
+            return; // 0 o 2+ → ambiguo, lo resuelve el admin a mano
+
+        var commission = matches[0];
+        await studentAcademicRepository.AddAcademicAssignmentAsync(new StudentAcademicAssignment
+        {
+            StudentId = command.StudentId,
+            StudentCareerId = membership.Id,
+            CareerId = period.CareerId,
+            StudyPlanId = period.StudyPlanId,
+            CommissionId = commission.Id,
+            AcademicYear = period.AcademicYear,
+            YearNumber = yearNumber,
+            IsCurrent = true,
+            StartedAt = now,
+            Reason = "Asignación automática al inscribirse (turno coincidente, comisión única).",
+            AssignedByUserId = command.ActorUserId
         }, ct);
     }
 }

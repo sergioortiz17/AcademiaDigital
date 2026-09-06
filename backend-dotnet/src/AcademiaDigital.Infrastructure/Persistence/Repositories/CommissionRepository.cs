@@ -8,4 +8,14 @@ public sealed class CommissionRepository(AppDbContext db) : ICommissionRepositor
 {
     public Task<Commission?> FindByIdAsync(int id, CancellationToken ct = default)
         => db.Commissions.AsNoTracking().FirstOrDefaultAsync(commission => commission.Id == id, ct);
+
+    public async Task<IReadOnlyList<Commission>> FindMatchingActiveAsync(
+        int careerId, int academicYear, int yearNumber, string shift, CancellationToken ct = default)
+        => await db.Commissions.AsNoTracking()
+            .Where(c => c.IsActive
+                && c.CareerId == careerId
+                && c.AcademicYear == academicYear
+                && c.YearNumber == yearNumber
+                && c.Shift == shift)
+            .ToListAsync(ct);
 }
