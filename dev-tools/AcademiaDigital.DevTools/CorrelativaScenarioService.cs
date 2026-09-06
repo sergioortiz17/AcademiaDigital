@@ -116,10 +116,14 @@ public sealed class CorrelativaScenarioService(
                 t => new { presidentTeacherId = t.Item1.Id, vocalTeacherId = t.Item2.Id });
 
             var actorUserId = teacherPresident.UserId; // actor admin para las operaciones
+            // AcademicYear = año calendario real (convención única del sistema). El escenario simula
+            // dos ciclos consecutivos: año actual (1er año) y el siguiente (2º año).
+            var currentYear = DateTime.UtcNow.Year;
+            var nextYear = currentYear + 1;
 
             // 5. Período de inscripción 1er año + comisiones + cargos + inscripción en C3 y C4 ---
             var year1 = await Step("Crear período de inscripción de 1er año (activo)",
-                async () => await CreateActivePeriodAsync(career.Id, studyPlan.Id, academicYear: 1, semester: 1, ct),
+                async () => await CreateActivePeriodAsync(career.Id, studyPlan.Id, academicYear: currentYear, semester: 1, ct),
                 p => new { p.Id, p.AcademicYear, p.IsActive });
 
             var (enrollC3, enrollC4) = await Step("Inscribir alumno en Programación I (C3) y Base de Datos (C4)",
@@ -128,7 +132,7 @@ public sealed class CorrelativaScenarioService(
                     // Una sola inscripción con ambas materias: el handler rechaza 2 inscripciones
                     // del mismo alumno en el mismo período, por eso van juntas.
                     await createEnrollment.Handle(new CreateEnrollmentCommand(
-                        student.Id, year1.Id, Shift, [progI.Id, baseDatos.Id]), ct);
+                        student.Id, year1.Id, Shift, [progI.Id, baseDatos.Id], actorUserId), ct);
                     var e3 = await FindEnrollment(student.Id, progI.CourseId, year1.Id, ct);
                     var e4 = await FindEnrollment(student.Id, baseDatos.CourseId, year1.Id, ct);
                     return (e3, e4);
@@ -167,7 +171,7 @@ public sealed class CorrelativaScenarioService(
 
             // 7. Período de inscripción 2º año -------------------------------------------------
             var year2 = await Step("Crear período de inscripción de 2º año (activo)",
-                async () => await CreateActivePeriodAsync(career.Id, studyPlan.Id, academicYear: 2, semester: 1, ct),
+                async () => await CreateActivePeriodAsync(career.Id, studyPlan.Id, academicYear: nextYear, semester: 1, ct),
                 p => new { p.Id, p.AcademicYear, p.IsActive });
 
             // 8. Intento bloqueante: inscribir en Programación II (C13) --------------------------
@@ -176,7 +180,7 @@ public sealed class CorrelativaScenarioService(
             try
             {
                 await createEnrollment.Handle(new CreateEnrollmentCommand(
-                    student.Id, year2.Id, Shift, [progII.Id]), ct);
+                    student.Id, year2.Id, Shift, [progII.Id], actorUserId), ct);
             }
             catch (InvalidOperationException ex)
             {

@@ -113,7 +113,7 @@ public sealed class AcademicActionsService(
         var period = await ResolveOrCreatePeriodAsync(student.CareerId, studyPlanId, academicYear, semester, steps, ct);
 
         await createEnrollment.Handle(new CreateEnrollmentCommand(studentId, period.Id, Shift,
-            spcs.Select(s => s.Id).ToList()), ct);
+            spcs.Select(s => s.Id).ToList(), student.UserId), ct);
 
         var enrolled = new List<object>();
         foreach (var spc in spcs)
@@ -243,6 +243,10 @@ public sealed class AcademicActionsService(
 
         var created = (dynamic)await CreateStudentAsync(name, lastName, email, password, effectiveDni, careerId, ct);
         long studentId = created.studentId;
+        long actorUserId = created.userId;
+        // AcademicYear = año calendario real (convención única del sistema: DTOs validan 2000-2100,
+        // el auto-match de la Parte 6 compara Period.AcademicYear == Commission.AcademicYear).
+        var academicYear = DateTime.UtcNow.Year;
         steps.Add(new { step = "Crear alumno", status = "ok", detail = $"Alumno #{studentId} creado en carrera {careerId}.", data = new { studentId } });
 
         var plan = (await studyPlanRepository.GetByCareerIdAsync(careerId, ct)).FirstOrDefault()
@@ -274,16 +278,16 @@ public sealed class AcademicActionsService(
             // al mismo alumno en el mismo período, así que no se puede reusar el de la oleada anterior.
             var wavePeriod = await enrollmentPeriodRepository.CreateAsync(new EnrollmentPeriod
             {
-                CareerId = careerId, StudyPlanId = plan.Id, AcademicYear = 1, Semester = 1,
+                CareerId = careerId, StudyPlanId = plan.Id, AcademicYear = academicYear, Semester = 1,
                 QuotasMorning = 100, QuotasAfternoon = 100, QuotasEvening = 100, IsActive = true, StartDate = DateTime.UtcNow
             }, ct);
-            await createEnrollment.Handle(new CreateEnrollmentCommand(studentId, wavePeriod.Id, "Mañana", eligibleNow), ct);
+            await createEnrollment.Handle(new CreateEnrollmentCommand(studentId, wavePeriod.Id, "Mañana", eligibleNow, actorUserId), ct);
             foreach (var spcId in eligibleNow)
             {
                 var spc = firstYear.First(f => f.Id == spcId);
                 var score = gradesBySpcId.TryGetValue(spcId, out var s) ? s : 8m;
                 var enrollment = await db.Enrollments.AsNoTracking()
-                    .Where(x => x.StudentId == studentId && x.CourseId == spc.CourseId && x.AcademicYear == 1)
+                    .Where(x => x.StudentId == studentId && x.CourseId == spc.CourseId && x.AcademicYear == academicYear)
                     .OrderByDescending(x => x.Id).FirstAsync(ct);
                 await RunGradebookAsync(enrollment.Id, score, teacherId: null, ct);
                 if (score >= 6m) await RunFinalExamAsync(enrollment.Id, score, ct); // Regularized -> Approved
