@@ -4,6 +4,8 @@ import { Commission, UpsertCommissionRequest } from '../../../../core/services/c
 
 export interface CommissionFormDialogData {
   commission: Commission | null;
+  /** Año académico precargado al crear (viene del atajo de cobertura de la Parte 11). */
+  presetAcademicYear?: number | null;
 }
 
 /**
@@ -45,6 +47,8 @@ export class CommissionFormDialogComponent {
       this.academicYear = data.commission.academicYear;
       this.yearNumber = data.commission.yearNumber;
       this.shift = data.commission.shift;
+    } else if (data.presetAcademicYear) {
+      this.academicYear = data.presetAcademicYear;
     }
   }
 

@@ -294,6 +294,75 @@ public sealed class DeleteEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposi
         => await repository.DeleteAsync(command.PeriodId, ct);
 }
 
+// ── Cobertura de comisiones de un período (Parte 11, read-only, NO bloquea la activación) ──────
+
+public sealed record GetPeriodCommissionCoverageQuery(int PeriodId);
+
+/// <summary>Un turno (con cupo &gt; 0) de un año del plan que NO tiene comisión activa que matchee.</summary>
+public sealed record CommissionCoverageGap(int YearNumber, string Shift);
+
+public sealed class PeriodCommissionCoverageDto
+{
+    public int PeriodId { get; set; }
+    public int CareerId { get; set; }
+    public int AcademicYear { get; set; }
+    /// <summary>Combinaciones (Año del plan, Turno con cupo) sin comisión activa que matchee.
+    /// Vacío = todo cubierto. El auto-match de la Parte 6 no falla igual; esto es solo un aviso.</summary>
+    public IReadOnlyList<CommissionCoverageGap> Gaps { get; set; } = [];
+}
+
+/// <summary>
+/// Reporta, para un período, qué combinaciones (YearNumber-con-materias × turno-con-cupo&gt;0) no
+/// tienen una comisión activa que matchee (misma clave que el auto-match de la Parte 6:
+/// Career + AcademicYear + YearNumber + Shift). No modifica nada ni bloquea la activación: es un
+/// diagnóstico para avisarle al admin que ciertos alumnos quedarían sin comisión automática.
+/// </summary>
+public sealed class GetPeriodCommissionCoverageQueryHandler(
+    IEnrollmentPeriodRepository periodRepository,
+    IStudyPlanCourseRepository studyPlanCourseRepository,
+    ICommissionRepository commissionRepository)
+{
+    public async Task<PeriodCommissionCoverageDto> Handle(GetPeriodCommissionCoverageQuery query, CancellationToken ct = default)
+    {
+        var period = await periodRepository.FindByIdAsync(query.PeriodId, ct)
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
+
+        // Años del plan que realmente tienen materias activas (el período abarca todo el plan, pero
+        // las comisiones son por año; solo tiene sentido exigir comisiones para años con materias).
+        var years = (await studyPlanCourseRepository.GetByStudyPlanIdAsync(period.StudyPlanId, ct))
+            .Select(spc => spc.YearNumber)
+            .Distinct()
+            .OrderBy(y => y)
+            .ToList();
+
+        // Turnos con cupo abierto (> 0): un turno sin cupo no admite inscripciones, no exige comisión.
+        var shiftsWithQuota = new List<string>();
+        if (period.QuotasMorning > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.MorningShift);
+        if (period.QuotasAfternoon > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.AfternoonShift);
+        if (period.QuotasEvening > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.EveningShift);
+
+        var gaps = new List<CommissionCoverageGap>();
+        foreach (var year in years)
+        {
+            foreach (var shift in shiftsWithQuota)
+            {
+                var matches = await commissionRepository.FindMatchingActiveAsync(
+                    period.CareerId, period.AcademicYear, year, shift, ct);
+                if (matches.Count == 0)
+                    gaps.Add(new CommissionCoverageGap(year, shift));
+            }
+        }
+
+        return new PeriodCommissionCoverageDto
+        {
+            PeriodId = period.Id,
+            CareerId = period.CareerId,
+            AcademicYear = period.AcademicYear,
+            Gaps = gaps
+        };
+    }
+}
+
 public sealed class PeriodReportDto
 {
     public IReadOnlyList<GenderReportItem> GenderCounts { get; set; } = [];

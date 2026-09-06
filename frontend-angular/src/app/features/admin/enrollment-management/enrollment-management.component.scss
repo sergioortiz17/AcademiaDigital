@@ -214,3 +214,41 @@
   height: 30px;
   line-height: 28px;
 }
+
+/* Parte 11: aviso de comisiones faltantes por período */
+.coverage-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff4e5;
+  border: 1px solid #ffcc80;
+  color: #8a5300;
+
+  > mat-icon {
+    color: #e68a00;
+    flex: 0 0 auto;
+  }
+
+  .coverage-text {
+    flex: 1 1 auto;
+    font-size: .88rem;
+    line-height: 1.35;
+  }
+
+  .coverage-gaps {
+    margin: 6px 0 0;
+    padding-left: 18px;
+
+    li {
+      margin: 2px 0;
+    }
+  }
+
+  button {
+    flex: 0 0 auto;
+    align-self: center;
+  }
+}

@@ -8,6 +8,10 @@
   </div>
 
   <div *ngIf="successMsg" class="success-banner">{{ successMsg }}</div>
+  <div *ngIf="errorMsg && !showOpenForm" class="error-banner" style="margin-bottom: 12px;">
+    {{ errorMsg }}
+    <button mat-icon-button (click)="errorMsg = ''" matTooltip="Descartar"><mat-icon>close</mat-icon></button>
+  </div>
 
   <!-- Open period form -->
   <mat-card *ngIf="showOpenForm" class="open-form-card">
@@ -124,6 +128,22 @@
             <mat-icon>delete</mat-icon>
           </button>
         </div>
+      </div>
+
+      <!-- Parte 11: aviso persistente de comisiones faltantes (solo períodos activos) -->
+      <div class="coverage-warning" *ngIf="p.isActive && gapsFor(p.id).length > 0">
+        <mat-icon>warning</mat-icon>
+        <div class="coverage-text">
+          <strong>Faltan comisiones para este período.</strong>
+          Los alumnos que se inscriban en estos turnos van a quedar sin comisión hasta que las crees o los asignes a mano:
+          <ul class="coverage-gaps">
+            <li *ngFor="let g of gapsFor(p.id)">{{ g.yearNumber }}° año — Turno {{ shiftLabel(g.shift) }}</li>
+          </ul>
+        </div>
+        <button mat-stroked-button color="primary" (click)="goToCreateCommission(p)">
+          <mat-icon>add</mat-icon>
+          Crear comisiones
+        </button>
       </div>
 
       <!-- Inline edit quotas -->

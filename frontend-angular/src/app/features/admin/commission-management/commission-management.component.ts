@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Career, CareerService } from '../../../core/services/career.service';
 import { Commission, CommissionService, UpsertCommissionRequest } from '../../../core/services/commission.service';
@@ -12,8 +13,10 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
  * con datos reales. Es el prerequisito para poder crear cargos docentes (teaching-positions)
  * sobre comisiones existentes y luego asignarles un profesor.
  *
- * El turno (Shift) se guarda en la convención del backend (Morning/Afternoon/Evening, que es
- * lo que valida SaveCommissionAsync); en la UI se muestra la etiqueta en español.
+ * El turno (Shift) se guarda unificado en español (Mañana/Tarde/Noche), igual que Enrollment.Shift.
+ *
+ * Acepta query params opcionales careerId + academicYear (atajo desde el aviso de cobertura de la
+ * Parte 11): preselecciona la carrera y precarga el año al abrir el alta de comisión.
  */
 @Component({
   selector: 'app-commission-management',
@@ -26,6 +29,7 @@ export class CommissionManagementComponent implements OnInit {
   commissions: Commission[] = [];
 
   selectedCareerId: number | null = null;
+  private presetAcademicYear: number | null = null;
 
   isLoading = false;
   errorMsg = '';
@@ -37,12 +41,26 @@ export class CommissionManagementComponent implements OnInit {
     private readonly careerService: CareerService,
     private readonly commissionService: CommissionService,
     private readonly dialog: MatDialog,
+    private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const careerId = qp.get('careerId');
+    const academicYear = qp.get('academicYear');
+    if (careerId) this.selectedCareerId = Number(careerId);
+    if (academicYear) this.presetAcademicYear = Number(academicYear);
+
     this.careerService.getCareers().subscribe({
-      next: (careers) => { this.careers = careers; this.cdr.detectChanges(); },
+      next: (careers) => {
+        this.careers = careers;
+        // Si vino una carrera por query param, cargar sus comisiones directamente.
+        if (this.selectedCareerId && careers.some(c => c.id === this.selectedCareerId)) {
+          this.loadCommissions();
+        }
+        this.cdr.detectChanges();
+      },
       error: (err) => this.fail(err, 'Error al cargar las carreras.')
     });
   }
@@ -74,7 +92,7 @@ export class CommissionManagementComponent implements OnInit {
 
   openCreateDialog(): void {
     if (!this.selectedCareerId) return;
-    const data: CommissionFormDialogData = { commission: null };
+    const data: CommissionFormDialogData = { commission: null, presetAcademicYear: this.presetAcademicYear };
     const dialogRef = this.dialog.open(CommissionFormDialogComponent, {
       width: '520px', maxWidth: '95vw', disableClose: true, data
     });

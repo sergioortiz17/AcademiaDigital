@@ -192,6 +192,7 @@ builder.Services.AddScoped<GetMyEnrollmentsQueryHandler>();
 builder.Services.AddScoped<ActivateEnrollmentPeriodCommandHandler>();
 builder.Services.AddScoped<DeleteEnrollmentPeriodCommandHandler>();
 builder.Services.AddScoped<GetPeriodReportQueryHandler>();
+builder.Services.AddScoped<GetPeriodCommissionCoverageQueryHandler>();
 builder.Services.AddScoped<EnrollmentPeriodFacade>();
 builder.Services.AddScoped<EnrollmentPeriodAdminFacade>();
 builder.Services.AddScoped<CreateEnrollmentCommandHandler>();

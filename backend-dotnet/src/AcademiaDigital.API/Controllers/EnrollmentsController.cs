@@ -112,6 +112,18 @@ public class EnrollmentsController(
         return Ok(new { success = true, data = report });
     }
 
+    // GET /api/v1/enrollments/periods/{id}/commission-coverage
+    // Diagnóstico read-only (Parte 11): qué (año del plan, turno con cupo) no tiene comisión activa
+    // que matchee. No bloquea la activación; sirve para avisarle al admin.
+    [HttpGet("periods/{id:int}/commission-coverage")]
+    public async Task<IActionResult> GetCommissionCoverage(int id, CancellationToken ct)
+    {
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
+        var coverage = await admin.GetCommissionCoverageAsync(id, ct);
+        return Ok(new { success = true, data = coverage });
+    }
+
     // DELETE /api/v1/enrollments/periods/{id}/students/{studentId}
     [HttpDelete("periods/{id:int}/students/{studentId:long}")]
     public async Task<IActionResult> RemoveStudent(int id, long studentId, CancellationToken ct)
