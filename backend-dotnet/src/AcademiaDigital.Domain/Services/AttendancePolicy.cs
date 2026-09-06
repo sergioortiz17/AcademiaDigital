@@ -21,7 +21,7 @@ public sealed class AttendancePolicy
         int units,
         DateTime nowUtc)
     {
-        if (!position.IsActive || position.CommissionId is null)
+        if (!position.IsActive || position.DivisionId is null)
             throw new InvalidOperationException("La asistencia requiere un cargo docente activo con una comisión.");
         if (sessionDate.Year != position.AcademicYear)
             throw new ArgumentException("La fecha de la clase debe pertenecer al año académico del cargo docente.");

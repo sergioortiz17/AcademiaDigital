@@ -15,7 +15,7 @@ public sealed record GetTeachingPositionByIdQuery(int TeachingPositionId);
 
 public sealed record CreateTeachingPositionCommand(
     int CourseId,
-    int CommissionId,
+    int DivisionId,
     int AcademicYear,
     int Semester,
     PositionType PositionType,
@@ -24,7 +24,7 @@ public sealed record CreateTeachingPositionCommand(
 public sealed record UpdateTeachingPositionCommand(
     int TeachingPositionId,
     int CourseId,
-    int CommissionId,
+    int DivisionId,
     int AcademicYear,
     int Semester,
     PositionType PositionType,
@@ -40,9 +40,9 @@ public sealed record TeachingPositionDto(
     int CourseId,
     string CourseCode,
     string CourseName,
-    int? CommissionId,
-    string? CommissionCode,
-    string? CommissionName,
+    int? DivisionId,
+    string? DivisionCode,
+    string? DivisionName,
     int AcademicYear,
     int Semester,
     string PositionType,
@@ -80,7 +80,7 @@ public sealed class GetTeachingPositionByIdQueryHandler(ITeachingPositionReposit
 public sealed class CreateTeachingPositionCommandHandler(
     ITeachingPositionRepository repository,
     ICourseRepository courseRepository,
-    ICommissionRepository commissionRepository,
+    IDivisionRepository commissionRepository,
     TeachingAssignmentPolicy policy,
     TimeProvider timeProvider)
 {
@@ -90,7 +90,7 @@ public sealed class CreateTeachingPositionCommandHandler(
     {
         var course = await courseRepository.FindByIdAsync(command.CourseId, ct)
             ?? throw new KeyNotFoundException("Materia no encontrada.");
-        var commission = await commissionRepository.FindByIdAsync(command.CommissionId, ct)
+        var commission = await commissionRepository.FindByIdAsync(command.DivisionId, ct)
             ?? throw new KeyNotFoundException("Comisión no encontrada.");
         policy.ValidatePositionDefinition(
             command.AcademicYear, command.Semester, command.MaxStudents, course, commission);
@@ -98,7 +98,7 @@ public sealed class CreateTeachingPositionCommandHandler(
         var created = await repository.CreateAsync(new TeachingPosition
         {
             CourseId = command.CourseId,
-            CommissionId = command.CommissionId,
+            DivisionId = command.DivisionId,
             AcademicYear = command.AcademicYear,
             Semester = command.Semester,
             PositionType = command.PositionType,
@@ -109,7 +109,7 @@ public sealed class CreateTeachingPositionCommandHandler(
             UpdatedAt = now
         }, ct);
         created.Course = course;
-        created.Commission = commission;
+        created.Division = commission;
         return TeachingPositionMapper.Map(created);
     }
 }
@@ -118,7 +118,7 @@ public sealed class UpdateTeachingPositionCommandHandler(
     ITeachingPositionRepository repository,
     ITeacherAssignmentRepository assignmentRepository,
     ICourseRepository courseRepository,
-    ICommissionRepository commissionRepository,
+    IDivisionRepository commissionRepository,
     TeachingAssignmentPolicy policy,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
@@ -132,7 +132,7 @@ public sealed class UpdateTeachingPositionCommandHandler(
                 ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
             var course = await courseRepository.FindByIdAsync(command.CourseId, transactionCt)
                 ?? throw new KeyNotFoundException("Materia no encontrada.");
-            var commission = await commissionRepository.FindByIdAsync(command.CommissionId, transactionCt)
+            var commission = await commissionRepository.FindByIdAsync(command.DivisionId, transactionCt)
                 ?? throw new KeyNotFoundException("Comisión no encontrada.");
             policy.ValidatePositionDefinition(
                 command.AcademicYear, command.Semester, command.MaxStudents, course, commission);
@@ -141,8 +141,8 @@ public sealed class UpdateTeachingPositionCommandHandler(
 
             position.CourseId = command.CourseId;
             position.Course = course;
-            position.CommissionId = command.CommissionId;
-            position.Commission = commission;
+            position.DivisionId = command.DivisionId;
+            position.Division = commission;
             position.AcademicYear = command.AcademicYear;
             position.Semester = command.Semester;
             position.PositionType = command.PositionType;
@@ -185,9 +185,9 @@ internal static class TeachingPositionMapper
         position.CourseId,
         position.Course.Code,
         position.Course.Name,
-        position.CommissionId,
-        position.Commission?.Code,
-        position.Commission?.Name,
+        position.DivisionId,
+        position.Division?.Code,
+        position.Division?.Name,
         position.AcademicYear,
         position.Semester,
         position.PositionType.ToString(),

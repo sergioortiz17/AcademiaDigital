@@ -193,12 +193,12 @@ public sealed class CreateEnrollmentCommandHandlerTests
     {
         var context = CreateContext(
             studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
-            matchingCommissions: [Commission(id: 55, yearNumber: 1, shift: "Tarde")]);
+            matchingCommissions: [Division(id: 55, yearNumber: 1, shift: "Tarde")]);
 
         await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
 
         var assignment = Assert.Single(context.CreatedAssignments);
-        Assert.Equal(55, assignment.CommissionId);
+        Assert.Equal(55, assignment.DivisionId);
         Assert.Equal(StudentId, assignment.StudentId);
         Assert.Equal(StudentCareerId, assignment.StudentCareerId);
         Assert.Equal(CareerId, assignment.CareerId);
@@ -216,8 +216,8 @@ public sealed class CreateEnrollmentCommandHandlerTests
             studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
             matchingCommissions:
             [
-                Commission(id: 55, yearNumber: 1, shift: "Tarde"),
-                Commission(id: 56, yearNumber: 1, shift: "Tarde")
+                Division(id: 55, yearNumber: 1, shift: "Tarde"),
+                Division(id: 56, yearNumber: 1, shift: "Tarde")
             ]);
 
         await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
@@ -248,7 +248,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
                 PlanCourse(id: 101, courseId: 1, yearNumber: 1),
                 PlanCourse(id: 102, courseId: 2, yearNumber: 2)
             ],
-            matchingCommissions: [Commission(id: 55, yearNumber: 1, shift: "Tarde")]);
+            matchingCommissions: [Division(id: 55, yearNumber: 1, shift: "Tarde")]);
 
         await context.Handler.Handle(Command(courseIds: [101, 102], shift: "Tarde"), TestContext.Current.CancellationToken);
 
@@ -261,7 +261,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
     {
         var context = CreateContext(
             studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
-            matchingCommissions: [Commission(id: 55, yearNumber: 1, shift: "Tarde")],
+            matchingCommissions: [Division(id: 55, yearNumber: 1, shift: "Tarde")],
             hasCurrentAssignment: true);
 
         await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
@@ -279,7 +279,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         IReadOnlyList<CoursePrerequisite>? prerequisites = null,
         IReadOnlyList<Enrollment>? enrollmentHistory = null,
         (int Morning, int Afternoon, int Evening)? enrolledShiftCounts = null,
-        IReadOnlyList<Commission>? matchingCommissions = null,
+        IReadOnlyList<Division>? matchingCommissions = null,
         bool hasCurrentAssignment = false)
     {
         var periodRepository = Substitute.For<IEnrollmentPeriodRepository>();
@@ -287,7 +287,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var studyPlanCourseRepository = Substitute.For<IStudyPlanCourseRepository>();
         var studentCareerRepository = Substitute.For<IStudentCareerRepository>();
         var studentAcademicRepository = Substitute.For<IStudentAcademicRepository>();
-        var commissionRepository = Substitute.For<ICommissionRepository>();
+        var commissionRepository = Substitute.For<IDivisionRepository>();
         var unitOfWork = Substitute.For<IUnitOfWork>();
         var createdEnrollments = new List<Enrollment>();
         var createdAssignments = new List<StudentAcademicAssignment>();
@@ -327,7 +327,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
             .Returns(Task.CompletedTask);
         commissionRepository.FindMatchingActiveAsync(
                 Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(matchingCommissions ?? (IReadOnlyList<Commission>)[]));
+            .Returns(Task.FromResult(matchingCommissions ?? (IReadOnlyList<Division>)[]));
         enrollmentRepository.GetByEnrollmentPeriodAsync(PeriodId, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IEnumerable<Enrollment>>(existingEnrollments));
         studyPlanCourseRepository.GetByIdsAsync(Arg.Any<IReadOnlyList<int>>(), Arg.Any<CancellationToken>())
@@ -404,7 +404,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         List<Enrollment> CreatedEnrollments,
         List<StudentAcademicAssignment> CreatedAssignments);
 
-    private static Commission Commission(int id, int yearNumber = 1, string shift = "Tarde")
+    private static Division Division(int id, int yearNumber = 1, string shift = "Tarde")
         => new()
         {
             Id = id,

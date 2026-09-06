@@ -23,8 +23,8 @@ public class TeachingPosition
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;
 
-    public int? CommissionId { get; set; }
-    public Commission? Commission { get; set; }
+    public int? DivisionId { get; set; }
+    public Division? Division { get; set; }
 
     public long? TeacherId { get; set; }
     public Teacher? Teacher { get; set; }

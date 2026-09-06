@@ -51,7 +51,7 @@ public sealed class SimpleAttendanceReportGenerator : IAttendanceReportGenerator
             $"Sesion: {model.SessionId}",
             $"Fecha: {model.SessionDate:yyyy-MM-dd}",
             $"Materia: {model.Course}",
-            $"Comision: {model.Commission}",
+            $"Comision: {model.Division}",
             $"Modalidad: {model.Scope} - Unidades: {model.Units}",
             string.Empty,
             "Legajo | DNI | Alumno | Estado"

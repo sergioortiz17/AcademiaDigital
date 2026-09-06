@@ -12,6 +12,7 @@ public sealed class StudentCareerConfiguration : IEntityTypeConfiguration<Studen
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedOnAdd();
         builder.Property(x => x.EnrollmentDate).IsRequired();
+        builder.Property(x => x.AdmissionYear).HasDefaultValue(0);
         builder.Property(x => x.IsActive).HasDefaultValue(true);
         builder.HasIndex(x => new { x.StudentId, x.CareerId }).IsUnique();
         builder.HasIndex(x => new { x.CareerId, x.IsActive });

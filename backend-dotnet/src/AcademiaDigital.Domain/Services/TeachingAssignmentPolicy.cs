@@ -9,7 +9,7 @@ public sealed class TeachingAssignmentPolicy
         int semester,
         int maxStudents,
         Course course,
-        Commission commission)
+        Division commission)
     {
         if (academicYear is < 2000 or > 2100)
             throw new ArgumentException("El año académico debe estar entre 2000 y 2100.");

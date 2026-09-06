@@ -25,7 +25,7 @@ public sealed class GradebookHandlersTests
                 var gradebook = call.Arg<Gradebook>();
                 gradebook.Id = 10;
                 gradebook.Course = Course();
-                gradebook.Commission = Commission();
+                gradebook.Division = Division();
                 return (gradebook, true);
             });
         var handler = new CreateGradebookCommandHandler(
@@ -111,10 +111,10 @@ public sealed class GradebookHandlersTests
         };
 
     private static Course Course() => new() { Id = 2, Code = "MAT", Name = "Mathematics" };
-    private static Commission Commission() => new() { Id = 3, Code = "C1", Name = "Commission 1" };
+    private static Division Division() => new() { Id = 3, Code = "C1", Name = "Division 1" };
     private static TeachingPosition Position() => new()
     {
-        Id = 5, CourseId = 2, Course = Course(), CommissionId = 3, Commission = Commission(),
+        Id = 5, CourseId = 2, Course = Course(), DivisionId = 3, Division = Division(),
         AcademicYear = 2027, Semester = 1, IsActive = true
     };
     private static Enrollment Enrollment() => new()
@@ -137,8 +137,8 @@ public sealed class GradebookHandlersTests
         TeachingPositionId = 5,
         CourseId = 2,
         Course = Course(),
-        CommissionId = 3,
-        Commission = Commission(),
+        DivisionId = 3,
+        Division = Division(),
         AcademicYear = 2027,
         Semester = 1,
         Status = GradebookStatus.Draft,

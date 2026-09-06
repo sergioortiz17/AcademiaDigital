@@ -11,7 +11,7 @@ namespace AcademiaDigital.Application.UnitTests.UseCases.Enrollments;
 /// (YearNumber-con-materias × turno-con-cupo&gt;0) NO tienen comisión activa que matchee. Es
 /// read-only y no bloquea nada.
 /// </summary>
-public sealed class GetPeriodCommissionCoverageQueryHandlerTests
+public sealed class GetPeriodDivisionCoverageQueryHandlerTests
 {
     private const int PeriodId = 700;
     private const int CareerId = 7;
@@ -25,9 +25,9 @@ public sealed class GetPeriodCommissionCoverageQueryHandlerTests
             years: [1],
             quotas: (10, 10, 10),
             // toda combinación (año, turno) tiene comisión
-            commissionsByYearShift: (year, shift) => [Commission(1, year, shift)]);
+            commissionsByYearShift: (year, shift) => [Division(1, year, shift)]);
 
-        var result = await ctx.Handler.Handle(new GetPeriodCommissionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
+        var result = await ctx.Handler.Handle(new GetPeriodDivisionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
 
         Assert.Empty(result.Gaps);
         Assert.Equal(PeriodId, result.PeriodId);
@@ -43,9 +43,9 @@ public sealed class GetPeriodCommissionCoverageQueryHandlerTests
             years: [1],
             quotas: (10, 10, 10),
             commissionsByYearShift: (year, shift) =>
-                shift == "Mañana" ? [Commission(1, year, shift)] : []);
+                shift == "Mañana" ? [Division(1, year, shift)] : []);
 
-        var result = await ctx.Handler.Handle(new GetPeriodCommissionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
+        var result = await ctx.Handler.Handle(new GetPeriodDivisionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.Gaps.Count);
         Assert.Contains(result.Gaps, g => g.YearNumber == 1 && g.Shift == "Tarde");
@@ -62,7 +62,7 @@ public sealed class GetPeriodCommissionCoverageQueryHandlerTests
             quotas: (10, 0, 0),
             commissionsByYearShift: (_, _) => []);
 
-        var result = await ctx.Handler.Handle(new GetPeriodCommissionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
+        var result = await ctx.Handler.Handle(new GetPeriodDivisionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
 
         // Solo se reporta el turno con cupo (Mañana); Tarde/Noche con cupo 0 no se exigen.
         var gap = Assert.Single(result.Gaps);
@@ -79,7 +79,7 @@ public sealed class GetPeriodCommissionCoverageQueryHandlerTests
             quotas: (5, 0, 0),
             commissionsByYearShift: (_, _) => []);
 
-        var result = await ctx.Handler.Handle(new GetPeriodCommissionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
+        var result = await ctx.Handler.Handle(new GetPeriodDivisionCoverageQuery(PeriodId), TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.Gaps.Count);
         Assert.Contains(result.Gaps, g => g.YearNumber == 1 && g.Shift == "Mañana");
@@ -91,11 +91,11 @@ public sealed class GetPeriodCommissionCoverageQueryHandlerTests
     private static HandlerContext CreateContext(
         int[] years,
         (int Morning, int Afternoon, int Evening) quotas,
-        Func<int, string, IReadOnlyList<Commission>> commissionsByYearShift)
+        Func<int, string, IReadOnlyList<Division>> commissionsByYearShift)
     {
         var periodRepository = Substitute.For<IEnrollmentPeriodRepository>();
         var studyPlanCourseRepository = Substitute.For<IStudyPlanCourseRepository>();
-        var commissionRepository = Substitute.For<ICommissionRepository>();
+        var commissionRepository = Substitute.For<IDivisionRepository>();
 
         periodRepository.FindByIdAsync(PeriodId, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<EnrollmentPeriod?>(new EnrollmentPeriod
@@ -117,16 +117,16 @@ public sealed class GetPeriodCommissionCoverageQueryHandlerTests
                 CareerId, AcademicYear, Arg.Any<int>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult(commissionsByYearShift(call.ArgAt<int>(2), call.ArgAt<string>(3))));
 
-        var handler = new GetPeriodCommissionCoverageQueryHandler(
+        var handler = new GetPeriodDivisionCoverageQueryHandler(
             periodRepository, studyPlanCourseRepository, commissionRepository);
         return new HandlerContext(handler);
     }
 
-    private static Commission Commission(int id, int yearNumber, string shift) => new()
+    private static Division Division(int id, int yearNumber, string shift) => new()
     {
         Id = id, CareerId = CareerId, Code = $"COM-{id}", Name = $"Comisión {id}",
         AcademicYear = AcademicYear, YearNumber = yearNumber, Shift = shift, IsActive = true
     };
 
-    private sealed record HandlerContext(GetPeriodCommissionCoverageQueryHandler Handler);
+    private sealed record HandlerContext(GetPeriodDivisionCoverageQueryHandler Handler);
 }

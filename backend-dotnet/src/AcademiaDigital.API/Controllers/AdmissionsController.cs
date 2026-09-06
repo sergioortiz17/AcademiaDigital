@@ -72,7 +72,7 @@ public sealed class AdmissionsController(
         var result = await createFormHandler.Handle(
             new CreateAdmissionFormCommand(
                 request.CareerId,
-                request.CommissionId,
+                request.DivisionId,
                 request.Slug,
                 request.Title,
                 request.Description,
@@ -284,7 +284,7 @@ public sealed record AdmissionFormFieldRequest(
 
 public sealed record CreateAdmissionFormRequest(
     [Range(1, int.MaxValue)] int CareerId,
-    [Range(1, int.MaxValue)] int? CommissionId,
+    [Range(1, int.MaxValue)] int? DivisionId,
     [Required][StringLength(100, MinimumLength = 3)] string Slug,
     [Required][StringLength(200, MinimumLength = 1)] string Title,
     [StringLength(1000)] string? Description,

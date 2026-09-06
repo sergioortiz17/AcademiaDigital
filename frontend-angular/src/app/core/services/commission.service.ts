@@ -31,18 +31,18 @@ export class CommissionService {
   getCommissions(careerId: number, academicYear?: number): Observable<Commission[]> {
     let params = new HttpParams();
     if (academicYear != null) params = params.set('academicYear', academicYear);
-    return this.http.get<Commission[]>(`${this.base}v1/careers/${careerId}/commissions`, { params });
+    return this.http.get<Commission[]>(`${this.base}v1/careers/${careerId}/divisions`, { params });
   }
 
   createCommission(careerId: number, request: UpsertCommissionRequest): Observable<Commission> {
-    return this.http.post<Commission>(`${this.base}v1/careers/${careerId}/commissions`, request);
+    return this.http.post<Commission>(`${this.base}v1/careers/${careerId}/divisions`, request);
   }
 
   updateCommission(careerId: number, id: number, request: UpsertCommissionRequest): Observable<Commission> {
-    return this.http.put<Commission>(`${this.base}v1/careers/${careerId}/commissions/${id}`, request);
+    return this.http.put<Commission>(`${this.base}v1/careers/${careerId}/divisions/${id}`, request);
   }
 
   deactivateCommission(careerId: number, id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}v1/careers/${careerId}/commissions/${id}`);
+    return this.http.delete<void>(`${this.base}v1/careers/${careerId}/divisions/${id}`);
   }
 }

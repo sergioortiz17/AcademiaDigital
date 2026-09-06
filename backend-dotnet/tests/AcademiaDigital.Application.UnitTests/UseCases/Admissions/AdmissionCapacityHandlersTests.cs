@@ -78,7 +78,7 @@ public sealed class AdmissionCapacityHandlersTests
     {
         var repository = Substitute.For<IAdmissionRepository>();
         var form = Form(capacity: 3);
-        form.CommissionId = 30;
+        form.DivisionId = 30;
         repository.LockFormForCapacityAsync(form.Id, Arg.Any<CancellationToken>()).Returns(form);
         repository.FindFormByIdAsync(form.Id, Arg.Any<CancellationToken>()).Returns(form);
         var handler = new SetAdmissionFormCapacityCommandHandler(

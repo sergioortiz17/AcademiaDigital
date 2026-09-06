@@ -11,8 +11,8 @@ public sealed class StudentRematriculation
     public Career Career { get; set; } = null!;
     public int StudyPlanId { get; set; }
     public StudyPlan StudyPlan { get; set; } = null!;
-    public int CommissionId { get; set; }
-    public Commission Commission { get; set; } = null!;
+    public int DivisionId { get; set; }
+    public Division Division { get; set; } = null!;
     public int AcademicYear { get; set; }
     public int YearNumber { get; set; }
     public DateTime RematriculatedAt { get; set; }

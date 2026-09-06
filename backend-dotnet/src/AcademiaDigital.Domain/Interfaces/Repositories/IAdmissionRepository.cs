@@ -9,7 +9,7 @@ public interface IAdmissionRepository
     Task<AdmissionForm?> FindFormByIdAsync(int id, CancellationToken ct = default);
     Task<AdmissionForm?> LockFormForCapacityAsync(int id, CancellationToken ct = default);
     Task<bool> FormSlugExistsAsync(string slug, CancellationToken ct = default);
-    Task<bool> CommissionTargetExistsAsync(int commissionId, CancellationToken ct = default);
+    Task<bool> DivisionTargetExistsAsync(int commissionId, CancellationToken ct = default);
     Task<AdmissionForm> CreateFormAsync(AdmissionForm form, CancellationToken ct = default);
     Task<AdmissionForm> UpdateFormAsync(AdmissionForm form, CancellationToken ct = default);
     Task<bool> ApplicationExistsAsync(

@@ -40,7 +40,7 @@ public sealed class EnrollmentPeriodAdminFacade(
     ActivateEnrollmentPeriodCommandHandler activate,
     DeleteEnrollmentPeriodCommandHandler delete,
     GetPeriodReportQueryHandler getReport,
-    GetPeriodCommissionCoverageQueryHandler getCoverage)
+    GetPeriodDivisionCoverageQueryHandler getCoverage)
 {
     public Task ActivateAsync(int periodId, CancellationToken ct = default)
         => activate.Handle(new ActivateEnrollmentPeriodCommand(periodId), ct);
@@ -51,6 +51,6 @@ public sealed class EnrollmentPeriodAdminFacade(
     public Task<PeriodReportDto> GetReportAsync(int periodId, CancellationToken ct = default)
         => getReport.Handle(new GetPeriodReportQuery(periodId), ct);
 
-    public Task<PeriodCommissionCoverageDto> GetCommissionCoverageAsync(int periodId, CancellationToken ct = default)
-        => getCoverage.Handle(new GetPeriodCommissionCoverageQuery(periodId), ct);
+    public Task<PeriodDivisionCoverageDto> GetDivisionCoverageAsync(int periodId, CancellationToken ct = default)
+        => getCoverage.Handle(new GetPeriodDivisionCoverageQuery(periodId), ct);
 }

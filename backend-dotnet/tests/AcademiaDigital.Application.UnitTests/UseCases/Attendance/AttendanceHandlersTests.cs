@@ -25,7 +25,7 @@ public sealed class AttendanceHandlersTests
                 var session = call.Arg<AttendanceSession>();
                 session.Id = 10;
                 session.Course = Course();
-                session.Commission = Commission();
+                session.Division = Division();
                 return (session, true);
             });
         var handler = new CreateAttendanceSessionCommandHandler(
@@ -155,7 +155,7 @@ public sealed class AttendanceHandlersTests
     }
 
     private static Course Course() => new() { Id = 2, Code = "MAT", Name = "Mathematics" };
-    private static Commission Commission() => new() { Id = 3, Code = "C1", Name = "Commission 1" };
+    private static Division Division() => new() { Id = 3, Code = "C1", Name = "Division 1" };
     private static Student Student() => new()
     {
         Id = 40,
@@ -168,8 +168,8 @@ public sealed class AttendanceHandlersTests
         Id = 5,
         CourseId = 2,
         Course = Course(),
-        CommissionId = 3,
-        Commission = Commission(),
+        DivisionId = 3,
+        Division = Division(),
         AcademicYear = 2027,
         Semester = 1,
         IsActive = true
@@ -181,8 +181,8 @@ public sealed class AttendanceHandlersTests
         TeachingPositionId = 5,
         CourseId = 2,
         Course = Course(),
-        CommissionId = 3,
-        Commission = Commission(),
+        DivisionId = 3,
+        Division = Division(),
         AcademicYear = 2027,
         Semester = 1,
         SessionDate = new DateOnly(2027, 3, 10),

@@ -113,7 +113,7 @@ public sealed class AttendancePolicyTests
     {
         Id = 5,
         IsActive = true,
-        CommissionId = 3,
+        DivisionId = 3,
         AcademicYear = 2027
     };
 

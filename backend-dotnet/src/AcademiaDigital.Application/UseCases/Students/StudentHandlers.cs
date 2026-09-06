@@ -58,12 +58,12 @@ public sealed class CreateStudentCommandHandler(
         var academicValues = new[]
         {
             request.StudyPlanId.HasValue,
-            request.CommissionId.HasValue,
+            request.DivisionId.HasValue,
             request.AcademicYear.HasValue,
             request.YearNumber.HasValue
         };
         if (academicValues.Any(x => x) && !academicValues.All(x => x))
-            throw new ArgumentException("StudyPlanId, CommissionId, AcademicYear y YearNumber deben proporcionarse juntos.");
+            throw new ArgumentException("StudyPlanId, DivisionId, AcademicYear y YearNumber deben proporcionarse juntos.");
 
         var user = await userRepository.FindByIdAsync(request.UserId, ct)
             ?? throw new KeyNotFoundException("Usuario no encontrado.");
@@ -104,13 +104,14 @@ public sealed class CreateStudentCommandHandler(
             {
                 StudentId = student.Id,
                 CareerId = career.Id,
-                EnrollmentDate = student.EnrollmentDate
+                EnrollmentDate = student.EnrollmentDate,
+                AdmissionYear = student.EnrollmentDate.Year
             }, transactionCt);
 
             if (academicValues.All(x => x))
             {
                 await management.AssignAcademicAsync(student.Id, new CreateAcademicAssignmentRequest(
-                    career.Id, request.StudyPlanId!.Value, request.CommissionId!.Value,
+                    career.Id, request.StudyPlanId!.Value, request.DivisionId!.Value,
                     request.AcademicYear!.Value, request.YearNumber!.Value, request.StudyPlanMigrationReason),
                     command.ActorId, transactionCt);
             }

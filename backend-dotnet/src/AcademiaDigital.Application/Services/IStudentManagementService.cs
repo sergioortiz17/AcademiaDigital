@@ -16,9 +16,9 @@ public interface IStudentManagementService
     Task<IReadOnlyList<StudentCareerDto>> GetStudentCareersAsync(long studentId, CancellationToken ct);
     Task<StudentCareerDto> AddStudentCareerAsync(long studentId, AddStudentCareerRequest request, CancellationToken ct);
 
-    Task<IReadOnlyList<CommissionDto>> GetCommissionsAsync(int careerId, int? academicYear, CancellationToken ct);
-    Task<CommissionDto> SaveCommissionAsync(int careerId, int? id, UpsertCommissionRequest request, CancellationToken ct);
-    Task DisableCommissionAsync(int careerId, int id, CancellationToken ct);
+    Task<IReadOnlyList<DivisionDto>> GetDivisionsAsync(int careerId, int? academicYear, CancellationToken ct);
+    Task<DivisionDto> SaveDivisionAsync(int careerId, int? id, UpsertDivisionRequest request, CancellationToken ct);
+    Task DisableDivisionAsync(int careerId, int id, CancellationToken ct);
     Task<AcademicAssignmentDto> AssignAcademicAsync(long studentId, CreateAcademicAssignmentRequest request, long actorId, CancellationToken ct);
     Task<IReadOnlyList<AcademicAssignmentDto>> GetAssignmentsAsync(long studentId, int? academicYear, CancellationToken ct);
 

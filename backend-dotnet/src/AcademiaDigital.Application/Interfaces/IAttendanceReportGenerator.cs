@@ -11,7 +11,7 @@ public sealed record AttendanceReportRow(
 public sealed record AttendanceReportModel(
     long SessionId,
     string Course,
-    string Commission,
+    string Division,
     DateOnly SessionDate,
     string Scope,
     int Units,

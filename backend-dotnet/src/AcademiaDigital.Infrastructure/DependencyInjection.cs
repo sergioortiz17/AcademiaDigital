@@ -47,7 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<IEnrollmentPeriodRepository, EnrollmentPeriodRepository>();
         services.AddScoped<IAdmissionRepository, AdmissionRepository>();
-        services.AddScoped<ICommissionRepository, CommissionRepository>();
+        services.AddScoped<IDivisionRepository, DivisionRepository>();
         services.AddScoped<ITeacherContestRepository, TeacherContestRepository>();
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
         services.AddScoped<ITeachingPositionRepository, TeachingPositionRepository>();

@@ -99,5 +99,5 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
         => db.TeacherAssignments.AsNoTracking()
             .Include(assignment => assignment.Teacher).ThenInclude(teacher => teacher.User)
             .Include(assignment => assignment.TeachingPosition).ThenInclude(position => position.Course)
-            .Include(assignment => assignment.TeachingPosition).ThenInclude(position => position.Commission);
+            .Include(assignment => assignment.TeachingPosition).ThenInclude(position => position.Division);
 }

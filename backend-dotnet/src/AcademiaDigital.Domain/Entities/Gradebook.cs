@@ -10,8 +10,8 @@ public sealed class Gradebook
     public TeachingPosition TeachingPosition { get; set; } = null!;
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;
-    public int CommissionId { get; set; }
-    public Commission Commission { get; set; } = null!;
+    public int DivisionId { get; set; }
+    public Division Division { get; set; } = null!;
     public int AcademicYear { get; set; }
     public int Semester { get; set; }
     public GradebookStatus Status { get; set; } = GradebookStatus.Draft;

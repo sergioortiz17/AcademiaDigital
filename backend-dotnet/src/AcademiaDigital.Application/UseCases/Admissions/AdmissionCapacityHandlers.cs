@@ -99,7 +99,7 @@ public sealed class SetAdmissionFormCapacityCommandHandler(
                 ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
             var form = await repository.FindFormByIdAsync(command.FormId, transactionCt)
                 ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
-            targetPolicy.ValidateCapacity(form.CommissionId, command.Capacity);
+            targetPolicy.ValidateCapacity(form.DivisionId, command.Capacity);
             var occupied = await repository.CountCapacityOccupyingApplicationsAsync(form.Id, transactionCt);
             if (command.Capacity.HasValue && command.Capacity.Value < occupied)
                 throw new InvalidOperationException("El cupo del formulario de admisión no puede ser menor que su cupo ocupado.");

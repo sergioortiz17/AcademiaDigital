@@ -11,19 +11,19 @@ public sealed class TeachingAssignmentPolicyTests
 
     [Fact]
     public void ValidatePositionDefinition_accepts_a_compatible_course_and_commission()
-        => policy.ValidatePositionDefinition(2027, 1, 40, Course(), Commission());
+        => policy.ValidatePositionDefinition(2027, 1, 40, Course(), Division());
 
     [Fact]
     public void ValidatePositionDefinition_rejects_incompatible_academic_context()
     {
-        var incompatibleCommission = Commission();
+        var incompatibleCommission = Division();
         incompatibleCommission.CareerId = 11;
         Assert.Throws<ArgumentException>(() =>
             policy.ValidatePositionDefinition(2027, 1, 40, Course(), incompatibleCommission));
         Assert.Throws<ArgumentException>(() =>
-            policy.ValidatePositionDefinition(2028, 1, 40, Course(), Commission()));
+            policy.ValidatePositionDefinition(2028, 1, 40, Course(), Division()));
         Assert.Throws<ArgumentException>(() =>
-            policy.ValidatePositionDefinition(2027, 3, 40, Course(), Commission()));
+            policy.ValidatePositionDefinition(2027, 3, 40, Course(), Division()));
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class TeachingAssignmentPolicyTests
         => Assert.Throws<InvalidOperationException>(() => policy.EnsurePositionCanChange(Position(), true));
 
     private static Course Course() => new() { Id = 2, CareerId = 10, IsActive = true };
-    private static Commission Commission() => new()
+    private static Division Division() => new()
     {
         Id = 3, CareerId = 10, AcademicYear = 2027, IsActive = true
     };

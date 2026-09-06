@@ -116,11 +116,11 @@ public class EnrollmentsController(
     // Diagnóstico read-only (Parte 11): qué (año del plan, turno con cupo) no tiene comisión activa
     // que matchee. No bloquea la activación; sirve para avisarle al admin.
     [HttpGet("periods/{id:int}/commission-coverage")]
-    public async Task<IActionResult> GetCommissionCoverage(int id, CancellationToken ct)
+    public async Task<IActionResult> GetDivisionCoverage(int id, CancellationToken ct)
     {
         var denial = RequireAdmin();
         if (denial is not null) return denial;
-        var coverage = await admin.GetCommissionCoverageAsync(id, ct);
+        var coverage = await admin.GetDivisionCoverageAsync(id, ct);
         return Ok(new { success = true, data = coverage });
     }
 

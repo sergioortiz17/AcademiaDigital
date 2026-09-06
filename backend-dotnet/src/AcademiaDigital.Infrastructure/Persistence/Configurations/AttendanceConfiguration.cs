@@ -18,7 +18,7 @@ public sealed class AttendanceSessionConfiguration : IEntityTypeConfiguration<At
         builder.Property(session => session.IdempotencyKey).HasColumnName("idempotency_key").HasMaxLength(100).IsRequired();
         builder.Property(session => session.TeachingPositionId).HasColumnName("teaching_position_id");
         builder.Property(session => session.CourseId).HasColumnName("course_id");
-        builder.Property(session => session.CommissionId).HasColumnName("commission_id");
+        builder.Property(session => session.DivisionId).HasColumnName("division_id");
         builder.Property(session => session.AcademicYear).HasColumnName("academic_year");
         builder.Property(session => session.Semester).HasColumnName("semester");
         builder.Property(session => session.SessionDate).HasColumnName("session_date");
@@ -37,7 +37,7 @@ public sealed class AttendanceSessionConfiguration : IEntityTypeConfiguration<At
         builder.HasIndex(session => new
         {
             session.CourseId,
-            session.CommissionId,
+            session.DivisionId,
             session.AcademicYear,
             session.Semester,
             session.SessionDate,
@@ -46,7 +46,7 @@ public sealed class AttendanceSessionConfiguration : IEntityTypeConfiguration<At
         }).IsUnique().HasFilter(null);
         builder.HasOne(session => session.TeachingPosition).WithMany().HasForeignKey(session => session.TeachingPositionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(session => session.Course).WithMany().HasForeignKey(session => session.CourseId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(session => session.Commission).WithMany().HasForeignKey(session => session.CommissionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(session => session.Division).WithMany().HasForeignKey(session => session.DivisionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(session => session.CreatedByUser).WithMany().HasForeignKey(session => session.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(session => session.ClosedByUser).WithMany().HasForeignKey(session => session.ClosedByUserId).OnDelete(DeleteBehavior.Restrict);
     }

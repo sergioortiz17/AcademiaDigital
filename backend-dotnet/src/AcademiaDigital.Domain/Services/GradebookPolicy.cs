@@ -8,7 +8,7 @@ public sealed class GradebookPolicy
 {
     public void EnsureCanCreate(TeachingPosition position, IReadOnlyCollection<GradebookEvaluation> evaluations)
     {
-        if (!position.IsActive || !position.CommissionId.HasValue)
+        if (!position.IsActive || !position.DivisionId.HasValue)
             throw new InvalidOperationException("El cargo docente debe estar activo y asignado a una comisión.");
         ValidateEvaluations(evaluations);
     }

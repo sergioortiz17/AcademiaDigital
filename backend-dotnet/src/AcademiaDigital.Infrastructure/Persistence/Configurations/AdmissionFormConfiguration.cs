@@ -14,7 +14,7 @@ public sealed class AdmissionFormConfiguration : IEntityTypeConfiguration<Admiss
         builder.HasKey(form => form.Id);
         builder.Property(form => form.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(form => form.CareerId).HasColumnName("career_id").IsRequired();
-        builder.Property(form => form.CommissionId).HasColumnName("commission_id");
+        builder.Property(form => form.DivisionId).HasColumnName("division_id");
         builder.Property(form => form.Slug).HasColumnName("slug").HasMaxLength(100).IsRequired();
         builder.Property(form => form.Title).HasColumnName("title").HasMaxLength(200).IsRequired();
         builder.Property(form => form.Description).HasColumnName("description").HasMaxLength(1000);
@@ -30,16 +30,16 @@ public sealed class AdmissionFormConfiguration : IEntityTypeConfiguration<Admiss
         builder.UseXminAsConcurrencyToken();
 
         builder.HasIndex(form => form.Slug).IsUnique();
-        builder.HasIndex(form => form.CommissionId)
+        builder.HasIndex(form => form.DivisionId)
             .IsUnique()
-            .HasFilter("commission_id IS NOT NULL");
+            .HasFilter("division_id IS NOT NULL");
         builder.HasOne(form => form.Career)
             .WithMany()
             .HasForeignKey(form => form.CareerId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(form => form.Commission)
+        builder.HasOne(form => form.Division)
             .WithMany()
-            .HasForeignKey(form => form.CommissionId)
+            .HasForeignKey(form => form.DivisionId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

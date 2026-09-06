@@ -8,7 +8,7 @@ namespace AcademiaDigital.Application.UseCases.Grades;
 
 public sealed record GradebookEvaluationInput(string Name, decimal WeightPercentage, decimal MaximumScore = 10m);
 public sealed record GradeEntryInput(long EvaluationId, long EnrollmentId, decimal Score, string? Notes);
-public sealed record GetGradebooksQuery(int? AcademicYear, int? CourseId, int? CommissionId, long ActorUserId, bool IsAdmin);
+public sealed record GetGradebooksQuery(int? AcademicYear, int? CourseId, int? DivisionId, long ActorUserId, bool IsAdmin);
 public sealed record GetGradebookQuery(long GradebookId, long ActorUserId, bool IsAdmin);
 public sealed record CreateGradebookCommand(
     string IdempotencyKey,
@@ -42,9 +42,9 @@ public sealed record GradebookDto(
     int CourseId,
     string CourseCode,
     string CourseName,
-    int CommissionId,
-    string CommissionCode,
-    string CommissionName,
+    int DivisionId,
+    string DivisionCode,
+    string DivisionName,
     int AcademicYear,
     int Semester,
     GradebookStatus Status,
@@ -78,7 +78,7 @@ public sealed class GetGradebooksQueryHandler(IGradebookRepository repository)
 {
     public async Task<IReadOnlyList<GradebookDto>> Handle(GetGradebooksQuery query, CancellationToken ct = default)
         => (await repository.GetGradebooksAsync(
-                query.AcademicYear, query.CourseId, query.CommissionId,
+                query.AcademicYear, query.CourseId, query.DivisionId,
                 query.IsAdmin ? null : query.ActorUserId, ct))
             .Select(GradebookMapper.MapSummary)
             .ToArray();
@@ -124,7 +124,7 @@ public sealed class CreateGradebookCommandHandler(
                 IdempotencyKey = command.IdempotencyKey.Trim(),
                 TeachingPositionId = position.Id,
                 CourseId = position.CourseId,
-                CommissionId = position.CommissionId!.Value,
+                DivisionId = position.DivisionId!.Value,
                 AcademicYear = position.AcademicYear,
                 Semester = position.Semester,
                 Status = GradebookStatus.Draft,
@@ -365,7 +365,7 @@ internal static class GradebookMapper
     public static GradebookDto MapSummary(Gradebook item) => new(
         item.Id, item.IdempotencyKey, item.TeachingPositionId,
         item.CourseId, item.Course.Code, item.Course.Name,
-        item.CommissionId, item.Commission.Code, item.Commission.Name,
+        item.DivisionId, item.Division.Code, item.Division.Name,
         item.AcademicYear, item.Semester, item.Status,
         item.Evaluations.Count, item.GradeRevisions.Count(revision => revision.IsCurrent), item.Reopenings.Count,
         item.CreatedAt, item.SubmittedAt, item.ApprovedAt, item.PublishedAt, item.ClosedAt);

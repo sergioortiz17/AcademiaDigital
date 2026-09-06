@@ -32,7 +32,7 @@ public sealed class StudentRematriculationPolicyTests
         => policy.ValidateTarget(
             new StudentCareer { CareerId = 10, IsActive = true },
             DomainTestFactory.StudyPlan(careerId: 10, status: StudyPlanStatus.Active),
-            new Commission { CareerId = 10, AcademicYear = 2027, YearNumber = 2, IsActive = true },
+            new Division { CareerId = 10, AcademicYear = 2027, YearNumber = 2, IsActive = true },
             2027,
             2);
 
@@ -41,7 +41,7 @@ public sealed class StudentRematriculationPolicyTests
         => Assert.Throws<InvalidOperationException>(() => policy.ValidateTarget(
             new StudentCareer { CareerId = 10, IsActive = true },
             DomainTestFactory.StudyPlan(careerId: 10, status: StudyPlanStatus.Active),
-            new Commission { CareerId = 10, AcademicYear = 2026, YearNumber = 1, IsActive = true },
+            new Division { CareerId = 10, AcademicYear = 2026, YearNumber = 1, IsActive = true },
             2027,
             2));
 

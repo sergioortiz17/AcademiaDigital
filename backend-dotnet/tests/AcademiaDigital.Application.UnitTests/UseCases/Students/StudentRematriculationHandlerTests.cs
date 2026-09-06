@@ -104,7 +104,7 @@ public sealed class StudentRematriculationHandlerTests
     {
         var students = Substitute.For<IStudentRepository>();
         var plans = Substitute.For<IStudyPlanRepository>();
-        var commissions = Substitute.For<ICommissionRepository>();
+        var commissions = Substitute.For<IDivisionRepository>();
         var rematriculations = Substitute.For<IRematriculationRepository>();
         var student = new Student
         {
@@ -114,7 +114,7 @@ public sealed class StudentRematriculationHandlerTests
         };
         var studentCareer = new StudentCareer { Id = 11, StudentId = 1, CareerId = 10, IsActive = true };
         var plan = DomainTestFactory.StudyPlan(id: 20, careerId: 10, name: "Plan 2027", status: StudyPlanStatus.Active);
-        var commission = new Commission
+        var commission = new Division
         {
             Id = 30,
             CareerId = 10,

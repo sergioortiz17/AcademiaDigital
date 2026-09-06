@@ -14,7 +14,7 @@ public sealed class GradebookConfiguration : IEntityTypeConfiguration<Gradebook>
         builder.Property(item => item.IdempotencyKey).HasColumnName("idempotency_key").HasMaxLength(100).IsRequired();
         builder.Property(item => item.TeachingPositionId).HasColumnName("teaching_position_id");
         builder.Property(item => item.CourseId).HasColumnName("course_id");
-        builder.Property(item => item.CommissionId).HasColumnName("commission_id");
+        builder.Property(item => item.DivisionId).HasColumnName("division_id");
         builder.Property(item => item.AcademicYear).HasColumnName("academic_year");
         builder.Property(item => item.Semester).HasColumnName("semester");
         builder.Property(item => item.Status).HasColumnName("status").HasConversion<int>();
@@ -29,10 +29,10 @@ public sealed class GradebookConfiguration : IEntityTypeConfiguration<Gradebook>
         builder.Property(item => item.ClosedAt).HasColumnName("closed_at");
         builder.Property(item => item.ClosedByUserId).HasColumnName("closed_by_user_id");
         builder.HasIndex(item => item.IdempotencyKey).IsUnique();
-        builder.HasIndex(item => new { item.CourseId, item.CommissionId, item.AcademicYear, item.Semester }).IsUnique();
+        builder.HasIndex(item => new { item.CourseId, item.DivisionId, item.AcademicYear, item.Semester }).IsUnique();
         builder.HasOne(item => item.TeachingPosition).WithMany().HasForeignKey(item => item.TeachingPositionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.Course).WithMany().HasForeignKey(item => item.CourseId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(item => item.Commission).WithMany().HasForeignKey(item => item.CommissionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(item => item.Division).WithMany().HasForeignKey(item => item.DivisionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.CreatedByUser).WithMany().HasForeignKey(item => item.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.SubmittedByUser).WithMany().HasForeignKey(item => item.SubmittedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.ApprovedByUser).WithMany().HasForeignKey(item => item.ApprovedByUserId).OnDelete(DeleteBehavior.Restrict);

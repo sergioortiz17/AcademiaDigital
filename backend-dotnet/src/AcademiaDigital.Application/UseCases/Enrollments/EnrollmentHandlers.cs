@@ -18,7 +18,7 @@ public sealed class CreateEnrollmentCommandHandler(
     IStudyPlanCourseRepository studyPlanCourseRepository,
     IStudentCareerRepository studentCareerRepository,
     IStudentAcademicRepository studentAcademicRepository,
-    ICommissionRepository commissionRepository,
+    IDivisionRepository commissionRepository,
     EnrollmentEligibilityPolicy eligibilityPolicy,
     EnrollmentCapacityPolicy capacityPolicy,
     IUnitOfWork unitOfWork,
@@ -97,7 +97,7 @@ public sealed class CreateEnrollmentCommandHandler(
             foreach (var enrollment in enrollments)
                 await enrollmentRepository.CreateAsync(enrollment, transactionCt);
 
-            await TryAutoAssignCommissionAsync(command, period, membership, studyPlanCourses, now, transactionCt);
+            await TryAutoAssignDivisionAsync(command, period, membership, studyPlanCourses, now, transactionCt);
             return true;
         }, ct);
     }
@@ -113,10 +113,10 @@ public sealed class CreateEnrollmentCommandHandler(
     ///    + el mismo Turno elegido. Cero o 2+ → ambiguo, no se asigna.
     ///  - El alumno no tiene ya una asignación vigente para esta membresía (no pisar una manual).
     ///
-    /// El Shift se compara directo porque Commission.Shift y Enrollment.Shift ya están unificados en
+    /// El Shift se compara directo porque Division.Shift y Enrollment.Shift ya están unificados en
     /// español (Mañana/Tarde/Noche) — ver migración NormalizeCommissionShiftToSpanish.
     /// </summary>
-    private async Task TryAutoAssignCommissionAsync(
+    private async Task TryAutoAssignDivisionAsync(
         CreateEnrollmentCommand command,
         EnrollmentPeriod period,
         StudentCareer membership,
@@ -145,7 +145,7 @@ public sealed class CreateEnrollmentCommandHandler(
             StudentCareerId = membership.Id,
             CareerId = period.CareerId,
             StudyPlanId = period.StudyPlanId,
-            CommissionId = commission.Id,
+            DivisionId = commission.Id,
             AcademicYear = period.AcademicYear,
             YearNumber = yearNumber,
             IsCurrent = true,

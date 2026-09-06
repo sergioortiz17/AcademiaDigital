@@ -4,7 +4,7 @@ namespace AcademiaDigital.Domain.Services;
 
 public sealed class AdmissionTargetPolicy
 {
-    public void Validate(Career career, Commission? commission, int? capacity)
+    public void Validate(Career career, Division? commission, int? capacity)
     {
         if (commission is null)
             return;

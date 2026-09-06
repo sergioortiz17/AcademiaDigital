@@ -54,7 +54,8 @@ public class RegisterUseCase(IUserRepository userRepository, IStudentRepository 
             {
                 StudentId = student.Id,
                 CareerId = career.Id,
-                EnrollmentDate = enrolledAt
+                EnrollmentDate = enrolledAt,
+                AdmissionYear = enrolledAt.Year
             }, transactionCt);
             // Plan de estudios actual del alumno (IsCurrent=true). Sin esto, la primera inscripción
             // fallaba con "El alumno no tiene un plan de estudios actual para la carrera...".

@@ -29,7 +29,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         var query = Details();
         if (academicYear.HasValue) query = query.Where(item => item.AcademicYear == academicYear);
         if (courseId.HasValue) query = query.Where(item => item.CourseId == courseId);
-        if (commissionId.HasValue) query = query.Where(item => item.CommissionId == commissionId);
+        if (commissionId.HasValue) query = query.Where(item => item.DivisionId == commissionId);
         if (teacherUserId.HasValue)
             query = query.Where(gradebook => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
@@ -74,7 +74,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         }
         if (await db.Gradebooks.AsNoTracking().AnyAsync(item =>
                 item.CourseId == gradebook.CourseId
-                && item.CommissionId == gradebook.CommissionId
+                && item.DivisionId == gradebook.DivisionId
                 && item.AcademicYear == gradebook.AcademicYear
                 && item.Semester == gradebook.Semester, ct))
             throw new InvalidOperationException("A gradebook already exists for this course offering.");
@@ -92,7 +92,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
                 && (enrollment.TeachingPositionId == gradebook.TeachingPositionId
                     || (enrollment.TeachingPositionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
-                        && assignment.CommissionId == gradebook.CommissionId
+                        && assignment.DivisionId == gradebook.DivisionId
                         && assignment.AcademicYear == gradebook.AcademicYear))))
             .OrderBy(enrollment => enrollment.Student.User.LastName)
             .ThenBy(enrollment => enrollment.Student.User.Username)
@@ -153,7 +153,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
     private IQueryable<Gradebook> Details()
         => db.Gradebooks.AsNoTracking()
             .Include(item => item.Course)
-            .Include(item => item.Commission)
+            .Include(item => item.Division)
             .Include(item => item.Evaluations)
             .Include(item => item.GradeRevisions.Where(revision => revision.IsCurrent)).ThenInclude(item => item.Evaluation)
             .Include(item => item.GradeRevisions.Where(revision => revision.IsCurrent))

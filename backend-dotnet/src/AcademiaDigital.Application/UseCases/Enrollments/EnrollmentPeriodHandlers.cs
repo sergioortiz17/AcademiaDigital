@@ -296,19 +296,19 @@ public sealed class DeleteEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposi
 
 // ── Cobertura de comisiones de un período (Parte 11, read-only, NO bloquea la activación) ──────
 
-public sealed record GetPeriodCommissionCoverageQuery(int PeriodId);
+public sealed record GetPeriodDivisionCoverageQuery(int PeriodId);
 
 /// <summary>Un turno (con cupo &gt; 0) de un año del plan que NO tiene comisión activa que matchee.</summary>
-public sealed record CommissionCoverageGap(int YearNumber, string Shift);
+public sealed record DivisionCoverageGap(int YearNumber, string Shift);
 
-public sealed class PeriodCommissionCoverageDto
+public sealed class PeriodDivisionCoverageDto
 {
     public int PeriodId { get; set; }
     public int CareerId { get; set; }
     public int AcademicYear { get; set; }
     /// <summary>Combinaciones (Año del plan, Turno con cupo) sin comisión activa que matchee.
     /// Vacío = todo cubierto. El auto-match de la Parte 6 no falla igual; esto es solo un aviso.</summary>
-    public IReadOnlyList<CommissionCoverageGap> Gaps { get; set; } = [];
+    public IReadOnlyList<DivisionCoverageGap> Gaps { get; set; } = [];
 }
 
 /// <summary>
@@ -317,12 +317,12 @@ public sealed class PeriodCommissionCoverageDto
 /// Career + AcademicYear + YearNumber + Shift). No modifica nada ni bloquea la activación: es un
 /// diagnóstico para avisarle al admin que ciertos alumnos quedarían sin comisión automática.
 /// </summary>
-public sealed class GetPeriodCommissionCoverageQueryHandler(
+public sealed class GetPeriodDivisionCoverageQueryHandler(
     IEnrollmentPeriodRepository periodRepository,
     IStudyPlanCourseRepository studyPlanCourseRepository,
-    ICommissionRepository commissionRepository)
+    IDivisionRepository commissionRepository)
 {
-    public async Task<PeriodCommissionCoverageDto> Handle(GetPeriodCommissionCoverageQuery query, CancellationToken ct = default)
+    public async Task<PeriodDivisionCoverageDto> Handle(GetPeriodDivisionCoverageQuery query, CancellationToken ct = default)
     {
         var period = await periodRepository.FindByIdAsync(query.PeriodId, ct)
             ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
@@ -341,7 +341,7 @@ public sealed class GetPeriodCommissionCoverageQueryHandler(
         if (period.QuotasAfternoon > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.AfternoonShift);
         if (period.QuotasEvening > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.EveningShift);
 
-        var gaps = new List<CommissionCoverageGap>();
+        var gaps = new List<DivisionCoverageGap>();
         foreach (var year in years)
         {
             foreach (var shift in shiftsWithQuota)
@@ -349,11 +349,11 @@ public sealed class GetPeriodCommissionCoverageQueryHandler(
                 var matches = await commissionRepository.FindMatchingActiveAsync(
                     period.CareerId, period.AcademicYear, year, shift, ct);
                 if (matches.Count == 0)
-                    gaps.Add(new CommissionCoverageGap(year, shift));
+                    gaps.Add(new DivisionCoverageGap(year, shift));
             }
         }
 
-        return new PeriodCommissionCoverageDto
+        return new PeriodDivisionCoverageDto
         {
             PeriodId = period.Id,
             CareerId = period.CareerId,

@@ -32,7 +32,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             DniAlreadyExistsException e        => (StatusCodes.Status409Conflict,       e.Message),
             AdmissionApplicationAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),
             AdmissionFormSlugAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),
-            AdmissionCommissionAlreadyAssignedException e => (StatusCodes.Status409Conflict, e.Message),
+            AdmissionDivisionAlreadyAssignedException e => (StatusCodes.Status409Conflict, e.Message),
             AdmissionApplicationConcurrencyException e => (StatusCodes.Status409Conflict, e.Message),
             AdmissionChallengeRejectedException e => (StatusCodes.Status403Forbidden, e.Message),
             StudentRematriculationAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),

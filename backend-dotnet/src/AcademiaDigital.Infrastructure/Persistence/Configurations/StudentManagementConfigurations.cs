@@ -19,11 +19,11 @@ public class StudentStatusHistoryConfiguration : IEntityTypeConfiguration<Studen
     }
 }
 
-public class CommissionConfiguration : IEntityTypeConfiguration<Commission>
+public class DivisionConfiguration : IEntityTypeConfiguration<Division>
 {
-    public void Configure(EntityTypeBuilder<Commission> b)
+    public void Configure(EntityTypeBuilder<Division> b)
     {
-        b.ToTable("Commissions");
+        b.ToTable("Divisions");
         b.HasKey(x => x.Id);
         b.Property(x => x.Code).HasMaxLength(30).IsRequired();
         b.Property(x => x.Name).HasMaxLength(100).IsRequired();
@@ -50,7 +50,7 @@ public class StudentAcademicAssignmentConfiguration : IEntityTypeConfiguration<S
         b.HasOne(x => x.StudentCareer).WithMany(x => x.AcademicAssignments).HasForeignKey(x => x.StudentCareerId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.Career).WithMany().HasForeignKey(x => x.CareerId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.StudyPlan).WithMany().HasForeignKey(x => x.StudyPlanId).OnDelete(DeleteBehavior.Restrict);
-        b.HasOne(x => x.Commission).WithMany().HasForeignKey(x => x.CommissionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Division).WithMany().HasForeignKey(x => x.DivisionId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.AssignedByUser).WithMany().HasForeignKey(x => x.AssignedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

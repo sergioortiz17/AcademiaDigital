@@ -12,17 +12,17 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
         => db.AdmissionForms
             .AsNoTracking()
             .Include(form => form.Career)
-            .Include(form => form.Commission)
+            .Include(form => form.Division)
             .Include(form => form.Fields.OrderBy(field => field.SortOrder))
             .FirstOrDefaultAsync(form => form.Slug == slug
                 && form.IsActive
-                && (form.CommissionId == null || form.Commission!.IsActive), ct);
+                && (form.DivisionId == null || form.Division!.IsActive), ct);
 
     public async Task<IReadOnlyList<AdmissionForm>> GetFormsAsync(CancellationToken ct = default)
         => await db.AdmissionForms
             .AsNoTracking()
             .Include(form => form.Career)
-            .Include(form => form.Commission)
+            .Include(form => form.Division)
             .Include(form => form.Fields.OrderBy(field => field.SortOrder))
             .OrderBy(form => form.Title)
             .ToArrayAsync(ct);
@@ -30,7 +30,7 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
     public Task<AdmissionForm?> FindFormByIdAsync(int id, CancellationToken ct = default)
         => db.AdmissionForms
             .Include(form => form.Career)
-            .Include(form => form.Commission)
+            .Include(form => form.Division)
             .Include(form => form.Fields.OrderBy(field => field.SortOrder))
             .FirstOrDefaultAsync(form => form.Id == id, ct);
 
@@ -42,8 +42,8 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
     public Task<bool> FormSlugExistsAsync(string slug, CancellationToken ct = default)
         => db.AdmissionForms.AsNoTracking().AnyAsync(form => form.Slug == slug, ct);
 
-    public Task<bool> CommissionTargetExistsAsync(int commissionId, CancellationToken ct = default)
-        => db.AdmissionForms.AsNoTracking().AnyAsync(form => form.CommissionId == commissionId, ct);
+    public Task<bool> DivisionTargetExistsAsync(int commissionId, CancellationToken ct = default)
+        => db.AdmissionForms.AsNoTracking().AnyAsync(form => form.DivisionId == commissionId, ct);
 
     public async Task<AdmissionForm> CreateFormAsync(AdmissionForm form, CancellationToken ct = default)
     {
@@ -56,9 +56,9 @@ public sealed class AdmissionRepository(AppDbContext db) : IAdmissionRepository
         catch (DbUpdateException exception) when (
             exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
-            if (form.CommissionId.HasValue
-                && exception.InnerException.Message.Contains("commission_id", StringComparison.OrdinalIgnoreCase))
-                throw new AdmissionCommissionAlreadyAssignedException(form.CommissionId.Value);
+            if (form.DivisionId.HasValue
+                && exception.InnerException.Message.Contains("division_id", StringComparison.OrdinalIgnoreCase))
+                throw new AdmissionDivisionAlreadyAssignedException(form.DivisionId.Value);
             throw new AdmissionFormSlugAlreadyExistsException(form.Slug);
         }
     }

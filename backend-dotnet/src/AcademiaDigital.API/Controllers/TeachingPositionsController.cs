@@ -82,15 +82,15 @@ public sealed class TeachingPositionsController(
 
 public sealed record SaveTeachingPositionRequest(
     [Range(1, int.MaxValue)] int CourseId,
-    [Range(1, int.MaxValue)] int CommissionId,
+    [Range(1, int.MaxValue)] int DivisionId,
     [Range(2000, 2100)] int AcademicYear,
     [Range(1, 2)] int Semester,
     PositionType PositionType,
     [Range(1, 1000)] int MaxStudents)
 {
     public CreateTeachingPositionCommand ToCreateCommand() => new(
-        CourseId, CommissionId, AcademicYear, Semester, PositionType, MaxStudents);
+        CourseId, DivisionId, AcademicYear, Semester, PositionType, MaxStudents);
 
     public UpdateTeachingPositionCommand ToUpdateCommand(int id) => new(
-        id, CourseId, CommissionId, AcademicYear, Semester, PositionType, MaxStudents);
+        id, CourseId, DivisionId, AcademicYear, Semester, PositionType, MaxStudents);
 }

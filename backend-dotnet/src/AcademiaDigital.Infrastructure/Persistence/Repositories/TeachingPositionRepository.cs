@@ -77,6 +77,6 @@ public class TeachingPositionRepository(AppDbContext db) : ITeachingPositionRepo
     private IQueryable<TeachingPosition> Details()
         => db.TeachingPositions.AsNoTracking()
             .Include(position => position.Course)
-            .Include(position => position.Commission)
+            .Include(position => position.Division)
             .Include(position => position.Teacher).ThenInclude(teacher => teacher!.User);
 }

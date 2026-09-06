@@ -16,7 +16,7 @@ public sealed class StudentRematriculationPolicy
     public void ValidateTarget(
         StudentCareer studentCareer,
         StudyPlan studyPlan,
-        Commission commission,
+        Division commission,
         int academicYear,
         int yearNumber)
     {

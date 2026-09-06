@@ -4,7 +4,7 @@ public class AdmissionForm
 {
     public int Id { get; set; }
     public int CareerId { get; set; }
-    public int? CommissionId { get; set; }
+    public int? DivisionId { get; set; }
     public string Slug { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -17,7 +17,7 @@ public class AdmissionForm
     public byte[] RowVersion { get; set; } = [];
 
     public Career Career { get; set; } = null!;
-    public Commission? Commission { get; set; }
+    public Division? Division { get; set; }
     public ICollection<AdmissionFormField> Fields { get; set; } = [];
     public ICollection<AdmissionApplication> Applications { get; set; } = [];
 }

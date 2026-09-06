@@ -16,7 +16,7 @@ public sealed record AdmissionFormFieldInput(
 
 public sealed record CreateAdmissionFormCommand(
     int CareerId,
-    int? CommissionId,
+    int? DivisionId,
     string Slug,
     string Title,
     string? Description,
@@ -28,7 +28,7 @@ public sealed record CreateAdmissionFormCommand(
 public sealed class CreateAdmissionFormCommandHandler(
     IAdmissionRepository repository,
     ICareerRepository careerRepository,
-    ICommissionRepository commissionRepository,
+    IDivisionRepository commissionRepository,
     AdmissionFormPolicy policy,
     AdmissionCapacityPolicy capacityPolicy,
     AdmissionTargetPolicy targetPolicy,
@@ -52,23 +52,23 @@ public sealed class CreateAdmissionFormCommandHandler(
             ?? throw new KeyNotFoundException("Carrera no encontrada.");
         if (!career.IsActive)
             throw new InvalidOperationException("No se pueden crear formularios de admisión para una carrera inactiva.");
-        Commission? commission = null;
-        if (command.CommissionId.HasValue)
+        Division? commission = null;
+        if (command.DivisionId.HasValue)
         {
-            commission = await commissionRepository.FindByIdAsync(command.CommissionId.Value, ct)
+            commission = await commissionRepository.FindByIdAsync(command.DivisionId.Value, ct)
                 ?? throw new KeyNotFoundException("Comisión no encontrada.");
         }
         targetPolicy.Validate(career, commission, command.Capacity);
         if (await repository.FormSlugExistsAsync(slug, ct))
             throw new AdmissionFormSlugAlreadyExistsException(slug);
-        if (commission is not null && await repository.CommissionTargetExistsAsync(commission.Id, ct))
-            throw new AdmissionCommissionAlreadyAssignedException(commission.Id);
+        if (commission is not null && await repository.DivisionTargetExistsAsync(commission.Id, ct))
+            throw new AdmissionDivisionAlreadyAssignedException(commission.Id);
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var form = new AdmissionForm
         {
             CareerId = career.Id,
-            CommissionId = commission?.Id,
+            DivisionId = commission?.Id,
             Slug = slug,
             Title = command.Title.Trim(),
             Description = string.IsNullOrWhiteSpace(command.Description) ? null : command.Description.Trim(),
@@ -83,7 +83,7 @@ public sealed class CreateAdmissionFormCommandHandler(
 
         var created = await repository.CreateFormAsync(form, ct);
         created.Career = career;
-        created.Commission = commission;
+        created.Division = commission;
         return GetAdmissionFormQueryHandler.Map(created);
     }
 }

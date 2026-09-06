@@ -48,7 +48,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<EnrollmentPeriod> EnrollmentPeriods => Set<EnrollmentPeriod>();
     public DbSet<AcademicEvent> AcademicEvents => Set<AcademicEvent>();
     public DbSet<StudentStatusHistory> StudentStatusHistory => Set<StudentStatusHistory>();
-    public DbSet<Commission> Commissions => Set<Commission>();
+    public DbSet<Division> Divisions => Set<Division>();
     public DbSet<StudentAcademicAssignment> StudentAcademicAssignments => Set<StudentAcademicAssignment>();
     public DbSet<DocumentRequirement> DocumentRequirements => Set<DocumentRequirement>();
     public DbSet<StudentDocument> StudentDocuments => Set<StudentDocument>();
@@ -106,7 +106,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new TeachingPositionConfiguration());
         modelBuilder.ApplyConfiguration(new EnrollmentPeriodConfiguration());
         modelBuilder.ApplyConfiguration(new StudentStatusHistoryConfiguration());
-        modelBuilder.ApplyConfiguration(new CommissionConfiguration());
+        modelBuilder.ApplyConfiguration(new DivisionConfiguration());
         modelBuilder.ApplyConfiguration(new StudentAcademicAssignmentConfiguration());
         modelBuilder.ApplyConfiguration(new DocumentRequirementConfiguration());
         modelBuilder.ApplyConfiguration(new StudentDocumentConfiguration());

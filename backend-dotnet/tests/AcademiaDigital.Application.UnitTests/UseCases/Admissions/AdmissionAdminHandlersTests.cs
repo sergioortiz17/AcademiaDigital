@@ -22,7 +22,7 @@ public sealed class AdmissionAdminHandlersTests
             .Returns(DomainTestFactory.Career(id: 20, name: "Backend", isActive: true));
         repository.CreateFormAsync(Arg.Any<AdmissionForm>(), Arg.Any<CancellationToken>())
             .Returns(call => call.Arg<AdmissionForm>());
-        var commissions = Substitute.For<ICommissionRepository>();
+        var commissions = Substitute.For<IDivisionRepository>();
         var handler = new CreateAdmissionFormCommandHandler(
             repository, careers, commissions, new AdmissionFormPolicy(), new AdmissionCapacityPolicy(),
             new AdmissionTargetPolicy(), new FixedTimeProvider(Now));
@@ -48,7 +48,7 @@ public sealed class AdmissionAdminHandlersTests
         careers.FindByIdAsync(20, Arg.Any<CancellationToken>())
             .Returns(DomainTestFactory.Career(id: 20, name: "Backend", isActive: true));
         repository.FormSlugExistsAsync("backend-2027", Arg.Any<CancellationToken>()).Returns(true);
-        var commissions = Substitute.For<ICommissionRepository>();
+        var commissions = Substitute.For<IDivisionRepository>();
         var handler = new CreateAdmissionFormCommandHandler(
             repository, careers, commissions, new AdmissionFormPolicy(), new AdmissionCapacityPolicy(),
             new AdmissionTargetPolicy(), new FixedTimeProvider(Now));
@@ -65,9 +65,9 @@ public sealed class AdmissionAdminHandlersTests
     {
         var repository = Substitute.For<IAdmissionRepository>();
         var careers = Substitute.For<ICareerRepository>();
-        var commissions = Substitute.For<ICommissionRepository>();
+        var commissions = Substitute.For<IDivisionRepository>();
         var career = DomainTestFactory.Career(id: 20, name: "Backend", isActive: true);
-        var commission = new Commission
+        var commission = new Division
         {
             Id = 30,
             CareerId = 20,
@@ -87,15 +87,15 @@ public sealed class AdmissionAdminHandlersTests
             new AdmissionTargetPolicy(), new FixedTimeProvider(Now));
 
         var result = await handler.Handle(
-            ValidCreateCommand() with { CommissionId = 30, Capacity = 25 },
+            ValidCreateCommand() with { DivisionId = 30, Capacity = 25 },
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(30, result.CommissionId);
-        Assert.Equal("B1", result.CommissionCode);
+        Assert.Equal(30, result.DivisionId);
+        Assert.Equal("B1", result.DivisionCode);
         Assert.Equal("Evening", result.Shift);
         Assert.Equal(25, result.Capacity);
         await repository.Received(1).CreateFormAsync(
-            Arg.Is<AdmissionForm>(form => form.CommissionId == 30 && form.Capacity == 25),
+            Arg.Is<AdmissionForm>(form => form.DivisionId == 30 && form.Capacity == 25),
             Arg.Any<CancellationToken>());
     }
 
@@ -104,18 +104,18 @@ public sealed class AdmissionAdminHandlersTests
     {
         var repository = Substitute.For<IAdmissionRepository>();
         var careers = Substitute.For<ICareerRepository>();
-        var commissions = Substitute.For<ICommissionRepository>();
+        var commissions = Substitute.For<IDivisionRepository>();
         careers.FindByIdAsync(20, Arg.Any<CancellationToken>())
             .Returns(DomainTestFactory.Career(id: 20, name: "Backend", isActive: true));
         commissions.FindByIdAsync(30, Arg.Any<CancellationToken>())
-            .Returns(new Commission { Id = 30, CareerId = 20, IsActive = true });
-        repository.CommissionTargetExistsAsync(30, Arg.Any<CancellationToken>()).Returns(true);
+            .Returns(new Division { Id = 30, CareerId = 20, IsActive = true });
+        repository.DivisionTargetExistsAsync(30, Arg.Any<CancellationToken>()).Returns(true);
         var handler = new CreateAdmissionFormCommandHandler(
             repository, careers, commissions, new AdmissionFormPolicy(), new AdmissionCapacityPolicy(),
             new AdmissionTargetPolicy(), new FixedTimeProvider(Now));
 
-        await Assert.ThrowsAsync<AdmissionCommissionAlreadyAssignedException>(() => handler.Handle(
-            ValidCreateCommand() with { CommissionId = 30, Capacity = 25 },
+        await Assert.ThrowsAsync<AdmissionDivisionAlreadyAssignedException>(() => handler.Handle(
+            ValidCreateCommand() with { DivisionId = 30, Capacity = 25 },
             TestContext.Current.CancellationToken));
 
         await repository.DidNotReceive().CreateFormAsync(

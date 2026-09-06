@@ -22,7 +22,7 @@ public sealed class RematriculationRepository(AppDbContext db) : IRematriculatio
         CancellationToken ct = default)
         => db.StudentRematriculations.AsNoTracking()
             .Include(item => item.StudyPlan)
-            .Include(item => item.Commission)
+            .Include(item => item.Division)
             .FirstOrDefaultAsync(item => item.StudentCareerId == studentCareerId
                 && item.AcademicYear == academicYear, ct);
 

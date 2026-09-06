@@ -18,9 +18,9 @@ public sealed class TeachingAssignmentHandlersTests
     {
         var positions = Substitute.For<ITeachingPositionRepository>();
         var courses = Substitute.For<ICourseRepository>();
-        var commissions = Substitute.For<ICommissionRepository>();
+        var commissions = Substitute.For<IDivisionRepository>();
         courses.FindByIdAsync(2, Arg.Any<CancellationToken>()).Returns(Course());
-        commissions.FindByIdAsync(3, Arg.Any<CancellationToken>()).Returns(Commission());
+        commissions.FindByIdAsync(3, Arg.Any<CancellationToken>()).Returns(Division());
         positions.CreateAsync(Arg.Any<TeachingPosition>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
@@ -123,7 +123,7 @@ public sealed class TeachingAssignmentHandlersTests
     {
         Id = 2, CareerId = 10, Code = "ARQ", Name = "Arquitectura", IsActive = true
     };
-    private static Commission Commission() => new()
+    private static Division Division() => new()
     {
         Id = 3, CareerId = 10, Code = "C1", Name = "Comisión 1", AcademicYear = 2027, IsActive = true
     };
@@ -137,8 +137,8 @@ public sealed class TeachingAssignmentHandlersTests
         Id = 5,
         CourseId = 2,
         Course = Course(),
-        CommissionId = 3,
-        Commission = Commission(),
+        DivisionId = 3,
+        Division = Division(),
         AcademicYear = 2027,
         Semester = 1,
         PositionType = PositionType.Titular,

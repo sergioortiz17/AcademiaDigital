@@ -10,7 +10,7 @@ public sealed record CreateStudentRematriculationCommand(
     long StudentId,
     int CareerId,
     int StudyPlanId,
-    int CommissionId,
+    int DivisionId,
     int AcademicYear,
     int YearNumber,
     string? Notes,
@@ -23,8 +23,8 @@ public sealed record StudentRematriculationDto(
     int CareerId,
     int StudyPlanId,
     string StudyPlanName,
-    int CommissionId,
-    string CommissionName,
+    int DivisionId,
+    string DivisionName,
     string Shift,
     int AcademicYear,
     int YearNumber,
@@ -35,7 +35,7 @@ public sealed record StudentRematriculationDto(
 public sealed class CreateStudentRematriculationCommandHandler(
     IStudentRepository studentRepository,
     IStudyPlanRepository studyPlanRepository,
-    ICommissionRepository commissionRepository,
+    IDivisionRepository commissionRepository,
     IRematriculationRepository rematriculationRepository,
     StudentRematriculationPolicy policy,
     IUnitOfWork unitOfWork,
@@ -50,7 +50,7 @@ public sealed class CreateStudentRematriculationCommandHandler(
         policy.ValidateStudent(student);
         var studyPlan = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
             ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
-        var commission = await commissionRepository.FindByIdAsync(command.CommissionId, ct)
+        var commission = await commissionRepository.FindByIdAsync(command.DivisionId, ct)
             ?? throw new KeyNotFoundException("Comisión no encontrada.");
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
@@ -90,7 +90,7 @@ public sealed class CreateStudentRematriculationCommandHandler(
                 StudentCareerId = studentCareer.Id,
                 CareerId = studentCareer.CareerId,
                 StudyPlanId = studyPlan.Id,
-                CommissionId = commission.Id,
+                DivisionId = commission.Id,
                 AcademicYear = command.AcademicYear,
                 YearNumber = command.YearNumber,
                 StartedAt = now,
@@ -127,7 +127,7 @@ public sealed class CreateStudentRematriculationCommandHandler(
                 StudentCareerId = studentCareer.Id,
                 CareerId = studentCareer.CareerId,
                 StudyPlanId = studyPlan.Id,
-                CommissionId = commission.Id,
+                DivisionId = commission.Id,
                 AcademicYear = command.AcademicYear,
                 YearNumber = command.YearNumber,
                 RematriculatedAt = now,
@@ -144,7 +144,7 @@ public sealed class CreateStudentRematriculationCommandHandler(
                 created.CareerId,
                 created.StudyPlanId,
                 studyPlan.Name,
-                created.CommissionId,
+                created.DivisionId,
                 commission.Name,
                 commission.Shift,
                 created.AcademicYear,

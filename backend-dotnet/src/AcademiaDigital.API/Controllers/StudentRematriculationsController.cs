@@ -25,7 +25,7 @@ public sealed class StudentRematriculationsController(
                 studentId,
                 request.CareerId,
                 request.StudyPlanId,
-                request.CommissionId,
+                request.DivisionId,
                 request.AcademicYear,
                 request.YearNumber,
                 request.Notes,
@@ -38,7 +38,7 @@ public sealed class StudentRematriculationsController(
 public sealed record CreateStudentRematriculationRequest(
     [Range(1, int.MaxValue)] int CareerId,
     [Range(1, int.MaxValue)] int StudyPlanId,
-    [Range(1, int.MaxValue)] int CommissionId,
+    [Range(1, int.MaxValue)] int DivisionId,
     [Range(2000, 2100)] int AcademicYear,
     [Range(1, 20)] int YearNumber,
     [StringLength(500)] string? Notes);

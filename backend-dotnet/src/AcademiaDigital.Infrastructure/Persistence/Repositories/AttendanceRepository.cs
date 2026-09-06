@@ -18,7 +18,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
                 && assignment.TeachingPosition.CourseId == session.CourseId
-                && assignment.TeachingPosition.CommissionId == session.CommissionId
+                && assignment.TeachingPosition.DivisionId == session.DivisionId
                 && assignment.TeachingPosition.AcademicYear == session.AcademicYear
                 && assignment.TeachingPosition.Semester == session.Semester
                 && assignment.StartedOn <= session.SessionDate
@@ -34,11 +34,11 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
             record.StudentId == studentId
             && record.AttendanceSession.Status == AttendanceSessionStatus.Closed
             && (!courseId.HasValue || record.AttendanceSession.CourseId == courseId)
-            && (!commissionId.HasValue || record.AttendanceSession.CommissionId == commissionId)
+            && (!commissionId.HasValue || record.AttendanceSession.DivisionId == commissionId)
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
                 && assignment.TeachingPosition.CourseId == record.AttendanceSession.CourseId
-                && assignment.TeachingPosition.CommissionId == record.AttendanceSession.CommissionId
+                && assignment.TeachingPosition.DivisionId == record.AttendanceSession.DivisionId
                 && assignment.TeachingPosition.AcademicYear == record.AttendanceSession.AcademicYear
                 && assignment.TeachingPosition.Semester == record.AttendanceSession.Semester
                 && assignment.StartedOn <= record.AttendanceSession.SessionDate
@@ -54,12 +54,12 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         var query = Details();
         if (academicYear.HasValue) query = query.Where(session => session.AcademicYear == academicYear);
         if (courseId.HasValue) query = query.Where(session => session.CourseId == courseId);
-        if (commissionId.HasValue) query = query.Where(session => session.CommissionId == commissionId);
+        if (commissionId.HasValue) query = query.Where(session => session.DivisionId == commissionId);
         if (teacherUserId.HasValue)
             query = query.Where(session => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
                 && assignment.TeachingPosition.CourseId == session.CourseId
-                && assignment.TeachingPosition.CommissionId == session.CommissionId
+                && assignment.TeachingPosition.DivisionId == session.DivisionId
                 && assignment.TeachingPosition.AcademicYear == session.AcademicYear
                 && assignment.TeachingPosition.Semester == session.Semester
                 && assignment.StartedOn <= session.SessionDate
@@ -101,7 +101,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
 
         var duplicateOffering = await db.AttendanceSessions.AsNoTracking().AnyAsync(item =>
             item.CourseId == session.CourseId
-            && item.CommissionId == session.CommissionId
+            && item.DivisionId == session.DivisionId
             && item.AcademicYear == session.AcademicYear
             && item.Semester == session.Semester
             && item.SessionDate == session.SessionDate
@@ -126,7 +126,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
                 && (enrollment.TeachingPositionId == session.TeachingPositionId
                     || (enrollment.TeachingPositionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
-                        && assignment.CommissionId == session.CommissionId
+                        && assignment.DivisionId == session.DivisionId
                         && assignment.AcademicYear == session.AcademicYear))))
             .OrderBy(enrollment => enrollment.Student.User.LastName)
             .ThenBy(enrollment => enrollment.Student.User.Username)
@@ -206,18 +206,18 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
     {
         var query = db.AttendanceRecords.AsNoTracking()
             .Include(record => record.AttendanceSession).ThenInclude(session => session.Course)
-            .Include(record => record.AttendanceSession).ThenInclude(session => session.Commission)
+            .Include(record => record.AttendanceSession).ThenInclude(session => session.Division)
             .Include(record => record.Enrollment).ThenInclude(enrollment => enrollment.StudyPlanCourse)!.ThenInclude(course => course!.ApprovalRule)
             .Include(record => record.Justifications.Where(justification => justification.IsCurrent))
             .Where(record => record.StudentId == studentId
                 && record.AttendanceSession.Status == AttendanceSessionStatus.Closed);
         if (courseId.HasValue) query = query.Where(record => record.AttendanceSession.CourseId == courseId);
-        if (commissionId.HasValue) query = query.Where(record => record.AttendanceSession.CommissionId == commissionId);
+        if (commissionId.HasValue) query = query.Where(record => record.AttendanceSession.DivisionId == commissionId);
         if (teacherUserId.HasValue)
             query = query.Where(record => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
                 && assignment.TeachingPosition.CourseId == record.AttendanceSession.CourseId
-                && assignment.TeachingPosition.CommissionId == record.AttendanceSession.CommissionId
+                && assignment.TeachingPosition.DivisionId == record.AttendanceSession.DivisionId
                 && assignment.TeachingPosition.AcademicYear == record.AttendanceSession.AcademicYear
                 && assignment.TeachingPosition.Semester == record.AttendanceSession.Semester
                 && assignment.StartedOn <= record.AttendanceSession.SessionDate
@@ -228,7 +228,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
     private IQueryable<AttendanceSession> Details()
         => db.AttendanceSessions.AsNoTracking()
             .Include(session => session.Course)
-            .Include(session => session.Commission)
+            .Include(session => session.Division)
             .Include(session => session.Records).ThenInclude(record => record.Student).ThenInclude(student => student.User)
             .Include(session => session.Records).ThenInclude(record => record.Enrollment)
             .Include(session => session.Records).ThenInclude(record => record.Justifications.Where(justification => justification.IsCurrent))

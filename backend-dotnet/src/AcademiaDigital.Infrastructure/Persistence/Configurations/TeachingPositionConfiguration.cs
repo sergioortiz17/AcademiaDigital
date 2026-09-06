@@ -24,11 +24,11 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
         builder.Property(tp => tp.DeactivatedByUserId).HasColumnName("deactivated_by_user_id");
         builder.Property(tp => tp.DeactivationReason).HasColumnName("deactivation_reason").HasMaxLength(500);
         builder.Property(tp => tp.CourseId).HasColumnName("course_id");
-        builder.Property(tp => tp.CommissionId).HasColumnName("commission_id");
+        builder.Property(tp => tp.DivisionId).HasColumnName("division_id");
         builder.Property(tp => tp.TeacherId).HasColumnName("teacher_id");
 
         builder.HasIndex(tp => new { tp.AcademicYear, tp.Semester, tp.IsActive });
-        builder.HasIndex(tp => new { tp.CommissionId, tp.CourseId });
+        builder.HasIndex(tp => new { tp.DivisionId, tp.CourseId });
         builder.ToTable(table => table.HasCheckConstraint(
             "CK_TeachingPositions_AssignmentState",
             "(is_vacant AND teacher_id IS NULL) OR (NOT is_vacant AND teacher_id IS NOT NULL)"));
@@ -43,9 +43,9 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
             .HasForeignKey(tp => tp.TeacherId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne(tp => tp.Commission)
+        builder.HasOne(tp => tp.Division)
             .WithMany()
-            .HasForeignKey(tp => tp.CommissionId)
+            .HasForeignKey(tp => tp.DivisionId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(tp => tp.DeactivatedByUser)

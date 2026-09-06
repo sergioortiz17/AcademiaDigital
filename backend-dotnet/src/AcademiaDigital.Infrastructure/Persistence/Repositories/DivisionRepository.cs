@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
 
-public sealed class CommissionRepository(AppDbContext db) : ICommissionRepository
+public sealed class DivisionRepository(AppDbContext db) : IDivisionRepository
 {
-    public Task<Commission?> FindByIdAsync(int id, CancellationToken ct = default)
-        => db.Commissions.AsNoTracking().FirstOrDefaultAsync(commission => commission.Id == id, ct);
+    public Task<Division?> FindByIdAsync(int id, CancellationToken ct = default)
+        => db.Divisions.AsNoTracking().FirstOrDefaultAsync(commission => commission.Id == id, ct);
 
-    public async Task<IReadOnlyList<Commission>> FindMatchingActiveAsync(
+    public async Task<IReadOnlyList<Division>> FindMatchingActiveAsync(
         int careerId, int academicYear, int yearNumber, string shift, CancellationToken ct = default)
-        => await db.Commissions.AsNoTracking()
+        => await db.Divisions.AsNoTracking()
             .Where(c => c.IsActive
                 && c.CareerId == careerId
                 && c.AcademicYear == academicYear

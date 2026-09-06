@@ -9,7 +9,7 @@ namespace AcademiaDigital.Application.UseCases.Attendance;
 public sealed record GetAttendanceSessionsQuery(
     int? AcademicYear,
     int? CourseId,
-    int? CommissionId,
+    int? DivisionId,
     long ActorUserId,
     bool IsAdmin);
 public sealed record GetAttendanceSessionQuery(long SessionId, long ActorUserId, bool IsAdmin);
@@ -40,13 +40,13 @@ public sealed record JustifyAttendanceRecordCommand(
 public sealed record GetStudentAttendanceSummaryQuery(
     long StudentId,
     int? CourseId,
-    int? CommissionId,
+    int? DivisionId,
     long ActorUserId,
     bool IsAdmin);
 public sealed record GetMyAttendanceSummaryQuery(
     long UserId,
     int? CourseId,
-    int? CommissionId);
+    int? DivisionId);
 public sealed record ExportAttendanceSessionQuery(
     long SessionId,
     string Format,
@@ -80,9 +80,9 @@ public sealed record AttendanceSessionDto(
     int CourseId,
     string CourseCode,
     string CourseName,
-    int CommissionId,
-    string CommissionCode,
-    string CommissionName,
+    int DivisionId,
+    string DivisionCode,
+    string DivisionName,
     int AcademicYear,
     int Semester,
     DateOnly SessionDate,
@@ -108,9 +108,9 @@ public sealed record AttendanceSummaryItemDto(
     int CourseId,
     string CourseCode,
     string CourseName,
-    int CommissionId,
-    string CommissionCode,
-    string CommissionName,
+    int DivisionId,
+    string DivisionCode,
+    string DivisionName,
     int AcademicYear,
     int Semester,
     decimal? MinimumAttendancePercentage,
@@ -135,7 +135,7 @@ public sealed class GetAttendanceSessionsQueryHandler(IAttendanceRepository repo
         => (await repository.GetSessionsAsync(
                 query.AcademicYear,
                 query.CourseId,
-                query.CommissionId,
+                query.DivisionId,
                 query.IsAdmin ? null : query.ActorUserId,
                 ct))
             .Select(AttendanceMapper.MapSession)
@@ -177,7 +177,7 @@ public sealed class CreateAttendanceSessionCommandHandler(
                 IdempotencyKey = command.IdempotencyKey.Trim(),
                 TeachingPositionId = position.Id,
                 CourseId = position.CourseId,
-                CommissionId = position.CommissionId!.Value,
+                DivisionId = position.DivisionId!.Value,
                 AcademicYear = position.AcademicYear,
                 Semester = position.Semester,
                 SessionDate = command.SessionDate,
@@ -334,10 +334,10 @@ public sealed class GetStudentAttendanceSummaryQueryHandler(
         var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
             ?? throw new KeyNotFoundException("Alumno no encontrado.");
         if (!query.IsAdmin && !await attendanceRepository.CanTeacherViewStudentAsync(
-                query.ActorUserId, student.Id, query.CourseId, query.CommissionId, ct))
+                query.ActorUserId, student.Id, query.CourseId, query.DivisionId, ct))
             throw new ForbiddenException("El docente no puede ver la asistencia de este alumno.");
         var records = await attendanceRepository.GetStudentRecordsAsync(
-            student.Id, query.CourseId, query.CommissionId,
+            student.Id, query.CourseId, query.DivisionId,
             query.IsAdmin ? null : query.ActorUserId, ct);
         return AttendanceMapper.MapSummary(student, records, policy);
     }
@@ -353,7 +353,7 @@ public sealed class GetMyAttendanceSummaryQueryHandler(
         var student = await studentRepository.FindByUserIdAsync(query.UserId, ct)
             ?? throw new KeyNotFoundException("Perfil de alumno no encontrado.");
         var records = await attendanceRepository.GetStudentRecordsAsync(
-            student.Id, query.CourseId, query.CommissionId, null, ct);
+            student.Id, query.CourseId, query.DivisionId, null, ct);
         return AttendanceMapper.MapSummary(student, records, policy);
     }
 }
@@ -370,7 +370,7 @@ public sealed class ExportAttendanceSessionQueryHandler(
         return await generator.GenerateAsync(new AttendanceReportModel(
             session.Id,
             $"{session.CourseCode} - {session.CourseName}",
-            $"{session.CommissionCode} - {session.CommissionName}",
+            $"{session.DivisionCode} - {session.DivisionName}",
             session.SessionDate,
             session.Scope.ToString(),
             session.Units,
@@ -422,9 +422,9 @@ internal static class AttendanceMapper
         session.CourseId,
         session.Course.Code,
         session.Course.Name,
-        session.CommissionId,
-        session.Commission.Code,
-        session.Commission.Name,
+        session.DivisionId,
+        session.Division.Code,
+        session.Division.Name,
         session.AcademicYear,
         session.Semester,
         session.SessionDate,
@@ -478,7 +478,7 @@ internal static class AttendanceMapper
             .GroupBy(record => new
             {
                 record.AttendanceSession.CourseId,
-                record.AttendanceSession.CommissionId,
+                record.AttendanceSession.DivisionId,
                 record.AttendanceSession.AcademicYear,
                 record.AttendanceSession.Semester
             })
@@ -492,9 +492,9 @@ internal static class AttendanceMapper
                     first.AttendanceSession.CourseId,
                     first.AttendanceSession.Course.Code,
                     first.AttendanceSession.Course.Name,
-                    first.AttendanceSession.CommissionId,
-                    first.AttendanceSession.Commission.Code,
-                    first.AttendanceSession.Commission.Name,
+                    first.AttendanceSession.DivisionId,
+                    first.AttendanceSession.Division.Code,
+                    first.AttendanceSession.Division.Name,
                     first.AttendanceSession.AcademicYear,
                     first.AttendanceSession.Semester,
                     minimum,

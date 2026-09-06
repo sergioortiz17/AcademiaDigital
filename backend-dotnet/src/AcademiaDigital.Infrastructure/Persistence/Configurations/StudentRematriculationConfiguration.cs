@@ -15,7 +15,7 @@ public sealed class StudentRematriculationConfiguration : IEntityTypeConfigurati
         builder.Property(item => item.StudentCareerId).HasColumnName("student_career_id");
         builder.Property(item => item.CareerId).HasColumnName("career_id");
         builder.Property(item => item.StudyPlanId).HasColumnName("study_plan_id");
-        builder.Property(item => item.CommissionId).HasColumnName("commission_id");
+        builder.Property(item => item.DivisionId).HasColumnName("division_id");
         builder.Property(item => item.AcademicYear).HasColumnName("academic_year");
         builder.Property(item => item.YearNumber).HasColumnName("year_number");
         builder.Property(item => item.RematriculatedAt).HasColumnName("rematriculated_at");
@@ -29,7 +29,7 @@ public sealed class StudentRematriculationConfiguration : IEntityTypeConfigurati
             .HasForeignKey(item => item.StudentCareerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.Career).WithMany().HasForeignKey(item => item.CareerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.StudyPlan).WithMany().HasForeignKey(item => item.StudyPlanId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(item => item.Commission).WithMany().HasForeignKey(item => item.CommissionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(item => item.Division).WithMany().HasForeignKey(item => item.DivisionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.CreatedByUser).WithMany().HasForeignKey(item => item.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }
