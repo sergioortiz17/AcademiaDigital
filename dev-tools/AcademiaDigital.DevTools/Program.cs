@@ -407,7 +407,7 @@ app.MapPost("/api/actions/setup-first-year-student", async (SetupFirstYearReques
         return Results.BadRequest(new { error = "Se requieren name, email, password y careerId." });
     try
     {
-        var grades = (req.Grades ?? []).ToDictionary(g => g.StudyPlanCourseId, g => g.Score);
+        var grades = (req.Grades ?? []).ToDictionary(g => g.StudyPlanCourseId, g => g.Score ?? 8m);
         return Results.Ok(await svc.SetupFirstYearStudentAsync(req.Name, req.LastName ?? "", req.Email, req.Password, req.Dni, req.CareerId, grades, ct));
     }
     catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Alta 1° año", status = "fail", detail = ex.Message }])); }
@@ -435,7 +435,7 @@ internal sealed record CreateUserRequest(string Name, string? LastName, string E
 internal sealed record EnrollActionRequest(long StudentId, IReadOnlyList<int> StudyPlanCourseIds, int AcademicYear, int Semester);
 internal sealed record GradebookActionRequest(long EnrollmentId, decimal Score, long? TeacherId);
 internal sealed record ExamActionRequest(long EnrollmentId, decimal Grade);
-internal sealed record CourseGradeInput(int StudyPlanCourseId, decimal Score);
+internal sealed record CourseGradeInput(int StudyPlanCourseId, decimal? Score);
 internal sealed record SetupFirstYearRequest(string Name, string? LastName, string Email, string Password, string? Dni, int CareerId, IReadOnlyList<CourseGradeInput>? Grades);
 internal sealed record SetupTeacherRequest(string Name, string? LastName, string Email, string Password, string? Dni, int CareerId, IReadOnlyList<int> CourseIds, int AcademicYear, int Semester);
 internal sealed record AssignRequest(long TeacherId, int CourseId, int AcademicYear, int Semester, int MaxStudents, string? Reason);

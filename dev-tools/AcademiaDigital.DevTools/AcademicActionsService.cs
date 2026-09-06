@@ -144,7 +144,7 @@ public sealed class AcademicActionsService(
             detail = teacherId is > 0 ? $"Profesor real id {teacher.Id}." : $"Docente de prueba id {teacher.Id} (no se indicó profesor).",
             data = new { teacherId = teacher.Id, isTestTeacher = teacherId is not > 0 } });
 
-        var position = await ResolveOrCreateTeachingPositionAsync(spc, enrollment.CourseId, enrollment.AcademicYear, enrollment.Semester, teacher, steps, ct);
+        var position = await ResolveOrCreateTeachingPositionAsync(spc, enrollment.CourseId, enrollment.AcademicYear, enrollment.Semester, enrollment.StudentId, teacher, steps, ct);
 
         // Linkear el enrollment a la TeachingPosition (el roster del gradebook lo requiere).
         var tracked = await db.Enrollments.FirstAsync(e => e.Id == enrollmentId, ct);
@@ -394,9 +394,11 @@ public sealed class AcademicActionsService(
 
     /// <summary>Auto-crea o reusa Commission + TeachingPosition para la materia/año/cuatri, y lo reporta.</summary>
     private async Task<TeachingPosition> ResolveOrCreateTeachingPositionAsync(
-        StudyPlanCourse spc, int courseId, int academicYear, int semester, Teacher teacher, List<object> steps, CancellationToken ct)
+        StudyPlanCourse spc, int courseId, int academicYear, int semester, long studentId, Teacher teacher, List<object> steps, CancellationToken ct)
     {
-        var commissionCode = $"COM-ADHOC-{courseId}-{academicYear}";
+        // Per-student offering: cada alumno tiene su propia comisión/cargo para que el gradebook
+        // (único por course-offering) no colisione al correr el atajo para más de un alumno.
+        var commissionCode = $"COM-ADHOC-{courseId}-{academicYear}-S{studentId}";
         var commission = await db.Set<Commission>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
         var commissionReused = commission is not null;
         if (commission is null)

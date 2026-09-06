@@ -695,8 +695,18 @@ $('#fyCareer').addEventListener('change', fyLoadCourses);
 $('#tpCareer').addEventListener('change', tpLoadCourses);
 
 $('#fyRun').addEventListener('click', async ()=>{
-  const grades=[...document.querySelectorAll('[data-fy-spc]')].map(i=>({ studyPlanCourseId:parseInt(i.dataset.fySpc,10), score:parseFloat(i.value) }));
-  const payload={ name:$('#fyName').value, lastName:$('#fyLast').value, email:$('#fyEmail').value, password:$('#fyPass').value, dni:$('#fyDni').value||null, careerId:parseInt($('#fyCareer').value,10), grades };
+  const careerId = parseInt($('#fyCareer').value,10);
+  if (!careerId) {                       // selector vacío (carreras no cargadas / ninguna elegida)
+    if (!$('#fyCareer').options.length) await shortcutFillCareers();
+    outShow('#fyOut', { ok:false, body:{ success:false, summary:'Elegí una carrera (si el selector está vacío, corré el reset+reseed en Datos base y recargá).' } });
+    return;
+  }
+  if (!$('#fyName').value.trim() || !$('#fyEmail').value.trim() || !$('#fyPass').value.trim()) {
+    outShow('#fyOut', { ok:false, body:{ success:false, summary:'Completá nombre, email y password.' } });
+    return;
+  }
+  const grades=[...document.querySelectorAll('[data-fy-spc]')].map(i=>{ const v=parseFloat(i.value); return { studyPlanCourseId:parseInt(i.dataset.fySpc,10), score: Number.isFinite(v)?v:8 }; });
+  const payload={ name:$('#fyName').value, lastName:$('#fyLast').value, email:$('#fyEmail').value, password:$('#fyPass').value, dni:$('#fyDni').value||null, careerId, grades };
   const btn=$('#fyRun'); btn.disabled=true; btn.textContent='Procesando…';
   outShow('#fyOut', await api('/api/actions/setup-first-year-student',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));
   btn.disabled=false; btn.textContent='Crear alumno con 1° año completo'; await Promise.all([loadOverview(), tlFillSelectors&&tlFillSelectors()]);
