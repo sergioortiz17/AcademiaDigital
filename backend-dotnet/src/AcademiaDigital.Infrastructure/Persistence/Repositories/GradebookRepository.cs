@@ -9,14 +9,14 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
     public Task<bool> CanTeacherManagePositionAsync(long userId, int teachingPositionId, CancellationToken ct = default)
         => db.TeacherAssignments.AsNoTracking().AnyAsync(assignment =>
             assignment.Teacher.UserId == userId
-            && assignment.TeachingPositionId == teachingPositionId
+            && assignment.CourseSectionId == teachingPositionId
             && assignment.IsCurrent, ct);
 
     public Task<bool> CanTeacherManageGradebookAsync(long userId, long gradebookId, CancellationToken ct = default)
         => db.Gradebooks.AsNoTracking().AnyAsync(gradebook => gradebook.Id == gradebookId
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
-                && assignment.TeachingPositionId == gradebook.TeachingPositionId
+                && assignment.CourseSectionId == gradebook.CourseSectionId
                 && assignment.IsCurrent), ct);
 
     public async Task<IReadOnlyList<Gradebook>> GetGradebooksAsync(
@@ -33,7 +33,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         if (teacherUserId.HasValue)
             query = query.Where(gradebook => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
-                && assignment.TeachingPositionId == gradebook.TeachingPositionId
+                && assignment.CourseSectionId == gradebook.CourseSectionId
                 && assignment.IsCurrent));
         return await query.OrderByDescending(item => item.AcademicYear)
             .ThenByDescending(item => item.Semester)
@@ -55,8 +55,8 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
 
     public async Task<(Gradebook Gradebook, bool Created)> CreateIdempotentAsync(Gradebook gradebook, CancellationToken ct = default)
     {
-        _ = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {gradebook.TeachingPositionId} FOR UPDATE")
+        _ = await db.CourseSections
+            .FromSqlInterpolated($"SELECT * FROM \"CourseSections\" WHERE id = {gradebook.CourseSectionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teaching position not found.");
         var existing = await db.Gradebooks.AsNoTracking()
@@ -68,7 +68,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
                 .Select(item => (item.Name, item.WeightPercentage, item.MaximumScore))
                 .SequenceEqual(gradebook.Evaluations.OrderBy(item => item.DisplayOrder)
                     .Select(item => (item.Name, item.WeightPercentage, item.MaximumScore)));
-            if (existing.TeachingPositionId != gradebook.TeachingPositionId || !sameEvaluations)
+            if (existing.CourseSectionId != gradebook.CourseSectionId || !sameEvaluations)
                 throw new InvalidOperationException("The idempotency key was already used with a different gradebook.");
             return (loaded, false);
         }
@@ -89,8 +89,8 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
                 && enrollment.AcademicYear == gradebook.AcademicYear
                 && enrollment.Semester == gradebook.Semester
                 && enrollment.Status != EnrollmentStatus.Withdrawn
-                && (enrollment.TeachingPositionId == gradebook.TeachingPositionId
-                    || (enrollment.TeachingPositionId == null && db.StudentAcademicAssignments.Any(assignment =>
+                && (enrollment.CourseSectionId == gradebook.CourseSectionId
+                    || (enrollment.CourseSectionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
                         && assignment.DivisionId == gradebook.DivisionId
                         && assignment.AcademicYear == gradebook.AcademicYear))))

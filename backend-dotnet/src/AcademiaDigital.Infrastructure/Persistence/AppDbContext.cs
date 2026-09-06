@@ -20,7 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StudentCareer> StudentCareers => Set<StudentCareer>();
     public DbSet<StudentRematriculation> StudentRematriculations => Set<StudentRematriculation>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
-    public DbSet<TeacherDocument> TeacherDocuments => Set<TeacherDocument>();
+    public DbSet<TeacherCareer> TeacherCareers => Set<TeacherCareer>();    public DbSet<TeacherDocument> TeacherDocuments => Set<TeacherDocument>();
     public DbSet<TeacherAssignment> TeacherAssignments => Set<TeacherAssignment>();
     public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
@@ -41,7 +41,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<TeacherContest> TeacherContests => Set<TeacherContest>();
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
-    public DbSet<TeachingPosition> TeachingPositions => Set<TeachingPosition>();
+    public DbSet<CourseSection> CourseSections => Set<CourseSection>();
     public DbSet<CertificateRequest> CertificateRequests => Set<CertificateRequest>();
     public DbSet<CertificateIssuance> CertificateIssuances => Set<CertificateIssuance>();
     public DbSet<CertificateSequence> CertificateSequences => Set<CertificateSequence>();
@@ -82,6 +82,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new StudentCareerConfiguration());
         modelBuilder.ApplyConfiguration(new StudentRematriculationConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherConfiguration());
+        modelBuilder.ApplyConfiguration(new TeacherCareerConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherAssignmentConfiguration());
         modelBuilder.ApplyConfiguration(new AttendanceSessionConfiguration());
@@ -103,7 +104,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new EnrollmentConfiguration());
         modelBuilder.ApplyConfiguration(new TeacherContestConfiguration());
         modelBuilder.ApplyConfiguration(new ContestApplicationConfiguration());
-        modelBuilder.ApplyConfiguration(new TeachingPositionConfiguration());
+        modelBuilder.ApplyConfiguration(new CourseSectionConfiguration());
         modelBuilder.ApplyConfiguration(new EnrollmentPeriodConfiguration());
         modelBuilder.ApplyConfiguration(new StudentStatusHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new DivisionConfiguration());

@@ -29,7 +29,7 @@ public interface IEnrollmentRepository
 {
     Task<IEnumerable<Enrollment>> GetByStudentAsync(long studentId, CancellationToken ct = default);
     Task<IEnumerable<Enrollment>> GetByCourseAndPeriodAsync(int courseId, int year, int semester, CancellationToken ct = default);
-    Task<IEnumerable<Enrollment>> GetByTeachingPositionAsync(int teachingPositionId, CancellationToken ct = default);
+    Task<IEnumerable<Enrollment>> GetByCourseSectionAsync(int teachingPositionId, CancellationToken ct = default);
     Task<Enrollment?> FindByIdAsync(long id, CancellationToken ct = default);
     Task<Enrollment?> FindByStudentAndCourseAsync(long studentId, int courseId, int year, int semester, CancellationToken ct = default);
     Task<IEnumerable<Enrollment>> GetByEnrollmentPeriodAsync(int periodId, CancellationToken ct = default);

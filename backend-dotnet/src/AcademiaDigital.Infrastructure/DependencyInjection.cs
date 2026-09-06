@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<ITeacherRepository, TeacherRepository>();
         services.AddScoped<ITeacherDocumentRepository, TeacherDocumentRepository>();
         services.AddScoped<ITeacherAssignmentRepository, TeacherAssignmentRepository>();
+        services.AddScoped<ITeacherCareerRepository, TeacherCareerRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IGradebookRepository, GradebookRepository>();
         services.AddScoped<IExamTableRepository, ExamTableRepository>();
@@ -50,7 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IDivisionRepository, DivisionRepository>();
         services.AddScoped<ITeacherContestRepository, TeacherContestRepository>();
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
-        services.AddScoped<ITeachingPositionRepository, TeachingPositionRepository>();
+        services.AddScoped<ICourseSectionRepository, CourseSectionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Servicios

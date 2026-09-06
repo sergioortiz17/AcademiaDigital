@@ -9,7 +9,7 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
     public async Task<IEnumerable<Enrollment>> GetByStudentAsync(long studentId, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Course)
-            .Include(e => e.TeachingPosition).ThenInclude(tp => tp!.Teacher).ThenInclude(t => t!.User)
+            .Include(e => e.CourseSection).ThenInclude(tp => tp!.Teacher).ThenInclude(t => t!.User)
             .Where(e => e.StudentId == studentId)
             .OrderByDescending(e => e.AcademicYear).ThenByDescending(e => e.Semester)
             .ToListAsync(ct);
@@ -20,18 +20,18 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
             .Where(e => e.CourseId == courseId && e.AcademicYear == year && e.Semester == semester)
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<Enrollment>> GetByTeachingPositionAsync(int teachingPositionId, CancellationToken ct = default)
+    public async Task<IEnumerable<Enrollment>> GetByCourseSectionAsync(int teachingPositionId, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Student).ThenInclude(s => s.User)
             .Include(e => e.Course)
-            .Where(e => e.TeachingPositionId == teachingPositionId)
+            .Where(e => e.CourseSectionId == teachingPositionId)
             .ToListAsync(ct);
 
     public async Task<Enrollment?> FindByIdAsync(long id, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Student)
             .Include(e => e.Course)
-            .Include(e => e.TeachingPosition)
+            .Include(e => e.CourseSection)
             .FirstOrDefaultAsync(e => e.Id == id, ct);
 
     public async Task<Enrollment?> FindByStudentAndCourseAsync(long studentId, int courseId, int year, int semester, CancellationToken ct = default)

@@ -19,7 +19,7 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
 
     public Task<bool> HasHistoryForPositionAsync(int teachingPositionId, CancellationToken ct = default)
         => db.TeacherAssignments.AsNoTracking()
-            .AnyAsync(assignment => assignment.TeachingPositionId == teachingPositionId, ct);
+            .AnyAsync(assignment => assignment.CourseSectionId == teachingPositionId, ct);
 
     public Task<TeacherAssignment?> FindAsync(
         long teacherId,
@@ -32,8 +32,8 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
         TeacherAssignment assignment,
         CancellationToken ct = default)
     {
-        var position = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {assignment.TeachingPositionId} FOR UPDATE")
+        var position = await db.CourseSections
+            .FromSqlInterpolated($"SELECT * FROM \"CourseSections\" WHERE id = {assignment.CourseSectionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teaching position not found.");
         var teacher = await db.Teachers
@@ -75,8 +75,8 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
         if (!assignment.IsCurrent || assignment.EndedOn.HasValue)
             throw new InvalidOperationException("The teacher assignment is already closed.");
 
-        var position = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {assignment.TeachingPositionId} FOR UPDATE")
+        var position = await db.CourseSections
+            .FromSqlInterpolated($"SELECT * FROM \"CourseSections\" WHERE id = {assignment.CourseSectionId} FOR UPDATE")
             .SingleAsync(ct);
         if (position.IsVacant || position.TeacherId != teacherId)
             throw new InvalidOperationException("Teaching position and current assignment are inconsistent.");
@@ -98,6 +98,6 @@ public sealed class TeacherAssignmentRepository(AppDbContext db) : ITeacherAssig
     private IQueryable<TeacherAssignment> Details()
         => db.TeacherAssignments.AsNoTracking()
             .Include(assignment => assignment.Teacher).ThenInclude(teacher => teacher.User)
-            .Include(assignment => assignment.TeachingPosition).ThenInclude(position => position.Course)
-            .Include(assignment => assignment.TeachingPosition).ThenInclude(position => position.Division);
+            .Include(assignment => assignment.CourseSection).ThenInclude(position => position.Course)
+            .Include(assignment => assignment.CourseSection).ThenInclude(position => position.Division);
 }

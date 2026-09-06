@@ -16,7 +16,7 @@ public sealed class AttendanceHandlersTests
     [Fact]
     public async Task Create_session_is_idempotent_and_uses_the_position_snapshot()
     {
-        var positions = Substitute.For<ITeachingPositionRepository>();
+        var positions = Substitute.For<ICourseSectionRepository>();
         var attendance = Substitute.For<IAttendanceRepository>();
         positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
         attendance.CreateIdempotentAsync(Arg.Any<AttendanceSession>(), Arg.Any<CancellationToken>())
@@ -48,7 +48,7 @@ public sealed class AttendanceHandlersTests
     [Fact]
     public async Task Professor_cannot_create_a_session_outside_their_assignment()
     {
-        var positions = Substitute.For<ITeachingPositionRepository>();
+        var positions = Substitute.For<ICourseSectionRepository>();
         var attendance = Substitute.For<IAttendanceRepository>();
         positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
         attendance.CanTeacherManagePositionAsync(88, 5, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(false);
@@ -163,7 +163,7 @@ public sealed class AttendanceHandlersTests
         User = new User { Username = "Ada", LastName = "Lovelace", Dni = "12345678" }
     };
     private static Enrollment Enrollment() => new() { Id = 30, StudentId = 40 };
-    private static TeachingPosition Position() => new()
+    private static CourseSection Position() => new()
     {
         Id = 5,
         CourseId = 2,
@@ -178,7 +178,7 @@ public sealed class AttendanceHandlersTests
     {
         Id = 10,
         IdempotencyKey = "attendance-request-001",
-        TeachingPositionId = 5,
+        CourseSectionId = 5,
         CourseId = 2,
         Course = Course(),
         DivisionId = 3,

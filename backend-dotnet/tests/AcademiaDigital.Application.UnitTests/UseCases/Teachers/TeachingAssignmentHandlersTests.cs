@@ -16,22 +16,22 @@ public sealed class TeachingAssignmentHandlersTests
     [Fact]
     public async Task CreatePosition_validates_relations_and_creates_a_vacancy()
     {
-        var positions = Substitute.For<ITeachingPositionRepository>();
+        var positions = Substitute.For<ICourseSectionRepository>();
         var courses = Substitute.For<ICourseRepository>();
         var commissions = Substitute.For<IDivisionRepository>();
         courses.FindByIdAsync(2, Arg.Any<CancellationToken>()).Returns(Course());
         commissions.FindByIdAsync(3, Arg.Any<CancellationToken>()).Returns(Division());
-        positions.CreateAsync(Arg.Any<TeachingPosition>(), Arg.Any<CancellationToken>())
+        positions.CreateAsync(Arg.Any<CourseSection>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var position = call.Arg<TeachingPosition>();
+                var position = call.Arg<CourseSection>();
                 position.Id = 5;
                 return position;
             });
-        var handler = new CreateTeachingPositionCommandHandler(
+        var handler = new CreateCourseSectionCommandHandler(
             positions, courses, commissions, new TeachingAssignmentPolicy(), new FixedTimeProvider(Now));
 
-        var result = await handler.Handle(new CreateTeachingPositionCommand(
+        var result = await handler.Handle(new CreateCourseSectionCommand(
             2, 3, 2027, 1, PositionType.Titular, 40), TestContext.Current.CancellationToken);
 
         Assert.Equal(5, result.Id);
@@ -44,15 +44,16 @@ public sealed class TeachingAssignmentHandlersTests
     public async Task AssignTeacher_uses_a_serializable_transaction()
     {
         var teachers = Substitute.For<ITeacherRepository>();
-        var positions = Substitute.For<ITeachingPositionRepository>();
+        var positions = Substitute.For<ICourseSectionRepository>();
         var assignments = Substitute.For<ITeacherAssignmentRepository>();
+        var teacherCareers = Substitute.For<ITeacherCareerRepository>();
         var unitOfWork = SerializableUnitOfWork();
         teachers.FindByIdAsync(4, Arg.Any<CancellationToken>()).Returns(Teacher());
         positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
         assignments.AssignAsync(Arg.Any<TeacherAssignment>(), Arg.Any<CancellationToken>())
             .Returns(call => Assignment(call.Arg<TeacherAssignment>()));
         var handler = new AssignTeacherCommandHandler(
-            teachers, positions, assignments, new TeachingAssignmentPolicy(), unitOfWork,
+            teachers, positions, assignments, teacherCareers, new TeachingAssignmentPolicy(), unitOfWork,
             new FixedTimeProvider(Now));
 
         var result = await handler.Handle(new AssignTeacherCommand(
@@ -132,7 +133,7 @@ public sealed class TeachingAssignmentHandlersTests
         Id = 88, Username = "Ada", LastName = "Lovelace", IsActive = true, Role = UserRole.Profesor
     };
     private static Teacher Teacher() => new() { Id = 4, IsActive = true, UserId = 88, User = ProfessorUser() };
-    private static TeachingPosition Position() => new()
+    private static CourseSection Position() => new()
     {
         Id = 5,
         CourseId = 2,
@@ -153,14 +154,14 @@ public sealed class TeachingAssignmentHandlersTests
         var assignment = source ?? new TeacherAssignment
         {
             TeacherId = 4,
-            TeachingPositionId = 5,
+            CourseSectionId = 5,
             StartedOn = new DateOnly(2027, 3, 1),
             IsCurrent = true,
             CreatedAt = Now.UtcDateTime
         };
         assignment.Id = 7;
         assignment.Teacher = Teacher();
-        assignment.TeachingPosition = Position();
+        assignment.CourseSection = Position();
         return assignment;
     }
 

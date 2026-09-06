@@ -13,7 +13,7 @@ public sealed class AttendancePolicy
     public static readonly TimeSpan DefaultEditWindow = TimeSpan.FromHours(48);
 
     public DateTime EnsureCanCreateSession(
-        TeachingPosition position,
+        CourseSection position,
         DateOnly sessionDate,
         TimeOnly? startTime,
         TimeOnly? endTime,

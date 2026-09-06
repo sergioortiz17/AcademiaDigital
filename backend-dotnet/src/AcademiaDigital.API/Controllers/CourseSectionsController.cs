@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AcademiaDigital.API.Controllers;
 
-[Route("api/v1/teaching-positions")]
-public sealed class TeachingPositionsController(
-    GetTeachingPositionsQueryHandler listHandler,
-    GetTeachingPositionByIdQueryHandler getHandler,
-    CreateTeachingPositionCommandHandler createHandler,
-    UpdateTeachingPositionCommandHandler updateHandler,
-    DeactivateTeachingPositionCommandHandler deactivateHandler) : ApiControllerBase
+[Route("api/v1/course-sections")]
+public sealed class CourseSectionsController(
+    GetCourseSectionsQueryHandler listHandler,
+    GetCourseSectionByIdQueryHandler getHandler,
+    CreateCourseSectionCommandHandler createHandler,
+    UpdateCourseSectionCommandHandler updateHandler,
+    DeactivateCourseSectionCommandHandler deactivateHandler) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(
@@ -25,7 +25,7 @@ public sealed class TeachingPositionsController(
         var guard = RequireAdmin();
         if (guard is not null) return guard;
         return Ok(await listHandler.Handle(
-            new GetTeachingPositionsQuery(academicYear, semester, isVacant, includeInactive), ct));
+            new GetCourseSectionsQuery(academicYear, semester, isVacant, includeInactive), ct));
     }
 
     [HttpGet("{id:int}")]
@@ -33,12 +33,12 @@ public sealed class TeachingPositionsController(
     {
         var guard = RequireAdmin();
         if (guard is not null) return guard;
-        return Ok(await getHandler.Handle(new GetTeachingPositionByIdQuery(id), ct));
+        return Ok(await getHandler.Handle(new GetCourseSectionByIdQuery(id), ct));
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(
-        [FromBody] SaveTeachingPositionRequest request,
+        [FromBody] SaveCourseSectionRequest request,
         CancellationToken ct)
     {
         var guard = RequireAdmin();
@@ -50,7 +50,7 @@ public sealed class TeachingPositionsController(
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(
         int id,
-        [FromBody] SaveTeachingPositionRequest request,
+        [FromBody] SaveCourseSectionRequest request,
         CancellationToken ct)
     {
         var guard = RequireAdmin();
@@ -67,7 +67,7 @@ public sealed class TeachingPositionsController(
         var guard = RequireAdmin();
         if (guard is not null) return guard;
         await deactivateHandler.Handle(
-            new DeactivateTeachingPositionCommand(id, CurrentUserId!.Value, reason), ct);
+            new DeactivateCourseSectionCommand(id, CurrentUserId!.Value, reason), ct);
         return NoContent();
     }
 
@@ -80,7 +80,7 @@ public sealed class TeachingPositionsController(
     }
 }
 
-public sealed record SaveTeachingPositionRequest(
+public sealed record SaveCourseSectionRequest(
     [Range(1, int.MaxValue)] int CourseId,
     [Range(1, int.MaxValue)] int DivisionId,
     [Range(2000, 2100)] int AcademicYear,
@@ -88,9 +88,9 @@ public sealed record SaveTeachingPositionRequest(
     PositionType PositionType,
     [Range(1, 1000)] int MaxStudents)
 {
-    public CreateTeachingPositionCommand ToCreateCommand() => new(
+    public CreateCourseSectionCommand ToCreateCommand() => new(
         CourseId, DivisionId, AcademicYear, Semester, PositionType, MaxStudents);
 
-    public UpdateTeachingPositionCommand ToUpdateCommand(int id) => new(
+    public UpdateCourseSectionCommand ToUpdateCommand(int id) => new(
         id, CourseId, DivisionId, AcademicYear, Semester, PositionType, MaxStudents);
 }

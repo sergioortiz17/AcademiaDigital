@@ -16,7 +16,7 @@ public sealed class GradebookHandlersTests
     [Fact]
     public async Task Create_gradebook_uses_position_snapshot_and_idempotency_key()
     {
-        var positions = Substitute.For<ITeachingPositionRepository>();
+        var positions = Substitute.For<ICourseSectionRepository>();
         var gradebooks = Substitute.For<IGradebookRepository>();
         positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
         gradebooks.CreateIdempotentAsync(Arg.Any<Gradebook>(), Arg.Any<CancellationToken>())
@@ -46,7 +46,7 @@ public sealed class GradebookHandlersTests
     [Fact]
     public async Task Professor_cannot_create_gradebook_outside_current_assignment()
     {
-        var positions = Substitute.For<ITeachingPositionRepository>();
+        var positions = Substitute.For<ICourseSectionRepository>();
         var gradebooks = Substitute.For<IGradebookRepository>();
         positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
         gradebooks.CanTeacherManagePositionAsync(88, 5, Arg.Any<CancellationToken>()).Returns(false);
@@ -112,7 +112,7 @@ public sealed class GradebookHandlersTests
 
     private static Course Course() => new() { Id = 2, Code = "MAT", Name = "Mathematics" };
     private static Division Division() => new() { Id = 3, Code = "C1", Name = "Division 1" };
-    private static TeachingPosition Position() => new()
+    private static CourseSection Position() => new()
     {
         Id = 5, CourseId = 2, Course = Course(), DivisionId = 3, Division = Division(),
         AcademicYear = 2027, Semester = 1, IsActive = true
@@ -134,7 +134,7 @@ public sealed class GradebookHandlersTests
     {
         Id = 10,
         IdempotencyKey = "gradebook-request-001",
-        TeachingPositionId = 5,
+        CourseSectionId = 5,
         CourseId = 2,
         Course = Course(),
         DivisionId = 3,

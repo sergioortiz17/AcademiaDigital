@@ -3,13 +3,17 @@ using System.Text.Json.Serialization;
 namespace AcademiaDigital.Domain.Entities;
 
 /// <summary>
-/// Plaza docente: cargo asignado a una materia para un período académico.
+/// Comisión de una materia: la sección real donde el profesor dicta y carga notas/asistencia.
+/// Se asocia a una materia (CourseId), a una División/grupo de cursada (DivisionId), a un docente,
+/// y a un cuatrimestre-año (AcademicYear + Semester, o IsAnnual=true para materias anuales).
 /// </summary>
-public class TeachingPosition
+public class CourseSection
 {
     public int Id { get; set; }
     public int AcademicYear { get; set; }
     public int Semester { get; set; }
+    /// <summary>Materia anual: se dicta todo el año, no aplica un cuatrimestre puntual.</summary>
+    public bool IsAnnual { get; set; } = false;
     public PositionType PositionType { get; set; }
     public int MaxStudents { get; set; }
     public bool IsVacant { get; set; } = true;

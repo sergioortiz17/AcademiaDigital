@@ -9,7 +9,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
     public Task<bool> CanTeacherManagePositionAsync(long userId, int teachingPositionId, DateOnly onDate, CancellationToken ct = default)
         => db.TeacherAssignments.AsNoTracking().AnyAsync(assignment =>
             assignment.Teacher.UserId == userId
-            && assignment.TeachingPositionId == teachingPositionId
+            && assignment.CourseSectionId == teachingPositionId
             && assignment.StartedOn <= onDate
             && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= onDate), ct);
 
@@ -17,10 +17,10 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         => db.AttendanceSessions.AsNoTracking().AnyAsync(session => session.Id == sessionId
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
-                && assignment.TeachingPosition.CourseId == session.CourseId
-                && assignment.TeachingPosition.DivisionId == session.DivisionId
-                && assignment.TeachingPosition.AcademicYear == session.AcademicYear
-                && assignment.TeachingPosition.Semester == session.Semester
+                && assignment.CourseSection.CourseId == session.CourseId
+                && assignment.CourseSection.DivisionId == session.DivisionId
+                && assignment.CourseSection.AcademicYear == session.AcademicYear
+                && assignment.CourseSection.Semester == session.Semester
                 && assignment.StartedOn <= session.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= session.SessionDate)), ct);
 
@@ -37,10 +37,10 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
             && (!commissionId.HasValue || record.AttendanceSession.DivisionId == commissionId)
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
-                && assignment.TeachingPosition.CourseId == record.AttendanceSession.CourseId
-                && assignment.TeachingPosition.DivisionId == record.AttendanceSession.DivisionId
-                && assignment.TeachingPosition.AcademicYear == record.AttendanceSession.AcademicYear
-                && assignment.TeachingPosition.Semester == record.AttendanceSession.Semester
+                && assignment.CourseSection.CourseId == record.AttendanceSession.CourseId
+                && assignment.CourseSection.DivisionId == record.AttendanceSession.DivisionId
+                && assignment.CourseSection.AcademicYear == record.AttendanceSession.AcademicYear
+                && assignment.CourseSection.Semester == record.AttendanceSession.Semester
                 && assignment.StartedOn <= record.AttendanceSession.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= record.AttendanceSession.SessionDate)), ct);
 
@@ -58,10 +58,10 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         if (teacherUserId.HasValue)
             query = query.Where(session => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
-                && assignment.TeachingPosition.CourseId == session.CourseId
-                && assignment.TeachingPosition.DivisionId == session.DivisionId
-                && assignment.TeachingPosition.AcademicYear == session.AcademicYear
-                && assignment.TeachingPosition.Semester == session.Semester
+                && assignment.CourseSection.CourseId == session.CourseId
+                && assignment.CourseSection.DivisionId == session.DivisionId
+                && assignment.CourseSection.AcademicYear == session.AcademicYear
+                && assignment.CourseSection.Semester == session.Semester
                 && assignment.StartedOn <= session.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= session.SessionDate)));
         return await query.OrderByDescending(session => session.SessionDate)
@@ -81,15 +81,15 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         AttendanceSession session,
         CancellationToken ct = default)
     {
-        _ = await db.TeachingPositions
-            .FromSqlInterpolated($"SELECT * FROM \"TeachingPositions\" WHERE id = {session.TeachingPositionId} FOR UPDATE")
+        _ = await db.CourseSections
+            .FromSqlInterpolated($"SELECT * FROM \"CourseSections\" WHERE id = {session.CourseSectionId} FOR UPDATE")
             .SingleOrDefaultAsync(ct)
             ?? throw new KeyNotFoundException("Teaching position not found.");
         var existing = await db.AttendanceSessions.AsNoTracking()
             .SingleOrDefaultAsync(item => item.IdempotencyKey == session.IdempotencyKey, ct);
         if (existing is not null)
         {
-            if (existing.TeachingPositionId != session.TeachingPositionId
+            if (existing.CourseSectionId != session.CourseSectionId
                 || existing.SessionDate != session.SessionDate
                 || existing.StartTime != session.StartTime
                 || existing.EndTime != session.EndTime
@@ -123,8 +123,8 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
                 && enrollment.AcademicYear == session.AcademicYear
                 && enrollment.Semester == session.Semester
                 && enrollment.Status != EnrollmentStatus.Withdrawn
-                && (enrollment.TeachingPositionId == session.TeachingPositionId
-                    || (enrollment.TeachingPositionId == null && db.StudentAcademicAssignments.Any(assignment =>
+                && (enrollment.CourseSectionId == session.CourseSectionId
+                    || (enrollment.CourseSectionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
                         && assignment.DivisionId == session.DivisionId
                         && assignment.AcademicYear == session.AcademicYear))))
@@ -216,10 +216,10 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         if (teacherUserId.HasValue)
             query = query.Where(record => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
-                && assignment.TeachingPosition.CourseId == record.AttendanceSession.CourseId
-                && assignment.TeachingPosition.DivisionId == record.AttendanceSession.DivisionId
-                && assignment.TeachingPosition.AcademicYear == record.AttendanceSession.AcademicYear
-                && assignment.TeachingPosition.Semester == record.AttendanceSession.Semester
+                && assignment.CourseSection.CourseId == record.AttendanceSession.CourseId
+                && assignment.CourseSection.DivisionId == record.AttendanceSession.DivisionId
+                && assignment.CourseSection.AcademicYear == record.AttendanceSession.AcademicYear
+                && assignment.CourseSection.Semester == record.AttendanceSession.Semester
                 && assignment.StartedOn <= record.AttendanceSession.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= record.AttendanceSession.SessionDate)));
         return await query.OrderBy(record => record.AttendanceSession.SessionDate).ToArrayAsync(ct);

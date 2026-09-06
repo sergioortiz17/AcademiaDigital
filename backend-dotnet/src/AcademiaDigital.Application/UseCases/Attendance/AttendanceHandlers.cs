@@ -15,7 +15,7 @@ public sealed record GetAttendanceSessionsQuery(
 public sealed record GetAttendanceSessionQuery(long SessionId, long ActorUserId, bool IsAdmin);
 public sealed record CreateAttendanceSessionCommand(
     string IdempotencyKey,
-    int TeachingPositionId,
+    int CourseSectionId,
     DateOnly SessionDate,
     TimeOnly? StartTime,
     TimeOnly? EndTime,
@@ -76,7 +76,7 @@ public sealed record AttendanceRecordDto(
 public sealed record AttendanceSessionDto(
     long Id,
     string IdempotencyKey,
-    int TeachingPositionId,
+    int CourseSectionId,
     int CourseId,
     string CourseCode,
     string CourseName,
@@ -152,7 +152,7 @@ public sealed class GetAttendanceSessionQueryHandler(IAttendanceRepository repos
 }
 
 public sealed class CreateAttendanceSessionCommandHandler(
-    ITeachingPositionRepository positionRepository,
+    ICourseSectionRepository positionRepository,
     IAttendanceRepository attendanceRepository,
     AttendancePolicy policy,
     IUnitOfWork unitOfWork,
@@ -162,10 +162,10 @@ public sealed class CreateAttendanceSessionCommandHandler(
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey) || command.IdempotencyKey.Trim().Length > 100)
             throw new ArgumentException("Se requiere una clave de idempotencia válida de hasta 100 caracteres.");
-        var position = await positionRepository.FindByIdAsync(command.TeachingPositionId, ct)
+        var position = await positionRepository.FindByIdAsync(command.CourseSectionId, ct)
             ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
         await AttendanceAuthorization.EnsureCanManagePosition(
-            attendanceRepository, command.TeachingPositionId, command.SessionDate,
+            attendanceRepository, command.CourseSectionId, command.SessionDate,
             command.ActorUserId, command.IsAdmin, ct);
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var editDeadline = policy.EnsureCanCreateSession(
@@ -175,7 +175,7 @@ public sealed class CreateAttendanceSessionCommandHandler(
             transactionCt => attendanceRepository.CreateIdempotentAsync(new AttendanceSession
             {
                 IdempotencyKey = command.IdempotencyKey.Trim(),
-                TeachingPositionId = position.Id,
+                CourseSectionId = position.Id,
                 CourseId = position.CourseId,
                 DivisionId = position.DivisionId!.Value,
                 AcademicYear = position.AcademicYear,
@@ -418,7 +418,7 @@ internal static class AttendanceMapper
     public static AttendanceSessionDto MapSession(AttendanceSession session) => new(
         session.Id,
         session.IdempotencyKey,
-        session.TeachingPositionId,
+        session.CourseSectionId,
         session.CourseId,
         session.Course.Code,
         session.Course.Name,

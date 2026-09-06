@@ -52,7 +52,7 @@ public sealed class AttendanceController(
         if (guard is not null) return guard;
         var created = await createHandler.Handle(new CreateAttendanceSessionCommand(
             idempotencyKey,
-            request.TeachingPositionId,
+            request.CourseSectionId,
             request.SessionDate,
             request.StartTime,
             request.EndTime,
@@ -174,7 +174,7 @@ public sealed class AttendanceController(
 }
 
 public sealed record CreateAttendanceSessionRequest(
-    [Range(1, int.MaxValue)] int TeachingPositionId,
+    [Range(1, int.MaxValue)] int CourseSectionId,
     DateOnly SessionDate,
     TimeOnly? StartTime,
     TimeOnly? EndTime,

@@ -27,7 +27,7 @@ public sealed class TeachingAssignmentPolicy
             throw new ArgumentException("La comisión y el cargo docente deben usar el mismo año académico.");
     }
 
-    public void EnsurePositionCanChange(TeachingPosition position, bool hasAssignmentHistory)
+    public void EnsurePositionCanChange(CourseSection position, bool hasAssignmentHistory)
     {
         if (!position.IsActive)
             throw new InvalidOperationException("El cargo docente está inactivo.");
@@ -37,14 +37,14 @@ public sealed class TeachingAssignmentPolicy
             throw new InvalidOperationException("Un cargo docente con historial de asignaciones no puede cambiar su definición académica.");
     }
 
-    public void EnsureCanDeactivate(TeachingPosition position)
+    public void EnsureCanDeactivate(CourseSection position)
     {
         if (!position.IsActive) return;
         if (!position.IsVacant || position.TeacherId.HasValue)
             throw new InvalidOperationException("Finalice la asignación docente actual antes de desactivar el cargo.");
     }
 
-    public void EnsureCanAssign(TeachingPosition position, Teacher teacher, DateOnly startedOn)
+    public void EnsureCanAssign(CourseSection position, Teacher teacher, DateOnly startedOn)
     {
         if (!position.IsActive)
             throw new InvalidOperationException("El cargo docente está inactivo.");

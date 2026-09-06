@@ -131,7 +131,7 @@ public sealed class TeachersController(
         if (guard is not null) return guard;
         var created = await assignHandler.Handle(new AssignTeacherCommand(
             id,
-            request.TeachingPositionId,
+            request.CourseSectionId,
             request.StartedOn,
             request.Reason,
             CurrentUserId!.Value), ct);
@@ -230,7 +230,7 @@ public sealed record ReviewTeacherDocumentRequest(
     [StringLength(1000)] string? Observation);
 
 public sealed record AssignTeacherRequest(
-    [Range(1, int.MaxValue)] int TeachingPositionId,
+    [Range(1, int.MaxValue)] int CourseSectionId,
     DateOnly StartedOn,
     [StringLength(500)] string? Reason);
 

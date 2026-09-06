@@ -16,7 +16,7 @@ public sealed class AttendanceSessionConfiguration : IEntityTypeConfiguration<At
         builder.HasKey(session => session.Id);
         builder.Property(session => session.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(session => session.IdempotencyKey).HasColumnName("idempotency_key").HasMaxLength(100).IsRequired();
-        builder.Property(session => session.TeachingPositionId).HasColumnName("teaching_position_id");
+        builder.Property(session => session.CourseSectionId).HasColumnName("course_section_id");
         builder.Property(session => session.CourseId).HasColumnName("course_id");
         builder.Property(session => session.DivisionId).HasColumnName("division_id");
         builder.Property(session => session.AcademicYear).HasColumnName("academic_year");
@@ -44,7 +44,7 @@ public sealed class AttendanceSessionConfiguration : IEntityTypeConfiguration<At
             session.StartTime,
             session.Scope
         }).IsUnique().HasFilter(null);
-        builder.HasOne(session => session.TeachingPosition).WithMany().HasForeignKey(session => session.TeachingPositionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(session => session.CourseSection).WithMany().HasForeignKey(session => session.CourseSectionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(session => session.Course).WithMany().HasForeignKey(session => session.CourseId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(session => session.Division).WithMany().HasForeignKey(session => session.DivisionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(session => session.CreatedByUser).WithMany().HasForeignKey(session => session.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);

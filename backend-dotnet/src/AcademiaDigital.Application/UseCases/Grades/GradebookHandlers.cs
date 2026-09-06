@@ -12,7 +12,7 @@ public sealed record GetGradebooksQuery(int? AcademicYear, int? CourseId, int? D
 public sealed record GetGradebookQuery(long GradebookId, long ActorUserId, bool IsAdmin);
 public sealed record CreateGradebookCommand(
     string IdempotencyKey,
-    int TeachingPositionId,
+    int CourseSectionId,
     IReadOnlyList<GradebookEvaluationInput> Evaluations,
     long ActorUserId,
     bool IsAdmin);
@@ -38,7 +38,7 @@ public sealed record GradebookStudentDto(
 public sealed record GradebookDto(
     long Id,
     string IdempotencyKey,
-    int TeachingPositionId,
+    int CourseSectionId,
     int CourseId,
     string CourseCode,
     string CourseName,
@@ -94,7 +94,7 @@ public sealed class GetGradebookQueryHandler(IGradebookRepository repository, Gr
 }
 
 public sealed class CreateGradebookCommandHandler(
-    ITeachingPositionRepository positionRepository,
+    ICourseSectionRepository positionRepository,
     IGradebookRepository gradebookRepository,
     GradebookPolicy policy,
     IUnitOfWork unitOfWork,
@@ -104,7 +104,7 @@ public sealed class CreateGradebookCommandHandler(
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey) || command.IdempotencyKey.Trim().Length > 100)
             throw new ArgumentException("Se requiere una clave de idempotencia válida de hasta 100 caracteres.");
-        var position = await positionRepository.FindByIdAsync(command.TeachingPositionId, ct)
+        var position = await positionRepository.FindByIdAsync(command.CourseSectionId, ct)
             ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
         if (!command.IsAdmin && !await gradebookRepository.CanTeacherManagePositionAsync(
                 command.ActorUserId, position.Id, ct))
@@ -122,7 +122,7 @@ public sealed class CreateGradebookCommandHandler(
             transactionCt => gradebookRepository.CreateIdempotentAsync(new Gradebook
             {
                 IdempotencyKey = command.IdempotencyKey.Trim(),
-                TeachingPositionId = position.Id,
+                CourseSectionId = position.Id,
                 CourseId = position.CourseId,
                 DivisionId = position.DivisionId!.Value,
                 AcademicYear = position.AcademicYear,
@@ -363,7 +363,7 @@ internal static class GradebookTransitions
 internal static class GradebookMapper
 {
     public static GradebookDto MapSummary(Gradebook item) => new(
-        item.Id, item.IdempotencyKey, item.TeachingPositionId,
+        item.Id, item.IdempotencyKey, item.CourseSectionId,
         item.CourseId, item.Course.Code, item.Course.Name,
         item.DivisionId, item.Division.Code, item.Division.Name,
         item.AcademicYear, item.Semester, item.Status,

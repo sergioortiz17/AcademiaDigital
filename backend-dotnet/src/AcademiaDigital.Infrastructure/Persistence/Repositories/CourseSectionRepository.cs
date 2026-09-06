@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
 
-public class TeachingPositionRepository(AppDbContext db) : ITeachingPositionRepository
+public class CourseSectionRepository(AppDbContext db) : ICourseSectionRepository
 {
-    public async Task<IReadOnlyList<TeachingPosition>> GetAllAsync(
+    public async Task<IReadOnlyList<CourseSection>> GetAllAsync(
         int? academicYear,
         int? semester,
         bool? isVacant,
@@ -23,59 +23,59 @@ public class TeachingPositionRepository(AppDbContext db) : ITeachingPositionRepo
             .ToArrayAsync(ct);
     }
 
-    public async Task<IEnumerable<TeachingPosition>> GetByCourseAsync(int courseId, CancellationToken ct = default)
-        => await db.TeachingPositions.AsNoTracking()
+    public async Task<IEnumerable<CourseSection>> GetByCourseAsync(int courseId, CancellationToken ct = default)
+        => await db.CourseSections.AsNoTracking()
             .Include(tp => tp.Teacher).ThenInclude(t => t!.User)
             .Where(tp => tp.CourseId == courseId)
             .OrderBy(tp => tp.AcademicYear).ThenBy(tp => tp.Semester)
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<TeachingPosition>> GetByTeacherAsync(long teacherId, CancellationToken ct = default)
-        => await db.TeachingPositions.AsNoTracking()
+    public async Task<IEnumerable<CourseSection>> GetByTeacherAsync(long teacherId, CancellationToken ct = default)
+        => await db.CourseSections.AsNoTracking()
             .Include(tp => tp.Course)
             .Where(tp => tp.TeacherId == teacherId)
             .OrderByDescending(tp => tp.AcademicYear).ThenByDescending(tp => tp.Semester)
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<TeachingPosition>> GetByPeriodAsync(int year, int semester, CancellationToken ct = default)
-        => await db.TeachingPositions.AsNoTracking()
+    public async Task<IEnumerable<CourseSection>> GetByPeriodAsync(int year, int semester, CancellationToken ct = default)
+        => await db.CourseSections.AsNoTracking()
             .Include(tp => tp.Course)
             .Include(tp => tp.Teacher).ThenInclude(t => t!.User)
             .Where(tp => tp.AcademicYear == year && tp.Semester == semester)
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<TeachingPosition>> GetVacantAsync(CancellationToken ct = default)
-        => await db.TeachingPositions.AsNoTracking()
+    public async Task<IEnumerable<CourseSection>> GetVacantAsync(CancellationToken ct = default)
+        => await db.CourseSections.AsNoTracking()
             .Include(tp => tp.Course)
             .Where(tp => tp.IsVacant)
             .ToListAsync(ct);
 
-    public async Task<TeachingPosition?> FindByIdAsync(int id, CancellationToken ct = default)
+    public async Task<CourseSection?> FindByIdAsync(int id, CancellationToken ct = default)
         => await Details()
             .FirstOrDefaultAsync(tp => tp.Id == id, ct);
 
-    public async Task<TeachingPosition> CreateAsync(TeachingPosition position, CancellationToken ct = default)
+    public async Task<CourseSection> CreateAsync(CourseSection position, CancellationToken ct = default)
     {
-        db.TeachingPositions.Add(position);
+        db.CourseSections.Add(position);
         await db.SaveChangesAsync(ct);
         return position;
     }
 
-    public async Task<TeachingPosition> UpdateAsync(TeachingPosition position, CancellationToken ct = default)
+    public async Task<CourseSection> UpdateAsync(CourseSection position, CancellationToken ct = default)
     {
         db.Entry(position).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
         return position;
     }
 
-    public async Task DeactivateAsync(TeachingPosition position, CancellationToken ct = default)
+    public async Task DeactivateAsync(CourseSection position, CancellationToken ct = default)
     {
         db.Entry(position).State = EntityState.Modified;
         await db.SaveChangesAsync(ct);
     }
 
-    private IQueryable<TeachingPosition> Details()
-        => db.TeachingPositions.AsNoTracking()
+    private IQueryable<CourseSection> Details()
+        => db.CourseSections.AsNoTracking()
             .Include(position => position.Course)
             .Include(position => position.Division)
             .Include(position => position.Teacher).ThenInclude(teacher => teacher!.User);

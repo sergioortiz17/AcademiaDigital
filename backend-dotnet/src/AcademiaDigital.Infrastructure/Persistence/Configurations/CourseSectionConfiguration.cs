@@ -4,16 +4,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Configurations;
 
-public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPosition>
+public class CourseSectionConfiguration : IEntityTypeConfiguration<CourseSection>
 {
-    public void Configure(EntityTypeBuilder<TeachingPosition> builder)
+    public void Configure(EntityTypeBuilder<CourseSection> builder)
     {
-        builder.ToTable("TeachingPositions");
+        builder.ToTable("CourseSections");
 
         builder.HasKey(tp => tp.Id);
         builder.Property(tp => tp.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(tp => tp.AcademicYear).HasColumnName("academic_year");
         builder.Property(tp => tp.Semester).HasColumnName("semester");
+        builder.Property(tp => tp.IsAnnual).HasColumnName("is_annual").HasDefaultValue(false);
         builder.Property(tp => tp.PositionType).HasColumnName("position_type").HasConversion<int>();
         builder.Property(tp => tp.MaxStudents).HasColumnName("max_students");
         builder.Property(tp => tp.IsVacant).HasColumnName("is_vacant").HasDefaultValue(true);
@@ -30,7 +31,7 @@ public class TeachingPositionConfiguration : IEntityTypeConfiguration<TeachingPo
         builder.HasIndex(tp => new { tp.AcademicYear, tp.Semester, tp.IsActive });
         builder.HasIndex(tp => new { tp.DivisionId, tp.CourseId });
         builder.ToTable(table => table.HasCheckConstraint(
-            "CK_TeachingPositions_AssignmentState",
+            "CK_CourseSections_AssignmentState",
             "(is_vacant AND teacher_id IS NULL) OR (NOT is_vacant AND teacher_id IS NOT NULL)"));
 
         builder.HasOne(tp => tp.Course)

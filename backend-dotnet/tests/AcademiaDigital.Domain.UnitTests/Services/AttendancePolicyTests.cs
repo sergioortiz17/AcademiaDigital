@@ -109,7 +109,7 @@ public sealed class AttendancePolicyTests
         Assert.False(result.IsAtRisk);
     }
 
-    private static TeachingPosition Position() => new()
+    private static CourseSection Position() => new()
     {
         Id = 5,
         IsActive = true,

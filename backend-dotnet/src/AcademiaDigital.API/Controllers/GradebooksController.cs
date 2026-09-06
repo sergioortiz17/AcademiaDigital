@@ -59,7 +59,7 @@ public sealed class GradebooksController(
         if (guard is not null) return guard;
         var created = await createHandler.Handle(new CreateGradebookCommand(
             idempotencyKey,
-            request.TeachingPositionId,
+            request.CourseSectionId,
             request.Evaluations.Select(item => new GradebookEvaluationInput(
                 item.Name, item.WeightPercentage, item.MaximumScore)).ToArray(),
             CurrentUserId!.Value,
@@ -140,7 +140,7 @@ public sealed class GradebooksController(
 }
 
 public sealed record CreateGradebookRequest(
-    [Range(1, int.MaxValue)] int TeachingPositionId,
+    [Range(1, int.MaxValue)] int CourseSectionId,
     [Required, MinLength(1), MaxLength(20)] IReadOnlyList<GradebookEvaluationRequest> Evaluations);
 public sealed record GradebookEvaluationRequest(
     [Required, StringLength(150, MinimumLength = 1)] string Name,

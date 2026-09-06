@@ -229,7 +229,7 @@ public sealed class GetMyEnrollmentsQueryHandler(IEnrollmentRepository enrollmen
 {
     public async Task<IReadOnlyList<MyEnrollmentPeriodDto>> Handle(GetMyEnrollmentsQuery query, CancellationToken ct = default)
     {
-        // Projected query — no TeachingPosition/Teacher/User joins, only course name needed
+        // Projected query — no CourseSection/Teacher/User joins, only course name needed
         var rows = await enrollmentRepository.GetMyEnrollmentRowsAsync(query.StudentId, ct);
 
         // Group by (year, semester) with dictionary — O(n) single pass

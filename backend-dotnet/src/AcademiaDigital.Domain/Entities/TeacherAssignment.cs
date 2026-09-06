@@ -3,8 +3,8 @@ namespace AcademiaDigital.Domain.Entities;
 public sealed class TeacherAssignment
 {
     public long Id { get; set; }
-    public int TeachingPositionId { get; set; }
-    public TeachingPosition TeachingPosition { get; set; } = null!;
+    public int CourseSectionId { get; set; }
+    public CourseSection CourseSection { get; set; } = null!;
     public long TeacherId { get; set; }
     public Teacher Teacher { get; set; } = null!;
     public DateOnly StartedOn { get; set; }

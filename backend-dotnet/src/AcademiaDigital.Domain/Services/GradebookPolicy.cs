@@ -6,7 +6,7 @@ public sealed record GradebookResult(decimal Average, EnrollmentStatus Status);
 
 public sealed class GradebookPolicy
 {
-    public void EnsureCanCreate(TeachingPosition position, IReadOnlyCollection<GradebookEvaluation> evaluations)
+    public void EnsureCanCreate(CourseSection position, IReadOnlyCollection<GradebookEvaluation> evaluations)
     {
         if (!position.IsActive || !position.DivisionId.HasValue)
             throw new InvalidOperationException("El cargo docente debe estar activo y asignado a una comisión.");

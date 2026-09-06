@@ -96,7 +96,7 @@ export class TeachingPositionFormDialogComponent implements OnInit {
     if (!this.isValid) return;
     const request: SaveTeachingPositionRequest = {
       courseId: this.courseId!,
-      commissionId: this.commissionId!,
+      divisionId: this.commissionId!,
       academicYear: this.academicYear,
       semester: this.semester,
       positionType: this.positionType,

@@ -32,7 +32,7 @@ export interface TeachingPositionFilters {
 
 export interface SaveTeachingPositionRequest {
   courseId: number;
-  commissionId: number;
+  divisionId: number;
   academicYear: number;
   semester: number;
   positionType: string;
@@ -51,23 +51,23 @@ export class TeachingPositionService {
     if (filters.semester != null) params = params.set('semester', filters.semester);
     if (filters.isVacant != null) params = params.set('isVacant', filters.isVacant);
     if (filters.includeInactive != null) params = params.set('includeInactive', filters.includeInactive);
-    return this.http.get<TeachingPosition[]>(`${this.base}v1/teaching-positions`, { params });
+    return this.http.get<TeachingPosition[]>(`${this.base}v1/course-sections`, { params });
   }
 
   getTeachingPosition(id: number): Observable<TeachingPosition> {
-    return this.http.get<TeachingPosition>(`${this.base}v1/teaching-positions/${id}`);
+    return this.http.get<TeachingPosition>(`${this.base}v1/course-sections/${id}`);
   }
 
   createTeachingPosition(request: SaveTeachingPositionRequest): Observable<TeachingPosition> {
-    return this.http.post<TeachingPosition>(`${this.base}v1/teaching-positions`, request);
+    return this.http.post<TeachingPosition>(`${this.base}v1/course-sections`, request);
   }
 
   updateTeachingPosition(id: number, request: SaveTeachingPositionRequest): Observable<TeachingPosition> {
-    return this.http.put<TeachingPosition>(`${this.base}v1/teaching-positions/${id}`, request);
+    return this.http.put<TeachingPosition>(`${this.base}v1/course-sections/${id}`, request);
   }
 
   deactivateTeachingPosition(id: number, reason: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}v1/teaching-positions/${id}`, {
+    return this.http.delete<void>(`${this.base}v1/course-sections/${id}`, {
       params: new HttpParams().set('reason', reason)
     });
   }

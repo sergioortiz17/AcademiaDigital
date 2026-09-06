@@ -5,15 +5,15 @@ using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.Teachers;
 
-public sealed record GetTeachingPositionsQuery(
+public sealed record GetCourseSectionsQuery(
     int? AcademicYear,
     int? Semester,
     bool? IsVacant,
     bool IncludeInactive);
 
-public sealed record GetTeachingPositionByIdQuery(int TeachingPositionId);
+public sealed record GetCourseSectionByIdQuery(int CourseSectionId);
 
-public sealed record CreateTeachingPositionCommand(
+public sealed record CreateCourseSectionCommand(
     int CourseId,
     int DivisionId,
     int AcademicYear,
@@ -21,8 +21,8 @@ public sealed record CreateTeachingPositionCommand(
     PositionType PositionType,
     int MaxStudents);
 
-public sealed record UpdateTeachingPositionCommand(
-    int TeachingPositionId,
+public sealed record UpdateCourseSectionCommand(
+    int CourseSectionId,
     int CourseId,
     int DivisionId,
     int AcademicYear,
@@ -30,12 +30,12 @@ public sealed record UpdateTeachingPositionCommand(
     PositionType PositionType,
     int MaxStudents);
 
-public sealed record DeactivateTeachingPositionCommand(
-    int TeachingPositionId,
+public sealed record DeactivateCourseSectionCommand(
+    int CourseSectionId,
     long ActorUserId,
     string Reason);
 
-public sealed record TeachingPositionDto(
+public sealed record CourseSectionDto(
     int Id,
     int CourseId,
     string CourseCode,
@@ -57,35 +57,35 @@ public sealed record TeachingPositionDto(
     long? DeactivatedByUserId,
     string? DeactivationReason);
 
-public sealed class GetTeachingPositionsQueryHandler(ITeachingPositionRepository repository)
+public sealed class GetCourseSectionsQueryHandler(ICourseSectionRepository repository)
 {
-    public async Task<IReadOnlyList<TeachingPositionDto>> Handle(
-        GetTeachingPositionsQuery query,
+    public async Task<IReadOnlyList<CourseSectionDto>> Handle(
+        GetCourseSectionsQuery query,
         CancellationToken ct = default)
         => (await repository.GetAllAsync(
                 query.AcademicYear, query.Semester, query.IsVacant, query.IncludeInactive, ct))
-            .Select(TeachingPositionMapper.Map)
+            .Select(CourseSectionMapper.Map)
             .ToArray();
 }
 
-public sealed class GetTeachingPositionByIdQueryHandler(ITeachingPositionRepository repository)
+public sealed class GetCourseSectionByIdQueryHandler(ICourseSectionRepository repository)
 {
-    public async Task<TeachingPositionDto> Handle(
-        GetTeachingPositionByIdQuery query,
+    public async Task<CourseSectionDto> Handle(
+        GetCourseSectionByIdQuery query,
         CancellationToken ct = default)
-        => TeachingPositionMapper.Map(await repository.FindByIdAsync(query.TeachingPositionId, ct)
+        => CourseSectionMapper.Map(await repository.FindByIdAsync(query.CourseSectionId, ct)
             ?? throw new KeyNotFoundException("Cargo docente no encontrado."));
 }
 
-public sealed class CreateTeachingPositionCommandHandler(
-    ITeachingPositionRepository repository,
+public sealed class CreateCourseSectionCommandHandler(
+    ICourseSectionRepository repository,
     ICourseRepository courseRepository,
     IDivisionRepository commissionRepository,
     TeachingAssignmentPolicy policy,
     TimeProvider timeProvider)
 {
-    public async Task<TeachingPositionDto> Handle(
-        CreateTeachingPositionCommand command,
+    public async Task<CourseSectionDto> Handle(
+        CreateCourseSectionCommand command,
         CancellationToken ct = default)
     {
         var course = await courseRepository.FindByIdAsync(command.CourseId, ct)
@@ -95,7 +95,7 @@ public sealed class CreateTeachingPositionCommandHandler(
         policy.ValidatePositionDefinition(
             command.AcademicYear, command.Semester, command.MaxStudents, course, commission);
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var created = await repository.CreateAsync(new TeachingPosition
+        var created = await repository.CreateAsync(new CourseSection
         {
             CourseId = command.CourseId,
             DivisionId = command.DivisionId,
@@ -110,12 +110,12 @@ public sealed class CreateTeachingPositionCommandHandler(
         }, ct);
         created.Course = course;
         created.Division = commission;
-        return TeachingPositionMapper.Map(created);
+        return CourseSectionMapper.Map(created);
     }
 }
 
-public sealed class UpdateTeachingPositionCommandHandler(
-    ITeachingPositionRepository repository,
+public sealed class UpdateCourseSectionCommandHandler(
+    ICourseSectionRepository repository,
     ITeacherAssignmentRepository assignmentRepository,
     ICourseRepository courseRepository,
     IDivisionRepository commissionRepository,
@@ -123,12 +123,12 @@ public sealed class UpdateTeachingPositionCommandHandler(
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
 {
-    public Task<TeachingPositionDto> Handle(
-        UpdateTeachingPositionCommand command,
+    public Task<CourseSectionDto> Handle(
+        UpdateCourseSectionCommand command,
         CancellationToken ct = default)
         => unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
-            var position = await repository.FindByIdAsync(command.TeachingPositionId, transactionCt)
+            var position = await repository.FindByIdAsync(command.CourseSectionId, transactionCt)
                 ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
             var course = await courseRepository.FindByIdAsync(command.CourseId, transactionCt)
                 ?? throw new KeyNotFoundException("Materia no encontrada.");
@@ -148,20 +148,20 @@ public sealed class UpdateTeachingPositionCommandHandler(
             position.PositionType = command.PositionType;
             position.MaxStudents = command.MaxStudents;
             position.UpdatedAt = timeProvider.GetUtcNow().UtcDateTime;
-            return TeachingPositionMapper.Map(await repository.UpdateAsync(position, transactionCt));
+            return CourseSectionMapper.Map(await repository.UpdateAsync(position, transactionCt));
         }, ct);
 }
 
-public sealed class DeactivateTeachingPositionCommandHandler(
-    ITeachingPositionRepository repository,
+public sealed class DeactivateCourseSectionCommandHandler(
+    ICourseSectionRepository repository,
     TeachingAssignmentPolicy policy,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
 {
-    public Task Handle(DeactivateTeachingPositionCommand command, CancellationToken ct = default)
+    public Task Handle(DeactivateCourseSectionCommand command, CancellationToken ct = default)
         => unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
-            var position = await repository.FindByIdAsync(command.TeachingPositionId, transactionCt)
+            var position = await repository.FindByIdAsync(command.CourseSectionId, transactionCt)
                 ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
             policy.EnsureCanDeactivate(position);
             if (!position.IsActive) return true;
@@ -178,9 +178,9 @@ public sealed class DeactivateTeachingPositionCommandHandler(
         }, ct);
 }
 
-internal static class TeachingPositionMapper
+internal static class CourseSectionMapper
 {
-    public static TeachingPositionDto Map(TeachingPosition position) => new(
+    public static CourseSectionDto Map(CourseSection position) => new(
         position.Id,
         position.CourseId,
         position.Course.Code,

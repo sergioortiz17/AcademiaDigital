@@ -68,7 +68,7 @@ public sealed class TeachingAssignmentPolicyTests
     {
         Id = 3, CareerId = 10, AcademicYear = 2027, IsActive = true
     };
-    private static TeachingPosition Position() => new()
+    private static CourseSection Position() => new()
     {
         Id = 5, AcademicYear = 2027, IsActive = true, IsVacant = true
     };

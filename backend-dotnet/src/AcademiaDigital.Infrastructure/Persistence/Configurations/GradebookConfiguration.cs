@@ -12,7 +12,7 @@ public sealed class GradebookConfiguration : IEntityTypeConfiguration<Gradebook>
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(item => item.IdempotencyKey).HasColumnName("idempotency_key").HasMaxLength(100).IsRequired();
-        builder.Property(item => item.TeachingPositionId).HasColumnName("teaching_position_id");
+        builder.Property(item => item.CourseSectionId).HasColumnName("course_section_id");
         builder.Property(item => item.CourseId).HasColumnName("course_id");
         builder.Property(item => item.DivisionId).HasColumnName("division_id");
         builder.Property(item => item.AcademicYear).HasColumnName("academic_year");
@@ -30,7 +30,7 @@ public sealed class GradebookConfiguration : IEntityTypeConfiguration<Gradebook>
         builder.Property(item => item.ClosedByUserId).HasColumnName("closed_by_user_id");
         builder.HasIndex(item => item.IdempotencyKey).IsUnique();
         builder.HasIndex(item => new { item.CourseId, item.DivisionId, item.AcademicYear, item.Semester }).IsUnique();
-        builder.HasOne(item => item.TeachingPosition).WithMany().HasForeignKey(item => item.TeachingPositionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(item => item.CourseSection).WithMany().HasForeignKey(item => item.CourseSectionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.Course).WithMany().HasForeignKey(item => item.CourseId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.Division).WithMany().HasForeignKey(item => item.DivisionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.CreatedByUser).WithMany().HasForeignKey(item => item.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);

@@ -6,8 +6,8 @@ public sealed class Gradebook
 {
     public long Id { get; set; }
     public string IdempotencyKey { get; set; } = string.Empty;
-    public int TeachingPositionId { get; set; }
-    public TeachingPosition TeachingPosition { get; set; } = null!;
+    public int CourseSectionId { get; set; }
+    public CourseSection CourseSection { get; set; } = null!;
     public int CourseId { get; set; }
     public Course Course { get; set; } = null!;
     public int DivisionId { get; set; }

@@ -11,7 +11,7 @@ public sealed class TeacherAssignmentConfiguration : IEntityTypeConfiguration<Te
         builder.ToTable("TeacherAssignments");
         builder.HasKey(assignment => assignment.Id);
         builder.Property(assignment => assignment.Id).HasColumnName("id").ValueGeneratedOnAdd();
-        builder.Property(assignment => assignment.TeachingPositionId).HasColumnName("teaching_position_id");
+        builder.Property(assignment => assignment.CourseSectionId).HasColumnName("course_section_id");
         builder.Property(assignment => assignment.TeacherId).HasColumnName("teacher_id");
         builder.Property(assignment => assignment.StartedOn).HasColumnName("started_on");
         builder.Property(assignment => assignment.EndedOn).HasColumnName("ended_on");
@@ -23,14 +23,14 @@ public sealed class TeacherAssignmentConfiguration : IEntityTypeConfiguration<Te
         builder.Property(assignment => assignment.CreatedAt).HasColumnName("created_at");
         builder.Property(assignment => assignment.EndedAt).HasColumnName("ended_at");
 
-        builder.HasIndex(assignment => assignment.TeachingPositionId)
+        builder.HasIndex(assignment => assignment.CourseSectionId)
             .IsUnique()
             .HasFilter("is_current");
         builder.HasIndex(assignment => new { assignment.TeacherId, assignment.IsCurrent });
 
-        builder.HasOne(assignment => assignment.TeachingPosition)
+        builder.HasOne(assignment => assignment.CourseSection)
             .WithMany(position => position.Assignments)
-            .HasForeignKey(assignment => assignment.TeachingPositionId)
+            .HasForeignKey(assignment => assignment.CourseSectionId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(assignment => assignment.Teacher)
             .WithMany()
