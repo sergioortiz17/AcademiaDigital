@@ -107,7 +107,7 @@ export class TeachingPositionManagementComponent implements OnInit {
   }
 
   deactivatePosition(position: TeachingPosition): void {
-    if (!confirm(`¿Dar de baja la comisión de ${position.courseName} — ${position.commissionName}?`)) return;
+    if (!confirm(`¿Dar de baja la comisión de ${position.courseName} — ${position.divisionName}?`)) return;
     let reason = prompt('Motivo de la baja (mínimo 3 caracteres):');
     if (reason === null) return;
     reason = reason.trim();

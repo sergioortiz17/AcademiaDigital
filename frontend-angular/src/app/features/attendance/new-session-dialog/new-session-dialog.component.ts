@@ -3,7 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AttendanceScope, CreateAttendanceSessionRequest } from '../../../core/services/attendance.service';
 
 export interface NewSessionDialogData {
-  teachingPositionId: number;
+  courseSectionId: number;
   defaultDate?: Date;
 }
 
@@ -54,7 +54,7 @@ export class NewSessionDialogComponent {
     if (!this.isValid) return;
 
     const request: CreateAttendanceSessionRequest = {
-      teachingPositionId: this.data.teachingPositionId,
+      courseSectionId: this.data.courseSectionId,
       sessionDate: this.toDateOnly(this.sessionDate),
       scope: this.scope,
       units: this.scope === 'ClassHour' ? this.units : 1,

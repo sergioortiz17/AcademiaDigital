@@ -36,13 +36,13 @@ export interface GradebookStudent {
 export interface Gradebook {
   id: number;
   idempotencyKey: string;
-  teachingPositionId: number;
+  courseSectionId: number;
   courseId: number;
   courseCode: string;
   courseName: string;
-  commissionId: number;
-  commissionCode: string;
-  commissionName: string;
+  divisionId: number;
+  divisionCode: string;
+  divisionName: string;
   academicYear: number;
   semester: number;
   status: GradebookStatus;
@@ -80,7 +80,7 @@ export interface StudentPublishedGradebook {
 export interface GradebookFilters {
   academicYear?: number;
   courseId?: number;
-  commissionId?: number;
+  divisionId?: number;
 }
 
 export interface CreateGradebookEvaluationInput {
@@ -106,7 +106,7 @@ export class GradebookService {
     let params = new HttpParams();
     if (filters.academicYear != null) params = params.set('academicYear', filters.academicYear);
     if (filters.courseId != null) params = params.set('courseId', filters.courseId);
-    if (filters.commissionId != null) params = params.set('commissionId', filters.commissionId);
+    if (filters.divisionId != null) params = params.set('divisionId', filters.divisionId);
     return this.http.get<Gradebook[]>(`${this.base}v1/gradebooks`, { params });
   }
 
@@ -114,10 +114,10 @@ export class GradebookService {
     return this.http.get<GradebookDetail>(`${this.base}v1/gradebooks/${id}`);
   }
 
-  createGradebook(teachingPositionId: number, evaluations: CreateGradebookEvaluationInput[]): Observable<Gradebook> {
+  createGradebook(courseSectionId: number, evaluations: CreateGradebookEvaluationInput[]): Observable<Gradebook> {
     return this.http.post<Gradebook>(
       `${this.base}v1/gradebooks`,
-      { teachingPositionId, evaluations },
+      { courseSectionId, evaluations },
       { headers: { 'Idempotency-Key': crypto.randomUUID() } }
     );
   }

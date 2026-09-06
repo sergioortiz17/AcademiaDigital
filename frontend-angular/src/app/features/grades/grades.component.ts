@@ -54,13 +54,6 @@ export class GradesComponent implements OnInit {
   selectedCareerId: number | null = null;
   sedes = ['Sede Centro', 'Sede Norte'];
   selectedSede: string | null = null;
-  planYears = [
-    { value: 1, label: 'Primero' },
-    { value: 2, label: 'Segundo' },
-    { value: 3, label: 'Tercero' }
-  ];
-  selectedPlanYear: number | null = null;
-
   // --- Profesor ---
   assignments: TeacherAssignment[] = [];
   selectedTeachingPositionId: number | null = null;
@@ -115,7 +108,7 @@ export class GradesComponent implements OnInit {
       next: (assignments) => {
         this.assignments = assignments;
         if (assignments.length === 1) {
-          this.selectedTeachingPositionId = assignments[0].teachingPositionId;
+          this.selectedTeachingPositionId = assignments[0].courseSectionId;
           this.loadGradebookForPosition();
         }
         this.cdr.detectChanges();
@@ -128,7 +121,7 @@ export class GradesComponent implements OnInit {
   }
 
   get selectedAssignment(): TeacherAssignment | undefined {
-    return this.assignments.find(a => a.teachingPositionId === this.selectedTeachingPositionId);
+    return this.assignments.find(a => a.courseSectionId === this.selectedTeachingPositionId);
   }
 
   get canEdit(): boolean {
@@ -166,7 +159,7 @@ export class GradesComponent implements OnInit {
 
     this.gradebookService.getGradebooks({
       courseId: assignment.courseId,
-      commissionId: assignment.commissionId ?? undefined,
+      divisionId: assignment.divisionId ?? undefined,
       academicYear: assignment.academicYear
     }).subscribe({
       next: (gradebooks) => {
@@ -229,7 +222,7 @@ export class GradesComponent implements OnInit {
     dialogRef.afterClosed().subscribe((evaluations) => {
       if (!evaluations) return;
       this.isCreating = true;
-      this.gradebookService.createGradebook(assignment.teachingPositionId, evaluations).subscribe({
+      this.gradebookService.createGradebook(assignment.courseSectionId, evaluations).subscribe({
         next: (gradebook) => {
           this.isCreating = false;
           this.noGradebookYet = false;
@@ -345,7 +338,7 @@ export class GradesComponent implements OnInit {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `notas_${this.detail.gradebook.courseName}_${this.detail.gradebook.commissionName}.csv`;
+    a.download = `notas_${this.detail.gradebook.courseName}_${this.detail.gradebook.divisionName}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

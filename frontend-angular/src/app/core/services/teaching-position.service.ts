@@ -8,9 +8,9 @@ export interface TeachingPosition {
   courseId: number;
   courseCode: string;
   courseName: string;
-  commissionId: number | null;
-  commissionCode: string | null;
-  commissionName: string | null;
+  divisionId: number | null;
+  divisionCode: string | null;
+  divisionName: string | null;
   academicYear: number;
   semester: number;
   positionType: string;

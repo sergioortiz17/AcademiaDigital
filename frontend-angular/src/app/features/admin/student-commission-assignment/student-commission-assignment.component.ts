@@ -67,7 +67,7 @@ export class StudentCommissionAssignmentComponent implements OnInit {
     if (!this.selectedCareerId) return;
 
     this.isLoading = true;
-    this.studentService.searchStudents(undefined, this.selectedCareerId, 1, 200).subscribe({
+    this.studentService.searchStudents(undefined, this.selectedCareerId, 1, 100).subscribe({
       next: (page) => { this.students = page.items; this.isLoading = false; this.cdr.detectChanges(); },
       error: (err) => this.fail(err)
     });
@@ -107,7 +107,7 @@ export class StudentCommissionAssignmentComponent implements OnInit {
     this.studentService.assignAcademic(student.id, {
       careerId: commission.careerId,
       studyPlanId: student.currentStudyPlanId,   // derivado del plan actual del alumno
-      commissionId: commission.id,
+      divisionId: commission.id,
       academicYear: commission.academicYear,      // derivado de la comisión
       yearNumber: commission.yearNumber,          // derivado de la comisión
       reason: this.reason?.trim() || null

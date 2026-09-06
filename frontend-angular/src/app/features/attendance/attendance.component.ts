@@ -35,17 +35,9 @@ interface StudentRow {
   standalone: false
 })
 export class AttendanceComponent implements OnInit {
-  // Carrera/Sede/Año decorativos, consistentes con Calificaciones.
+  // Carrera decorativo, consistente con Calificaciones.
   careers: Career[] = [];
   selectedCareerId: number | null = null;
-  sedes = ['Sede Centro', 'Sede Norte'];
-  selectedSede: string | null = null;
-  planYears = [
-    { value: 1, label: 'Primero' },
-    { value: 2, label: 'Segundo' },
-    { value: 3, label: 'Tercero' }
-  ];
-  selectedPlanYear: number | null = null;
 
   assignments: TeacherAssignment[] = [];
   selectedTeachingPositionId: number | null = null;
@@ -81,7 +73,7 @@ export class AttendanceComponent implements OnInit {
       next: (assignments) => {
         this.assignments = assignments;
         if (assignments.length === 1) {
-          this.selectedTeachingPositionId = assignments[0].teachingPositionId;
+          this.selectedTeachingPositionId = assignments[0].courseSectionId;
           this.onPositionChange();
         }
         this.cdr.detectChanges();
@@ -99,7 +91,7 @@ export class AttendanceComponent implements OnInit {
   }
 
   get selectedAssignment(): TeacherAssignment | undefined {
-    return this.assignments.find(a => a.teachingPositionId === this.selectedTeachingPositionId);
+    return this.assignments.find(a => a.courseSectionId === this.selectedTeachingPositionId);
   }
 
   get visibleSessions(): AttendanceSession[] {
@@ -154,7 +146,7 @@ export class AttendanceComponent implements OnInit {
     this.errorMsg = '';
     this.attendanceService.getSessions({
       courseId: assignment.courseId,
-      commissionId: assignment.commissionId ?? undefined,
+      divisionId: assignment.divisionId ?? undefined,
       academicYear: assignment.academicYear
     }).subscribe({
       next: (sessions) => {
@@ -243,7 +235,7 @@ export class AttendanceComponent implements OnInit {
     const dialogRef = this.dialog.open(NewSessionDialogComponent, {
       width: '480px',
       disableClose: true,
-      data: { teachingPositionId: assignment.teachingPositionId }
+      data: { courseSectionId: assignment.courseSectionId }
     });
 
     dialogRef.afterClosed().subscribe((request) => {

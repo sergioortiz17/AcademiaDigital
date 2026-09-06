@@ -28,8 +28,8 @@ export interface StudentListItem {
   careerName: string;
   academicYear: number | null;
   yearNumber: number | null;
-  commissionId: number | null;
-  commissionName: string | null;
+  divisionId: number | null;
+  divisionName: string | null;
 }
 
 export interface PagedResult<T> {
@@ -43,7 +43,7 @@ export interface PagedResult<T> {
 export interface CreateAcademicAssignmentRequest {
   careerId: number;
   studyPlanId: number;
-  commissionId: number;
+  divisionId: number;
   academicYear: number;
   yearNumber: number;
   reason?: string | null;
@@ -54,7 +54,7 @@ export interface AcademicAssignment {
   studentId: number;
   careerId: number;
   studyPlanId: number;
-  commissionId: number | null;
+  divisionId: number | null;
 }
 
 @Injectable({

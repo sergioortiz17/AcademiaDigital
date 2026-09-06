@@ -81,7 +81,9 @@ public sealed class CreateCourseSectionCommandHandler(
     ICourseSectionRepository repository,
     ICourseRepository courseRepository,
     IDivisionRepository commissionRepository,
+    IEnrollmentRepository enrollmentRepository,
     TeachingAssignmentPolicy policy,
+    IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
 {
     public async Task<CourseSectionDto> Handle(
@@ -95,22 +97,52 @@ public sealed class CreateCourseSectionCommandHandler(
         policy.ValidatePositionDefinition(
             command.AcademicYear, command.Semester, command.MaxStudents, course, commission);
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        var created = await repository.CreateAsync(new CourseSection
+
+        var created = await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
-            CourseId = command.CourseId,
-            DivisionId = command.DivisionId,
-            AcademicYear = command.AcademicYear,
-            Semester = command.Semester,
-            PositionType = command.PositionType,
-            MaxStudents = command.MaxStudents,
-            IsVacant = true,
-            IsActive = true,
-            CreatedAt = now,
-            UpdatedAt = now
+            var section = await repository.CreateAsync(new CourseSection
+            {
+                CourseId = command.CourseId,
+                DivisionId = command.DivisionId,
+                AcademicYear = command.AcademicYear,
+                Semester = command.Semester,
+                PositionType = command.PositionType,
+                MaxStudents = command.MaxStudents,
+                IsVacant = true,
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            }, transactionCt);
+
+            await ReattachUnmatchedEnrollmentsAsync(section, transactionCt);
+            return section;
         }, ct);
+
         created.Course = course;
         created.Division = commission;
         return CourseSectionMapper.Map(created);
+    }
+
+    /// <summary>
+    /// Re-engancha inscripciones que quedaron sin sección (CourseSectionId null) porque el alumno
+    /// se inscribió antes de que existiera esta sección para la materia. Misma regla de "coincidencia
+    /// clara" que el auto-match de nivel 2 al inscribirse: solo se re-engancha si esta sección recién
+    /// creada es la ÚNICA activa para esa materia/ciclo — si ya había otra, queda ambiguo y no se toca
+    /// (lo resuelve un admin a mano).
+    /// </summary>
+    private async Task ReattachUnmatchedEnrollmentsAsync(CourseSection section, CancellationToken ct)
+    {
+        var matchingSections = await repository.FindActiveByCourseTermAsync(
+            section.CourseId, section.AcademicYear, section.Semester, section.IsAnnual, ct);
+        if (matchingSections.Count != 1) return;
+
+        var unmatched = await enrollmentRepository.GetUnmatchedByCourseTermAsync(
+            section.CourseId, section.AcademicYear, section.Semester, section.IsAnnual, ct);
+        foreach (var enrollment in unmatched)
+        {
+            enrollment.CourseSectionId = section.Id;
+            await enrollmentRepository.UpdateAsync(enrollment, ct);
+        }
     }
 }
 

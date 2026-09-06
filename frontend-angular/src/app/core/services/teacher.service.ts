@@ -50,13 +50,13 @@ export interface TeacherAssignment {
   id: number;
   teacherId: number;
   teacherName: string;
-  teachingPositionId: number;
+  courseSectionId: number;
   courseId: number;
   courseCode: string;
   courseName: string;
-  commissionId: number | null;
-  commissionCode: string | null;
-  commissionName: string | null;
+  divisionId: number | null;
+  divisionCode: string | null;
+  divisionName: string | null;
   academicYear: number;
   semester: number;
   positionType: string;
@@ -114,9 +114,9 @@ export class TeacherService {
     });
   }
 
-  assignTeacher(teacherId: number, teachingPositionId: number, startedOn: string, reason?: string | null): Observable<TeacherAssignment> {
+  assignTeacher(teacherId: number, courseSectionId: number, startedOn: string, reason?: string | null): Observable<TeacherAssignment> {
     return this.http.post<TeacherAssignment>(`${this.base}v1/teachers/${teacherId}/assignments`, {
-      teachingPositionId,
+      courseSectionId,
       startedOn,
       reason: reason || null
     });

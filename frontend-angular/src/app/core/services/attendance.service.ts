@@ -55,13 +55,13 @@ export type AttendanceRecordStatus = 'Present' | 'Late' | 'Absent' | 'Justified'
 export interface AttendanceSession {
   id: number;
   idempotencyKey: string;
-  teachingPositionId: number;
+  courseSectionId: number;
   courseId: number;
   courseCode: string;
   courseName: string;
-  commissionId: number;
-  commissionCode: string;
-  commissionName: string;
+  divisionId: number;
+  divisionCode: string;
+  divisionName: string;
   academicYear: number;
   semester: number;
   sessionDate: string;
@@ -111,9 +111,9 @@ export interface AttendanceSummaryItem {
   courseId: number;
   courseCode: string;
   courseName: string;
-  commissionId: number;
-  commissionCode: string;
-  commissionName: string;
+  divisionId: number;
+  divisionCode: string;
+  divisionName: string;
   academicYear: number;
   semester: number;
   minimumAttendancePercentage: number | null;
@@ -137,11 +137,11 @@ export interface StudentAttendanceSummary {
 export interface AttendanceSessionFilters {
   academicYear?: number;
   courseId?: number;
-  commissionId?: number;
+  divisionId?: number;
 }
 
 export interface CreateAttendanceSessionRequest {
-  teachingPositionId: number;
+  courseSectionId: number;
   sessionDate: string;
   startTime?: string | null;
   endTime?: string | null;
@@ -165,7 +165,7 @@ export class AttendanceService {
     let params = new HttpParams();
     if (filters.academicYear != null) params = params.set('academicYear', filters.academicYear);
     if (filters.courseId != null) params = params.set('courseId', filters.courseId);
-    if (filters.commissionId != null) params = params.set('commissionId', filters.commissionId);
+    if (filters.divisionId != null) params = params.set('divisionId', filters.divisionId);
     return this.http.get<AttendanceSession[]>(`${this.base}v1/attendance/sessions`, { params });
   }
 

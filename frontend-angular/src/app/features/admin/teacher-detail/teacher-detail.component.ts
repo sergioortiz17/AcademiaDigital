@@ -107,7 +107,7 @@ export class TeacherDetailComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: AssignPositionDialogResult | null) => {
       if (!result) return;
-      this.teacherService.assignTeacher(this.teacherId, result.teachingPositionId, result.startedOn, result.reason).subscribe({
+      this.teacherService.assignTeacher(this.teacherId, result.courseSectionId, result.startedOn, result.reason).subscribe({
         next: () => {
           this.successMsg = 'Comisión asignada correctamente.';
           this.loadAssignments();

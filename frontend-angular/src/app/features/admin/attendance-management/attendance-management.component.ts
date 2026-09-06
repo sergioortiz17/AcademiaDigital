@@ -165,7 +165,7 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
     this.errorMsg = '';
     this.attendanceService.getSessions({
       courseId: position.courseId,
-      commissionId: position.commissionId ?? undefined,
+      divisionId: position.divisionId ?? undefined,
       academicYear: position.academicYear
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (sessions) => {

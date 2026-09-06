@@ -3,7 +3,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { TeachingPositionService, TeachingPosition } from '../../../../core/services/teaching-position.service';
 
 export interface AssignPositionDialogResult {
-  teachingPositionId: number;
+  courseSectionId: number;
   startedOn: string;
   reason: string | null;
 }
@@ -18,7 +18,7 @@ export class AssignPositionDialogComponent implements OnInit {
   positions: TeachingPosition[] = [];
   isLoading = false;
 
-  teachingPositionId: number | null = null;
+  courseSectionId: number | null = null;
   startedOn: Date = new Date();
   reason = '';
 
@@ -44,7 +44,7 @@ export class AssignPositionDialogComponent implements OnInit {
   }
 
   get isValid(): boolean {
-    return !!this.teachingPositionId && !!this.startedOn;
+    return !!this.courseSectionId && !!this.startedOn;
   }
 
   cancel(): void {
@@ -54,7 +54,7 @@ export class AssignPositionDialogComponent implements OnInit {
   confirm(): void {
     if (!this.isValid) return;
     const result: AssignPositionDialogResult = {
-      teachingPositionId: this.teachingPositionId!,
+      courseSectionId: this.courseSectionId!,
       startedOn: this.toIsoDate(this.startedOn),
       reason: this.reason.trim() || null
     };

@@ -120,7 +120,7 @@ export class GradebookManagementComponent implements OnInit, OnDestroy {
 
     this.gradebookService.getGradebooks({
       courseId: position.courseId,
-      commissionId: position.commissionId ?? undefined,
+      divisionId: position.divisionId ?? undefined,
       academicYear: position.academicYear
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (gradebooks) => {

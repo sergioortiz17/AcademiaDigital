@@ -19,6 +19,7 @@ public sealed class TeachingAssignmentHandlersTests
         var positions = Substitute.For<ICourseSectionRepository>();
         var courses = Substitute.For<ICourseRepository>();
         var commissions = Substitute.For<IDivisionRepository>();
+        var enrollments = Substitute.For<IEnrollmentRepository>();
         courses.FindByIdAsync(2, Arg.Any<CancellationToken>()).Returns(Course());
         commissions.FindByIdAsync(3, Arg.Any<CancellationToken>()).Returns(Division());
         positions.CreateAsync(Arg.Any<CourseSection>(), Arg.Any<CancellationToken>())
@@ -28,8 +29,12 @@ public sealed class TeachingAssignmentHandlersTests
                 position.Id = 5;
                 return position;
             });
+        positions.FindActiveByCourseTermAsync(
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(new List<CourseSection>());
         var handler = new CreateCourseSectionCommandHandler(
-            positions, courses, commissions, new TeachingAssignmentPolicy(), new FixedTimeProvider(Now));
+            positions, courses, commissions, enrollments, new TeachingAssignmentPolicy(),
+            SerializableUnitOfWork<CourseSection>(), new FixedTimeProvider(Now));
 
         var result = await handler.Handle(new CreateCourseSectionCommand(
             2, 3, 2027, 1, PositionType.Titular, 40), TestContext.Current.CancellationToken);
@@ -110,12 +115,14 @@ public sealed class TeachingAssignmentHandlersTests
         Assert.Equal("Reasignación", result.EndReason);
     }
 
-    private static IUnitOfWork SerializableUnitOfWork()
+    private static IUnitOfWork SerializableUnitOfWork() => SerializableUnitOfWork<TeacherAssignment>();
+
+    private static IUnitOfWork SerializableUnitOfWork<T>()
     {
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.ExecuteInSerializableTransactionAsync(
-                Arg.Any<Func<CancellationToken, Task<TeacherAssignment>>>(), Arg.Any<CancellationToken>())
-            .Returns(call => call.Arg<Func<CancellationToken, Task<TeacherAssignment>>>()(
+                Arg.Any<Func<CancellationToken, Task<T>>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<Func<CancellationToken, Task<T>>>()(
                 call.ArgAt<CancellationToken>(1)));
         return unitOfWork;
     }

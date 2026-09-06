@@ -27,6 +27,15 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
             .Where(e => e.CourseSectionId == teachingPositionId)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Enrollment>> GetUnmatchedByCourseTermAsync(
+        int courseId, int academicYear, int semester, bool isAnnual, CancellationToken ct = default)
+        => await db.Enrollments
+            .Where(e => e.CourseSectionId == null
+                && e.CourseId == courseId
+                && e.AcademicYear == academicYear
+                && (isAnnual || e.Semester == semester))
+            .ToListAsync(ct);
+
     public async Task<Enrollment?> FindByIdAsync(long id, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Student)

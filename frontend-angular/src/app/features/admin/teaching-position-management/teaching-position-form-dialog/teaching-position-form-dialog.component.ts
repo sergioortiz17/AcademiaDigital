@@ -49,7 +49,7 @@ export class TeachingPositionFormDialogComponent implements OnInit {
     this.isEdit = !!data.position;
     if (data.position) {
       this.courseId = data.position.courseId;
-      this.commissionId = data.position.commissionId;
+      this.commissionId = data.position.divisionId;
       this.academicYear = data.position.academicYear;
       this.semester = data.position.semester;
       this.positionType = data.position.positionType;

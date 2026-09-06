@@ -20,33 +20,11 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="filter-field filter-field--small">
-          <mat-label>Sede</mat-label>
-          <mat-select [(ngModel)]="selectedSede">
-            <mat-option *ngFor="let s of sedes" [value]="s">{{ s }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field filter-field--small">
-          <mat-label>Año</mat-label>
-          <mat-select [(ngModel)]="selectedPlanYear">
-            <mat-select-trigger>
-              <mat-chip-set *ngIf="selectedPlanYear">
-                <mat-chip removable (removed)="selectedPlanYear = null">
-                  {{ planYears[selectedPlanYear - 1]?.label }}
-                  <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
-                </mat-chip>
-              </mat-chip-set>
-            </mat-select-trigger>
-            <mat-option *ngFor="let y of planYears" [value]="y.value">{{ y.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Materia</mat-label>
           <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
-            <mat-option *ngFor="let a of assignments" [value]="a.teachingPositionId">
-              {{ a.courseName }} — {{ a.commissionName }}{{ a.commissionCode ? ' [' + a.commissionCode + ']' : '' }} ({{ a.academicYear }})
+            <mat-option *ngFor="let a of assignments" [value]="a.courseSectionId">
+              {{ a.courseName }} — {{ a.divisionName }}{{ a.divisionCode ? ' [' + a.divisionCode + ']' : '' }} ({{ a.academicYear }})
             </mat-option>
           </mat-select>
           <mat-hint *ngIf="assignments.length === 0">No tenés materias asignadas actualmente.</mat-hint>

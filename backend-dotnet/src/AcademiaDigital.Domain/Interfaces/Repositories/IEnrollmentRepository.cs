@@ -30,6 +30,15 @@ public interface IEnrollmentRepository
     Task<IEnumerable<Enrollment>> GetByStudentAsync(long studentId, CancellationToken ct = default);
     Task<IEnumerable<Enrollment>> GetByCourseAndPeriodAsync(int courseId, int year, int semester, CancellationToken ct = default);
     Task<IEnumerable<Enrollment>> GetByCourseSectionAsync(int teachingPositionId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Inscripciones de una materia/ciclo que quedaron SIN sección vinculada (CourseSectionId null) —
+    /// típicamente porque se inscribieron antes de que existiera una sección activa para esa materia.
+    /// Se usa para re-enganchar automáticamente al crear una sección nueva (Parte 15).
+    /// </summary>
+    Task<IReadOnlyList<Enrollment>> GetUnmatchedByCourseTermAsync(
+        int courseId, int academicYear, int semester, bool isAnnual, CancellationToken ct = default);
+
     Task<Enrollment?> FindByIdAsync(long id, CancellationToken ct = default);
     Task<Enrollment?> FindByStudentAndCourseAsync(long studentId, int courseId, int year, int semester, CancellationToken ct = default);
     Task<IEnumerable<Enrollment>> GetByEnrollmentPeriodAsync(int periodId, CancellationToken ct = default);
