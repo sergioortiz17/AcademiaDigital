@@ -127,13 +127,20 @@ public sealed class AcademicActionsService(
 
     // ── 3. Notas (cadena Gradebook completa) ─────────────────────────────────────────────────
 
-    public async Task<ActionResult> RunGradebookAsync(long enrollmentId, decimal score, CancellationToken ct)
+    public async Task<ActionResult> RunGradebookAsync(long enrollmentId, decimal score, long? teacherId, CancellationToken ct)
     {
         var steps = new List<object>();
         var enrollment = await db.Enrollments.AsNoTracking().FirstOrDefaultAsync(e => e.Id == enrollmentId, ct)
             ?? throw new InvalidOperationException("Enrollment no encontrado.");
         var spc = await ResolveStudyPlanCourseForEnrollment(enrollment, ct);
-        var teacher = await EnsureTestTeacherAsync("A", ct);
+        // Profesor real si se indica; si no, un docente de prueba (comportamiento previo).
+        var teacher = teacherId is > 0
+            ? await teacherRepository.FindByIdAsync(teacherId.Value, ct)
+                ?? throw new InvalidOperationException("Docente no encontrado.")
+            : await EnsureTestTeacherAsync("A", ct);
+        steps.Add(new { step = "Profesor de la planilla", status = "ok",
+            detail = teacherId is > 0 ? $"Profesor real id {teacher.Id}." : $"Docente de prueba id {teacher.Id} (no se indicó profesor).",
+            data = new { teacherId = teacher.Id, isTestTeacher = teacherId is not > 0 } });
 
         var position = await ResolveOrCreateTeachingPositionAsync(spc, enrollment.CourseId, enrollment.AcademicYear, enrollment.Semester, teacher, steps, ct);
 

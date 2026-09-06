@@ -150,6 +150,20 @@
   </div><!-- /escenarios -->
 
   <div class="tabpanel" data-panel="flujo" style="grid-template-columns:1fr">
+  <!-- Línea de tiempo del alumno (Parte 5) -->
+  <section class="card full">
+    <h2>🕒 Línea de tiempo del alumno</h2>
+    <p class="muted">Elegí un alumno para ver su avance por año. En cada año podés inscribir materias, cargar notas (con un profesor real) y rendir finales; al intentar inscribir una materia con correlativa no aprobada, el bloqueo se muestra claramente en el paso.</p>
+    <div class="row" style="align-items:flex-end;max-width:640px">
+      <div><label>Alumno</label><select id="tlStudent"></select></div>
+      <div><label>Profesor (para planillas)</label><select id="tlTeacher"></select></div>
+      <div style="flex:0 0 auto"><button id="tlLoad" style="width:100%">Cargar línea de tiempo</button></div>
+    </div>
+    <div id="tlProgress" class="muted" style="margin-top:8px"></div>
+    <div id="tlSteps" style="display:flex;gap:12px;overflow-x:auto;margin-top:12px;padding-bottom:8px"></div>
+    <div id="tlOut" class="out" style="display:none"></div>
+  </section>
+
   <!-- Acciones académicas ad-hoc -->
   <section class="card full">
     <h2>🧩 Acciones académicas ad-hoc</h2>
@@ -488,7 +502,126 @@ document.querySelectorAll('#tabbar button').forEach(btn => {
   });
 });
 
-async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); }
+// ── Línea de tiempo del alumno (Parte 5) ────────────────────────────────────
+const tl = { studentId: null, careerId: null, maxYear: 1, state: null };
+
+function tlMsg(text, kind) {
+  const el = $('#tlOut'); el.style.display = 'block';
+  el.className = 'out ' + (kind || ''); el.textContent = text;
+}
+async function tlFillSelectors() {
+  const st = await api('/api/actions/students');
+  $('#tlStudent').innerHTML = (st.body||[]).map(s => `<option value="${s.studentId}" data-career="${s.careerId}">#${s.studentId} · ${s.name||s.email}</option>`).join('') || '<option value="">(sin alumnos)</option>';
+  const tt = await api('/api/teachers');
+  $('#tlTeacher').innerHTML = (tt.body||[]).map(t => `<option value="${t.id}">${t.name} (${t.email})</option>`).join('') || '<option value="">(sin profesores)</option>';
+}
+const STATUS_COLOR = s => ({Approved:'var(--ok)',Promoted:'var(--ok)',Regularized:'#38bdf8',Failed:'var(--danger)',InProgress:'#f59e0b',Enrolled:'#f59e0b'})[s] || 'var(--muted)';
+
+async function tlReload() {
+  if (!tl.studentId) return;
+  const { body } = await api(`/api/actions/students/${tl.studentId}/academic-state`);
+  tl.state = body;
+  const p = body.progress || {};
+  tl.careerId = p.careerId;
+  $('#tlProgress').textContent = `${p.careerName||''} · plan ${p.studyPlanName||''} · aprobadas ${p.approvedCourses}/${p.totalCourses} · en curso ${p.inProgressCourses} · pendientes ${p.pendingCourses}`;
+  // Año máximo a mostrar: el mayor entre años con materias y el maxYear elegido al avanzar.
+  const courseYears = (p.courses||[]).map(c => c.yearNumber);
+  const eligYears = (body.eligible||[]).map(e => e.yearNumber);
+  tl.maxYear = Math.max(tl.maxYear, 1, ...courseYears, ...eligYears.filter(() => false)); // materias ya cursadas definen años vistos
+  tlRender();
+}
+
+function tlRender() {
+  const p = tl.state.progress || {}; const elig = tl.state.eligible || [];
+  const coursesByYear = {}; (p.courses||[]).forEach(c => (coursesByYear[c.yearNumber] ??= []).push(c));
+  const eligByYear = {}; elig.forEach(e => (eligByYear[e.yearNumber] ??= []).push(e));
+  const years = [];
+  for (let y = 1; y <= tl.maxYear; y++) years.push(y);
+
+  $('#tlSteps').innerHTML = years.map(y => {
+    const cs = (coursesByYear[y]||[]).map(c =>
+      `<div style="display:flex;justify-content:space-between;gap:8px"><span>${c.code} ${c.name.slice(0,22)}</span><span style="color:${STATUS_COLOR(c.academicStatus)}">${c.academicStatus}${c.finalGrade!=null?(' '+c.finalGrade):''}</span></div>`).join('') || '<span class="muted">sin materias cursadas</span>';
+    // materias que puede inscribir este año (eligibles) y las bloqueadas con su motivo
+    const eligible = (eligByYear[y]||[]).filter(e => e.eligibilityStatus==='Eligible');
+    const blocked = (eligByYear[y]||[]).filter(e => e.eligibilityStatus!=='Eligible');
+    const opts = eligible.map(e => `<option value="${e.studyPlanCourseId}">${e.code} · ${e.name.slice(0,24)}</option>`).join('');
+    const blockedHtml = blocked.map(e => {
+      const miss = (e.missingPrerequisites||[]).map(m => `${m.code} (${m.currentStatus||'sin cursar'}, requiere ${m.requiredStatus})`).join(', ');
+      return `<div class="muted" style="color:var(--danger);font-size:11px">🔒 ${e.code}: ${miss||e.eligibilityStatus}</div>`;
+    }).join('');
+    return `<div class="card" style="min-width:280px;max-width:300px;flex:0 0 auto">
+      <h3 style="margin:0 0 8px;font-size:14px">Año ${y}</h3>
+      <div style="font-size:12px;display:grid;gap:3px">${cs}</div>
+      <hr style="border-color:var(--border);margin:10px 0"/>
+      <label style="font-size:11px">Inscribir materia (elegibles)</label>
+      <select data-tl-course="${y}" style="font-size:12px">${opts||'<option value="">(ninguna elegible)</option>'}</select>
+      <button data-tl-enroll="${y}" style="padding:5px 10px;font-size:12px;margin-top:6px" ${eligible.length?'':'disabled'}>Inscribir</button>
+      ${blockedHtml ? `<div style="margin-top:8px">${blockedHtml}</div>` : ''}
+      <div data-tl-stepout="${y}" style="margin-top:8px;font-size:12px"></div>
+    </div>`;
+  }).join('') + `<div style="flex:0 0 auto;display:flex;align-items:center"><button id="tlAdvance" style="padding:8px 14px">➕ Avanzar al año ${tl.maxYear+1}</button></div>`;
+
+  // wire per-step enroll buttons
+  document.querySelectorAll('[data-tl-enroll]').forEach(btn => btn.addEventListener('click', () => tlEnroll(parseInt(btn.dataset.tlEnroll,10))));
+  $('#tlAdvance').addEventListener('click', () => { tl.maxYear++; tlRender(); });
+}
+
+async function tlEnroll(year) {
+  const sel = document.querySelector(`[data-tl-course="${year}"]`);
+  const spcId = parseInt(sel.value,10);
+  const out = document.querySelector(`[data-tl-stepout="${year}"]`);
+  if (!spcId) { out.innerHTML = '<span class="err">Elegí una materia.</span>'; return; }
+  const { body } = await api('/api/actions/enroll', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ studentId: tl.studentId, studyPlanCourseIds:[spcId], academicYear: year, semester: 1 }) });
+  if (body.success) {
+    const enr = (body.steps||[]).find(s => Array.isArray(s.data));
+    const eid = enr?.data?.[0]?.enrollmentId;
+    out.innerHTML = `<span class="ok">✅ Inscripto${eid?(' (enrollmentId '+eid+')'):''}. Cargá nota abajo.</span>` + tlGradeControls(year, eid);
+    wireGradeControls(year);
+  } else {
+    // Bloqueo por correlativa u otra razón: mostrar legible
+    const reason = body.summary || '';
+    const m = reason.match(/correlativas obligatorias[^.]*/i) || reason.match(/prerequisit[^.]*/i);
+    out.innerHTML = `<span class="err">❌ Bloqueado: ${m ? m[0] : reason}</span>`;
+  }
+  tlReload();
+}
+
+function tlGradeControls(year, enrollmentId) {
+  if (!enrollmentId) return '';
+  return `<div style="margin-top:6px;display:grid;gap:4px" data-tl-grade="${year}" data-eid="${enrollmentId}">
+    <div class="row"><input type="number" step="0.1" value="8" data-tl-gradeval placeholder="nota"/><button data-tl-cursada style="margin:0;padding:5px 8px;font-size:12px">Cursada</button></div>
+    <div class="row"><input type="number" step="0.1" value="8" data-tl-examval placeholder="nota final"/><button data-tl-final style="margin:0;padding:5px 8px;font-size:12px">Final (mesa)</button></div>
+  </div>`;
+}
+function wireGradeControls(year) {
+  const box = document.querySelector(`[data-tl-grade="${year}"]`); if (!box) return;
+  const eid = parseInt(box.dataset.eid,10);
+  const out = document.querySelector(`[data-tl-stepout="${year}"]`);
+  box.querySelector('[data-tl-cursada]').addEventListener('click', async () => {
+    const score = parseFloat(box.querySelector('[data-tl-gradeval]').value);
+    const { body } = await api('/api/actions/gradebook', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ enrollmentId: eid, score, teacherId: parseInt($('#tlTeacher').value,10) }) });
+    out.insertAdjacentHTML('beforeend', `<div class="${body.success?'ok':'err'}">${body.success?'✅':'❌'} Cursada: ${body.summary}</div>`);
+    tlReload();
+  });
+  box.querySelector('[data-tl-final]').addEventListener('click', async () => {
+    const grade = parseFloat(box.querySelector('[data-tl-examval]').value);
+    const { body } = await api('/api/actions/exam', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ enrollmentId: eid, grade }) });
+    out.insertAdjacentHTML('beforeend', `<div class="${body.success?'ok':'err'}">${body.success?'✅':'❌'} Final: ${body.summary}</div>`);
+    tlReload();
+  });
+}
+
+$('#tlLoad').addEventListener('click', async () => {
+  tl.studentId = parseInt($('#tlStudent').value,10);
+  tl.maxYear = 1;
+  if (!tl.studentId) return;
+  await tlReload();
+});
+
+async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); await tlFillSelectors(); }
 loadTarget(); refreshAll();
 </script>
 </body>

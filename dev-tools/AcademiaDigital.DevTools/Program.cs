@@ -380,7 +380,7 @@ app.MapPost("/api/actions/gradebook", async (GradebookActionRequest req, Academi
 {
     if (req is null || req.EnrollmentId <= 0)
         return Results.BadRequest(new { error = "Se requiere enrollmentId (y score 0-10)." });
-    try { return Results.Ok(await svc.RunGradebookAsync(req.EnrollmentId, req.Score, ct)); }
+    try { return Results.Ok(await svc.RunGradebookAsync(req.EnrollmentId, req.Score, req.TeacherId, ct)); }
     catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Gradebook", status = "fail", detail = ex.Message }])); }
 });
 
@@ -406,6 +406,6 @@ app.Run();
 internal sealed record ResetRequest(bool Confirm);
 internal sealed record CreateUserRequest(string Name, string? LastName, string Email, string Password, string Dni, int Role, int? CareerId);
 internal sealed record EnrollActionRequest(long StudentId, IReadOnlyList<int> StudyPlanCourseIds, int AcademicYear, int Semester);
-internal sealed record GradebookActionRequest(long EnrollmentId, decimal Score);
+internal sealed record GradebookActionRequest(long EnrollmentId, decimal Score, long? TeacherId);
 internal sealed record ExamActionRequest(long EnrollmentId, decimal Grade);
 internal sealed record AssignRequest(long TeacherId, int CourseId, int AcademicYear, int Semester, int MaxStudents, string? Reason);
