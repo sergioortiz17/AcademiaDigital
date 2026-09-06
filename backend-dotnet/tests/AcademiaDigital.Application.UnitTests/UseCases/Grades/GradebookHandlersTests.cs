@@ -24,8 +24,7 @@ public sealed class GradebookHandlersTests
             {
                 var gradebook = call.Arg<Gradebook>();
                 gradebook.Id = 10;
-                gradebook.Course = Course();
-                gradebook.Division = Division();
+                gradebook.CourseSection = Position();
                 return (gradebook, true);
             });
         var handler = new CreateGradebookCommandHandler(
@@ -39,7 +38,7 @@ public sealed class GradebookHandlersTests
         Assert.Equal(10, result.Id);
         Assert.Equal(2, result.EvaluationCount);
         await gradebooks.Received(1).CreateIdempotentAsync(
-            Arg.Is<Gradebook>(item => item.IdempotencyKey == "gradebook-request-001" && item.CourseId == 2),
+            Arg.Is<Gradebook>(item => item.IdempotencyKey == "gradebook-request-001" && item.CourseSectionId == 5),
             Arg.Any<CancellationToken>());
     }
 
@@ -135,12 +134,7 @@ public sealed class GradebookHandlersTests
         Id = 10,
         IdempotencyKey = "gradebook-request-001",
         CourseSectionId = 5,
-        CourseId = 2,
-        Course = Course(),
-        DivisionId = 3,
-        Division = Division(),
-        AcademicYear = 2027,
-        Semester = 1,
+        CourseSection = Position(),
         Status = GradebookStatus.Draft,
         Evaluations =
         [

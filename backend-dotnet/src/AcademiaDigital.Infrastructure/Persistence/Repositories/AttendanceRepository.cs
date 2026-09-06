@@ -17,10 +17,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         => db.AttendanceSessions.AsNoTracking().AnyAsync(session => session.Id == sessionId
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
-                && assignment.CourseSection.CourseId == session.CourseId
-                && assignment.CourseSection.DivisionId == session.DivisionId
-                && assignment.CourseSection.AcademicYear == session.AcademicYear
-                && assignment.CourseSection.Semester == session.Semester
+                && assignment.CourseSectionId == session.CourseSectionId
                 && assignment.StartedOn <= session.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= session.SessionDate)), ct);
 
@@ -33,14 +30,11 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         => db.AttendanceRecords.AsNoTracking().AnyAsync(record =>
             record.StudentId == studentId
             && record.AttendanceSession.Status == AttendanceSessionStatus.Closed
-            && (!courseId.HasValue || record.AttendanceSession.CourseId == courseId)
-            && (!commissionId.HasValue || record.AttendanceSession.DivisionId == commissionId)
+            && (!courseId.HasValue || record.AttendanceSession.CourseSection.CourseId == courseId)
+            && (!commissionId.HasValue || record.AttendanceSession.CourseSection.DivisionId == commissionId)
             && db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == userId
-                && assignment.CourseSection.CourseId == record.AttendanceSession.CourseId
-                && assignment.CourseSection.DivisionId == record.AttendanceSession.DivisionId
-                && assignment.CourseSection.AcademicYear == record.AttendanceSession.AcademicYear
-                && assignment.CourseSection.Semester == record.AttendanceSession.Semester
+                && assignment.CourseSectionId == record.AttendanceSession.CourseSectionId
                 && assignment.StartedOn <= record.AttendanceSession.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= record.AttendanceSession.SessionDate)), ct);
 
@@ -52,16 +46,13 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         CancellationToken ct = default)
     {
         var query = Details();
-        if (academicYear.HasValue) query = query.Where(session => session.AcademicYear == academicYear);
-        if (courseId.HasValue) query = query.Where(session => session.CourseId == courseId);
-        if (commissionId.HasValue) query = query.Where(session => session.DivisionId == commissionId);
+        if (academicYear.HasValue) query = query.Where(session => session.CourseSection.AcademicYear == academicYear);
+        if (courseId.HasValue) query = query.Where(session => session.CourseSection.CourseId == courseId);
+        if (commissionId.HasValue) query = query.Where(session => session.CourseSection.DivisionId == commissionId);
         if (teacherUserId.HasValue)
             query = query.Where(session => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
-                && assignment.CourseSection.CourseId == session.CourseId
-                && assignment.CourseSection.DivisionId == session.DivisionId
-                && assignment.CourseSection.AcademicYear == session.AcademicYear
-                && assignment.CourseSection.Semester == session.Semester
+                && assignment.CourseSectionId == session.CourseSectionId
                 && assignment.StartedOn <= session.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= session.SessionDate)));
         return await query.OrderByDescending(session => session.SessionDate)
@@ -100,10 +91,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         }
 
         var duplicateOffering = await db.AttendanceSessions.AsNoTracking().AnyAsync(item =>
-            item.CourseId == session.CourseId
-            && item.DivisionId == session.DivisionId
-            && item.AcademicYear == session.AcademicYear
-            && item.Semester == session.Semester
+            item.CourseSectionId == session.CourseSectionId
             && item.SessionDate == session.SessionDate
             && item.StartTime == session.StartTime
             && item.Scope == session.Scope, ct);
@@ -119,15 +107,15 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         AttendanceSession session,
         CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
-            .Where(enrollment => enrollment.CourseId == session.CourseId
-                && enrollment.AcademicYear == session.AcademicYear
-                && enrollment.Semester == session.Semester
+            .Where(enrollment => enrollment.CourseId == session.CourseSection.CourseId
+                && enrollment.AcademicYear == session.CourseSection.AcademicYear
+                && enrollment.Semester == session.CourseSection.Semester
                 && enrollment.Status != EnrollmentStatus.Withdrawn
                 && (enrollment.CourseSectionId == session.CourseSectionId
                     || (enrollment.CourseSectionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
-                        && assignment.DivisionId == session.DivisionId
-                        && assignment.AcademicYear == session.AcademicYear))))
+                        && assignment.DivisionId == session.CourseSection.DivisionId
+                        && assignment.AcademicYear == session.CourseSection.AcademicYear))))
             .OrderBy(enrollment => enrollment.Student.User.LastName)
             .ThenBy(enrollment => enrollment.Student.User.Username)
             .Select(enrollment => new AttendanceRosterRow(
@@ -205,21 +193,18 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         CancellationToken ct = default)
     {
         var query = db.AttendanceRecords.AsNoTracking()
-            .Include(record => record.AttendanceSession).ThenInclude(session => session.Course)
-            .Include(record => record.AttendanceSession).ThenInclude(session => session.Division)
+            .Include(record => record.AttendanceSession).ThenInclude(session => session.CourseSection).ThenInclude(cs => cs.Course)
+            .Include(record => record.AttendanceSession).ThenInclude(session => session.CourseSection).ThenInclude(cs => cs.Division)
             .Include(record => record.Enrollment).ThenInclude(enrollment => enrollment.StudyPlanCourse)!.ThenInclude(course => course!.ApprovalRule)
             .Include(record => record.Justifications.Where(justification => justification.IsCurrent))
             .Where(record => record.StudentId == studentId
                 && record.AttendanceSession.Status == AttendanceSessionStatus.Closed);
-        if (courseId.HasValue) query = query.Where(record => record.AttendanceSession.CourseId == courseId);
-        if (commissionId.HasValue) query = query.Where(record => record.AttendanceSession.DivisionId == commissionId);
+        if (courseId.HasValue) query = query.Where(record => record.AttendanceSession.CourseSection.CourseId == courseId);
+        if (commissionId.HasValue) query = query.Where(record => record.AttendanceSession.CourseSection.DivisionId == commissionId);
         if (teacherUserId.HasValue)
             query = query.Where(record => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
-                && assignment.CourseSection.CourseId == record.AttendanceSession.CourseId
-                && assignment.CourseSection.DivisionId == record.AttendanceSession.DivisionId
-                && assignment.CourseSection.AcademicYear == record.AttendanceSession.AcademicYear
-                && assignment.CourseSection.Semester == record.AttendanceSession.Semester
+                && assignment.CourseSectionId == record.AttendanceSession.CourseSectionId
                 && assignment.StartedOn <= record.AttendanceSession.SessionDate
                 && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= record.AttendanceSession.SessionDate)));
         return await query.OrderBy(record => record.AttendanceSession.SessionDate).ToArrayAsync(ct);
@@ -227,8 +212,8 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
 
     private IQueryable<AttendanceSession> Details()
         => db.AttendanceSessions.AsNoTracking()
-            .Include(session => session.Course)
-            .Include(session => session.Division)
+            .Include(session => session.CourseSection).ThenInclude(cs => cs.Course)
+            .Include(session => session.CourseSection).ThenInclude(cs => cs.Division)
             .Include(session => session.Records).ThenInclude(record => record.Student).ThenInclude(student => student.User)
             .Include(session => session.Records).ThenInclude(record => record.Enrollment)
             .Include(session => session.Records).ThenInclude(record => record.Justifications.Where(justification => justification.IsCurrent))

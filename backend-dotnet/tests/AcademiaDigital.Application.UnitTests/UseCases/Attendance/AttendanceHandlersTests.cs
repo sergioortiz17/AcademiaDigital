@@ -24,8 +24,7 @@ public sealed class AttendanceHandlersTests
             {
                 var session = call.Arg<AttendanceSession>();
                 session.Id = 10;
-                session.Course = Course();
-                session.Division = Division();
+                session.CourseSection = Position();
                 return (session, true);
             });
         var handler = new CreateAttendanceSessionCommandHandler(
@@ -179,12 +178,7 @@ public sealed class AttendanceHandlersTests
         Id = 10,
         IdempotencyKey = "attendance-request-001",
         CourseSectionId = 5,
-        CourseId = 2,
-        Course = Course(),
-        DivisionId = 3,
-        Division = Division(),
-        AcademicYear = 2027,
-        Semester = 1,
+        CourseSection = Position(),
         SessionDate = new DateOnly(2027, 3, 10),
         StartTime = new TimeOnly(8, 0),
         EndTime = new TimeOnly(10, 0),

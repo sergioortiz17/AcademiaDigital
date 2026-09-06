@@ -8,12 +8,6 @@ public sealed class AttendanceSession
     public string IdempotencyKey { get; set; } = string.Empty;
     public int CourseSectionId { get; set; }
     public CourseSection CourseSection { get; set; } = null!;
-    public int CourseId { get; set; }
-    public Course Course { get; set; } = null!;
-    public int DivisionId { get; set; }
-    public Division Division { get; set; } = null!;
-    public int AcademicYear { get; set; }
-    public int Semester { get; set; }
     public DateOnly SessionDate { get; set; }
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }

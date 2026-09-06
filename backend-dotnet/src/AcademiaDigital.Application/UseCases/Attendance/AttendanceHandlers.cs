@@ -176,10 +176,6 @@ public sealed class CreateAttendanceSessionCommandHandler(
             {
                 IdempotencyKey = command.IdempotencyKey.Trim(),
                 CourseSectionId = position.Id,
-                CourseId = position.CourseId,
-                DivisionId = position.DivisionId!.Value,
-                AcademicYear = position.AcademicYear,
-                Semester = position.Semester,
                 SessionDate = command.SessionDate,
                 StartTime = command.StartTime,
                 EndTime = command.EndTime,
@@ -419,14 +415,14 @@ internal static class AttendanceMapper
         session.Id,
         session.IdempotencyKey,
         session.CourseSectionId,
-        session.CourseId,
-        session.Course.Code,
-        session.Course.Name,
-        session.DivisionId,
-        session.Division.Code,
-        session.Division.Name,
-        session.AcademicYear,
-        session.Semester,
+        session.CourseSection.CourseId,
+        session.CourseSection.Course.Code,
+        session.CourseSection.Course.Name,
+        session.CourseSection.DivisionId!.Value,
+        session.CourseSection.Division!.Code,
+        session.CourseSection.Division.Name,
+        session.CourseSection.AcademicYear,
+        session.CourseSection.Semester,
         session.SessionDate,
         session.StartTime,
         session.EndTime,
@@ -475,13 +471,7 @@ internal static class AttendanceMapper
         AttendancePolicy policy)
     {
         var items = records
-            .GroupBy(record => new
-            {
-                record.AttendanceSession.CourseId,
-                record.AttendanceSession.DivisionId,
-                record.AttendanceSession.AcademicYear,
-                record.AttendanceSession.Semester
-            })
+            .GroupBy(record => record.AttendanceSession.CourseSectionId)
             .Select(group =>
             {
                 var first = group.First();
@@ -489,14 +479,14 @@ internal static class AttendanceMapper
                     .FirstOrDefault(value => value.HasValue);
                 var measure = policy.Calculate(group.Select(record => (record.Status, record.AttendanceSession.Units)), minimum);
                 return new AttendanceSummaryItemDto(
-                    first.AttendanceSession.CourseId,
-                    first.AttendanceSession.Course.Code,
-                    first.AttendanceSession.Course.Name,
-                    first.AttendanceSession.DivisionId,
-                    first.AttendanceSession.Division.Code,
-                    first.AttendanceSession.Division.Name,
-                    first.AttendanceSession.AcademicYear,
-                    first.AttendanceSession.Semester,
+                    first.AttendanceSession.CourseSection.CourseId,
+                    first.AttendanceSession.CourseSection.Course.Code,
+                    first.AttendanceSession.CourseSection.Course.Name,
+                    first.AttendanceSession.CourseSection.DivisionId!.Value,
+                    first.AttendanceSession.CourseSection.Division!.Code,
+                    first.AttendanceSession.CourseSection.Division.Name,
+                    first.AttendanceSession.CourseSection.AcademicYear,
+                    first.AttendanceSession.CourseSection.Semester,
                     minimum,
                     measure.EarnedUnits,
                     measure.PossibleUnits,

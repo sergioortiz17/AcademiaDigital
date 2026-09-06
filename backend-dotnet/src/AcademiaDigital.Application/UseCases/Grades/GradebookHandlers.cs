@@ -123,10 +123,6 @@ public sealed class CreateGradebookCommandHandler(
             {
                 IdempotencyKey = command.IdempotencyKey.Trim(),
                 CourseSectionId = position.Id,
-                CourseId = position.CourseId,
-                DivisionId = position.DivisionId!.Value,
-                AcademicYear = position.AcademicYear,
-                Semester = position.Semester,
                 Status = GradebookStatus.Draft,
                 CreatedAt = now,
                 CreatedByUserId = command.ActorUserId,
@@ -364,9 +360,9 @@ internal static class GradebookMapper
 {
     public static GradebookDto MapSummary(Gradebook item) => new(
         item.Id, item.IdempotencyKey, item.CourseSectionId,
-        item.CourseId, item.Course.Code, item.Course.Name,
-        item.DivisionId, item.Division.Code, item.Division.Name,
-        item.AcademicYear, item.Semester, item.Status,
+        item.CourseSection.CourseId, item.CourseSection.Course.Code, item.CourseSection.Course.Name,
+        item.CourseSection.DivisionId!.Value, item.CourseSection.Division!.Code, item.CourseSection.Division.Name,
+        item.CourseSection.AcademicYear, item.CourseSection.Semester, item.Status,
         item.Evaluations.Count, item.GradeRevisions.Count(revision => revision.IsCurrent), item.Reopenings.Count,
         item.CreatedAt, item.SubmittedAt, item.ApprovedAt, item.PublishedAt, item.ClosedAt);
 
@@ -392,8 +388,8 @@ internal static class GradebookMapper
             (item.Score, item.Evaluation.MaximumScore, item.Evaluation.WeightPercentage)).ToArray(),
             revisions.First().Enrollment.StudyPlanCourse?.ApprovalRule);
         return new StudentPublishedGradebookDto(
-            gradebook.Id, gradebook.CourseId, gradebook.Course.Code, gradebook.Course.Name,
-            gradebook.AcademicYear, gradebook.Semester, gradebook.Status,
+            gradebook.Id, gradebook.CourseSection.CourseId, gradebook.CourseSection.Course.Code, gradebook.CourseSection.Course.Name,
+            gradebook.CourseSection.AcademicYear, gradebook.CourseSection.Semester, gradebook.Status,
             gradebook.Evaluations.OrderBy(item => item.DisplayOrder).Select(MapEvaluation).ToArray(),
             gradebook.Evaluations.OrderBy(item => item.DisplayOrder).Select(evaluation =>
             {

@@ -8,12 +8,6 @@ public sealed class Gradebook
     public string IdempotencyKey { get; set; } = string.Empty;
     public int CourseSectionId { get; set; }
     public CourseSection CourseSection { get; set; } = null!;
-    public int CourseId { get; set; }
-    public Course Course { get; set; } = null!;
-    public int DivisionId { get; set; }
-    public Division Division { get; set; } = null!;
-    public int AcademicYear { get; set; }
-    public int Semester { get; set; }
     public GradebookStatus Status { get; set; } = GradebookStatus.Draft;
     public DateTime CreatedAt { get; set; }
     public long CreatedByUserId { get; set; }

@@ -27,16 +27,16 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         CancellationToken ct = default)
     {
         var query = Details();
-        if (academicYear.HasValue) query = query.Where(item => item.AcademicYear == academicYear);
-        if (courseId.HasValue) query = query.Where(item => item.CourseId == courseId);
-        if (commissionId.HasValue) query = query.Where(item => item.DivisionId == commissionId);
+        if (academicYear.HasValue) query = query.Where(item => item.CourseSection.AcademicYear == academicYear);
+        if (courseId.HasValue) query = query.Where(item => item.CourseSection.CourseId == courseId);
+        if (commissionId.HasValue) query = query.Where(item => item.CourseSection.DivisionId == commissionId);
         if (teacherUserId.HasValue)
             query = query.Where(gradebook => db.TeacherAssignments.Any(assignment =>
                 assignment.Teacher.UserId == teacherUserId
                 && assignment.CourseSectionId == gradebook.CourseSectionId
                 && assignment.IsCurrent));
-        return await query.OrderByDescending(item => item.AcademicYear)
-            .ThenByDescending(item => item.Semester)
+        return await query.OrderByDescending(item => item.CourseSection.AcademicYear)
+            .ThenByDescending(item => item.CourseSection.Semester)
             .ToArrayAsync(ct);
     }
 
@@ -73,10 +73,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
             return (loaded, false);
         }
         if (await db.Gradebooks.AsNoTracking().AnyAsync(item =>
-                item.CourseId == gradebook.CourseId
-                && item.DivisionId == gradebook.DivisionId
-                && item.AcademicYear == gradebook.AcademicYear
-                && item.Semester == gradebook.Semester, ct))
+                item.CourseSectionId == gradebook.CourseSectionId, ct))
             throw new InvalidOperationException("A gradebook already exists for this course offering.");
         db.Gradebooks.Add(gradebook);
         await db.SaveChangesAsync(ct);
@@ -85,15 +82,15 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
 
     public async Task<IReadOnlyList<GradebookRosterRow>> GetRosterAsync(Gradebook gradebook, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
-            .Where(enrollment => enrollment.CourseId == gradebook.CourseId
-                && enrollment.AcademicYear == gradebook.AcademicYear
-                && enrollment.Semester == gradebook.Semester
+            .Where(enrollment => enrollment.CourseId == gradebook.CourseSection.CourseId
+                && enrollment.AcademicYear == gradebook.CourseSection.AcademicYear
+                && enrollment.Semester == gradebook.CourseSection.Semester
                 && enrollment.Status != EnrollmentStatus.Withdrawn
                 && (enrollment.CourseSectionId == gradebook.CourseSectionId
                     || (enrollment.CourseSectionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
-                        && assignment.DivisionId == gradebook.DivisionId
-                        && assignment.AcademicYear == gradebook.AcademicYear))))
+                        && assignment.DivisionId == gradebook.CourseSection.DivisionId
+                        && assignment.AcademicYear == gradebook.CourseSection.AcademicYear))))
             .OrderBy(enrollment => enrollment.Student.User.LastName)
             .ThenBy(enrollment => enrollment.Student.User.Username)
             .Select(enrollment => new GradebookRosterRow(
@@ -146,14 +143,14 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         var query = Details().Where(item =>
             item.Status == GradebookStatus.Published || item.Status == GradebookStatus.Closed);
         query = query.Where(item => item.GradeRevisions.Any(revision => revision.StudentId == studentId && revision.IsCurrent));
-        if (courseId.HasValue) query = query.Where(item => item.CourseId == courseId);
-        return await query.OrderByDescending(item => item.AcademicYear).ThenByDescending(item => item.Semester).ToArrayAsync(ct);
+        if (courseId.HasValue) query = query.Where(item => item.CourseSection.CourseId == courseId);
+        return await query.OrderByDescending(item => item.CourseSection.AcademicYear).ThenByDescending(item => item.CourseSection.Semester).ToArrayAsync(ct);
     }
 
     private IQueryable<Gradebook> Details()
         => db.Gradebooks.AsNoTracking()
-            .Include(item => item.Course)
-            .Include(item => item.Division)
+            .Include(item => item.CourseSection).ThenInclude(section => section.Course)
+            .Include(item => item.CourseSection).ThenInclude(section => section.Division)
             .Include(item => item.Evaluations)
             .Include(item => item.GradeRevisions.Where(revision => revision.IsCurrent)).ThenInclude(item => item.Evaluation)
             .Include(item => item.GradeRevisions.Where(revision => revision.IsCurrent))
