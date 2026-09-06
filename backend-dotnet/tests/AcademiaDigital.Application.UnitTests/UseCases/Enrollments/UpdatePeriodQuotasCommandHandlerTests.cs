@@ -20,7 +20,7 @@ public sealed class UpdatePeriodQuotasCommandHandlerTests
                 new UpdatePeriodQuotasCommand(10, 5, 1, 5),
                 TestContext.Current.CancellationToken));
 
-        Assert.Equal("Enrollment quotas cannot be lower than current occupancy.", exception.Message);
+        Assert.Equal("Los cupos de inscripción no pueden ser menores que la ocupación actual.", exception.Message);
         await context.Repository.DidNotReceive()
             .UpdateAsync(Arg.Any<EnrollmentPeriod>(), Arg.Any<CancellationToken>());
     }

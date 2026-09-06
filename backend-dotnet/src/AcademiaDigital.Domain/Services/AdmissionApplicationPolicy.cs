@@ -11,9 +11,9 @@ public sealed class AdmissionApplicationPolicy
         bool acceptedTerms)
     {
         if (!form.IsActive)
-            throw new InvalidOperationException("Admission form is not active.");
+            throw new InvalidOperationException("El formulario de admisión no está activo.");
         if (!acceptedTerms)
-            throw new ArgumentException("Admission terms must be accepted.");
+            throw new ArgumentException("Se deben aceptar los términos de admisión.");
 
         var configuredFields = form.Fields.ToDictionary(field => field.Key, StringComparer.OrdinalIgnoreCase);
         var normalized = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -21,7 +21,7 @@ public sealed class AdmissionApplicationPolicy
         foreach (var (key, rawValue) in submittedFields)
         {
             if (!configuredFields.TryGetValue(key, out var configuredField))
-                throw new ArgumentException($"Field '{key}' is not configured for this admission form.");
+                throw new ArgumentException($"El campo '{key}' no está configurado para este formulario de admisión.");
 
             var value = rawValue?.Trim();
             if (!string.IsNullOrEmpty(value))
@@ -34,7 +34,7 @@ public sealed class AdmissionApplicationPolicy
             .Select(field => field.Key)
             .ToArray();
         if (missing.Length > 0)
-            throw new ArgumentException($"Required admission fields are missing: {string.Join(", ", missing)}.");
+            throw new ArgumentException($"Faltan campos de admisión obligatorios: {string.Join(", ", missing)}.");
 
         var email = RequiredValue(normalized, "email").ToLowerInvariant();
         try
@@ -45,12 +45,12 @@ public sealed class AdmissionApplicationPolicy
         }
         catch (FormatException)
         {
-            throw new ArgumentException("The admission email is invalid.");
+            throw new ArgumentException("El email de admisión no es válido.");
         }
 
         var dni = RequiredValue(normalized, "dni");
         if (dni.Length is < 7 or > 8 || dni.Any(character => !char.IsDigit(character)))
-            throw new ArgumentException("The admission DNI is invalid.");
+            throw new ArgumentException("El DNI de admisión no es válido.");
 
         normalized["email"] = email;
         normalized["dni"] = dni;
@@ -60,5 +60,5 @@ public sealed class AdmissionApplicationPolicy
     private static string RequiredValue(IReadOnlyDictionary<string, string> fields, string key)
         => fields.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
             ? value
-            : throw new ArgumentException($"Admission form must configure and require the '{key}' field.");
+            : throw new ArgumentException($"El formulario de admisión debe configurar y requerir el campo '{key}'.");
 }

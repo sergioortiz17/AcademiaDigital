@@ -34,12 +34,12 @@ public sealed class AdmissionStatusTransitionPolicy
         string? reason)
     {
         if (!Enum.IsDefined(target))
-            throw new ArgumentException("Admission target status is invalid.");
+            throw new ArgumentException("El estado de admisión de destino no es válido.");
         if (!AllowedTransitions.TryGetValue(current, out var allowed) || !allowed.Contains(target))
-            throw new InvalidOperationException($"Admission status cannot transition from {current} to {target}.");
+            throw new InvalidOperationException($"El estado de admisión no puede transicionar de {current} a {target}.");
         if (target == AdmissionApplicationStatus.Rejected && string.IsNullOrWhiteSpace(reason))
-            throw new ArgumentException("A reason is required when rejecting an admission application.");
+            throw new ArgumentException("Se requiere un motivo al rechazar una solicitud de admisión.");
         if (reason?.Trim().Length > 500)
-            throw new ArgumentException("Admission status reason cannot exceed 500 characters.");
+            throw new ArgumentException("El motivo del estado de admisión no puede superar los 500 caracteres.");
     }
 }

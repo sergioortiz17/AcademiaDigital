@@ -20,7 +20,7 @@ public sealed class EnrollmentCapacityPolicyTests
     {
         var exception = Assert.Throws<ArgumentException>(() => _policy.EnsureValidShift("Morning"));
 
-        Assert.Contains("Valid values: Mañana, Tarde, Noche", exception.Message);
+        Assert.Contains("Valores válidos: Mañana, Tarde, Noche", exception.Message);
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public sealed class EnrollmentCapacityPolicyTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             _policy.EnsureVacancy(period, (Morning: 0, Afternoon: 1, Evening: 0), "Tarde"));
 
-        Assert.Equal("No vacancies are available for shift 'Tarde'.", exception.Message);
+        Assert.Equal("No hay vacantes disponibles para el turno 'Tarde'.", exception.Message);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class EnrollmentCapacityPolicyTests
                 afternoon: 1,
                 evening: 0));
 
-        Assert.Equal("Enrollment quotas cannot be lower than current occupancy.", exception.Message);
+        Assert.Equal("Los cupos de inscripción no pueden ser menores que la ocupación actual.", exception.Message);
     }
 
     [Fact]

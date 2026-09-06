@@ -27,28 +27,28 @@ public sealed class CreateEnrollmentCommandHandler(
         capacityPolicy.EnsureValidShift(command.Shift);
 
         var period = await periodRepository.FindByIdAsync(command.EnrollmentPeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         if (!period.IsActive)
-            throw new InvalidOperationException("Enrollment period is closed.");
+            throw new InvalidOperationException("El período de inscripción está cerrado.");
 
         var membership = await studentCareerRepository.FindAsync(command.StudentId, period.CareerId, true, ct)
-            ?? throw new InvalidOperationException("Student is not actively enrolled in the enrollment period career.");
+            ?? throw new InvalidOperationException("El alumno no está matriculado activamente en la carrera del período de inscripción.");
 
         var currentStudyPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(
             command.StudentId, period.CareerId, ct)
-            ?? throw new InvalidOperationException("Student has no current study plan for the enrollment period career.");
+            ?? throw new InvalidOperationException("El alumno no tiene un plan de estudios actual para la carrera del período de inscripción.");
         if (currentStudyPlan.StudyPlanId != period.StudyPlanId)
-            throw new InvalidOperationException("The enrollment period does not match the student's current study plan.");
+            throw new InvalidOperationException("El período de inscripción no coincide con el plan de estudios actual del alumno.");
 
         if (command.StudyPlanCourseIds.Count == 0)
-            throw new ArgumentException("At least one course must be selected.");
+            throw new ArgumentException("Debe seleccionarse al menos una materia.");
 
         var studyPlanCourses = await studyPlanCourseRepository.GetByIdsAsync(command.StudyPlanCourseIds, ct);
         if (studyPlanCourses.Count != command.StudyPlanCourseIds.Distinct().Count())
-            throw new KeyNotFoundException("One or more study plan courses were not found.");
+            throw new KeyNotFoundException("No se encontraron una o más materias del plan de estudios.");
         if (studyPlanCourses.Any(x => x.StudyPlanId != period.StudyPlanId))
-            throw new InvalidOperationException("All selected courses must belong to the enrollment period study plan.");
+            throw new InvalidOperationException("Todas las materias seleccionadas deben pertenecer al plan de estudios del período de inscripción.");
 
         var prerequisites = await studentAcademicRepository.GetPrerequisitesAsync(period.StudyPlanId, ct);
         var enrollmentHistory = await studentAcademicRepository.GetEnrollmentsAsync(
@@ -76,16 +76,16 @@ public sealed class CreateEnrollmentCommandHandler(
             var lockedPeriod = await periodRepository.LockForEnrollmentAsync(
                 command.EnrollmentPeriodId,
                 transactionCt)
-                ?? throw new KeyNotFoundException("Enrollment period not found.");
+                ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
             if (!lockedPeriod.IsActive)
-                throw new InvalidOperationException("Enrollment period is closed.");
+                throw new InvalidOperationException("El período de inscripción está cerrado.");
 
             var existing = await enrollmentRepository.GetByEnrollmentPeriodAsync(
                 command.EnrollmentPeriodId,
                 transactionCt);
             if (existing.Any(e => e.StudentId == command.StudentId))
-                throw new InvalidOperationException("Student is already enrolled in this period.");
+                throw new InvalidOperationException("El alumno ya está inscripto en este período.");
 
             var counts = await periodRepository.GetEnrolledShiftCountsAsync(
                 command.EnrollmentPeriodId,

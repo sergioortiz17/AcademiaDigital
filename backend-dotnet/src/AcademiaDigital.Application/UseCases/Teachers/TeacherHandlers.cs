@@ -77,7 +77,7 @@ public sealed class GetTeacherByIdQueryHandler(ITeacherRepository repository)
 {
     public async Task<TeacherDto> Handle(GetTeacherByIdQuery query, CancellationToken ct = default)
         => TeacherDtoMapper.Map(await repository.FindByIdAsync(query.TeacherId, ct)
-            ?? throw new KeyNotFoundException("Teacher not found."));
+            ?? throw new KeyNotFoundException("Docente no encontrado."));
 }
 
 public sealed class CreateTeacherCommandHandler(
@@ -89,11 +89,11 @@ public sealed class CreateTeacherCommandHandler(
     public async Task<TeacherDto> Handle(CreateTeacherCommand command, CancellationToken ct = default)
     {
         var user = await userRepository.FindByIdAsync(command.UserId, ct)
-            ?? throw new KeyNotFoundException("User not found.");
+            ?? throw new KeyNotFoundException("Usuario no encontrado.");
         if (user.Role != UserRole.Profesor)
-            throw new InvalidOperationException("Only users with Profesor role can be linked as teachers.");
+            throw new InvalidOperationException("Solo los usuarios con rol Profesor pueden vincularse como docentes.");
         if (!user.IsActive)
-            throw new InvalidOperationException("An inactive user cannot be linked as a teacher.");
+            throw new InvalidOperationException("Un usuario inactivo no puede vincularse como docente.");
         if (await teacherRepository.FindByUserIdAsync(user.Id, ct) is not null)
             throw new TeacherAlreadyExistsException("user");
 
@@ -158,7 +158,7 @@ public sealed class UpdateTeacherCommandHandler(
     public async Task<TeacherDto> Handle(UpdateTeacherCommand command, CancellationToken ct = default)
     {
         var teacher = await repository.FindByIdAsync(command.TeacherId, ct)
-            ?? throw new KeyNotFoundException("Teacher not found.");
+            ?? throw new KeyNotFoundException("Docente no encontrado.");
         var employeeNumber = policy.NormalizeEmployeeNumber(command.EmployeeNumber);
         policy.ValidateHireDate(command.HireDate, timeProvider.GetUtcNow().UtcDateTime);
         var duplicate = await repository.FindByEmployeeNumberAsync(employeeNumber, ct);
@@ -183,7 +183,7 @@ public sealed class DeactivateTeacherCommandHandler(
     public async Task Handle(DeactivateTeacherCommand command, CancellationToken ct = default)
     {
         var teacher = await repository.FindByIdAsync(command.TeacherId, ct)
-            ?? throw new KeyNotFoundException("Teacher not found.");
+            ?? throw new KeyNotFoundException("Docente no encontrado.");
         if (!teacher.IsActive)
             return;
 

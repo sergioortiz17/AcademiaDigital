@@ -29,7 +29,7 @@ public sealed class GetAdmissionApplicationDocumentsQueryHandler(IAdmissionRepos
         CancellationToken ct = default)
     {
         var application = await repository.FindApplicationByPublicIdAsync(query.PublicId, false, ct)
-            ?? throw new KeyNotFoundException("Admission application not found.");
+            ?? throw new KeyNotFoundException("Solicitud de admisión no encontrada.");
         return (await repository.GetApplicationDocumentsAsync(application.Id, false, ct))
             .Select(document => Map(query.PublicId, document))
             .ToArray();
@@ -73,9 +73,9 @@ public sealed class SubmitAdmissionApplicationDocumentCommandHandler(
         CancellationToken ct = default)
     {
         var application = await repository.FindApplicationByPublicIdAsync(command.PublicId, false, ct)
-            ?? throw new KeyNotFoundException("Admission application not found.");
+            ?? throw new KeyNotFoundException("Solicitud de admisión no encontrada.");
         var requirement = await repository.FindDocumentRequirementAsync(command.DocumentRequirementId, ct)
-            ?? throw new KeyNotFoundException("Document requirement not found.");
+            ?? throw new KeyNotFoundException("Requisito de documentación no encontrado.");
         var now = timeProvider.GetUtcNow().UtcDateTime;
         policy.EnsureCanSubmit(application.Status);
         policy.EnsureRequirementApplies(
@@ -118,7 +118,7 @@ public sealed class ReviewAdmissionApplicationDocumentCommandHandler(
     {
         var document = await repository.FindApplicationDocumentAsync(
             command.PublicId, command.DocumentId, true, ct)
-            ?? throw new KeyNotFoundException("Admission application document not found.");
+            ?? throw new KeyNotFoundException("Documento de la solicitud de admisión no encontrado.");
         policy.EnsureCanReview(document.Status, command.Status, command.Observation);
 
         document.Status = command.Status;

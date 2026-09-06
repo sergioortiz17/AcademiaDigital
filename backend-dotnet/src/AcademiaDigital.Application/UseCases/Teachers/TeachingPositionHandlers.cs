@@ -74,7 +74,7 @@ public sealed class GetTeachingPositionByIdQueryHandler(ITeachingPositionReposit
         GetTeachingPositionByIdQuery query,
         CancellationToken ct = default)
         => TeachingPositionMapper.Map(await repository.FindByIdAsync(query.TeachingPositionId, ct)
-            ?? throw new KeyNotFoundException("Teaching position not found."));
+            ?? throw new KeyNotFoundException("Cargo docente no encontrado."));
 }
 
 public sealed class CreateTeachingPositionCommandHandler(
@@ -89,9 +89,9 @@ public sealed class CreateTeachingPositionCommandHandler(
         CancellationToken ct = default)
     {
         var course = await courseRepository.FindByIdAsync(command.CourseId, ct)
-            ?? throw new KeyNotFoundException("Course not found.");
+            ?? throw new KeyNotFoundException("Materia no encontrada.");
         var commission = await commissionRepository.FindByIdAsync(command.CommissionId, ct)
-            ?? throw new KeyNotFoundException("Commission not found.");
+            ?? throw new KeyNotFoundException("Comisión no encontrada.");
         policy.ValidatePositionDefinition(
             command.AcademicYear, command.Semester, command.MaxStudents, course, commission);
         var now = timeProvider.GetUtcNow().UtcDateTime;
@@ -129,11 +129,11 @@ public sealed class UpdateTeachingPositionCommandHandler(
         => unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var position = await repository.FindByIdAsync(command.TeachingPositionId, transactionCt)
-                ?? throw new KeyNotFoundException("Teaching position not found.");
+                ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
             var course = await courseRepository.FindByIdAsync(command.CourseId, transactionCt)
-                ?? throw new KeyNotFoundException("Course not found.");
+                ?? throw new KeyNotFoundException("Materia no encontrada.");
             var commission = await commissionRepository.FindByIdAsync(command.CommissionId, transactionCt)
-                ?? throw new KeyNotFoundException("Commission not found.");
+                ?? throw new KeyNotFoundException("Comisión no encontrada.");
             policy.ValidatePositionDefinition(
                 command.AcademicYear, command.Semester, command.MaxStudents, course, commission);
             policy.EnsurePositionCanChange(position,
@@ -162,11 +162,11 @@ public sealed class DeactivateTeachingPositionCommandHandler(
         => unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var position = await repository.FindByIdAsync(command.TeachingPositionId, transactionCt)
-                ?? throw new KeyNotFoundException("Teaching position not found.");
+                ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
             policy.EnsureCanDeactivate(position);
             if (!position.IsActive) return true;
             if (string.IsNullOrWhiteSpace(command.Reason))
-                throw new ArgumentException("A deactivation reason is required.");
+                throw new ArgumentException("Se requiere un motivo de desactivación.");
             var now = timeProvider.GetUtcNow().UtcDateTime;
             position.IsActive = false;
             position.DeactivatedAt = now;

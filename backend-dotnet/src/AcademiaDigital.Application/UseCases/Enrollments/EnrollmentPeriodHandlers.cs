@@ -83,7 +83,7 @@ public sealed class GetEnrolledStudentsQueryHandler(
     public async Task<(int Total, IReadOnlyList<EnrolledStudentDto> Students)> Handle(GetEnrolledStudentsQuery query, CancellationToken ct = default)
     {
         _ = await periodRepository.FindByIdAsync(query.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         // One SQL query projecting only needed columns
         var rows = await enrollmentRepository.GetStudentRowsByPeriodAsync(query.PeriodId, ct);
@@ -128,14 +128,14 @@ public sealed class OpenEnrollmentPeriodCommandHandler(
             command.QuotasEvening);
 
         _ = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
 
         _ = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
         var existing = await repository.GetActiveByCareerAsync(command.CareerId, ct);
         if (existing is not null && existing.AcademicYear == command.AcademicYear && existing.Semester == command.Semester)
-            throw new InvalidOperationException("There is already an active enrollment period for this career, year and semester.");
+            throw new InvalidOperationException("Ya existe un período de inscripción activo para esta carrera, año y cuatrimestre.");
 
         var period = new EnrollmentPeriod
         {
@@ -160,7 +160,7 @@ public sealed class CloseEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposit
     public async Task Handle(CloseEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
         var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         period.IsActive = false;
         period.EndDate = DateTime.UtcNow;
@@ -192,7 +192,7 @@ public sealed class UpdatePeriodQuotasCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var period = await repository.LockForEnrollmentAsync(command.PeriodId, transactionCt)
-                ?? throw new KeyNotFoundException("Enrollment period not found.");
+                ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
             var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, transactionCt);
             capacityPolicy.EnsureQuotasCoverCurrentEnrollment(
                 counts,
@@ -209,7 +209,7 @@ public sealed class UpdatePeriodQuotasCommandHandler(
         }, ct);
 
         var updated = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
         var updatedCounts = await repository.GetEnrolledShiftCountsAsync(updated.Id, ct);
         return Mapper.Map(updated, updatedCounts);
     }
@@ -267,7 +267,7 @@ public sealed class RemoveStudentFromPeriodCommandHandler(
     public async Task Handle(RemoveStudentFromPeriodCommand command, CancellationToken ct = default)
     {
         _ = await periodRepository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         await enrollmentRepository.DeleteByStudentAndPeriodAsync(command.StudentId, command.PeriodId, ct);
     }
@@ -278,7 +278,7 @@ public sealed class ActivateEnrollmentPeriodCommandHandler(IEnrollmentPeriodRepo
     public async Task Handle(ActivateEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
         var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         period.IsActive = true;
         period.EndDate = null;

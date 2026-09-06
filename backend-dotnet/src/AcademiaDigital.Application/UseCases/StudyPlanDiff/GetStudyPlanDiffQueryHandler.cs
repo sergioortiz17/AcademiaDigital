@@ -17,12 +17,12 @@ public sealed class GetStudyPlanDiffQueryHandler(
     public async Task<StudyPlanDiffDto> Handle(GetStudyPlanDiffQuery query, CancellationToken ct = default)
     {
         var planA = await studyPlanRepository.GetByIdAsync(query.StudyPlanAId, ct)
-            ?? throw new KeyNotFoundException("Study plan A not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios A no encontrado.");
         var planB = await studyPlanRepository.GetByIdAsync(query.StudyPlanBId, ct)
-            ?? throw new KeyNotFoundException("Study plan B not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios B no encontrado.");
 
         if (planA.CareerId != planB.CareerId)
-            throw new InvalidOperationException("Both study plans must belong to the same career.");
+            throw new InvalidOperationException("Ambos planes de estudios deben pertenecer a la misma carrera.");
 
         var snapshotsA = await BuildSnapshotsAsync(planA.Id, ct);
         var snapshotsB = await BuildSnapshotsAsync(planB.Id, ct);

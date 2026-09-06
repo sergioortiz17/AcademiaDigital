@@ -7,7 +7,7 @@ public sealed class TeacherProfilePolicy
     public string NormalizeEmployeeNumber(string employeeNumber)
     {
         if (string.IsNullOrWhiteSpace(employeeNumber))
-            throw new ArgumentException("Employee number is required.");
+            throw new ArgumentException("El número de legajo es obligatorio.");
 
         return employeeNumber.Trim().ToUpperInvariant();
     }
@@ -15,7 +15,7 @@ public sealed class TeacherProfilePolicy
     public void ValidateHireDate(DateTime hireDate, DateTime now)
     {
         if (hireDate.Date > now.Date)
-            throw new ArgumentException("Hire date cannot be in the future.");
+            throw new ArgumentException("La fecha de ingreso no puede ser futura.");
     }
 
     public void Deactivate(Teacher teacher, long actorUserId, string? reason, DateTime now)

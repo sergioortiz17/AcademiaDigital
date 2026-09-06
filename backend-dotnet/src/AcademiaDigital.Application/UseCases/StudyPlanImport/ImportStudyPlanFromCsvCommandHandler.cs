@@ -38,7 +38,7 @@ public sealed class ImportStudyPlanFromCsvCommandHandler(
     public async Task<ImportStudyPlanCsvResult> Handle(ImportStudyPlanFromCsvCommand command, CancellationToken ct = default)
     {
         var career = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
 
         var parseResult = await csvValidator.ParseAndValidateAsync(command.CsvContent, courseTypeRepository, cycleValidator, ct);
         if (!parseResult.Success)

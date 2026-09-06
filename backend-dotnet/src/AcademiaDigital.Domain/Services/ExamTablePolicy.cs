@@ -14,76 +14,76 @@ public sealed class ExamTablePolicy
         DateTime nowUtc)
     {
         if (academicYear != examDateUtc.Year)
-            throw new ArgumentException("The exam date must belong to the selected academic year.");
+            throw new ArgumentException("La fecha del examen debe pertenecer al año académico seleccionado.");
         if (callNumber < 1 || callNumber > 10)
-            throw new ArgumentException("The call number must be between one and ten.");
+            throw new ArgumentException("El número de llamado debe estar entre uno y diez.");
         if (examDateUtc < nowUtc)
-            throw new ArgumentException("An exam table cannot be scheduled in the past.");
+            throw new ArgumentException("Una mesa de examen no puede programarse en el pasado.");
         if (registrationDeadlineUtc <= nowUtc || registrationDeadlineUtc > examDateUtc)
-            throw new ArgumentException("The registration deadline must be in the future and no later than the exam date.");
+            throw new ArgumentException("La fecha límite de inscripción debe ser futura y no posterior a la fecha del examen.");
         if (string.IsNullOrWhiteSpace(location) || location.Trim().Length > 200)
-            throw new ArgumentException("A location of up to 200 characters is required.");
+            throw new ArgumentException("Se requiere un lugar de hasta 200 caracteres.");
         if (tribunal.Count < 2 || tribunal.Count > 5)
-            throw new ArgumentException("The tribunal requires between two and five teachers.");
+            throw new ArgumentException("El tribunal requiere entre dos y cinco docentes.");
         if (tribunal.Select(item => item.TeacherId).Distinct().Count() != tribunal.Count)
-            throw new ArgumentException("A teacher cannot appear twice in the tribunal.");
+            throw new ArgumentException("Un docente no puede aparecer dos veces en el tribunal.");
         if (tribunal.Count(item => item.Role == ExamTribunalRole.President) != 1
             || !tribunal.Any(item => item.Role == ExamTribunalRole.Vocal))
-            throw new ArgumentException("The tribunal requires exactly one president and at least one vocal.");
+            throw new ArgumentException("El tribunal requiere exactamente un presidente y al menos un vocal.");
     }
 
     public void EnsureCanRegister(ExamTable table, Enrollment enrollment, DateTime nowUtc)
     {
         if (table.Status != ExamTableStatus.Open || nowUtc > table.RegistrationDeadlineUtc)
-            throw new InvalidOperationException("Registration for this exam table is closed.");
+            throw new InvalidOperationException("La inscripción a esta mesa de examen está cerrada.");
         if (enrollment.CourseId != table.CourseId)
-            throw new ArgumentException("The enrollment does not belong to the exam table course.");
+            throw new ArgumentException("La inscripción no pertenece a la materia de la mesa de examen.");
         if (enrollment.Status != EnrollmentStatus.Regularized)
-            throw new InvalidOperationException("Only a regularized enrollment can register for a final exam.");
+            throw new InvalidOperationException("Solo una inscripción regularizada puede inscribirse a un examen final.");
     }
 
     public void EnsureCanStartGrading(ExamTable table)
     {
         if (table.Status != ExamTableStatus.Open)
-            throw new InvalidOperationException("Only an open exam table can start grading.");
+            throw new InvalidOperationException("Solo una mesa de examen abierta puede comenzar la calificación.");
         if (table.Registrations.Count == 0)
-            throw new InvalidOperationException("An exam table without registrations cannot start grading.");
+            throw new InvalidOperationException("Una mesa de examen sin inscripciones no puede comenzar la calificación.");
     }
 
     public void EnsureCanRecordResults(ExamTable table)
     {
         if (table.Status != ExamTableStatus.Grading)
-            throw new InvalidOperationException("Results can only be recorded while the exam table is grading.");
+            throw new InvalidOperationException("Los resultados solo pueden registrarse mientras la mesa de examen está en calificación.");
     }
 
     public void EnsureResultIsValid(ExamResultOutcome outcome, decimal? grade, decimal minimumPassingGrade)
     {
         if (minimumPassingGrade < 1m || minimumPassingGrade > 10m)
-            throw new InvalidOperationException("The minimum final exam grade must be between one and ten.");
+            throw new InvalidOperationException("La nota mínima de aprobación del examen final debe estar entre uno y diez.");
         if (outcome == ExamResultOutcome.Absent && grade.HasValue)
-            throw new ArgumentException("An absent result cannot have a grade.");
+            throw new ArgumentException("Un resultado de ausente no puede tener nota.");
         if (outcome != ExamResultOutcome.Absent && (!grade.HasValue || grade < 0m || grade > 10m))
-            throw new ArgumentException("A present exam result requires a grade between zero and ten.");
+            throw new ArgumentException("Un resultado de examen presente requiere una nota entre cero y diez.");
         if (outcome == ExamResultOutcome.Passed && grade < minimumPassingGrade)
-            throw new ArgumentException("A passing result must meet the minimum final exam grade.");
+            throw new ArgumentException("Un resultado aprobado debe alcanzar la nota mínima de aprobación del examen final.");
         if (outcome == ExamResultOutcome.Failed && grade >= minimumPassingGrade)
-            throw new ArgumentException("A failing result must be below the minimum final exam grade.");
+            throw new ArgumentException("Un resultado desaprobado debe estar por debajo de la nota mínima de aprobación del examen final.");
     }
 
     public void EnsureCanPublish(ExamTable table)
     {
         if (table.Status != ExamTableStatus.Grading)
-            throw new InvalidOperationException("Only an exam table in grading can be published.");
+            throw new InvalidOperationException("Solo una mesa de examen en calificación puede publicarse.");
         if (table.Registrations.Count == 0
             || table.Registrations.Any(registration => registration.GradeRevisions.All(revision => !revision.IsCurrent)))
-            throw new InvalidOperationException("Every registration requires a result before publication.");
+            throw new InvalidOperationException("Cada inscripción requiere un resultado antes de la publicación.");
     }
 
     public void EnsureCanReopen(ExamTable table, string reason)
     {
         if (table.Status != ExamTableStatus.Published)
-            throw new InvalidOperationException("Only a published exam table can be reopened.");
+            throw new InvalidOperationException("Solo una mesa de examen publicada puede reabrirse.");
         if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 3 || reason.Trim().Length > 1000)
-            throw new ArgumentException("A reopening reason between 3 and 1000 characters is required.");
+            throw new ArgumentException("Se requiere un motivo de reapertura de entre 3 y 1000 caracteres.");
     }
 }

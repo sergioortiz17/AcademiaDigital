@@ -49,14 +49,14 @@ public sealed class CreateAdmissionFormCommandHandler(
         capacityPolicy.ValidateCapacity(command.Capacity);
 
         var career = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
         if (!career.IsActive)
-            throw new InvalidOperationException("Admission forms cannot be created for an inactive career.");
+            throw new InvalidOperationException("No se pueden crear formularios de admisión para una carrera inactiva.");
         Commission? commission = null;
         if (command.CommissionId.HasValue)
         {
             commission = await commissionRepository.FindByIdAsync(command.CommissionId.Value, ct)
-                ?? throw new KeyNotFoundException("Commission not found.");
+                ?? throw new KeyNotFoundException("Comisión no encontrada.");
         }
         targetPolicy.Validate(career, commission, command.Capacity);
         if (await repository.FormSlugExistsAsync(slug, ct))
@@ -109,7 +109,7 @@ public sealed class SetAdmissionFormActiveCommandHandler(
         CancellationToken ct = default)
     {
         var form = await repository.FindFormByIdAsync(command.FormId, ct)
-            ?? throw new KeyNotFoundException("Admission form not found.");
+            ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
         form.IsActive = command.IsActive;
         form.UpdatedAt = timeProvider.GetUtcNow().UtcDateTime;
         return GetAdmissionFormQueryHandler.Map(await repository.UpdateFormAsync(form, ct));
@@ -160,9 +160,9 @@ public sealed class GetAdmissionApplicationsQueryHandler(IAdmissionRepository re
         CancellationToken ct = default)
     {
         if (query.Page < 1)
-            throw new ArgumentException("Page must be greater than zero.");
+            throw new ArgumentException("La página debe ser mayor que cero.");
         if (query.PageSize is < 1 or > 100)
-            throw new ArgumentException("Page size must be between 1 and 100.");
+            throw new ArgumentException("El tamaño de página debe estar entre 1 y 100.");
 
         var (items, total) = await repository.GetApplicationsAsync(
             query.AdmissionFormId,
@@ -188,7 +188,7 @@ public sealed class GetAdmissionApplicationQueryHandler(IAdmissionRepository rep
         CancellationToken ct = default)
     {
         var application = await repository.FindApplicationByPublicIdAsync(query.PublicId, false, ct)
-            ?? throw new KeyNotFoundException("Admission application not found.");
+            ?? throw new KeyNotFoundException("Solicitud de admisión no encontrada.");
         return AdmissionAdminMappings.Detail(application);
     }
 }
@@ -217,10 +217,10 @@ public sealed class ChangeAdmissionApplicationStatusCommandHandler(
         {
             var application = await repository.FindApplicationByPublicIdAsync(
                 command.PublicId, true, transactionCt)
-                ?? throw new KeyNotFoundException("Admission application not found.");
+                ?? throw new KeyNotFoundException("Solicitud de admisión no encontrada.");
             var form = await repository.LockFormForCapacityAsync(
                 application.AdmissionFormId, transactionCt)
-                ?? throw new KeyNotFoundException("Admission form not found.");
+                ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
             policy.EnsureCanTransition(application.Status, command.Status, command.Reason);
 
             if (command.Status == AdmissionApplicationStatus.Confirmed)
@@ -241,10 +241,10 @@ public sealed class ChangeAdmissionApplicationStatusCommandHandler(
                     form, now, command.ChangedByUserId, application.Id, transactionCt);
                 var occupied = await repository.CountCapacityOccupyingApplicationsAsync(form.Id, transactionCt);
                 if (!capacityPolicy.HasAvailableSlot(form.Capacity, occupied))
-                    throw new InvalidOperationException("Admission form has no available capacity.");
+                    throw new InvalidOperationException("El formulario de admisión no tiene cupo disponible.");
                 if (await repository.HasEarlierWaitlistedApplicationAsync(
                     form.Id, application.CreatedAt, application.Id, transactionCt))
-                    throw new InvalidOperationException("An earlier admission application is waiting for capacity.");
+                    throw new InvalidOperationException("Una solicitud de admisión anterior está esperando cupo.");
             }
 
             application.Status = command.Status;

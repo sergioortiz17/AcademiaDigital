@@ -28,7 +28,7 @@ public sealed class AdmissionFormPolicyTests
         var exception = Assert.Throws<ArgumentException>(() =>
             _policy.ValidateDefinition("Ingreso", "Terms", 72, fields));
 
-        Assert.Contains("duplicated", exception.Message);
+        Assert.Contains("duplicada", exception.Message);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public sealed class AdmissionFormPolicyTests
         var exception = Assert.Throws<ArgumentException>(() =>
             _policy.ValidateDefinition("Ingreso", "Terms", 72, fields));
 
-        Assert.Contains("required field 'email'", exception.Message);
+        Assert.Contains("campo obligatorio 'email'", exception.Message);
     }
 
     [Fact]

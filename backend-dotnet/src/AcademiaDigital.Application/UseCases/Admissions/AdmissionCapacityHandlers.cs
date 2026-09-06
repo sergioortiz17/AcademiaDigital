@@ -96,13 +96,13 @@ public sealed class SetAdmissionFormCapacityCommandHandler(
         return await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             _ = await repository.LockFormForCapacityAsync(command.FormId, transactionCt)
-                ?? throw new KeyNotFoundException("Admission form not found.");
+                ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
             var form = await repository.FindFormByIdAsync(command.FormId, transactionCt)
-                ?? throw new KeyNotFoundException("Admission form not found.");
+                ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
             targetPolicy.ValidateCapacity(form.CommissionId, command.Capacity);
             var occupied = await repository.CountCapacityOccupyingApplicationsAsync(form.Id, transactionCt);
             if (command.Capacity.HasValue && command.Capacity.Value < occupied)
-                throw new InvalidOperationException("Admission form capacity cannot be lower than its occupied capacity.");
+                throw new InvalidOperationException("El cupo del formulario de admisión no puede ser menor que su cupo ocupado.");
 
             form.Capacity = command.Capacity;
             form.UpdatedAt = now;
@@ -138,7 +138,7 @@ public sealed class ProcessAdmissionExpirationsCommandHandler(
             foreach (var formId in formIds.Order())
             {
                 var form = await repository.LockFormForCapacityAsync(formId, transactionCt)
-                    ?? throw new KeyNotFoundException("Admission form not found.");
+                    ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
                 var result = await coordinator.ReconcileAsync(
                     form, now, command.ChangedByUserId, null, transactionCt);
                 expired += result.Expired;

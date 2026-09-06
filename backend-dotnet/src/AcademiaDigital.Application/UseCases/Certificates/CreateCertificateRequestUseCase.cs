@@ -22,11 +22,11 @@ public class CreateCertificateRequestUseCase(
             var kind = policy.ParseKind(certificateType);
             var academic = await repository.GetAcademicRecordAsync(
                 userId, studentCareerId, examRegistrationId, transactionCt)
-                ?? throw new KeyNotFoundException("Student career not found.");
+                ?? throw new KeyNotFoundException("Carrera del alumno no encontrada.");
             policy.EnsureEligible(kind, academic, examRegistrationId);
             if (await repository.HasActiveRequestAsync(
                     userId, academic.StudentCareerId, kind, examRegistrationId, transactionCt))
-                throw new InvalidOperationException("An active request already exists for this certificate.");
+                throw new InvalidOperationException("Ya existe una solicitud activa para este certificado.");
 
             var request = await repository.CreateAsync(new CertificateRequest
             {

@@ -103,12 +103,12 @@ public sealed class CreateGradebookCommandHandler(
     public async Task<GradebookDto> Handle(CreateGradebookCommand command, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey) || command.IdempotencyKey.Trim().Length > 100)
-            throw new ArgumentException("A valid idempotency key of up to 100 characters is required.");
+            throw new ArgumentException("Se requiere una clave de idempotencia válida de hasta 100 caracteres.");
         var position = await positionRepository.FindByIdAsync(command.TeachingPositionId, ct)
-            ?? throw new KeyNotFoundException("Teaching position not found.");
+            ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
         if (!command.IsAdmin && !await gradebookRepository.CanTeacherManagePositionAsync(
                 command.ActorUserId, position.Id, ct))
-            throw new ForbiddenException("The teacher is not assigned to this course and commission.");
+            throw new ForbiddenException("El docente no está asignado a esta materia y comisión.");
         var evaluations = command.Evaluations.Select((item, index) => new GradebookEvaluation
         {
             Name = item.Name.Trim(),
@@ -144,22 +144,22 @@ public sealed class SaveGradeEntriesCommandHandler(
 {
     public async Task<GradebookDetailDto> Handle(SaveGradeEntriesCommand command, CancellationToken ct = default)
     {
-        if (command.Grades.Count == 0) throw new ArgumentException("At least one grade is required.");
+        if (command.Grades.Count == 0) throw new ArgumentException("Se requiere al menos una nota.");
         if (command.Grades.Select(item => (item.EvaluationId, item.EnrollmentId)).Distinct().Count() != command.Grades.Count)
-            throw new ArgumentException("An evaluation and enrollment pair cannot appear more than once.");
+            throw new ArgumentException("Un par de evaluación e inscripción no puede aparecer más de una vez.");
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             await GradebookAuthorization.EnsureCanManage(repository, command.GradebookId, command.ActorUserId, command.IsAdmin, transactionCt);
             var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
-                ?? throw new KeyNotFoundException("Gradebook not found.");
+                ?? throw new KeyNotFoundException("Planilla no encontrada.");
             policy.EnsureEditable(gradebook);
             var roster = await repository.GetRosterAsync(gradebook, transactionCt);
             var rosterByEnrollment = roster.ToDictionary(item => item.EnrollmentId);
             var evaluations = gradebook.Evaluations.ToDictionary(item => item.Id);
             if (command.Grades.Any(item => !rosterByEnrollment.ContainsKey(item.EnrollmentId)))
-                throw new ArgumentException("Every grade must belong to the gradebook roster.");
+                throw new ArgumentException("Todas las notas deben pertenecer a la nómina de la planilla.");
             if (command.Grades.Any(item => !evaluations.ContainsKey(item.EvaluationId)))
-                throw new ArgumentException("Every grade must belong to a configured evaluation.");
+                throw new ArgumentException("Todas las notas deben pertenecer a una evaluación configurada.");
             foreach (var input in command.Grades) policy.EnsureScoreIsValid(evaluations[input.EvaluationId], input.Score);
             var now = timeProvider.GetUtcNow().UtcDateTime;
             await repository.SaveGradeRevisionsAsync(command.Grades.Select(input => new GradeEntryRevision
@@ -192,7 +192,7 @@ public sealed class SubmitGradebookCommandHandler(
         {
             await GradebookAuthorization.EnsureCanManage(repository, command.GradebookId, command.ActorUserId, command.IsAdmin, transactionCt);
             var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
-                ?? throw new KeyNotFoundException("Gradebook not found.");
+                ?? throw new KeyNotFoundException("Planilla no encontrada.");
             var roster = await repository.GetRosterAsync(gradebook, transactionCt);
             policy.EnsureCanSubmit(gradebook, roster.Count);
             gradebook.Status = GradebookStatus.Submitted;
@@ -202,7 +202,7 @@ public sealed class SubmitGradebookCommandHandler(
             return true;
         }, ct);
         return GradebookMapper.MapSummary(await repository.FindAsync(command.GradebookId, ct)
-            ?? throw new KeyNotFoundException("Gradebook not found."));
+            ?? throw new KeyNotFoundException("Planilla no encontrada."));
     }
 }
 
@@ -249,7 +249,7 @@ public sealed class CloseGradebookCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
-                ?? throw new KeyNotFoundException("Gradebook not found.");
+                ?? throw new KeyNotFoundException("Planilla no encontrada.");
             policy.EnsureCanClose(gradebook);
             var results = gradebook.GradeRevisions.Where(item => item.IsCurrent)
                 .GroupBy(item => item.EnrollmentId)
@@ -267,7 +267,7 @@ public sealed class CloseGradebookCommandHandler(
             return true;
         }, ct);
         return GradebookMapper.MapSummary(await repository.FindAsync(command.GradebookId, ct)
-            ?? throw new KeyNotFoundException("Gradebook not found."));
+            ?? throw new KeyNotFoundException("Planilla no encontrada."));
     }
 }
 
@@ -282,7 +282,7 @@ public sealed class ReopenGradebookCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
-                ?? throw new KeyNotFoundException("Gradebook not found.");
+                ?? throw new KeyNotFoundException("Planilla no encontrada.");
             policy.EnsureCanReopen(gradebook, command.Reason);
             var now = timeProvider.GetUtcNow().UtcDateTime;
             gradebook.Reopenings.Add(new GradebookReopening
@@ -305,7 +305,7 @@ public sealed class ReopenGradebookCommandHandler(
             return true;
         }, ct);
         return GradebookMapper.MapSummary(await repository.FindAsync(command.GradebookId, ct)
-            ?? throw new KeyNotFoundException("Gradebook not found."));
+            ?? throw new KeyNotFoundException("Planilla no encontrada."));
     }
 }
 
@@ -317,7 +317,7 @@ public sealed class GetMyGradesQueryHandler(
     public async Task<IReadOnlyList<StudentPublishedGradebookDto>> Handle(GetMyGradesQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByUserIdAsync(query.UserId, ct)
-            ?? throw new KeyNotFoundException("Student profile not found.");
+            ?? throw new KeyNotFoundException("Perfil de alumno no encontrado.");
         return (await gradebookRepository.GetPublishedForStudentAsync(student.Id, query.CourseId, ct))
             .Select(item => GradebookMapper.MapStudent(item, student.Id, policy))
             .ToArray();
@@ -334,7 +334,7 @@ internal static class GradebookAuthorization
         CancellationToken ct)
     {
         if (!isAdmin && !await repository.CanTeacherManageGradebookAsync(actorUserId, gradebookId, ct))
-            throw new ForbiddenException("The teacher cannot manage this gradebook.");
+            throw new ForbiddenException("El docente no puede gestionar esta planilla.");
     }
 }
 
@@ -350,13 +350,13 @@ internal static class GradebookTransitions
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var gradebook = await repository.FindForUpdateAsync(gradebookId, transactionCt)
-                ?? throw new KeyNotFoundException("Gradebook not found.");
+                ?? throw new KeyNotFoundException("Planilla no encontrada.");
             transition(gradebook);
             await repository.SaveAsync(gradebook, transactionCt);
             return true;
         }, ct);
         return GradebookMapper.MapSummary(await repository.FindAsync(gradebookId, ct)
-            ?? throw new KeyNotFoundException("Gradebook not found."));
+            ?? throw new KeyNotFoundException("Planilla no encontrada."));
     }
 }
 
@@ -377,7 +377,7 @@ internal static class GradebookMapper
         CancellationToken ct)
     {
         var gradebook = await repository.FindAsync(gradebookId, ct)
-            ?? throw new KeyNotFoundException("Gradebook not found.");
+            ?? throw new KeyNotFoundException("Planilla no encontrada.");
         var roster = await repository.GetRosterAsync(gradebook, ct);
         return new GradebookDetailDto(
             MapSummary(gradebook),

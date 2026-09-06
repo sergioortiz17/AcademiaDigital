@@ -10,7 +10,7 @@ public sealed class AdmissionDocumentPolicy
             || (requirement.CareerId.HasValue && requirement.CareerId != careerId)
             || (requirement.ValidFrom.HasValue && requirement.ValidFrom > today)
             || (requirement.ValidTo.HasValue && requirement.ValidTo < today))
-            throw new InvalidOperationException("Document requirement does not apply to this admission application.");
+            throw new InvalidOperationException("El requisito de documento no aplica a esta solicitud de admisión.");
     }
 
     public void EnsureCanSubmit(AdmissionApplicationStatus status)
@@ -18,7 +18,7 @@ public sealed class AdmissionDocumentPolicy
         if (status is AdmissionApplicationStatus.Confirmed
             or AdmissionApplicationStatus.Expired
             or AdmissionApplicationStatus.Rejected)
-            throw new InvalidOperationException("Documents cannot be submitted for an application in its current status.");
+            throw new InvalidOperationException("No se pueden enviar documentos para una solicitud en su estado actual.");
     }
 
     public void EnsureCanReview(
@@ -27,11 +27,11 @@ public sealed class AdmissionDocumentPolicy
         string? observation)
     {
         if (currentStatus != StudentDocumentStatus.Submitted)
-            throw new InvalidOperationException("Only submitted documents can be reviewed.");
+            throw new InvalidOperationException("Solo se pueden revisar los documentos enviados.");
         if (targetStatus is not (StudentDocumentStatus.Approved or StudentDocumentStatus.Rejected))
-            throw new ArgumentException("Review status must be Approved or Rejected.");
+            throw new ArgumentException("El estado de revisión debe ser Aprobado o Rechazado.");
         if (targetStatus == StudentDocumentStatus.Rejected && string.IsNullOrWhiteSpace(observation))
-            throw new ArgumentException("Observation is required when rejecting a document.");
+            throw new ArgumentException("La observación es obligatoria al rechazar un documento.");
     }
 
     public void EnsureRequiredDocumentsApproved(
@@ -49,6 +49,6 @@ public sealed class AdmissionDocumentPolicy
             .ToArray();
         if (missingCodes.Length > 0)
             throw new InvalidOperationException(
-                $"Required admission documents are not approved: {string.Join(", ", missingCodes)}.");
+                $"No están aprobados los documentos de admisión obligatorios: {string.Join(", ", missingCodes)}.");
     }
 }

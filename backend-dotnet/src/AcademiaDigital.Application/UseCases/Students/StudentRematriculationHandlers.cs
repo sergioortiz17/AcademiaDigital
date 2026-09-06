@@ -46,19 +46,19 @@ public sealed class CreateStudentRematriculationCommandHandler(
         CancellationToken ct = default)
     {
         var student = await studentRepository.FindByIdAsync(command.StudentId, ct)
-            ?? throw new KeyNotFoundException("Student not found.");
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
         policy.ValidateStudent(student);
         var studyPlan = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
         var commission = await commissionRepository.FindByIdAsync(command.CommissionId, ct)
-            ?? throw new KeyNotFoundException("Commission not found.");
+            ?? throw new KeyNotFoundException("Comisión no encontrada.");
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
         return await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var studentCareer = await rematriculationRepository.LockActiveStudentCareerAsync(
                 student.Id, command.CareerId, transactionCt)
-                ?? throw new InvalidOperationException("Student is not actively enrolled in the selected career.");
+                ?? throw new InvalidOperationException("El alumno no está matriculado activamente en la carrera seleccionada.");
             policy.ValidateTarget(
                 studentCareer,
                 studyPlan,

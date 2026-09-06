@@ -24,9 +24,9 @@ public sealed class PreviewStudyPlanDiffCommandHandler(
     public async Task<PreviewStudyPlanDiffResult> Handle(PreviewStudyPlanDiffCommand command, CancellationToken ct = default)
     {
         var plan = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
         if (plan.CareerId != command.CareerId)
-            throw new KeyNotFoundException("Study plan not found in this career.");
+            throw new KeyNotFoundException("Plan de estudios no encontrado en esta carrera.");
 
         var parseResult = await csvValidator.ParseAndValidateAsync(command.CsvContent, courseTypeRepository, cycleValidator, ct);
         if (!parseResult.Success)

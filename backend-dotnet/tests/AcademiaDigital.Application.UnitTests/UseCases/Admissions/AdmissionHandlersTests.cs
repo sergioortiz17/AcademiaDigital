@@ -40,7 +40,7 @@ public sealed class AdmissionHandlersTests
         var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             handler.Handle(new GetAdmissionFormQuery("missing-form"), TestContext.Current.CancellationToken));
 
-        Assert.Equal("Admission form not found.", exception.Message);
+        Assert.Equal("Formulario de admisión no encontrado.", exception.Message);
     }
 
     [Fact]

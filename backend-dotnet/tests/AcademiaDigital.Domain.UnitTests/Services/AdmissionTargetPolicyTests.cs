@@ -20,7 +20,7 @@ public sealed class AdmissionTargetPolicyTests
 
         var exception = Assert.Throws<ArgumentException>(() => policy.Validate(career, commission, null));
 
-        Assert.Contains("Capacity is required", exception.Message);
+        Assert.Contains("La capacidad es obligatoria", exception.Message);
     }
 
     [Fact]

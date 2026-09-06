@@ -48,7 +48,7 @@ public sealed class GetAdmissionFormQueryHandler(
     public async Task<AdmissionFormDto> Handle(GetAdmissionFormQuery query, CancellationToken ct = default)
     {
         var form = await repository.FindActiveFormBySlugAsync(formPolicy.NormalizeSlug(query.Slug), ct)
-            ?? throw new KeyNotFoundException("Admission form not found.");
+            ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
 
         return Map(form);
     }
@@ -111,16 +111,16 @@ public sealed class CreateAdmissionApplicationCommandHandler(
 
         var form = await repository.FindActiveFormBySlugAsync(
             formPolicy.NormalizeSlug(command.FormSlug), ct)
-            ?? throw new KeyNotFoundException("Admission form not found.");
+            ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
 
         var normalizedFields = policy.ValidateAndNormalize(form, command.Fields, command.AcceptedTerms);
         var now = timeProvider.GetUtcNow().UtcDateTime;
         return await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var lockedForm = await repository.LockFormForCapacityAsync(form.Id, transactionCt)
-                ?? throw new KeyNotFoundException("Admission form not found.");
+                ?? throw new KeyNotFoundException("Formulario de admisión no encontrado.");
             if (!lockedForm.IsActive)
-                throw new KeyNotFoundException("Admission form not found.");
+                throw new KeyNotFoundException("Formulario de admisión no encontrado.");
 
             var email = normalizedFields["email"];
             var dni = normalizedFields["dni"];

@@ -82,7 +82,7 @@ public sealed class GetExamTableQueryHandler(IExamTableRepository repository)
     {
         await ExamTableAuthorization.EnsureCanManage(repository, query.ExamTableId, query.ActorUserId, query.IsAdmin, ct);
         return ExamTableMapper.MapDetail(await repository.FindAsync(query.ExamTableId, ct)
-            ?? throw new KeyNotFoundException("Exam table not found."));
+            ?? throw new KeyNotFoundException("Mesa de examen no encontrada."));
     }
 }
 
@@ -97,9 +97,9 @@ public sealed class CreateExamTableCommandHandler(
     public async Task<ExamTableDto> Handle(CreateExamTableCommand command, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey) || command.IdempotencyKey.Trim().Length > 100)
-            throw new ArgumentException("A valid idempotency key of up to 100 characters is required.");
+            throw new ArgumentException("Se requiere una clave de idempotencia válida de hasta 100 caracteres.");
         _ = await courseRepository.FindByIdAsync(command.CourseId, ct)
-            ?? throw new KeyNotFoundException("Course not found.");
+            ?? throw new KeyNotFoundException("Materia no encontrada.");
         var tribunal = command.Tribunal.Select(item => new ExamTribunalMember
         {
             TeacherId = item.TeacherId,
@@ -108,9 +108,9 @@ public sealed class CreateExamTableCommandHandler(
         foreach (var member in tribunal)
         {
             var teacher = await teacherRepository.FindByIdAsync(member.TeacherId, ct)
-                ?? throw new KeyNotFoundException($"Teacher {member.TeacherId} not found.");
+                ?? throw new KeyNotFoundException($"Docente {member.TeacherId} no encontrado.");
             if (!teacher.IsActive)
-                throw new InvalidOperationException("Every tribunal member must be an active teacher.");
+                throw new InvalidOperationException("Todos los miembros del tribunal deben ser docentes activos.");
         }
         var now = timeProvider.GetUtcNow().UtcDateTime;
         policy.EnsureCanCreate(
@@ -146,18 +146,18 @@ public sealed class RegisterForExamCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var table = await repository.FindForUpdateAsync(command.ExamTableId, transactionCt)
-                ?? throw new KeyNotFoundException("Exam table not found.");
+                ?? throw new KeyNotFoundException("Mesa de examen no encontrada.");
             var enrollment = await repository.FindEnrollmentForUpdateAsync(command.EnrollmentId, transactionCt)
-                ?? throw new KeyNotFoundException("Enrollment not found.");
+                ?? throw new KeyNotFoundException("Inscripción no encontrada.");
             if (!command.IsAdmin && enrollment.Student.UserId != command.ActorUserId)
-                throw new ForbiddenException("A student can only register their own enrollment.");
+                throw new ForbiddenException("Un alumno solo puede inscribir su propia inscripción.");
             var now = timeProvider.GetUtcNow().UtcDateTime;
             policy.EnsureCanRegister(table, enrollment, now);
             await repository.RegisterAsync(table, enrollment, command.ActorUserId, now, transactionCt);
             return true;
         }, ct);
         var loaded = await repository.FindAsync(command.ExamTableId, ct)
-            ?? throw new KeyNotFoundException("Exam table not found.");
+            ?? throw new KeyNotFoundException("Mesa de examen no encontrada.");
         return ExamTableMapper.MapRegistration(loaded.Registrations.Single(item => item.EnrollmentId == command.EnrollmentId));
     }
 }
@@ -173,7 +173,7 @@ public sealed class StartExamGradingCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var table = await repository.FindForUpdateAsync(command.ExamTableId, transactionCt)
-                ?? throw new KeyNotFoundException("Exam table not found.");
+                ?? throw new KeyNotFoundException("Mesa de examen no encontrada.");
             policy.EnsureCanStartGrading(table);
             table.Status = ExamTableStatus.Grading;
             table.GradingStartedAt = timeProvider.GetUtcNow().UtcDateTime;
@@ -182,7 +182,7 @@ public sealed class StartExamGradingCommandHandler(
             return true;
         }, ct);
         return ExamTableMapper.MapSummary(await repository.FindAsync(command.ExamTableId, ct)
-            ?? throw new KeyNotFoundException("Exam table not found."));
+            ?? throw new KeyNotFoundException("Mesa de examen no encontrada."));
     }
 }
 
@@ -194,18 +194,18 @@ public sealed class SaveExamResultsCommandHandler(
 {
     public async Task<ExamTableDetailDto> Handle(SaveExamResultsCommand command, CancellationToken ct = default)
     {
-        if (command.Results.Count == 0) throw new ArgumentException("At least one exam result is required.");
+        if (command.Results.Count == 0) throw new ArgumentException("Se requiere al menos un resultado de examen.");
         if (command.Results.Select(item => item.RegistrationId).Distinct().Count() != command.Results.Count)
-            throw new ArgumentException("An exam registration cannot appear more than once.");
+            throw new ArgumentException("Una inscripción a examen no puede aparecer más de una vez.");
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             await ExamTableAuthorization.EnsureCanManage(repository, command.ExamTableId, command.ActorUserId, command.IsAdmin, transactionCt);
             var table = await repository.FindForUpdateAsync(command.ExamTableId, transactionCt)
-                ?? throw new KeyNotFoundException("Exam table not found.");
+                ?? throw new KeyNotFoundException("Mesa de examen no encontrada.");
             policy.EnsureCanRecordResults(table);
             var registrations = table.Registrations.ToDictionary(item => item.Id);
             if (command.Results.Any(item => !registrations.ContainsKey(item.RegistrationId)))
-                throw new ArgumentException("Every result must belong to the exam table.");
+                throw new ArgumentException("Todos los resultados deben pertenecer a la mesa de examen.");
             foreach (var result in command.Results)
             {
                 var rule = registrations[result.RegistrationId].Enrollment.StudyPlanCourse?.ApprovalRule;
@@ -225,7 +225,7 @@ public sealed class SaveExamResultsCommandHandler(
             return true;
         }, ct);
         return ExamTableMapper.MapDetail(await repository.FindAsync(command.ExamTableId, ct)
-            ?? throw new KeyNotFoundException("Exam table not found."));
+            ?? throw new KeyNotFoundException("Mesa de examen no encontrada."));
     }
 }
 
@@ -240,7 +240,7 @@ public sealed class PublishExamTableCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var table = await repository.FindForUpdateAsync(command.ExamTableId, transactionCt)
-                ?? throw new KeyNotFoundException("Exam table not found.");
+                ?? throw new KeyNotFoundException("Mesa de examen no encontrada.");
             policy.EnsureCanPublish(table);
             table.Status = ExamTableStatus.Published;
             table.PublishedAt = timeProvider.GetUtcNow().UtcDateTime;
@@ -249,7 +249,7 @@ public sealed class PublishExamTableCommandHandler(
             return true;
         }, ct);
         return ExamTableMapper.MapSummary(await repository.FindAsync(command.ExamTableId, ct)
-            ?? throw new KeyNotFoundException("Exam table not found."));
+            ?? throw new KeyNotFoundException("Mesa de examen no encontrada."));
     }
 }
 
@@ -264,7 +264,7 @@ public sealed class ReopenExamTableCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var table = await repository.FindForUpdateAsync(command.ExamTableId, transactionCt)
-                ?? throw new KeyNotFoundException("Exam table not found.");
+                ?? throw new KeyNotFoundException("Mesa de examen no encontrada.");
             policy.EnsureCanReopen(table, command.Reason);
             table.Status = ExamTableStatus.Grading;
             table.PublishedAt = null;
@@ -279,7 +279,7 @@ public sealed class ReopenExamTableCommandHandler(
             return true;
         }, ct);
         return ExamTableMapper.MapSummary(await repository.FindAsync(command.ExamTableId, ct)
-            ?? throw new KeyNotFoundException("Exam table not found."));
+            ?? throw new KeyNotFoundException("Mesa de examen no encontrada."));
     }
 }
 
@@ -291,7 +291,7 @@ public sealed class GetMyExamTablesQueryHandler(
     public async Task<IReadOnlyList<StudentExamTableDto>> Handle(GetMyExamTablesQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByUserIdAsync(query.UserId, ct)
-            ?? throw new KeyNotFoundException("Student profile not found.");
+            ?? throw new KeyNotFoundException("Perfil de alumno no encontrado.");
         var now = timeProvider.GetUtcNow().UtcDateTime;
         return (await examTableRepository.GetForStudentAsync(student.Id, ct))
             .Select(table => ExamTableMapper.MapStudent(table, student.Id, now))
@@ -309,7 +309,7 @@ internal static class ExamTableAuthorization
         CancellationToken ct)
     {
         if (!isAdmin && !await repository.CanTeacherManageAsync(actorUserId, examTableId, ct))
-            throw new ForbiddenException("The teacher is not a member of this exam tribunal.");
+            throw new ForbiddenException("El docente no es miembro del tribunal de este examen.");
     }
 }
 

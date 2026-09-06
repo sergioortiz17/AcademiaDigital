@@ -11,7 +11,7 @@ public sealed class AdmissionFormPolicy
             || normalized[0] == '-'
             || normalized[^1] == '-'
             || normalized.Any(character => !char.IsLower(character) && !char.IsDigit(character) && character != '-'))
-            throw new ArgumentException("Admission form slug is invalid.");
+            throw new ArgumentException("El slug del formulario de admisión no es válido.");
         return normalized;
     }
 
@@ -22,35 +22,35 @@ public sealed class AdmissionFormPolicy
         IReadOnlyCollection<AdmissionFormField> fields)
     {
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200)
-            throw new ArgumentException("Admission form title is required and cannot exceed 200 characters.");
+            throw new ArgumentException("El título del formulario de admisión es obligatorio y no puede superar los 200 caracteres.");
         if (string.IsNullOrWhiteSpace(termsText) || termsText.Trim().Length > 8000)
-            throw new ArgumentException("Admission form terms are required and cannot exceed 8000 characters.");
+            throw new ArgumentException("Los términos del formulario de admisión son obligatorios y no pueden superar los 8000 caracteres.");
         if (reservationHours is < 1 or > 720)
-            throw new ArgumentException("Admission reservation hours must be between 1 and 720.");
+            throw new ArgumentException("Las horas de reserva de admisión deben estar entre 1 y 720.");
         if (fields.Count is < 2 or > 50)
-            throw new ArgumentException("Admission form must contain between 2 and 50 fields.");
+            throw new ArgumentException("El formulario de admisión debe contener entre 2 y 50 campos.");
 
         var duplicateKey = fields
             .GroupBy(field => field.Key, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault(group => group.Count() > 1)?.Key;
         if (duplicateKey is not null)
-            throw new ArgumentException($"Admission field key '{duplicateKey}' is duplicated.");
+            throw new ArgumentException($"La clave de campo de admisión '{duplicateKey}' está duplicada.");
         if (fields.GroupBy(field => field.SortOrder).Any(group => group.Count() > 1))
-            throw new ArgumentException("Admission field sort orders must be unique.");
+            throw new ArgumentException("Los órdenes de los campos de admisión deben ser únicos.");
 
         foreach (var field in fields)
         {
             var key = field.Key.Trim();
             if (!Enum.IsDefined(field.Type))
-                throw new ArgumentException($"Admission field '{key}' has an invalid type.");
+                throw new ArgumentException($"El campo de admisión '{key}' tiene un tipo no válido.");
             if (key.Length is < 2 or > 100
                 || !char.IsLower(key[0])
                 || key.Any(character => !char.IsLetterOrDigit(character) && character != '_'))
-                throw new ArgumentException($"Admission field key '{field.Key}' is invalid.");
+                throw new ArgumentException($"La clave de campo de admisión '{field.Key}' no es válida.");
             if (string.IsNullOrWhiteSpace(field.Label) || field.Label.Trim().Length > 150)
-                throw new ArgumentException($"Admission field '{key}' must have a valid label.");
+                throw new ArgumentException($"El campo de admisión '{key}' debe tener una etiqueta válida.");
             if (field.SortOrder < 0)
-                throw new ArgumentException($"Admission field '{key}' has an invalid sort order.");
+                throw new ArgumentException($"El campo de admisión '{key}' tiene un orden no válido.");
         }
 
         EnsureRequiredIdentityField(fields, "email", AdmissionFieldType.Email);
@@ -65,6 +65,6 @@ public sealed class AdmissionFormPolicy
         var field = fields.SingleOrDefault(candidate =>
             string.Equals(candidate.Key, key, StringComparison.OrdinalIgnoreCase));
         if (field is null || !field.IsRequired || field.Type != expectedType)
-            throw new ArgumentException($"Admission form must contain required field '{key}' with type {expectedType}.");
+            throw new ArgumentException($"El formulario de admisión debe contener el campo obligatorio '{key}' con tipo {expectedType}.");
     }
 }

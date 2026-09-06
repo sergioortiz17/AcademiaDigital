@@ -29,7 +29,7 @@ public sealed class EnrollmentEligibilityPolicy(CourseEligibilityService courseE
             .ToArray();
         if (unavailableCourses.Length > 0)
             throw new InvalidOperationException(
-                $"Courses already approved or in progress cannot be enrolled again: {string.Join(", ", unavailableCourses)}.");
+                $"Las materias ya aprobadas o en curso no pueden inscribirse nuevamente: {string.Join(", ", unavailableCourses)}.");
 
         var missingStrictPrerequisites = prerequisites
             .Where(prerequisite => prerequisite.IsActive
@@ -46,6 +46,6 @@ public sealed class EnrollmentEligibilityPolicy(CourseEligibilityService courseE
             .ToArray();
         if (missingStrictPrerequisites.Length > 0)
             throw new InvalidOperationException(
-                $"Strict prerequisites are not satisfied: {string.Join(", ", missingStrictPrerequisites)}.");
+                $"No se cumplen las correlativas obligatorias: {string.Join(", ", missingStrictPrerequisites)}.");
     }
 }

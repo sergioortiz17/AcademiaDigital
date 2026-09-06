@@ -54,7 +54,7 @@ public sealed class GetTeacherAssignmentsQueryHandler(
         CancellationToken ct = default)
     {
         _ = await teacherRepository.FindByIdAsync(query.TeacherId, ct)
-            ?? throw new KeyNotFoundException("Teacher not found.");
+            ?? throw new KeyNotFoundException("Docente no encontrado.");
         return (await assignmentRepository.GetByTeacherAsync(query.TeacherId, query.IncludeEnded, ct))
             .Select(TeacherAssignmentMapper.Map)
             .ToArray();
@@ -70,7 +70,7 @@ public sealed class GetMyTeacherAssignmentsQueryHandler(
         CancellationToken ct = default)
     {
         var teacher = await teacherRepository.FindByUserIdAsync(query.UserId, ct)
-            ?? throw new KeyNotFoundException("Teacher profile not found.");
+            ?? throw new KeyNotFoundException("Perfil de docente no encontrado.");
         return (await assignmentRepository.GetByTeacherAsync(teacher.Id, query.IncludeEnded, ct))
             .Select(TeacherAssignmentMapper.Map)
             .ToArray();
@@ -90,9 +90,9 @@ public sealed class AssignTeacherCommandHandler(
         CancellationToken ct = default)
     {
         var teacher = await teacherRepository.FindByIdAsync(command.TeacherId, ct)
-            ?? throw new KeyNotFoundException("Teacher not found.");
+            ?? throw new KeyNotFoundException("Docente no encontrado.");
         var position = await positionRepository.FindByIdAsync(command.TeachingPositionId, ct)
-            ?? throw new KeyNotFoundException("Teaching position not found.");
+            ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
         policy.EnsureCanAssign(position, teacher, command.StartedOn);
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var created = await unitOfWork.ExecuteInSerializableTransactionAsync(
@@ -121,7 +121,7 @@ public sealed class EndTeacherAssignmentCommandHandler(
         CancellationToken ct = default)
     {
         var assignment = await repository.FindAsync(command.TeacherId, command.AssignmentId, ct)
-            ?? throw new KeyNotFoundException("Teacher assignment not found.");
+            ?? throw new KeyNotFoundException("Asignación docente no encontrada.");
         policy.EnsureCanEnd(assignment, command.EndedOn, command.Reason);
         var ended = await unitOfWork.ExecuteInSerializableTransactionAsync(
             transactionCt => repository.EndAsync(

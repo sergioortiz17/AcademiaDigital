@@ -25,7 +25,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             context.Handler.Handle(Command(shift: "Madrugada"), TestContext.Current.CancellationToken));
 
-        Assert.Contains("Invalid shift", exception.Message);
+        Assert.Contains("no válido", exception.Message);
         await context.PeriodRepository.DidNotReceive()
             .FindByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
     }
@@ -40,7 +40,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Equal("Enrollment period is closed.", exception.Message);
+        Assert.Equal("El período de inscripción está cerrado.", exception.Message);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Equal("Student is not actively enrolled in the enrollment period career.", exception.Message);
+        Assert.Equal("El alumno no está matriculado activamente en la carrera del período de inscripción.", exception.Message);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             context.Handler.Handle(Command(courseIds: []), TestContext.Current.CancellationToken));
 
-        Assert.Equal("At least one course must be selected.", exception.Message);
+        Assert.Equal("Debe seleccionarse al menos una materia.", exception.Message);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Equal("Student is already enrolled in this period.", exception.Message);
+        Assert.Equal("El alumno ya está inscripto en este período.", exception.Message);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Equal("No vacancies are available for shift 'Tarde'.", exception.Message);
+        Assert.Equal("No hay vacantes disponibles para el turno 'Tarde'.", exception.Message);
         Assert.Empty(context.CreatedEnrollments);
     }
 
@@ -104,7 +104,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             context.Handler.Handle(Command(courseIds: [101, 102]), TestContext.Current.CancellationToken));
 
-        Assert.Equal("One or more study plan courses were not found.", exception.Message);
+        Assert.Equal("No se encontraron una o más materias del plan de estudios.", exception.Message);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Equal("All selected courses must belong to the enrollment period study plan.", exception.Message);
+        Assert.Equal("Todas las materias seleccionadas deben pertenecer al plan de estudios del período de inscripción.", exception.Message);
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Equal("The enrollment period does not match the student's current study plan.", exception.Message);
+        Assert.Equal("El período de inscripción no coincide con el plan de estudios actual del alumno.", exception.Message);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public sealed class CreateEnrollmentCommandHandlerTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
 
-        Assert.Contains("Strict prerequisites are not satisfied", exception.Message);
+        Assert.Contains("No se cumplen las correlativas obligatorias", exception.Message);
     }
 
     [Fact]

@@ -36,10 +36,10 @@ public sealed class CertificatePolicy
 
     public CertificateKind ParseKind(string value)
     {
-        if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException("Certificate type is required.");
+        if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException("El tipo de certificado es obligatorio.");
         var key = Normalize(value);
         if (!Aliases.TryGetValue(key, out var kind))
-            throw new ArgumentException("Unsupported certificate type.");
+            throw new ArgumentException("Tipo de certificado no soportado.");
         return kind;
     }
 
@@ -58,28 +58,28 @@ public sealed class CertificatePolicy
     public void EnsureEligible(CertificateKind kind, CertificateAcademicRecord record, long? examRegistrationId)
     {
         if (!record.StudentCareerIsActive)
-            throw new InvalidOperationException("The selected student career is not active.");
+            throw new InvalidOperationException("La carrera del estudiante seleccionada no está activa.");
         if (string.IsNullOrWhiteSpace(record.Dni)
             || string.IsNullOrWhiteSpace(record.StudentName)
             || string.IsNullOrWhiteSpace(record.CareerName))
-            throw new InvalidOperationException("Student name, DNI and career are required to issue a certificate.");
+            throw new InvalidOperationException("El nombre, el DNI y la carrera del estudiante son obligatorios para emitir un certificado.");
 
         switch (kind)
         {
             case CertificateKind.RegularStudent when record.StudentStatus != StudentStatus.Regular:
-                throw new InvalidOperationException("A regular-student certificate requires regular status.");
+                throw new InvalidOperationException("Un certificado de alumno regular requiere el estado regular.");
             case CertificateKind.Enrollment when !record.Courses.Any(course => course.Status != EnrollmentStatus.Withdrawn):
-                throw new InvalidOperationException("An enrollment certificate requires at least one active enrollment.");
+                throw new InvalidOperationException("Una constancia de matrícula requiere al menos una inscripción activa.");
             case CertificateKind.ApprovedCourses when !record.Courses.Any(course =>
                 course.Status is EnrollmentStatus.Approved or EnrollmentStatus.Promoted):
-                throw new InvalidOperationException("An approved-courses certificate requires at least one approved course.");
+                throw new InvalidOperationException("Un certificado de materias aprobadas requiere al menos una materia aprobada.");
             case CertificateKind.ExamPermit:
                 if (!examRegistrationId.HasValue)
-                    throw new ArgumentException("Exam registration id is required for an exam permit.");
+                    throw new ArgumentException("Se requiere el id de inscripción al examen para un permiso de examen.");
                 if (record.Exam is null || record.Exam.RegistrationId != examRegistrationId.Value)
-                    throw new InvalidOperationException("The exam registration does not belong to the selected student career.");
+                    throw new InvalidOperationException("La inscripción al examen no pertenece a la carrera del estudiante seleccionada.");
                 if (record.Exam.Status != ExamTableStatus.Open)
-                    throw new InvalidOperationException("Exam permits can only be issued while the exam table is open.");
+                    throw new InvalidOperationException("Los permisos de examen solo pueden emitirse mientras la mesa de examen está abierta.");
                 break;
         }
     }

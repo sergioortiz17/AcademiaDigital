@@ -19,12 +19,12 @@ public sealed class GetEligibleCoursesForStudentQueryHandler(
     public async Task<IReadOnlyList<EligibleCourseDto>> Handle(GetEligibleCoursesForStudentQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
-            ?? throw new KeyNotFoundException("Student not found.");
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
         var careerId = query.CareerId ?? student.CareerId;
         _ = await studentCareerRepository.FindAsync(query.StudentId, careerId, true, ct)
-            ?? throw new KeyNotFoundException("Active student career not found.");
+            ?? throw new KeyNotFoundException("No se encontró una carrera activa del alumno.");
         var currentPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(query.StudentId, careerId, ct)
-            ?? throw new KeyNotFoundException("Current study plan not found for student.");
+            ?? throw new KeyNotFoundException("No se encontró el plan de estudios actual del alumno.");
 
         var courses = await studentAcademicRepository.GetStudyPlanCoursesAsync(currentPlan.StudyPlanId, ct);
         var enrollments = await studentAcademicRepository.GetEnrollmentsAsync(query.StudentId, careerId, ct);
@@ -105,12 +105,12 @@ public sealed class GetStudentAcademicProgressQueryHandler(
     public async Task<StudentAcademicProgressDto> Handle(GetStudentAcademicProgressQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
-            ?? throw new KeyNotFoundException("Student not found.");
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
         var careerId = query.CareerId ?? student.CareerId;
         _ = await studentCareerRepository.FindAsync(query.StudentId, careerId, true, ct)
-            ?? throw new KeyNotFoundException("Active student career not found.");
+            ?? throw new KeyNotFoundException("No se encontró una carrera activa del alumno.");
         var currentPlan = await studentAcademicRepository.GetCurrentStudyPlanAsync(query.StudentId, careerId, ct)
-            ?? throw new KeyNotFoundException("Current study plan not found for student.");
+            ?? throw new KeyNotFoundException("No se encontró el plan de estudios actual del alumno.");
 
         var courses = await studentAcademicRepository.GetStudyPlanCoursesAsync(currentPlan.StudyPlanId, ct);
         var enrollments = await studentAcademicRepository.GetEnrollmentsAsync(query.StudentId, careerId, ct);
@@ -164,13 +164,13 @@ public sealed class AssignStudentStudyPlanCommandHandler(
     public async Task Handle(AssignStudentStudyPlanCommand command, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByIdAsync(command.StudentId, ct)
-            ?? throw new KeyNotFoundException("Student not found.");
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
 
         var studyPlan = await studyPlanRepository.GetByIdAsync(command.Request.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
         var membership = await studentCareerRepository.FindAsync(student.Id, studyPlan.CareerId, true, ct)
-            ?? throw new InvalidOperationException("Student is not actively enrolled in the study plan career.");
+            ?? throw new InvalidOperationException("El alumno no está matriculado activamente en la carrera del plan de estudios.");
 
         var assignment = new StudentStudyPlan
         {

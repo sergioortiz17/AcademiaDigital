@@ -9,15 +9,15 @@ public sealed class AdmissionTargetPolicy
         if (commission is null)
             return;
         if (!commission.IsActive)
-            throw new InvalidOperationException("Admission forms cannot target an inactive commission.");
+            throw new InvalidOperationException("Los formularios de admisión no pueden apuntar a una comisión inactiva.");
         if (commission.CareerId != career.Id)
-            throw new InvalidOperationException("Admission form career and commission are incompatible.");
+            throw new InvalidOperationException("La carrera y la comisión del formulario de admisión son incompatibles.");
         ValidateCapacity(commission.Id, capacity);
     }
 
     public void ValidateCapacity(int? commissionId, int? capacity)
     {
         if (commissionId.HasValue && !capacity.HasValue)
-            throw new ArgumentException("Capacity is required when an admission form targets a commission.");
+            throw new ArgumentException("La capacidad es obligatoria cuando un formulario de admisión apunta a una comisión.");
     }
 }

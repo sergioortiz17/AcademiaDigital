@@ -12,13 +12,13 @@ public sealed class EnrollmentCapacityPolicy
     {
         if (shift is not MorningShift and not AfternoonShift and not EveningShift)
             throw new ArgumentException(
-                $"Invalid shift '{shift}'. Valid values: {MorningShift}, {AfternoonShift}, {EveningShift}.");
+                $"Turno '{shift}' no válido. Valores válidos: {MorningShift}, {AfternoonShift}, {EveningShift}.");
     }
 
     public void EnsureValidQuotas(int morning, int afternoon, int evening)
     {
         if (morning < 0 || afternoon < 0 || evening < 0)
-            throw new ArgumentOutOfRangeException(nameof(morning), "Enrollment quotas cannot be negative.");
+            throw new ArgumentOutOfRangeException(nameof(morning), "Los cupos de inscripción no pueden ser negativos.");
     }
 
     public void EnsureVacancy(
@@ -33,11 +33,11 @@ public sealed class EnrollmentCapacityPolicy
             MorningShift => (period.QuotasMorning, enrolled.Morning),
             AfternoonShift => (period.QuotasAfternoon, enrolled.Afternoon),
             EveningShift => (period.QuotasEvening, enrolled.Evening),
-            _ => throw new InvalidOperationException("Unsupported enrollment shift.")
+            _ => throw new InvalidOperationException("Turno de inscripción no soportado.")
         };
 
         if (occupied >= quota)
-            throw new InvalidOperationException($"No vacancies are available for shift '{shift}'.");
+            throw new InvalidOperationException($"No hay vacantes disponibles para el turno '{shift}'.");
     }
 
     public void EnsureQuotasCoverCurrentEnrollment(
@@ -49,6 +49,6 @@ public sealed class EnrollmentCapacityPolicy
         EnsureValidQuotas(morning, afternoon, evening);
 
         if (morning < enrolled.Morning || afternoon < enrolled.Afternoon || evening < enrolled.Evening)
-            throw new InvalidOperationException("Enrollment quotas cannot be lower than current occupancy.");
+            throw new InvalidOperationException("Los cupos de inscripción no pueden ser menores que la ocupación actual.");
     }
 }

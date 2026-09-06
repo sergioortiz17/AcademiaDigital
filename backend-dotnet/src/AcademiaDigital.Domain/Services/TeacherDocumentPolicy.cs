@@ -15,11 +15,11 @@ public sealed class TeacherDocumentPolicy
     public string NormalizeDocumentType(string documentType)
     {
         if (string.IsNullOrWhiteSpace(documentType))
-            throw new ArgumentException("Document type is required.");
+            throw new ArgumentException("El tipo de documento es obligatorio.");
         var normalized = documentType.Trim().ToUpperInvariant();
         if (normalized.Length > 50 || normalized.Any(character =>
                 !char.IsAsciiLetterOrDigit(character) && character is not '-' and not '_'))
-            throw new ArgumentException("Document type must contain only letters, numbers, '-' or '_'.");
+            throw new ArgumentException("El tipo de documento solo puede contener letras, números, '-' o '_'.");
         return normalized;
     }
 
@@ -33,17 +33,17 @@ public sealed class TeacherDocumentPolicy
     {
         if (!Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != "storage"))
-            throw new ArgumentException("File URL must use HTTPS or a logical storage URI.");
+            throw new ArgumentException("La URL del archivo debe usar HTTPS o una URI lógica de almacenamiento.");
         if (string.IsNullOrWhiteSpace(originalFileName)
             || originalFileName.Contains('/')
             || originalFileName.Contains('\\'))
-            throw new ArgumentException("Original file name is invalid.");
+            throw new ArgumentException("El nombre original del archivo no es válido.");
         if (!AllowedContentTypes.Contains(contentType.Trim()))
-            throw new ArgumentException("Content type must be PDF, JPEG or PNG.");
+            throw new ArgumentException("El tipo de contenido debe ser PDF, JPEG o PNG.");
         if (fileSizeBytes is <= 0 or > MaximumFileSizeBytes)
-            throw new ArgumentException("File size must be between 1 byte and 10 MB.");
+            throw new ArgumentException("El tamaño del archivo debe estar entre 1 byte y 10 MB.");
         if (validUntil.HasValue && validUntil.Value < today)
-            throw new ArgumentException("Document validity cannot end in the past.");
+            throw new ArgumentException("La validez del documento no puede finalizar en el pasado.");
     }
 
     public void EnsureCanReview(
@@ -52,10 +52,10 @@ public sealed class TeacherDocumentPolicy
         string? observation)
     {
         if (currentStatus != StudentDocumentStatus.Submitted)
-            throw new InvalidOperationException("Only submitted teacher documents can be reviewed.");
+            throw new InvalidOperationException("Solo se pueden revisar los documentos docentes enviados.");
         if (targetStatus is not (StudentDocumentStatus.Approved or StudentDocumentStatus.Rejected))
-            throw new ArgumentException("Review status must be Approved or Rejected.");
+            throw new ArgumentException("El estado de revisión debe ser Aprobado o Rechazado.");
         if (targetStatus == StudentDocumentStatus.Rejected && string.IsNullOrWhiteSpace(observation))
-            throw new ArgumentException("Observation is required when rejecting a document.");
+            throw new ArgumentException("La observación es obligatoria al rechazar un documento.");
     }
 }

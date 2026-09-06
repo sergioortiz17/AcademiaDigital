@@ -161,9 +161,9 @@ public sealed class CreateAttendanceSessionCommandHandler(
     public async Task<AttendanceSessionDto> Handle(CreateAttendanceSessionCommand command, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey) || command.IdempotencyKey.Trim().Length > 100)
-            throw new ArgumentException("A valid idempotency key of up to 100 characters is required.");
+            throw new ArgumentException("Se requiere una clave de idempotencia válida de hasta 100 caracteres.");
         var position = await positionRepository.FindByIdAsync(command.TeachingPositionId, ct)
-            ?? throw new KeyNotFoundException("Teaching position not found.");
+            ?? throw new KeyNotFoundException("Cargo docente no encontrado.");
         await AttendanceAuthorization.EnsureCanManagePosition(
             attendanceRepository, command.TeachingPositionId, command.SessionDate,
             command.ActorUserId, command.IsAdmin, ct);
@@ -202,9 +202,9 @@ public sealed class SaveAttendanceRecordsCommandHandler(
 {
     public async Task<AttendanceSessionDetailDto> Handle(SaveAttendanceRecordsCommand command, CancellationToken ct = default)
     {
-        if (command.Records.Count == 0) throw new ArgumentException("At least one attendance record is required.");
+        if (command.Records.Count == 0) throw new ArgumentException("Se requiere al menos un registro de asistencia.");
         if (command.Records.Select(record => record.EnrollmentId).Distinct().Count() != command.Records.Count)
-            throw new ArgumentException("An enrollment cannot appear more than once in a bulk attendance request.");
+            throw new ArgumentException("Una inscripción no puede aparecer más de una vez en una solicitud de asistencia masiva.");
         foreach (var record in command.Records) policy.EnsureRecordStatusCanBeLoaded(record.Status);
         var now = timeProvider.GetUtcNow().UtcDateTime;
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
@@ -212,12 +212,12 @@ public sealed class SaveAttendanceRecordsCommandHandler(
             await AttendanceAuthorization.EnsureCanManageSession(
                 repository, command.SessionId, command.ActorUserId, command.IsAdmin, transactionCt);
             var session = await repository.FindSessionForUpdateAsync(command.SessionId, transactionCt)
-                ?? throw new KeyNotFoundException("Attendance session not found.");
+                ?? throw new KeyNotFoundException("Sesión de asistencia no encontrada.");
             policy.EnsureEditable(session, now);
             var roster = await repository.GetRosterAsync(session, transactionCt);
             var rosterByEnrollment = roster.ToDictionary(row => row.EnrollmentId);
             if (command.Records.Any(record => !rosterByEnrollment.ContainsKey(record.EnrollmentId)))
-                throw new ArgumentException("Every attendance record must belong to the session roster.");
+                throw new ArgumentException("Todos los registros de asistencia deben pertenecer a la nómina de la sesión.");
             var records = command.Records.Select(input => new AttendanceRecord
             {
                 AttendanceSessionId = session.Id,
@@ -247,7 +247,7 @@ public sealed class CloseAttendanceSessionCommandHandler(
         {
             await AttendanceAuthorization.EnsureCanManageSession(repository, command.SessionId, command.ActorUserId, command.IsAdmin, transactionCt);
             var session = await repository.FindSessionForUpdateAsync(command.SessionId, transactionCt)
-                ?? throw new KeyNotFoundException("Attendance session not found.");
+                ?? throw new KeyNotFoundException("Sesión de asistencia no encontrada.");
             policy.EnsureCanClose(session);
             session.Status = AttendanceSessionStatus.Closed;
             session.IsAdministrativelyReopened = false;
@@ -257,7 +257,7 @@ public sealed class CloseAttendanceSessionCommandHandler(
             return true;
         }, ct);
         return AttendanceMapper.MapSession(await repository.FindSessionAsync(command.SessionId, ct)
-            ?? throw new KeyNotFoundException("Attendance session not found."));
+            ?? throw new KeyNotFoundException("Sesión de asistencia no encontrada."));
     }
 }
 
@@ -272,7 +272,7 @@ public sealed class ReopenAttendanceSessionCommandHandler(
         await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var session = await repository.FindSessionForUpdateAsync(command.SessionId, transactionCt)
-                ?? throw new KeyNotFoundException("Attendance session not found.");
+                ?? throw new KeyNotFoundException("Sesión de asistencia no encontrada.");
             policy.EnsureCanReopen(session, command.Reason);
             var now = timeProvider.GetUtcNow().UtcDateTime;
             session.Status = AttendanceSessionStatus.Open;
@@ -289,7 +289,7 @@ public sealed class ReopenAttendanceSessionCommandHandler(
             return true;
         }, ct);
         return AttendanceMapper.MapSession(await repository.FindSessionAsync(command.SessionId, ct)
-            ?? throw new KeyNotFoundException("Attendance session not found."));
+            ?? throw new KeyNotFoundException("Sesión de asistencia no encontrada."));
     }
 }
 
@@ -304,7 +304,7 @@ public sealed class JustifyAttendanceRecordCommandHandler(
         var justification = await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var record = await repository.FindRecordForUpdateAsync(command.RecordId, transactionCt)
-                ?? throw new KeyNotFoundException("Attendance record not found.");
+                ?? throw new KeyNotFoundException("Registro de asistencia no encontrado.");
             policy.EnsureCanJustify(record, command.Category, command.Reason, command.EvidenceUrl);
             var created = new AttendanceJustification
             {
@@ -332,10 +332,10 @@ public sealed class GetStudentAttendanceSummaryQueryHandler(
     public async Task<StudentAttendanceSummaryDto> Handle(GetStudentAttendanceSummaryQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByIdAsync(query.StudentId, ct)
-            ?? throw new KeyNotFoundException("Student not found.");
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
         if (!query.IsAdmin && !await attendanceRepository.CanTeacherViewStudentAsync(
                 query.ActorUserId, student.Id, query.CourseId, query.CommissionId, ct))
-            throw new ForbiddenException("The teacher cannot view attendance for this student.");
+            throw new ForbiddenException("El docente no puede ver la asistencia de este alumno.");
         var records = await attendanceRepository.GetStudentRecordsAsync(
             student.Id, query.CourseId, query.CommissionId,
             query.IsAdmin ? null : query.ActorUserId, ct);
@@ -351,7 +351,7 @@ public sealed class GetMyAttendanceSummaryQueryHandler(
     public async Task<StudentAttendanceSummaryDto> Handle(GetMyAttendanceSummaryQuery query, CancellationToken ct = default)
     {
         var student = await studentRepository.FindByUserIdAsync(query.UserId, ct)
-            ?? throw new KeyNotFoundException("Student profile not found.");
+            ?? throw new KeyNotFoundException("Perfil de alumno no encontrado.");
         var records = await attendanceRepository.GetStudentRecordsAsync(
             student.Id, query.CourseId, query.CommissionId, null, ct);
         return AttendanceMapper.MapSummary(student, records, policy);
@@ -398,7 +398,7 @@ internal static class AttendanceAuthorization
         CancellationToken ct)
     {
         if (!isAdmin && !await repository.CanTeacherManagePositionAsync(actorUserId, positionId, onDate, ct))
-            throw new ForbiddenException("The teacher is not assigned to this course and commission.");
+            throw new ForbiddenException("El docente no está asignado a esta materia y comisión.");
     }
 
     public static async Task EnsureCanManageSession(
@@ -409,7 +409,7 @@ internal static class AttendanceAuthorization
         CancellationToken ct)
     {
         if (!isAdmin && !await repository.CanTeacherManageSessionAsync(actorUserId, sessionId, ct))
-            throw new ForbiddenException("The teacher cannot manage this attendance session.");
+            throw new ForbiddenException("El docente no puede gestionar esta sesión de asistencia.");
     }
 }
 
@@ -448,7 +448,7 @@ internal static class AttendanceMapper
         CancellationToken ct)
     {
         var session = await repository.FindSessionAsync(sessionId, ct)
-            ?? throw new KeyNotFoundException("Attendance session not found.");
+            ?? throw new KeyNotFoundException("Sesión de asistencia no encontrada.");
         var roster = await repository.GetRosterAsync(session, ct);
         var records = session.Records.ToDictionary(record => record.EnrollmentId);
         return new AttendanceSessionDetailDto(

@@ -19,7 +19,7 @@ public sealed class ReviewCertificateRequestCommandHandler(
         => unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var request = await repository.FindForUpdateAsync(command.RequestId, transactionCt)
-                ?? throw new KeyNotFoundException("Certificate request not found.");
+                ?? throw new KeyNotFoundException("Solicitud de certificado no encontrada.");
             var now = timeProvider.GetUtcNow().UtcDateTime;
             if (command.Approve) request.Approve(command.ActorUserId, now);
             else request.Reject(command.ActorUserId, command.Reason ?? string.Empty, now);
@@ -73,14 +73,14 @@ public sealed class IssueCertificateCommandHandler(
             // certificates while keeping the correlativo and its ledger row atomic.
             var sequence = await repository.LockSequenceAsync(transactionCt);
             var request = await repository.FindForUpdateAsync(command.RequestId, transactionCt)
-                ?? throw new KeyNotFoundException("Certificate request not found.");
+                ?? throw new KeyNotFoundException("Solicitud de certificado no encontrada.");
             var existing = await repository.FindIssuanceByRequestAsync(request.Id, true, transactionCt);
             if (existing is not null)
                 return (Request: request, Issuance: existing);
 
             var academic = await repository.GetAcademicRecordAsync(
                 request.UserId, request.StudentCareerId, request.ExamRegistrationId, transactionCt)
-                ?? throw new KeyNotFoundException("Student career not found.");
+                ?? throw new KeyNotFoundException("Carrera del alumno no encontrada.");
             policy.EnsureEligible(request.Kind, academic, request.ExamRegistrationId);
             var now = timeProvider.GetUtcNow().UtcDateTime;
             request.MarkIssuing(now);
@@ -113,7 +113,7 @@ public sealed class IssueCertificateCommandHandler(
         try
         {
             var snapshot = JsonSerializer.Deserialize<CertificateSnapshot>(prepared.Issuance.SnapshotJson)
-                ?? throw new InvalidOperationException("Certificate snapshot is invalid.");
+                ?? throw new InvalidOperationException("La instantánea del certificado es inválida.");
             var pdf = await pdfGenerator.GenerateAsync(ToPdfModel(prepared.Issuance.CertificateNumber, snapshot), ct);
             var storageKey = await fileStorage.SaveAsync(
                 $"certificates/{prepared.Issuance.CreatedAt:yyyy}/{prepared.Issuance.PublicId:N}/{prepared.Issuance.FileName}",
@@ -128,7 +128,7 @@ public sealed class IssueCertificateCommandHandler(
         {
             prepared.Issuance.MarkFailed(exception.Message);
             await unitOfWork.SaveChangesAsync(ct);
-            throw new InvalidOperationException("Certificate generation failed and can be retried with the same number.", exception);
+            throw new InvalidOperationException("La generación del certificado falló y puede reintentarse con el mismo número.", exception);
         }
     }
 
@@ -179,7 +179,7 @@ public sealed class GetCertificateHistoryQueryHandler(ICertificateRequestReposit
     public async Task<IReadOnlyList<CertificateIssuanceDto>> Handle(GetCertificateHistoryQuery query, CancellationToken ct = default)
     {
         if (query.StudentId.HasValue && !query.IsAdmin)
-            throw new ForbiddenException("Only administrators can query another student's certificate history.");
+            throw new ForbiddenException("Solo los administradores pueden consultar el historial de certificados de otro alumno.");
         var items = query.StudentId.HasValue
             ? await repository.GetHistoryByStudentAsync(query.StudentId.Value, ct)
             : await repository.GetHistoryByUserAsync(query.ActorUserId, ct);
@@ -196,17 +196,17 @@ public sealed class DownloadCertificateQueryHandler(
     public async Task<StoredFile> Handle(DownloadCertificateQuery query, CancellationToken ct = default)
     {
         var issuance = await repository.FindIssuanceByPublicIdAsync(query.PublicId, ct)
-            ?? throw new KeyNotFoundException("Issued certificate not found.");
+            ?? throw new KeyNotFoundException("Certificado emitido no encontrado.");
         if (!query.IsAdmin && issuance.CertificateRequest.UserId != query.ActorUserId)
-            throw new ForbiddenException("The certificate belongs to another student.");
+            throw new ForbiddenException("El certificado pertenece a otro alumno.");
         if (issuance.Status != CertificateIssuanceStatus.Ready || string.IsNullOrWhiteSpace(issuance.StorageKey))
-            throw new InvalidOperationException("Certificate is not ready for download.");
+            throw new InvalidOperationException("El certificado no está listo para descargar.");
         var stored = await fileStorage.ReadAsync(
             issuance.StorageKey, issuance.ContentType, issuance.FileName, ct)
-            ?? throw new KeyNotFoundException("Certificate file not found.");
+            ?? throw new KeyNotFoundException("Archivo del certificado no encontrado.");
         var actualHash = Convert.ToHexString(SHA256.HashData(stored.Content));
         if (!string.Equals(actualHash, issuance.Sha256, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Certificate file integrity validation failed.");
+            throw new InvalidOperationException("Falló la validación de integridad del archivo del certificado.");
         return stored;
     }
 }

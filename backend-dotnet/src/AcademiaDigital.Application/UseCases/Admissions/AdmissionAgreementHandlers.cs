@@ -34,7 +34,7 @@ public sealed class GetAdmissionAgreementQueryHandler(IAdmissionRepository repos
     public async Task<AdmissionAgreementDto> Handle(GetAdmissionAgreementQuery query, CancellationToken ct = default)
     {
         var agreement = await repository.FindAgreementByApplicationPublicIdAsync(query.PublicId, false, ct)
-            ?? throw new KeyNotFoundException("Admission agreement not found.");
+            ?? throw new KeyNotFoundException("Convenio de admisión no encontrado.");
         return Map(query.PublicId, agreement);
     }
 
@@ -62,12 +62,12 @@ public sealed class DownloadAdmissionAgreementQueryHandler(
     public async Task<StoredFile> Handle(DownloadAdmissionAgreementQuery query, CancellationToken ct = default)
     {
         var agreement = await repository.FindAgreementByApplicationPublicIdAsync(query.PublicId, false, ct)
-            ?? throw new KeyNotFoundException("Admission agreement not found.");
+            ?? throw new KeyNotFoundException("Convenio de admisión no encontrado.");
         if (agreement.Status != AdmissionAgreementStatus.Ready || string.IsNullOrWhiteSpace(agreement.StorageKey))
-            throw new InvalidOperationException("Admission agreement is not ready for download.");
+            throw new InvalidOperationException("El convenio de admisión no está listo para descargar.");
         return await fileStorage.ReadAsync(
                 agreement.StorageKey, agreement.ContentType, agreement.FileName, ct)
-            ?? throw new KeyNotFoundException("Admission agreement file not found.");
+            ?? throw new KeyNotFoundException("Archivo del convenio de admisión no encontrado.");
     }
 }
 
@@ -87,7 +87,7 @@ public sealed class ProcessAdmissionOutboxCommandHandler(
         CancellationToken ct = default)
     {
         if (command.Limit is < 1 or > 100)
-            throw new ArgumentException("Outbox processing limit must be between 1 and 100.");
+            throw new ArgumentException("El límite de procesamiento del outbox debe estar entre 1 y 100.");
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var messages = await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
@@ -106,12 +106,12 @@ public sealed class ProcessAdmissionOutboxCommandHandler(
             try
             {
                 var payload = JsonSerializer.Deserialize<AdmissionAgreementOutboxPayload>(message.PayloadJson)
-                    ?? throw new InvalidOperationException("Admission outbox payload is invalid.");
+                    ?? throw new InvalidOperationException("El contenido del outbox de admisión es inválido.");
                 var agreement = await repository.FindAgreementByApplicationPublicIdAsync(
                     payload.ApplicationPublicId, true, ct)
-                    ?? throw new KeyNotFoundException("Admission agreement not found for outbox message.");
+                    ?? throw new KeyNotFoundException("Convenio de admisión no encontrado para el mensaje del outbox.");
                 var snapshot = JsonSerializer.Deserialize<AdmissionAgreementSnapshot>(agreement.SnapshotJson)
-                    ?? throw new InvalidOperationException("Admission agreement snapshot is invalid.");
+                    ?? throw new InvalidOperationException("La instantánea del convenio de admisión es inválida.");
 
                 if (agreement.Status != AdmissionAgreementStatus.Ready)
                 {

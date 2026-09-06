@@ -35,7 +35,7 @@ public sealed class AdmissionApplicationPolicyTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             _policy.ValidateAndNormalize(form, ValidFields(), acceptedTerms: true));
 
-        Assert.Equal("Admission form is not active.", exception.Message);
+        Assert.Equal("El formulario de admisión no está activo.", exception.Message);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class AdmissionApplicationPolicyTests
         var exception = Assert.Throws<ArgumentException>(() =>
             _policy.ValidateAndNormalize(ValidForm(), ValidFields(), acceptedTerms: false));
 
-        Assert.Equal("Admission terms must be accepted.", exception.Message);
+        Assert.Equal("Se deben aceptar los términos de admisión.", exception.Message);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class AdmissionApplicationPolicyTests
         var exception = Assert.Throws<ArgumentException>(() =>
             _policy.ValidateAndNormalize(ValidForm(), fields, acceptedTerms: true));
 
-        Assert.Equal("The admission email is invalid.", exception.Message);
+        Assert.Equal("El email de admisión no es válido.", exception.Message);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class AdmissionApplicationPolicyTests
         var exception = Assert.Throws<ArgumentException>(() =>
             _policy.ValidateAndNormalize(ValidForm(), fields, acceptedTerms: true));
 
-        Assert.Equal("The admission DNI is invalid.", exception.Message);
+        Assert.Equal("El DNI de admisión no es válido.", exception.Message);
     }
 
     private static AdmissionForm ValidForm()

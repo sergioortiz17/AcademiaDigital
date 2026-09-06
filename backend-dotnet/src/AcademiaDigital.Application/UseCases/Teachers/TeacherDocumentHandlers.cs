@@ -48,7 +48,7 @@ public sealed class GetTeacherDocumentsQueryHandler(
         CancellationToken ct = default)
     {
         _ = await teacherRepository.FindByIdAsync(query.TeacherId, ct)
-            ?? throw new KeyNotFoundException("Teacher not found.");
+            ?? throw new KeyNotFoundException("Docente no encontrado.");
         return (await documentRepository.GetByTeacherAsync(query.TeacherId, ct))
             .Select(TeacherDocumentMapper.Map)
             .ToArray();
@@ -103,7 +103,7 @@ public sealed class ReviewTeacherDocumentCommandHandler(
         CancellationToken ct = default)
     {
         var document = await repository.FindAsync(command.TeacherId, command.DocumentId, true, ct)
-            ?? throw new KeyNotFoundException("Teacher document not found.");
+            ?? throw new KeyNotFoundException("Documento del docente no encontrado.");
         policy.EnsureCanReview(document.Status, command.Status, command.Observation);
 
         document.Status = command.Status;
