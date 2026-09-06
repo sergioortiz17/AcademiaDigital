@@ -34,6 +34,13 @@
   .modal .actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
   .modal .actions button { margin:0; }
   .muted { color:var(--muted); font-size:12px; }
+  /* Tabs */
+  .tabbar { display:flex; gap:4px; flex-wrap:wrap; max-width:1100px; margin:16px auto 0; padding:0 24px; }
+  .tabbar button { margin:0; background:var(--card); color:var(--muted); border:1px solid var(--border); border-bottom:none;
+    border-radius:8px 8px 0 0; padding:9px 16px; font-size:14px; font-weight:600; }
+  .tabbar button.active { background:var(--bg); color:var(--accent); border-color:var(--accent); border-bottom:2px solid var(--bg); position:relative; top:1px; }
+  .tabpanel { display:none; }
+  .tabpanel.active { display:grid; }
 </style>
 </head>
 <body>
@@ -43,7 +50,16 @@
   <span class="target" id="target">objetivo: …</span>
 </header>
 
+<div class="tabbar" id="tabbar">
+  <button data-tab="datos" class="active">📦 Datos base</button>
+  <button data-tab="usuarios">👥 Usuarios</button>
+  <button data-tab="flujo">🧩 Pruebas de flujo</button>
+  <button data-tab="escenarios">🧪 Escenarios</button>
+  <button data-tab="estado">📋 Estado actual</button>
+</div>
+
 <main>
+  <div class="tabpanel active" data-panel="datos" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
   <!-- (1) Reset -->
   <section class="card">
     <h2>♻️ Reset completo + reseed</h2>
@@ -73,7 +89,9 @@
     <button id="btnImport">Importar plan</button>
     <div class="out" id="outImport" style="display:none"></div>
   </section>
+  </div><!-- /datos -->
 
+  <div class="tabpanel" data-panel="usuarios" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
   <!-- (3) Usuarios -->
   <section class="card">
     <h2>👤 Alta de usuario</h2>
@@ -113,7 +131,9 @@
     <button id="btnAssign">Asignar</button>
     <div class="out" id="outAssign" style="display:none"></div>
   </section>
+  </div><!-- /usuarios -->
 
+  <div class="tabpanel" data-panel="escenarios" style="grid-template-columns:1fr">
   <!-- Escenario: correlativa bloqueante -->
   <section class="card full">
     <h2>🧪 Escenario: correlativa bloqueante (DS2023)</h2>
@@ -127,7 +147,9 @@
     <div id="scenarioVerdict" style="display:none;margin-top:12px;font-weight:700;font-size:15px"></div>
     <div id="scenarioSteps" style="display:none;margin-top:10px"></div>
   </section>
+  </div><!-- /escenarios -->
 
+  <div class="tabpanel" data-panel="flujo" style="grid-template-columns:1fr">
   <!-- Acciones académicas ad-hoc -->
   <section class="card full">
     <h2>🧩 Acciones académicas ad-hoc</h2>
@@ -191,10 +213,14 @@
   </section>
 
   <!-- (5) Listado -->
+  </div><!-- /flujo -->
+
+  <div class="tabpanel" data-panel="estado" style="grid-template-columns:1fr">
   <section class="card full">
     <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
     <div id="overview" class="muted">Cargando…</div>
   </section>
+  </div><!-- /estado -->
 </main>
 
 <!-- Modal confirmación reset -->
@@ -451,6 +477,15 @@ $('#aaState').addEventListener('click', async () => {
       <div><b>Materias (estado)</b><table><tr><th>cód</th><th>materia</th><th>año/c</th><th>estado</th><th>nota</th></tr>${courses||'<tr><td colspan=5>—</td></tr>'}</table></div>
       <div><b>Elegibilidad para cursar</b><table><tr><th>cód</th><th>materia</th><th>año/c</th><th>puede?</th><th>correlativas faltantes</th></tr>${eligRows||'<tr><td colspan=5>—</td></tr>'}</table></div>
     </div>`;
+});
+
+// Tabs
+document.querySelectorAll('#tabbar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tabpanel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+  });
 });
 
 async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); }
