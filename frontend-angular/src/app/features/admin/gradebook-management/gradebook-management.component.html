@@ -43,7 +43,7 @@
         <mat-label>Materia</mat-label>
         <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
           <mat-option *ngFor="let p of positions" [value]="p.id">
-            {{ p.courseName }} — {{ p.commissionName }} ({{ p.academicYear }})
+            {{ p.courseName }} — {{ p.commissionName }}{{ p.commissionCode ? ' [' + p.commissionCode + ']' : '' }} ({{ p.academicYear }})
           </mat-option>
         </mat-select>
       </mat-form-field>

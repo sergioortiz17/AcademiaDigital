@@ -407,7 +407,9 @@ public sealed class AcademicActionsService(
             {
                 CareerId = spc.CareerIdOrFallback(),
                 Code = commissionCode,
-                Name = $"Comisión ad-hoc {spc.Course.Code}",
+                // Name per-alumno igual que el Code: si no, varias comisiones ad-hoc del mismo curso
+                // comparten Name y violan la constraint única (CareerId, AcademicYear, Name).
+                Name = $"Comisión ad-hoc {spc.Course.Code} (alumno {studentId})",
                 AcademicYear = academicYear,
                 YearNumber = spc.YearNumber,
                 IsActive = true

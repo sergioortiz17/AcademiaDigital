@@ -14,7 +14,7 @@
       <mat-label>Cargo vacante</mat-label>
       <mat-select [(ngModel)]="teachingPositionId">
         <mat-option *ngFor="let p of positions" [value]="p.id">
-          {{ p.courseName }} — {{ p.commissionName }} ({{ p.academicYear }}, {{ p.positionType }})
+          {{ p.courseName }} — {{ p.commissionName }}{{ p.commissionCode ? ' [' + p.commissionCode + ']' : '' }} ({{ p.academicYear }}, {{ p.positionType }})
         </mat-option>
       </mat-select>
       <mat-hint *ngIf="positions.length === 0">No hay cargos vacantes activos.</mat-hint>

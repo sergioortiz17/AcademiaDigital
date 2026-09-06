@@ -186,7 +186,10 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         var code = r.Code.Trim();
         if (await db.Commissions.AnyAsync(x => x.Id != item.Id && x.CareerId == careerId &&
             x.AcademicYear == r.AcademicYear && x.Code == code, ct)) throw new InvalidOperationException("El código de la comisión ya existe.");
-        item.Code = code; item.Name = r.Name.Trim(); item.AcademicYear = r.AcademicYear;
+        var name = r.Name.Trim();
+        if (await db.Commissions.AnyAsync(x => x.Id != item.Id && x.CareerId == careerId &&
+            x.AcademicYear == r.AcademicYear && x.Name == name, ct)) throw new InvalidOperationException("El nombre de la comisión ya existe para esta carrera y año.");
+        item.Code = code; item.Name = name; item.AcademicYear = r.AcademicYear;
         item.YearNumber = r.YearNumber; item.Shift = Shifts.Single(x => x.Equals(r.Shift, StringComparison.OrdinalIgnoreCase));
         await db.SaveChangesAsync(ct); return Map(item);
     }

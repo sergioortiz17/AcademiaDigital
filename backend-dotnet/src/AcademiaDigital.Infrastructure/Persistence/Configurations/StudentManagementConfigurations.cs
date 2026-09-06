@@ -29,6 +29,10 @@ public class CommissionConfiguration : IEntityTypeConfiguration<Commission>
         b.Property(x => x.Name).HasMaxLength(100).IsRequired();
         b.Property(x => x.Shift).HasMaxLength(20).IsRequired();
         b.HasIndex(x => new { x.CareerId, x.AcademicYear, x.Code }).IsUnique();
+        // Mismo patrón que Code: el Name tampoco puede repetirse dentro de la misma carrera+año,
+        // para que un profesor nunca vea dos comisiones con el mismo nombre y cargue notas en la
+        // equivocada (Parte 10 - doble mitigación con el frontend que además muestra el Code).
+        b.HasIndex(x => new { x.CareerId, x.AcademicYear, x.Name }).IsUnique();
         b.HasOne(x => x.Career).WithMany().HasForeignKey(x => x.CareerId).OnDelete(DeleteBehavior.Restrict);
     }
 }
