@@ -128,6 +128,68 @@
     <div id="scenarioSteps" style="display:none;margin-top:10px"></div>
   </section>
 
+  <!-- Acciones académicas ad-hoc -->
+  <section class="card full">
+    <h2>🧩 Acciones académicas ad-hoc</h2>
+    <p class="muted">Piezas sueltas para armar casos de prueba a mano (reusan los handlers reales; Commission+cargo se auto-crean/reusan detrás de escena y se reportan). No es el escenario fijo.</p>
+
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <!-- Alumno -->
+      <div>
+        <h3 style="font-size:13px;margin:0 0 6px">1 · Alumno</h3>
+        <label>Carrera (para filtrar/crear)</label><select id="aaCareer"></select>
+        <label>Alumno</label>
+        <div class="row" style="align-items:flex-end">
+          <select id="aaStudent"></select>
+          <button id="aaReloadStudents" style="flex:0 0 auto;margin:0;padding:8px 10px">↻</button>
+        </div>
+        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">crear alumno nuevo</summary>
+          <div class="row"><div><label>Nombre</label><input id="aaNewName"/></div><div><label>Apellido</label><input id="aaNewLast"/></div></div>
+          <label>Email</label><input id="aaNewEmail" type="email"/>
+          <div class="row"><div><label>Password</label><input id="aaNewPass" value="Alumno123!"/></div><div><label>DNI</label><input id="aaNewDni"/></div></div>
+          <button id="aaCreateStudent">Crear alumno</button>
+        </details>
+      </div>
+
+      <!-- Inscribir -->
+      <div>
+        <h3 style="font-size:13px;margin:0 0 6px">2 · Inscribir en materia</h3>
+        <label>Plan de estudios</label><select id="aaPlan"></select>
+        <label>Materia(s) del plan</label>
+        <select id="aaCourses" multiple size="5" style="height:auto"></select>
+        <div class="row">
+          <div><label>Año académico</label><input id="aaYear" type="number" value="1"/></div>
+          <div><label>Cuatrimestre</label><select id="aaSem"><option value="1">1</option><option value="2">2</option></select></div>
+        </div>
+        <button id="aaEnroll">Inscribir</button>
+      </div>
+
+      <!-- Notas / Mesa -->
+      <div>
+        <h3 style="font-size:13px;margin:0 0 6px">3/4 · Notas y mesa de examen</h3>
+        <p class="muted">Usá el enrollmentId que devuelve la inscripción o la vista de estado.</p>
+        <label>Enrollment ID</label><input id="aaEnrollmentId" type="number" placeholder="123"/>
+        <div class="row">
+          <div><label>Nota cursada (gradebook)</label><input id="aaGrade" type="number" step="0.1" value="8"/></div>
+          <div style="align-self:flex-end"><button id="aaGradebook" style="width:100%">Cargar cursada</button></div>
+        </div>
+        <p class="muted" style="margin:6px 0 0">Cursada ≥6 → Regularized. Luego mesa → Approved.</p>
+        <div class="row">
+          <div><label>Nota final (mesa)</label><input id="aaExamGrade" type="number" step="0.1" value="8"/></div>
+          <div style="align-self:flex-end"><button id="aaExam" style="width:100%">Rendir final (mesa)</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="aaOut" class="out" style="display:none"></div>
+
+    <!-- Estado académico -->
+    <div style="margin-top:16px">
+      <h3 style="font-size:13px;margin:0 0 6px">5 · Estado académico y elegibilidad <button id="aaState" style="margin:0 0 0 8px;padding:3px 10px;font-size:12px">Ver estado del alumno</button></h3>
+      <div id="aaStateOut" class="muted">Elegí un alumno y tocá "Ver estado".</div>
+    </div>
+  </section>
+
   <!-- (5) Listado -->
   <section class="card full">
     <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
@@ -297,7 +359,101 @@ $('#btnScenario').addEventListener('click', async () => {
   }
 });
 
-async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); }
+// ── Acciones académicas ad-hoc ──────────────────────────────────────────────
+function aaShow(res) {
+  const el = $('#aaOut'); el.style.display = 'block';
+  const ok = res.ok && (res.body.success !== false);
+  el.className = 'out ' + (ok ? 'ok' : 'err');
+  const b = res.body;
+  let txt = (b.summary ? ((ok?'✅ ':'❌ ')+b.summary+'\n\n') : '');
+  if (Array.isArray(b.steps)) {
+    txt += b.steps.map(s => {
+      const ic = s.status==='ok'?'✔️':(s.status==='warn'?'⚠️':'✖️');
+      return `${ic} ${s.step}: ${s.detail||''}` + (s.data?('\n     '+JSON.stringify(s.data)):'');
+    }).join('\n');
+  } else { txt += JSON.stringify(b, null, 2); }
+  el.textContent = txt;
+}
+
+async function aaFillCareers() {
+  const { body } = await api('/api/careers');
+  $('#aaCareer').innerHTML = (body||[]).map(c => `<option value="${c.id}">${c.code} · ${c.name}</option>`).join('');
+  if (body && body.length) { await aaFillStudents(); await aaFillPlans(); }
+}
+async function aaFillStudents() {
+  const cid = $('#aaCareer').value;
+  const { body } = await api('/api/actions/students?careerId=' + cid);
+  $('#aaStudent').innerHTML = (body||[]).map(s => `<option value="${s.studentId}">#${s.studentId} · ${s.name||s.email||('legajo '+s.legajo)}</option>`).join('') || '<option value="">(sin alumnos)</option>';
+}
+async function aaFillPlans() {
+  const cid = $('#aaCareer').value;
+  const { body } = await api(`/api/actions/careers/${cid}/study-plans`);
+  $('#aaPlan').innerHTML = (body||[]).map(p => `<option value="${p.id}">${p.code} · ${p.name} (${p.status})</option>`).join('');
+  if (body && body.length) await aaFillCourses();
+}
+async function aaFillCourses() {
+  const pid = $('#aaPlan').value; if (!pid) { $('#aaCourses').innerHTML=''; return; }
+  const { body } = await api(`/api/actions/study-plans/${pid}/courses`);
+  $('#aaCourses').innerHTML = (body||[]).map(c => `<option value="${c.studyPlanCourseId}">${c.code} · ${c.name} (año ${c.year}/${c.semester})</option>`).join('');
+}
+$('#aaCareer').addEventListener('change', async () => { await aaFillStudents(); await aaFillPlans(); });
+$('#aaPlan').addEventListener('change', aaFillCourses);
+$('#aaReloadStudents').addEventListener('click', aaFillStudents);
+
+$('#aaCreateStudent').addEventListener('click', async () => {
+  const payload = { name:$('#aaNewName').value, lastName:$('#aaNewLast').value, email:$('#aaNewEmail').value,
+    password:$('#aaNewPass').value, dni:$('#aaNewDni').value, role:1, careerId:parseInt($('#aaCareer').value,10) };
+  const btn=$('#aaCreateStudent'); btn.disabled=true;
+  aaShow(await api('/api/actions/students', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false; await aaFillStudents();
+});
+
+$('#aaEnroll').addEventListener('click', async () => {
+  const ids = [...$('#aaCourses').selectedOptions].map(o => parseInt(o.value,10));
+  if (ids.length === 0) { aaShow({ ok:false, body:{ success:false, summary:'Elegí al menos una materia.' } }); return; }
+  const payload = { studentId: parseInt($('#aaStudent').value,10), studyPlanCourseIds: ids,
+    academicYear: parseInt($('#aaYear').value,10)||1, semester: parseInt($('#aaSem').value,10) };
+  const btn=$('#aaEnroll'); btn.disabled=true;
+  aaShow(await api('/api/actions/enroll', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false;
+});
+
+$('#aaGradebook').addEventListener('click', async () => {
+  const payload = { enrollmentId: parseInt($('#aaEnrollmentId').value,10), score: parseFloat($('#aaGrade').value) };
+  if (!payload.enrollmentId) { aaShow({ ok:false, body:{ success:false, summary:'Ingresá el enrollmentId.' } }); return; }
+  const btn=$('#aaGradebook'); btn.disabled=true;
+  aaShow(await api('/api/actions/gradebook', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false;
+});
+
+$('#aaExam').addEventListener('click', async () => {
+  const payload = { enrollmentId: parseInt($('#aaEnrollmentId').value,10), grade: parseFloat($('#aaExamGrade').value) };
+  if (!payload.enrollmentId) { aaShow({ ok:false, body:{ success:false, summary:'Ingresá el enrollmentId.' } }); return; }
+  const btn=$('#aaExam'); btn.disabled=true;
+  aaShow(await api('/api/actions/exam', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }));
+  btn.disabled=false;
+});
+
+$('#aaState').addEventListener('click', async () => {
+  const sid = $('#aaStudent').value; if (!sid) return;
+  const { body } = await api(`/api/actions/students/${sid}/academic-state`);
+  const p = body.progress || {}; const elig = body.eligible || [];
+  const statusColor = s => s==='Approved'||s==='Promoted'?'var(--ok)':(s==='Regularized'?'#38bdf8':(s==='Failed'?'var(--danger)':'var(--muted)'));
+  const courses = (p.courses||[]).map(c => `<tr><td>${c.code}</td><td>${c.name}</td><td>${c.yearNumber}/${c.semester}</td><td style="color:${statusColor(c.academicStatus)}">${c.academicStatus}</td><td>${c.finalGrade??''}</td></tr>`).join('');
+  const eligRows = elig.map(e => {
+    const miss = (e.missingPrerequisites||[]).map(m => `${m.code} (req ${m.requiredStatus}, tiene ${m.currentStatus||'—'})`).join('; ');
+    const col = e.eligibilityStatus==='Eligible'?'var(--ok)':'var(--danger)';
+    return `<tr><td>${e.code}</td><td>${e.name}</td><td>${e.yearNumber}/${e.semester}</td><td style="color:${col}">${e.eligibilityStatus}</td><td class="muted">${miss}</td></tr>`;
+  }).join('');
+  $('#aaStateOut').innerHTML = `
+    <div class="muted" style="margin-bottom:6px">${p.careerName||''} · plan ${p.studyPlanName||''} · progreso ${p.progressPercentage??0}% (aprob ${p.approvedCourses}/${p.totalCourses}, en curso ${p.inProgressCourses}, pend ${p.pendingCourses})</div>
+    <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div><b>Materias (estado)</b><table><tr><th>cód</th><th>materia</th><th>año/c</th><th>estado</th><th>nota</th></tr>${courses||'<tr><td colspan=5>—</td></tr>'}</table></div>
+      <div><b>Elegibilidad para cursar</b><table><tr><th>cód</th><th>materia</th><th>año/c</th><th>puede?</th><th>correlativas faltantes</th></tr>${eligRows||'<tr><td colspan=5>—</td></tr>'}</table></div>
+    </div>`;
+});
+
+async function refreshAll(){ await Promise.all([fillCareers(), fillTeachers()]); await loadOverview(); await aaFillCareers(); }
 loadTarget(); refreshAll();
 </script>
 </body>

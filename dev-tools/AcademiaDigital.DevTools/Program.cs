@@ -1,6 +1,7 @@
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Enrollments;
 using AcademiaDigital.Application.UseCases.Grades;
+using AcademiaDigital.Application.UseCases.Students;
 using AcademiaDigital.Application.UseCases.StudyPlanImport;
 using AcademiaDigital.Application.UseCases.Teachers;
 using AcademiaDigital.Domain.Entities;
@@ -55,6 +56,12 @@ builder.Services.AddScoped<StartExamGradingCommandHandler>();
 builder.Services.AddScoped<SaveExamResultsCommandHandler>();
 builder.Services.AddScoped<PublishExamTableCommandHandler>();
 builder.Services.AddScoped<CorrelativaScenarioService>();
+
+// ── Acciones académicas ad-hoc (sección nueva, aparte del escenario fijo) ────
+builder.Services.AddScoped<AcademicProgressCalculator>();
+builder.Services.AddScoped<GetStudentAcademicProgressQueryHandler>();
+builder.Services.AddScoped<GetEligibleCoursesForStudentQueryHandler>();
+builder.Services.AddScoped<AcademicActionsService>();
 
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
@@ -298,9 +305,75 @@ app.MapPost("/api/teacher-assignments", async (
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// ═══ Acciones académicas ad-hoc (sección nueva, aparte del escenario fijo) ═══
+
+// -- Endpoints de apoyo para poblar los selectores de la UI --
+app.MapGet("/api/actions/careers/{careerId:int}/study-plans", async (int careerId, IStudyPlanRepository plans, CancellationToken ct) =>
+    Results.Ok((await plans.GetByCareerIdAsync(careerId, ct))
+        .Select(p => new { p.Id, p.Code, p.Name, status = p.Status.ToString() })));
+
+// Materias de un plan (para elegir en qué inscribir / calificar).
+app.MapGet("/api/actions/study-plans/{studyPlanId:int}/courses", async (int studyPlanId, IStudyPlanCourseRepository spcRepo, CancellationToken ct) =>
+    Results.Ok((await spcRepo.GetByStudyPlanIdAsync(studyPlanId, ct))
+        .Select(spc => new { studyPlanCourseId = spc.Id, courseId = spc.CourseId, code = spc.Course.Code, name = spc.Course.Name, year = spc.YearNumber, semester = spc.Semester })));
+
+// (1) Alumnos: listar (opcional por carrera) / crear
+app.MapGet("/api/actions/students", async (int? careerId, AcademicActionsService svc, CancellationToken ct) =>
+    Results.Ok(await svc.ListStudentsAsync(careerId, ct)));
+
+app.MapPost("/api/actions/students", async (CreateUserRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || req.CareerId is null or <= 0)
+        return Results.BadRequest(new { error = "Se requieren name, email, password, dni y careerId (el alumno pertenece a una carrera)." });
+    try { return Results.Ok(await svc.CreateStudentAsync(req.Name, req.LastName ?? "", req.Email, req.Password, req.Dni, req.CareerId.Value, ct)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// (2) Inscribir en materias (año/cuatri libres)
+app.MapPost("/api/actions/enroll", async (EnrollActionRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || req.StudentId <= 0 || req.StudyPlanCourseIds is null || req.StudyPlanCourseIds.Count == 0)
+        return Results.BadRequest(new { error = "Se requieren studentId y studyPlanCourseIds[]." });
+    try
+    {
+        var year = req.AcademicYear > 0 ? req.AcademicYear : 1;
+        var sem = req.Semester is 1 or 2 ? req.Semester : 1;
+        return Results.Ok(await svc.EnrollManyAsync(req.StudentId, req.StudyPlanCourseIds, year, sem, ct));
+    }
+    catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Inscripción", status = "fail", detail = ex.Message }])); }
+});
+
+// (3) Cargar notas (cadena Gradebook completa) sobre un enrollment
+app.MapPost("/api/actions/gradebook", async (GradebookActionRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || req.EnrollmentId <= 0)
+        return Results.BadRequest(new { error = "Se requiere enrollmentId (y score 0-10)." });
+    try { return Results.Ok(await svc.RunGradebookAsync(req.EnrollmentId, req.Score, ct)); }
+    catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Gradebook", status = "fail", detail = ex.Message }])); }
+});
+
+// (4) Mesa de examen (Regularized -> Approved)
+app.MapPost("/api/actions/exam", async (ExamActionRequest req, AcademicActionsService svc, CancellationToken ct) =>
+{
+    if (req is null || req.EnrollmentId <= 0)
+        return Results.BadRequest(new { error = "Se requiere enrollmentId (y grade 6-10)." });
+    try { return Results.Ok(await svc.RunFinalExamAsync(req.EnrollmentId, req.Grade, ct)); }
+    catch (Exception ex) { return Results.Ok(new ActionResult(false, ex.Message, [new { step = "Mesa de examen", status = "fail", detail = ex.Message }])); }
+});
+
+// (5) Estado académico + elegibilidad del alumno
+app.MapGet("/api/actions/students/{studentId:long}/academic-state", async (long studentId, int? careerId, AcademicActionsService svc, CancellationToken ct) =>
+{
+    try { return Results.Ok(await svc.GetAcademicStateAsync(studentId, careerId, ct)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 app.Run();
 
 // ── DTOs de request ──────────────────────────────────────────────────────────
 internal sealed record ResetRequest(bool Confirm);
 internal sealed record CreateUserRequest(string Name, string? LastName, string Email, string Password, string Dni, int Role, int? CareerId);
+internal sealed record EnrollActionRequest(long StudentId, IReadOnlyList<int> StudyPlanCourseIds, int AcademicYear, int Semester);
+internal sealed record GradebookActionRequest(long EnrollmentId, decimal Score);
+internal sealed record ExamActionRequest(long EnrollmentId, decimal Grade);
 internal sealed record AssignRequest(long TeacherId, int CourseId, int AcademicYear, int Semester, int MaxStudents, string? Reason);
