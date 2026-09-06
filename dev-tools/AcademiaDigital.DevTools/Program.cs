@@ -10,6 +10,8 @@ using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Services;
 using AcademiaDigital.DevTools;
 using AcademiaDigital.Infrastructure;
+using AcademiaDigital.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -253,6 +255,7 @@ app.MapPost("/api/teacher-assignments", async (
     ITeachingPositionRepository positionRepo,
     AssignTeacherCommandHandler assignHandler,
     ICourseRepository courseRepo,
+    AppDbContext db,
     CancellationToken ct) =>
 {
     if (req is null || req.TeacherId <= 0 || req.CourseId <= 0)
@@ -269,10 +272,32 @@ app.MapPost("/api/teacher-assignments", async (
 
     try
     {
-        // Reusar una TeachingPosition vacante del curso para ese período, o crear una nueva.
+        // Un cargo docente SIN comisión rompe después 'Crear planilla' (el gradebook exige
+        // CommissionId). Por eso acá SIEMPRE se garantiza una comisión: se auto-crea o reusa una
+        // para la materia/año, y se linkea al cargo. Solo se reusa un cargo que YA tenga comisión.
+        var commissionCode = $"COM-DEV-{req.CourseId}-{academicYear}";
+        var commission = await db.Set<Commission>().FirstOrDefaultAsync(c => c.Code == commissionCode, ct);
+        var commissionReused = commission is not null;
+        if (commission is null)
+        {
+            commission = new Commission
+            {
+                CareerId = course.CareerId,
+                Code = commissionCode,
+                Name = $"Comisión dev {course.Code} {academicYear}",
+                AcademicYear = academicYear,
+                YearNumber = 1,
+                IsActive = true
+            };
+            db.Add(commission);
+            await db.SaveChangesAsync(ct);
+        }
+
+        // Reusar una TeachingPosition vacante del curso CON comisión para ese período, o crear una nueva CON comisión.
         var positions = await positionRepo.GetByCourseAsync(req.CourseId, ct);
         var position = positions.FirstOrDefault(p =>
-            p.IsActive && p.IsVacant && p.AcademicYear == academicYear && p.Semester == semester);
+            p.IsActive && p.IsVacant && p.CommissionId == commission.Id
+            && p.AcademicYear == academicYear && p.Semester == semester);
 
         if (position is null)
         {
@@ -280,6 +305,7 @@ app.MapPost("/api/teacher-assignments", async (
             position = await positionRepo.CreateAsync(new TeachingPosition
             {
                 CourseId = req.CourseId,
+                CommissionId = commission.Id,
                 AcademicYear = academicYear,
                 Semester = semester,
                 PositionType = PositionType.Titular,
@@ -299,7 +325,13 @@ app.MapPost("/api/teacher-assignments", async (
             ActorUserId: teacher.UserId); // actor = el propio profesor (herramienta de dev, sin auth)
 
         var dto = await assignHandler.Handle(command, ct);
-        return Results.Ok(new { success = true, assignment = dto, teachingPositionId = position.Id });
+        return Results.Ok(new
+        {
+            success = true,
+            assignment = dto,
+            teachingPositionId = position.Id,
+            commission = new { commission.Id, commission.Code, reused = commissionReused }
+        });
     }
     catch (KeyNotFoundException ex) { return Results.NotFound(new { error = ex.Message }); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
