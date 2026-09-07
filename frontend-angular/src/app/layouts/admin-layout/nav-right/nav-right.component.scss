@@ -32,6 +32,27 @@
   height: 35px;
 }
 
+.time-travel-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 1rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 193, 7, 0.18);
+  border: 1px solid #ffc107;
+  color: #ffc107;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .session-user {
   display: flex;
   flex-direction: column;

@@ -41,6 +41,18 @@
   .tabbar button.active { background:var(--bg); color:var(--accent); border-color:var(--accent); border-bottom:2px solid var(--bg); position:relative; top:1px; }
   .tabpanel { display:none; }
   .tabpanel.active { display:grid; }
+  /* Calendario oscuro (pestaña Volver al futuro) */
+  .rj-calendar-wrap { max-width:420px; margin:0 auto; }
+  .rj-cal-header { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:10px; }
+  .rj-cal-title { font-weight:700; font-size:15px; color:var(--fg); min-width:170px; text-align:center; }
+  .rj-nav-btn { margin:0; background:var(--card); border:1px solid var(--border); color:var(--accent); padding:4px 12px; font-size:16px; }
+  .rj-cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:4px; }
+  .rj-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .rj-cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:13px; cursor:pointer; background:#0b1220; border:1px solid transparent; }
+  .rj-cal-day:hover { border-color:var(--accent); }
+  .rj-cal-day.empty { visibility:hidden; cursor:default; }
+  .rj-cal-day.today { color:var(--accent); font-weight:700; }
+  .rj-cal-day.selected { background:var(--accent); color:#04121f; font-weight:700; }
 </style>
 </head>
 <body>
@@ -55,7 +67,7 @@
   <button data-tab="alumno">🎒 Alumno</button>
   <button data-tab="profesor">🧑‍🏫 Profesor</button>
   <button data-tab="estado">📋 Estado actual</button>
-  <button data-tab="reloj">🕐 Reloj</button>
+  <button data-tab="reloj">🚗 Volver al futuro</button>
 </div>
 
 <main>
@@ -127,22 +139,39 @@
 
   <div class="tabpanel" data-panel="reloj" style="grid-template-columns:1fr">
   <section class="card full">
-    <h2>🕐 Simulación de fecha/hora <button id="rjRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
+    <h2>🚗 Volver al futuro <button id="rjRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
     <p class="muted">Simula que la app corre en otra fecha/hora (ej. diciembre 2027) para probar flujos que miran el reloj real: apertura/cierre de inscripciones, sesiones de asistencia y su plazo de 48hs, asignaciones docentes, comisiones, certificados y planillas. <b>No afecta</b> login, sesiones ni expiración de JWT (esos van siempre en tiempo real, a propósito).</p>
 
     <div id="rjDisabled" class="out err" style="display:none">🔒 Función deshabilitada en este ambiente (falta <code>ALLOW_TIME_TRAVEL=true</code> en el backend).</div>
 
     <div id="rjPanel" style="display:none">
       <div class="row" style="max-width:680px;align-items:center">
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="margin:0"><input type="checkbox" id="rjToggle" style="width:auto;margin-right:6px"/>Simulación de fecha activa</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button type="button" id="rjToggleBtn" style="margin:0">Activar</button>
+          <span id="rjToggleStatus" class="muted">⚪ Apagado</span>
         </div>
       </div>
 
-      <div class="row" style="max-width:680px;align-items:flex-end">
-        <div><label>Fecha/hora simulada</label><input id="rjInput" type="datetime-local" step="1"/></div>
+      <label>Fecha simulada</label>
+      <div class="row" style="max-width:220px;margin-bottom:14px">
+        <div><label>Ir a fecha</label><input type="text" id="rjDateJump" placeholder="dd/mm/aaaa" maxlength="10"/></div>
+      </div>
+      <div class="rj-calendar-wrap">
+        <div class="rj-cal-header">
+          <button type="button" id="rjCalPrev" class="rj-nav-btn">‹</button>
+          <span id="rjCalTitle" class="rj-cal-title">—</span>
+          <button type="button" id="rjCalNext" class="rj-nav-btn">›</button>
+        </div>
+        <div class="rj-cal-weekdays">
+          <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+        </div>
+        <div class="rj-cal-grid" id="rjCalGrid"></div>
+      </div>
+
+      <div class="row" style="max-width:340px;align-items:flex-end;margin-top:12px">
+        <div><label>Hora</label><input id="rjTime" type="time" step="1" value="12:00:00"/></div>
         <div><button id="rjApply">Aplicar</button></div>
-        <div><button id="rjReset" style="background:#475569;color:#fff">Traer a fecha y hora actual</button></div>
+        <div><button id="rjReset" style="background:#475569;color:#fff">🙄 Volver al presente</button></div>
       </div>
 
       <div style="display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:12px">
@@ -601,43 +630,135 @@ document.querySelectorAll('#tabbar button').forEach(btn => {
   });
 });
 
-// ── Reloj: viaje en el tiempo (dev-tools -> backend :8000) ──────────────────
+// ── Volver al futuro: viaje en el tiempo (dev-tools -> backend :8000) ───────
 const TIME_BASE = 'http://localhost:8000/api/v1/devtools/time';
-let rjTimer = null;
+let rjTickTimer = null;   // tick local (1s) — NO pega al backend, solo suma tiempo real transcurrido al offset
+let rjResyncTimer = null; // resync de respaldo (30s) — por si algo externo cambió el estado
+let rjOffsetMs = 0;       // effectiveNow - Date.now() en el momento del último dato del servidor
+let rjCalYear, rjCalMonth, rjSelectedDay = null;
+let rjCalInitialized = false;
+const RJ_MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-function rjFmt(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+function rjFmt(date) { try { return date.toLocaleString(); } catch { return '—'; } }
 
 async function rjRefresh() {
   let r;
   try { r = await fetch(TIME_BASE); } catch { $('#rjDisabled').style.display='block'; $('#rjPanel').style.display='none'; return; }
   if (r.status === 403 || r.status === 404) {
     $('#rjDisabled').style.display='block'; $('#rjPanel').style.display='none';
-    if (rjTimer) { clearInterval(rjTimer); rjTimer = null; }
+    rjStopTimers();
     return;
   }
   $('#rjDisabled').style.display='none'; $('#rjPanel').style.display='block';
   const d = await r.json().catch(()=>({}));
+  if (!rjCalInitialized) { rjInitCalendar(d.fakeNow ? new Date(d.fakeNow) : new Date()); rjCalInitialized = true; }
   rjRender(d);
-  // Refresco periódico del reloj efectivo mientras la pestaña está visible.
-  if (!rjTimer) rjTimer = setInterval(async () => {
+  rjStartTimers();
+}
+
+function rjStopTimers() {
+  if (rjTickTimer) { clearInterval(rjTickTimer); rjTickTimer = null; }
+  if (rjResyncTimer) { clearInterval(rjResyncTimer); rjResyncTimer = null; }
+}
+
+function rjStartTimers() {
+  // Tick local: solo aritmética de fechas en el navegador, cero requests.
+  if (!rjTickTimer) rjTickTimer = setInterval(rjTick, 1000);
+  // Resync de respaldo cada 30s (no cada 1s) por si otra pestaña/curl cambió el estado.
+  if (!rjResyncTimer) rjResyncTimer = setInterval(async () => {
     const panel = document.querySelector('.tabpanel[data-panel="reloj"]');
     if (!panel || !panel.classList.contains('active')) return;
     try { const rr = await fetch(TIME_BASE); if (rr.ok) rjRender(await rr.json()); } catch {}
-  }, 1000);
+  }, 30000);
 }
 
+function rjTick() {
+  const real = new Date();
+  const effective = new Date(real.getTime() + rjOffsetMs);
+  $('#rjReal').textContent = rjFmt(real);
+  $('#rjEffective').textContent = rjFmt(effective);
+}
+
+let rjEnabled = false;
+
 function rjRender(d) {
-  $('#rjReal').textContent = rjFmt(d.realNow);
-  $('#rjEffective').textContent = rjFmt(d.effectiveNow);
-  $('#rjToggle').checked = !!d.enabled;
+  rjEnabled = !!d.enabled;
+  const effective = d.effectiveNow ? new Date(d.effectiveNow) : new Date();
+  rjOffsetMs = effective.getTime() - Date.now();
+  rjTick(); // pinta ya mismo con el offset nuevo, sin esperar el próximo segundo
+  $('#rjToggleBtn').textContent = d.enabled ? 'Apagar' : 'Activar';
+  $('#rjToggleBtn').style.background = d.enabled ? 'var(--danger)' : 'var(--accent)';
+  $('#rjToggleStatus').textContent = d.enabled ? '🟢 Activado' : '⚪ Apagado';
   $('#rjStatus').textContent = d.enabled ? '🟢 SIMULADO (activo)' : (d.fakeNow ? '⚪ apagado (hay fecha cargada)' : '⚪ tiempo real');
-  // Cargar el input con el fakeNow si hay y el usuario no está tipeando algo distinto.
-  if (d.fakeNow && document.activeElement !== $('#rjInput')) {
-    const dt = new Date(d.fakeNow);
-    const pad = n => String(n).padStart(2,'0');
-    $('#rjInput').value = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+}
+
+function rjInitCalendar(baseDate) {
+  rjCalYear = baseDate.getFullYear();
+  rjCalMonth = baseDate.getMonth();
+  rjSelectedDay = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const pad = n => String(n).padStart(2,'0');
+  $('#rjTime').value = `${pad(baseDate.getHours())}:${pad(baseDate.getMinutes())}:${pad(baseDate.getSeconds())}`;
+  rjSyncDateJumpInput();
+  rjRenderCalendar();
+}
+
+function rjSyncDateJumpInput() {
+  if (!rjSelectedDay) return;
+  const pad = n => String(n).padStart(2,'0');
+  $('#rjDateJump').value = `${pad(rjSelectedDay.getDate())}/${pad(rjSelectedDay.getMonth()+1)}/${rjSelectedDay.getFullYear()}`;
+}
+
+function rjRenderCalendar() {
+  $('#rjCalTitle').textContent = `${RJ_MONTHS[rjCalMonth]} ${rjCalYear}`;
+  const grid = $('#rjCalGrid');
+  grid.innerHTML = '';
+  const firstOfMonth = new Date(rjCalYear, rjCalMonth, 1);
+  const offset = (firstOfMonth.getDay() + 6) % 7; // Lunes-first
+  const daysInMonth = new Date(rjCalYear, rjCalMonth + 1, 0).getDate();
+  const today = new Date();
+  for (let i = 0; i < offset; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'rj-cal-day empty';
+    grid.appendChild(empty);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'rj-cal-day';
+    cell.textContent = day;
+    if (today.getFullYear() === rjCalYear && today.getMonth() === rjCalMonth && today.getDate() === day) cell.classList.add('today');
+    if (rjSelectedDay && rjSelectedDay.getFullYear() === rjCalYear && rjSelectedDay.getMonth() === rjCalMonth && rjSelectedDay.getDate() === day) cell.classList.add('selected');
+    cell.addEventListener('click', () => {
+      rjSelectedDay = new Date(rjCalYear, rjCalMonth, day);
+      rjSyncDateJumpInput();
+      rjRenderCalendar();
+    });
+    grid.appendChild(cell);
   }
 }
+
+$('#rjDateJump').addEventListener('change', e => {
+  const v = e.target.value.trim(); // dd/mm/aaaa
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v);
+  if (!match) {
+    rjSyncDateJumpInput(); // fecha inválida -> restaurar lo que había
+    return;
+  }
+  const [, d, m, y] = match.map(Number);
+  const parsed = new Date(y, m - 1, d);
+  if (parsed.getMonth() !== m - 1) { rjSyncDateJumpInput(); return; } // ej. 31/02 -> inválida
+  rjCalYear = y; rjCalMonth = m - 1;
+  rjSelectedDay = parsed;
+  rjRenderCalendar();
+});
+
+$('#rjCalPrev').addEventListener('click', () => {
+  rjCalMonth--; if (rjCalMonth < 0) { rjCalMonth = 11; rjCalYear--; }
+  rjRenderCalendar();
+});
+$('#rjCalNext').addEventListener('click', () => {
+  rjCalMonth++; if (rjCalMonth > 11) { rjCalMonth = 0; rjCalYear++; }
+  rjRenderCalendar();
+});
 
 async function rjCall(method, body) {
   const opt = { method, headers: {'Content-Type':'application/json'} };
@@ -653,14 +774,14 @@ async function rjCall(method, body) {
 
 $('#rjRefresh').addEventListener('click', rjRefresh);
 $('#rjApply').addEventListener('click', async () => {
-  const v = $('#rjInput').value;
-  if (!v) { $('#rjOut').style.display='block'; $('#rjOut').className='out err'; $('#rjOut').textContent='Elegí una fecha/hora.'; return; }
-  // datetime-local es hora local; el backend espera un instante -> lo mandamos como ISO UTC.
-  const iso = new Date(v).toISOString();
-  await rjCall('POST', { fakeNow: iso });
+  if (!rjSelectedDay) { $('#rjOut').style.display='block'; $('#rjOut').className='out err'; $('#rjOut').textContent='Elegí un día en el calendario.'; return; }
+  const timeVal = $('#rjTime').value || '00:00:00';
+  const parts = timeVal.split(':').map(Number);
+  const local = new Date(rjSelectedDay.getFullYear(), rjSelectedDay.getMonth(), rjSelectedDay.getDate(), parts[0]||0, parts[1]||0, parts[2]||0);
+  await rjCall('POST', { fakeNow: local.toISOString() });
 });
-$('#rjToggle').addEventListener('change', async e => { await rjCall('PATCH', { enabled: e.target.checked }); });
-$('#rjReset').addEventListener('click', async () => { if (await rjCall('DELETE')) $('#rjInput').value=''; });
+$('#rjToggleBtn').addEventListener('click', async () => { await rjCall('PATCH', { enabled: !rjEnabled }); });
+$('#rjReset').addEventListener('click', async () => { if (await rjCall('DELETE')) rjInitCalendar(new Date()); });
 
 // ── Línea de tiempo del alumno (Parte 5) ────────────────────────────────────
 const tl = { studentId: null, careerId: null, maxYear: 1, state: null };

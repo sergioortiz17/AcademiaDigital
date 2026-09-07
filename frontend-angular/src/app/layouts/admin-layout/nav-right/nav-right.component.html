@@ -1,6 +1,12 @@
 <div class="topbar-actions">
 <!-- Dark mode toggle: hidden until implemented -->
 
+<!-- Fecha simulada ("Volver al futuro" de DevTools): solo visible mientras está activa -->
+<div class="time-travel-badge" *ngIf="timeEnabled" matTooltip="La app está usando una fecha simulada (DevTools › Volver al futuro)">
+  <mat-icon>history_toggle_off</mat-icon>
+  <span>{{ effectiveDate | date:'dd/MM/yyyy HH:mm' }}</span>
+</div>
+
 <!-- Usuario logueado -->
 <div class="session-user" *ngIf="user$ | async as user">
   <span class="session-user-name">{{ user.username }} {{ user.lastName }}</span>
