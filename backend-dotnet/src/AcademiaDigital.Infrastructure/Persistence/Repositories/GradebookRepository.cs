@@ -46,6 +46,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
     public async Task<Gradebook?> FindForUpdateAsync(long gradebookId, CancellationToken ct = default)
         => await db.Gradebooks
             .FromSqlInterpolated($"SELECT * FROM \"Gradebooks\" WHERE id = {gradebookId} FOR UPDATE")
+            .Include(item => item.CourseSection)
             .Include(item => item.Evaluations)
             .Include(item => item.GradeRevisions).ThenInclude(item => item.Evaluation)
             .Include(item => item.GradeRevisions).ThenInclude(item => item.Enrollment)

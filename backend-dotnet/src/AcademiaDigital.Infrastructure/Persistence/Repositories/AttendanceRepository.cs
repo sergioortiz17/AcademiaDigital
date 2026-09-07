@@ -66,6 +66,7 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
     public async Task<AttendanceSession?> FindSessionForUpdateAsync(long sessionId, CancellationToken ct = default)
         => await db.AttendanceSessions
             .FromSqlInterpolated($"SELECT * FROM \"AttendanceSessions\" WHERE id = {sessionId} FOR UPDATE")
+            .Include(item => item.CourseSection)
             .SingleOrDefaultAsync(ct);
 
     public async Task<(AttendanceSession Session, bool Created)> CreateIdempotentAsync(
