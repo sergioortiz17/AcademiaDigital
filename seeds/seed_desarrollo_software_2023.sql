@@ -166,6 +166,17 @@ BEGIN
     -- C22 requiere C13 (Verificación y Validación ← Programación II)
     (v_study_plan_id, v_c22, v_c13, 'Strict', 'Approved', true, timezone('utc', now()), timezone('utc', now()));
 
+    -- ── 7. CourseApprovalRules (regla de aprobación por defecto) ──
+    -- Sin esta fila, "Promocionado" es matemáticamente imposible. Sembramos una regla razonable
+    -- por cada materia del plan: permite promoción (>=7), regulariza (>=6), mesa final desde 6.
+    INSERT INTO "CourseApprovalRules"
+        (study_plan_course_id, minimum_regular_grade, minimum_promotion_grade, minimum_final_exam_grade,
+         minimum_attendance_percentage, requires_final_exam, allows_promotion, created_at, updated_at)
+    SELECT spc.id, 6.0, 7.0, 6.0, 75.0, true, true, timezone('utc', now()), timezone('utc', now())
+    FROM "StudyPlanCourses" spc
+    WHERE spc.study_plan_id = v_study_plan_id
+      AND NOT EXISTS (SELECT 1 FROM "CourseApprovalRules" car WHERE car.study_plan_course_id = spc.id);
+
 END $$;
 
 COMMIT;

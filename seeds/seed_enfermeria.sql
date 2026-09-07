@@ -142,6 +142,16 @@ BEGIN
     (v_study_plan_id, v_c16, v_c10, 'Strict', 'Approved', true, timezone('utc', now()), timezone('utc', now())),
     (v_study_plan_id, v_c16, v_c11, 'Strict', 'Approved', true, timezone('utc', now()), timezone('utc', now()));
 
+    -- ── CourseApprovalRules (regla de aprobación por defecto) ──
+    -- Sin esta fila, "Promocionado" es matemáticamente imposible. Regla razonable por materia.
+    INSERT INTO "CourseApprovalRules"
+        (study_plan_course_id, minimum_regular_grade, minimum_promotion_grade, minimum_final_exam_grade,
+         minimum_attendance_percentage, requires_final_exam, allows_promotion, created_at, updated_at)
+    SELECT spc.id, 6.0, 7.0, 6.0, 75.0, true, true, timezone('utc', now()), timezone('utc', now())
+    FROM "StudyPlanCourses" spc
+    WHERE spc.study_plan_id = v_study_plan_id
+      AND NOT EXISTS (SELECT 1 FROM "CourseApprovalRules" car WHERE car.study_plan_course_id = spc.id);
+
 END $$;
 
 COMMIT;

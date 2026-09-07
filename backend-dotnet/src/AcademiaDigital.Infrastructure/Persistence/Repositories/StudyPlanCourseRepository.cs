@@ -57,4 +57,49 @@ public class StudyPlanCourseRepository(AppDbContext db) : IStudyPlanCourseReposi
 
     public async Task DeleteByStudyPlanIdsAsync(IReadOnlyList<int> studyPlanIds, CancellationToken ct = default)
         => await db.StudyPlanCourses.Where(spc => studyPlanIds.Contains(spc.StudyPlanId)).ExecuteDeleteAsync(ct);
+
+    public async Task SetApprovalRuleAsync(
+        int studyPlanId, int studyPlanCourseId,
+        decimal? minimumRegularGrade, decimal? minimumPromotionGrade, decimal minimumFinalExamGrade,
+        decimal? minimumAttendancePercentage, bool requiresFinalExam, bool allowsPromotion,
+        CancellationToken ct = default)
+    {
+        var studyPlanCourse = await db.StudyPlanCourses
+            .Include(spc => spc.ApprovalRule)
+            .FirstOrDefaultAsync(spc => spc.Id == studyPlanCourseId, ct)
+            ?? throw new KeyNotFoundException("Materia del plan no encontrada.");
+
+        if (studyPlanCourse.StudyPlanId != studyPlanId)
+            throw new KeyNotFoundException("Materia del plan no encontrada.");
+
+        var now = DateTime.UtcNow;
+        if (studyPlanCourse.ApprovalRule is null)
+        {
+            studyPlanCourse.ApprovalRule = new CourseApprovalRule
+            {
+                StudyPlanCourseId = studyPlanCourse.Id,
+                MinimumRegularGrade = minimumRegularGrade,
+                MinimumPromotionGrade = minimumPromotionGrade,
+                MinimumFinalExamGrade = minimumFinalExamGrade,
+                MinimumAttendancePercentage = minimumAttendancePercentage,
+                RequiresFinalExam = requiresFinalExam,
+                AllowsPromotion = allowsPromotion,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+        }
+        else
+        {
+            var existing = studyPlanCourse.ApprovalRule;
+            existing.MinimumRegularGrade = minimumRegularGrade;
+            existing.MinimumPromotionGrade = minimumPromotionGrade;
+            existing.MinimumFinalExamGrade = minimumFinalExamGrade;
+            existing.MinimumAttendancePercentage = minimumAttendancePercentage;
+            existing.RequiresFinalExam = requiresFinalExam;
+            existing.AllowsPromotion = allowsPromotion;
+            existing.UpdatedAt = now;
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
 }

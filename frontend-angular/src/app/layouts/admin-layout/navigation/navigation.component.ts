@@ -60,6 +60,7 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
   { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
+  { id: 'approval-rules', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' },
 ];
 
 @Component({

@@ -10,6 +10,7 @@ import { TeacherDetailComponent } from './teacher-detail/teacher-detail.componen
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
 import { StudentsConditionComponent } from './students-condition/students-condition.component';
+import { ApprovalRulesComponent } from './approval-rules/approval-rules.component';
 import { CareerManagementComponent } from './career-management/career-management.component';
 import { StudentCommissionAssignmentComponent } from './student-commission-assignment/student-commission-assignment.component';
 import { CommissionManagementComponent } from './commission-management/commission-management.component';
@@ -34,6 +35,12 @@ const routes: Routes = [
     component: StudentsConditionComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin, UserRole.Profesor] }
+  },
+  {
+    path: 'approval-rules',
+    component: ApprovalRulesComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
   },
   {
     path: 'teachers',

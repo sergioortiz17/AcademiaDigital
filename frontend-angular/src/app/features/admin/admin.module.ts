@@ -23,7 +23,8 @@ import { GradebookManagementComponent } from './gradebook-management/gradebook-m
 import { ReopenGradebookDialogComponent } from './gradebook-management/reopen-gradebook-dialog/reopen-gradebook-dialog.component';
 import { AdminApproveDialogComponent } from './gradebook-management/admin-approve-dialog/admin-approve-dialog.component';
 import { StudentsConditionComponent } from './students-condition/students-condition.component';
-import { ApproveReasonDialogComponent } from './students-condition/approve-reason-dialog/approve-reason-dialog.component';import { StudyPlanImportComponent } from './study-plan-import/study-plan-import.component';
+import { ApproveReasonDialogComponent } from './students-condition/approve-reason-dialog/approve-reason-dialog.component';
+import { ApprovalRulesComponent } from './approval-rules/approval-rules.component';import { StudyPlanImportComponent } from './study-plan-import/study-plan-import.component';
 import { CareerCreateComponent } from './career-create/career-create.component';
 import { StudyPlanDiffComponent } from './study-plan-diff/study-plan-diff.component';
 import { CareerManagementComponent } from './career-management/career-management.component';
@@ -56,6 +57,7 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     AdminApproveDialogComponent,
     StudentsConditionComponent,
     ApproveReasonDialogComponent,
+    ApprovalRulesComponent,
     StudyPlanImportComponent,
     CareerCreateComponent,
     StudyPlanDiffComponent,

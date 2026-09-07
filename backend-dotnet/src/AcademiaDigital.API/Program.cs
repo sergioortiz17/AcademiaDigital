@@ -117,6 +117,7 @@ builder.Services.AddScoped<GetStudyPlanCoursesQueryHandler>();
 builder.Services.AddScoped<AddCourseToStudyPlanCommandHandler>();
 builder.Services.AddScoped<UpdateStudyPlanCourseCommandHandler>();
 builder.Services.AddScoped<RemoveCourseFromStudyPlanCommandHandler>();
+builder.Services.AddScoped<SetCourseApprovalRuleCommandHandler>();
 builder.Services.AddScoped<GetCoursePrerequisitesQueryHandler>();
 builder.Services.AddScoped<AddCoursePrerequisiteCommandHandler>();
 builder.Services.AddScoped<RemoveCoursePrerequisiteCommandHandler>();

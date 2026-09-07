@@ -19,6 +19,15 @@ export interface StudyPlan {
   isActive: boolean;
 }
     
+export interface CourseApprovalRule {
+    minimumRegularGrade: number | null;
+    minimumPromotionGrade: number | null;
+    minimumFinalExamGrade: number;
+    minimumAttendancePercentage: number | null;
+    requiresFinalExam: boolean;
+    allowsPromotion: boolean;
+}
+
 export interface Subject{
     id:number;
     studyPlanId:number;
@@ -33,6 +42,7 @@ export interface Subject{
     credits:number;
     workloadHours:number;
     courseType: null;
+    approvalRule: CourseApprovalRule | null;
 }
 
 @Injectable({
@@ -56,6 +66,14 @@ export class SubjectService{
 
         return this.http.get<Subject[]>(
             `${this.baseURL}v1/study-plans/${studyPlanId}/courses`
+        );
+    }
+
+    // Upsert de la regla de aprobación de una materia del plan (admin-only en el backend).
+    setApprovalRule(studyPlanId:number, studyPlanCourseId:number, rule: CourseApprovalRule):Observable<void>{
+        return this.http.put<void>(
+            `${this.baseURL}v1/study-plans/${studyPlanId}/courses/${studyPlanCourseId}/approval-rule`,
+            rule
         );
     }
 

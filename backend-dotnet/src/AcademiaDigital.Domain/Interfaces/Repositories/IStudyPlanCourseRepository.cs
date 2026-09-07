@@ -12,4 +12,11 @@ public interface IStudyPlanCourseRepository
     Task<StudyPlanCourse> UpdateAsync(StudyPlanCourse studyPlanCourse, CancellationToken ct = default);
     Task DeleteAsync(StudyPlanCourse studyPlanCourse, CancellationToken ct = default);
     Task DeleteByStudyPlanIdsAsync(IReadOnlyList<int> studyPlanIds, CancellationToken ct = default);
+
+    /// <summary>Upsert de la CourseApprovalRule de una materia del plan (crea si no existe, si no edita).</summary>
+    Task SetApprovalRuleAsync(
+        int studyPlanId, int studyPlanCourseId,
+        decimal? minimumRegularGrade, decimal? minimumPromotionGrade, decimal minimumFinalExamGrade,
+        decimal? minimumAttendancePercentage, bool requiresFinalExam, bool allowsPromotion,
+        CancellationToken ct = default);
 }

@@ -1,16 +1,17 @@
 using AcademiaDigital.Application.Dtos;
 using AcademiaDigital.Application.UseCases.StudyPlanCourses;
+using AcademiaDigital.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AcademiaDigital.API.Controllers;
 
-[ApiController]
 [Route("api/v1/study-plans/{studyPlanId:int}/courses")]
 public class StudyPlanCoursesController(
     GetStudyPlanCoursesQueryHandler getCoursesHandler,
     AddCourseToStudyPlanCommandHandler addCourseHandler,
     UpdateStudyPlanCourseCommandHandler updateCourseHandler,
-    RemoveCourseFromStudyPlanCommandHandler removeCourseHandler) : ControllerBase
+    RemoveCourseFromStudyPlanCommandHandler removeCourseHandler,
+    SetCourseApprovalRuleCommandHandler setApprovalRuleHandler) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetByStudyPlan(int studyPlanId, CancellationToken ct)
@@ -49,6 +50,32 @@ public class StudyPlanCoursesController(
         }
         catch (KeyNotFoundException ex) { return NotFoundProblem(ex.Message); }
     }
+
+    // PUT /api/v1/study-plans/{studyPlanId}/courses/{studyPlanCourseId}/approval-rule
+    // Upsert de la regla de aprobación de la materia (persistente). Solo Admin.
+    [HttpPut("{studyPlanCourseId:int}/approval-rule")]
+    public async Task<IActionResult> SetApprovalRule(
+        int studyPlanId, int studyPlanCourseId, [FromBody] CourseApprovalRuleRequest request, CancellationToken ct)
+    {
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
+        try
+        {
+            await setApprovalRuleHandler.Handle(
+                new SetCourseApprovalRuleCommand(studyPlanId, studyPlanCourseId, request), ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex) { return NotFoundProblem(ex.Message); }
+        catch (ArgumentException ex) { return BadRequestProblem(ex.Message); }
+    }
+
+    private IActionResult? RequireAdmin()
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    private ObjectResult BadRequestProblem(string detail) => Problem(detail: detail, statusCode: StatusCodes.Status400BadRequest);
 
     private ObjectResult NotFoundProblem(string detail) => Problem(detail: detail, statusCode: StatusCodes.Status404NotFound);
 

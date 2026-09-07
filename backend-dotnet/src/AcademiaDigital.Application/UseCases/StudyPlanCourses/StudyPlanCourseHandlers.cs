@@ -8,6 +8,7 @@ public sealed record GetStudyPlanCoursesQuery(int StudyPlanId);
 public sealed record AddCourseToStudyPlanCommand(int StudyPlanId, AddCourseToStudyPlanRequest Request);
 public sealed record UpdateStudyPlanCourseCommand(int StudyPlanId, int StudyPlanCourseId, AddCourseToStudyPlanRequest Request);
 public sealed record RemoveCourseFromStudyPlanCommand(int StudyPlanId, int StudyPlanCourseId);
+public sealed record SetCourseApprovalRuleCommand(int StudyPlanId, int StudyPlanCourseId, CourseApprovalRuleRequest Rule);
 
 public sealed class GetStudyPlanCoursesQueryHandler(IStudyPlanCourseRepository studyPlanCourseRepository)
 {
@@ -31,7 +32,16 @@ public sealed class GetStudyPlanCoursesQueryHandler(IStudyPlanCourseRepository s
         IsMandatory = course.IsMandatory,
         Credits = course.Credits,
         WorkloadHours = course.WorkloadHours,
-        CourseType = course.CourseType?.Name
+        CourseType = course.CourseType?.Name,
+        ApprovalRule = course.ApprovalRule is null ? null : new CourseApprovalRuleDto
+        {
+            MinimumRegularGrade = course.ApprovalRule.MinimumRegularGrade,
+            MinimumPromotionGrade = course.ApprovalRule.MinimumPromotionGrade,
+            MinimumFinalExamGrade = course.ApprovalRule.MinimumFinalExamGrade,
+            MinimumAttendancePercentage = course.ApprovalRule.MinimumAttendancePercentage,
+            RequiresFinalExam = course.ApprovalRule.RequiresFinalExam,
+            AllowsPromotion = course.ApprovalRule.AllowsPromotion
+        }
     };
 }
 
@@ -93,7 +103,16 @@ public sealed class AddCourseToStudyPlanCommandHandler(
         IsMandatory = course.IsMandatory,
         Credits = course.Credits,
         WorkloadHours = course.WorkloadHours,
-        CourseType = course.CourseType?.Name
+        CourseType = course.CourseType?.Name,
+        ApprovalRule = course.ApprovalRule is null ? null : new CourseApprovalRuleDto
+        {
+            MinimumRegularGrade = course.ApprovalRule.MinimumRegularGrade,
+            MinimumPromotionGrade = course.ApprovalRule.MinimumPromotionGrade,
+            MinimumFinalExamGrade = course.ApprovalRule.MinimumFinalExamGrade,
+            MinimumAttendancePercentage = course.ApprovalRule.MinimumAttendancePercentage,
+            RequiresFinalExam = course.ApprovalRule.RequiresFinalExam,
+            AllowsPromotion = course.ApprovalRule.AllowsPromotion
+        }
     };
 }
 
@@ -129,5 +148,33 @@ public sealed class RemoveCourseFromStudyPlanCommandHandler(IStudyPlanCourseRepo
         if (studyPlanCourse.StudyPlanId != command.StudyPlanId) throw new KeyNotFoundException("Study plan course not found.");
 
         await studyPlanCourseRepository.DeleteAsync(studyPlanCourse, ct);
+    }
+}
+
+/// <summary>
+/// Upsert de la regla de aprobación (CourseApprovalRule) de una materia del plan. Permite
+/// configurar/editar de forma persistente AllowsPromotion, mínimos y RequiresFinalExam sin SQL.
+/// </summary>
+public sealed class SetCourseApprovalRuleCommandHandler(IStudyPlanCourseRepository studyPlanCourseRepository)
+{
+    public async Task Handle(SetCourseApprovalRuleCommand command, CancellationToken ct = default)
+    {
+        var rule = command.Rule;
+
+        // Validaciones de negocio simples y coherentes con la escala 1..10.
+        if (rule.MinimumFinalExamGrade < 1m || rule.MinimumFinalExamGrade > 10m)
+            throw new ArgumentException("La nota mínima de mesa final debe estar entre 1 y 10.");
+        if (rule.MinimumRegularGrade is { } mr && (mr < 1m || mr > 10m))
+            throw new ArgumentException("La nota mínima para regularizar debe estar entre 1 y 10.");
+        if (rule.MinimumPromotionGrade is { } mp && (mp < 1m || mp > 10m))
+            throw new ArgumentException("La nota mínima de promoción debe estar entre 1 y 10.");
+        if (rule.AllowsPromotion && rule.MinimumPromotionGrade is null)
+            throw new ArgumentException("Si la materia permite promoción, se requiere la nota mínima de promoción.");
+        if (rule.MinimumRegularGrade is { } r && rule.MinimumPromotionGrade is { } p && p < r)
+            throw new ArgumentException("La nota mínima de promoción no puede ser menor que la de regularización.");
+
+        await studyPlanCourseRepository.SetApprovalRuleAsync(
+            command.StudyPlanId, command.StudyPlanCourseId, rule.MinimumRegularGrade, rule.MinimumPromotionGrade,
+            rule.MinimumFinalExamGrade, rule.MinimumAttendancePercentage, rule.RequiresFinalExam, rule.AllowsPromotion, ct);
     }
 }
