@@ -42,6 +42,10 @@ const routes: Routes = [
         loadChildren: () => import('./features/grades/grades.module').then(m => m.GradesModule)
       },
       {
+        path: 'academic-history',
+        loadChildren: () => import('./features/academic-history/academic-history.module').then(m => m.AcademicHistoryModule)
+      },
+      {
         path: 'attendance',
         loadChildren: () => import('./features/attendance/attendance.module').then(m => m.AttendanceModule)
       },

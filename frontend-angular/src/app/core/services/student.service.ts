@@ -120,4 +120,39 @@ export class StudentService {
     if (careerId != null) params = params.set('careerId', careerId);
     return this.http.get<EligibleCourse[]>(`${this.baseURL}v1/students/me/eligible-courses`, { params });
   }
+
+  /** Historial académico del alumno LOGUEADO: materias del plan con su estado real por materia
+   *  (EnrollmentStatus sin agrupar). El backend resuelve el studentId desde el JWT. Solo lectura. */
+  getMyAcademicProgress(careerId?: number): Observable<StudentAcademicProgress> {
+    let params = new HttpParams();
+    if (careerId != null) params = params.set('careerId', careerId);
+    return this.http.get<StudentAcademicProgress>(`${this.baseURL}v1/students/me/academic-progress`, { params });
+  }
+}
+
+export interface StudentCourseProgress {
+  courseId: number;
+  code: string;
+  name: string;
+  yearNumber: number;
+  semester: number;
+  academicStatus: string;
+  // Estado real sin agrupar: Enrolled | Regularized | Failed | Approved | Promoted | null
+  enrollmentStatus: string | null;
+  finalGrade: number | null;
+  academicYear: number | null;
+}
+
+export interface StudentAcademicProgress {
+  studentId: number;
+  careerId: number;
+  careerName: string;
+  studyPlanId: number;
+  studyPlanName: string;
+  totalCourses: number;
+  approvedCourses: number;
+  inProgressCourses: number;
+  pendingCourses: number;
+  progressPercentage: number;
+  courses: StudentCourseProgress[];
 }

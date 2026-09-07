@@ -18,6 +18,7 @@ const MENU_ALUMNO: MenuItem[] = [
   { id: 'calendar',     title: 'Calendario',      url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
   { id: 'grades',       title: 'Calificaciones',  url: '/app/grades',            icon: 'grade' },
+  { id: 'academic-history', title: 'Historial académico', url: '/app/academic-history', icon: 'history_edu' },
   { id: 'my-attendance', title: 'Asistencias',    url: '/app/attendance/me',     icon: 'fact_check' },
 ];
 

@@ -147,6 +147,8 @@ public sealed class GetStudentAcademicProgressQueryHandler(
                         : eligibilityService.IsApproved(enrollment.Status)
                             ? "Approved"
                             : eligibilityService.IsInProgress(enrollment.Status) ? "InProgress" : enrollment.Status.ToString(),
+                    // Estado crudo sin agrupar (para historial del alumno). null si no cursó.
+                    EnrollmentStatus = enrollment?.Status.ToString(),
                     FinalGrade = enrollment?.FinalGrade,
                     AcademicYear = enrollment?.AcademicYear
                 };

@@ -14,7 +14,8 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/students/me")]
 public sealed class StudentSelfController(
     IStudentRepository studentRepository,
-    GetEligibleCoursesForStudentQueryHandler eligibleCoursesHandler) : ApiControllerBase
+    GetEligibleCoursesForStudentQueryHandler eligibleCoursesHandler,
+    GetStudentAcademicProgressQueryHandler academicProgressHandler) : ApiControllerBase
 {
     // GET /api/v1/students/me/eligible-courses?careerId=
     // Mismo cálculo que /students/{id}/eligible-courses; solo resuelve el studentId del alumno
@@ -28,6 +29,25 @@ public sealed class StudentSelfController(
         try
         {
             return Ok(await eligibleCoursesHandler.Handle(new GetEligibleCoursesForStudentQuery(student.Id, careerId), ct));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Problem(detail: ex.Message, statusCode: StatusCodes.Status404NotFound);
+        }
+    }
+
+    // GET /api/v1/students/me/academic-progress?careerId=
+    // Mismo cálculo que /students/{id}/academic-progress; resuelve el studentId del alumno
+    // autenticado. Read-only: historial de materias del plan con su estado real por materia.
+    [HttpGet("academic-progress")]
+    public async Task<IActionResult> GetMyAcademicProgress([FromQuery] int? careerId, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        var student = await studentRepository.FindByUserIdAsync(CurrentUserId.Value, ct);
+        if (student is null) return NotFound(new ProblemDetails { Title = "Not Found", Detail = "El usuario actual no es un alumno.", Status = StatusCodes.Status404NotFound });
+        try
+        {
+            return Ok(await academicProgressHandler.Handle(new GetStudentAcademicProgressQuery(student.Id, careerId), ct));
         }
         catch (KeyNotFoundException ex)
         {
