@@ -42,7 +42,11 @@
   .tabpanel { display:none; }
   .tabpanel.active { display:grid; }
   /* Calendario oscuro (pestaña Volver al futuro) */
-  .rj-calendar-wrap { max-width:420px; margin:0 auto; }
+  .rj-layout { display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap; }
+  .rj-controls { flex:0 0 260px; display:flex; flex-direction:column; }
+  .rj-controls input, .rj-controls label { width:100%; }
+  .rj-info { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
+  .rj-calendar-wrap { max-width:420px; flex:0 0 auto; }
   .rj-cal-header { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:10px; }
   .rj-cal-title { font-weight:700; font-size:15px; color:var(--fg); min-width:170px; text-align:center; }
   .rj-nav-btn { margin:0; background:var(--card); border:1px solid var(--border); color:var(--accent); padding:4px 12px; font-size:16px; }
@@ -145,41 +149,46 @@
     <div id="rjDisabled" class="out err" style="display:none">🔒 Función deshabilitada en este ambiente (falta <code>ALLOW_TIME_TRAVEL=true</code> en el backend).</div>
 
     <div id="rjPanel" style="display:none">
-      <div class="row" style="max-width:680px;align-items:center">
-        <div style="display:flex;align-items:center;gap:10px">
-          <button type="button" id="rjToggleBtn" style="margin:0">Activar</button>
-          <span id="rjToggleStatus" class="muted">⚪ Apagado</span>
-        </div>
-      </div>
+      <div class="rj-layout">
 
-      <label>Fecha simulada</label>
-      <div class="row" style="max-width:220px;margin-bottom:14px">
-        <div><label>Ir a fecha</label><input type="text" id="rjDateJump" placeholder="dd/mm/aaaa" maxlength="10"/></div>
-      </div>
-      <div class="rj-calendar-wrap">
-        <div class="rj-cal-header">
-          <button type="button" id="rjCalPrev" class="rj-nav-btn">‹</button>
-          <span id="rjCalTitle" class="rj-cal-title">—</span>
-          <button type="button" id="rjCalNext" class="rj-nav-btn">›</button>
-        </div>
-        <div class="rj-cal-weekdays">
-          <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
-        </div>
-        <div class="rj-cal-grid" id="rjCalGrid"></div>
-      </div>
+        <div class="rj-controls">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button type="button" id="rjToggleBtn" style="margin:0">Activar</button>
+            <span id="rjToggleStatus" class="muted">⚪ Apagado</span>
+          </div>
 
-      <div class="row" style="max-width:340px;align-items:flex-end;margin-top:12px">
-        <div><label>Hora</label><input id="rjTime" type="time" step="1" value="12:00:00"/></div>
-        <div><button id="rjApply">Aplicar</button></div>
-        <div><button id="rjReset" style="background:#475569;color:#fff">🙄 Volver al presente</button></div>
-      </div>
+          <label>Ir a fecha</label>
+          <input type="text" id="rjDateJump" placeholder="dd/mm/aaaa" maxlength="10"/>
 
-      <div style="display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:12px">
-        <div class="muted">Hora REAL del servidor:<br><b id="rjReal">—</b></div>
-        <div class="muted">Hora EFECTIVA (la que usan los handlers):<br><b id="rjEffective">—</b></div>
-        <div class="muted">Estado:<br><b id="rjStatus">—</b></div>
+          <label>Hora</label>
+          <input id="rjTime" type="time" step="1" value="12:00:00"/>
+
+          <div class="row" style="margin-top:12px">
+            <button id="rjApply" style="margin:0">Aplicar</button>
+            <button id="rjReset" style="margin:0;background:#475569;color:#fff">🙄 Volver al presente</button>
+          </div>
+
+          <div class="rj-info">
+            <div class="muted">Hora REAL del servidor:<br><b id="rjReal">—</b></div>
+            <div class="muted">Hora EFECTIVA (la que usan los handlers):<br><b id="rjEffective">—</b></div>
+            <div class="muted">Estado:<br><b id="rjStatus">—</b></div>
+          </div>
+          <div class="out" id="rjOut" style="display:none"></div>
+        </div>
+
+        <div class="rj-calendar-wrap">
+          <div class="rj-cal-header">
+            <button type="button" id="rjCalPrev" class="rj-nav-btn">‹</button>
+            <span id="rjCalTitle" class="rj-cal-title">—</span>
+            <button type="button" id="rjCalNext" class="rj-nav-btn">›</button>
+          </div>
+          <div class="rj-cal-weekdays">
+            <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+          </div>
+          <div class="rj-cal-grid" id="rjCalGrid"></div>
+        </div>
+
       </div>
-      <div class="out" id="rjOut" style="display:none"></div>
     </div>
   </section>
   </div><!-- /reloj -->

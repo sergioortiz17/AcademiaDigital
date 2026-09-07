@@ -227,5 +227,5 @@ public record EnrollRequest(
 
 public record AdminApproveRequest(
     [Required][Range(1, 10)] decimal FinalGrade,
-    [Required][MinLength(1)] string Reason,
+    string? Reason,
     bool Promote = false);

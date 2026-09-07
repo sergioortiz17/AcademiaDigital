@@ -11,7 +11,7 @@ namespace AcademiaDigital.Application.UseCases.Enrollments;
 public sealed record AdminApproveEnrollmentCommand(
     long EnrollmentId,
     decimal FinalGrade,
-    string Reason,
+    string? Reason,
     long ActorUserId,
     bool Promote = false);
 
@@ -23,19 +23,18 @@ public sealed class AdminApproveEnrollmentCommandHandler(
 {
     public async Task<AdminApproveEnrollmentResult> Handle(AdminApproveEnrollmentCommand command, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(command.Reason))
-            throw new ArgumentException("El motivo es obligatorio.", nameof(command.Reason));
-
         // Escala de calificación 1..10 (aprobado a partir de 4, pero eso lo valida el negocio aparte;
         // acá sólo garantizamos un rango sano para el atajo administrativo).
         if (command.FinalGrade < 1m || command.FinalGrade > 10m)
             throw new ArgumentException("La nota final debe estar entre 1 y 10.", nameof(command.FinalGrade));
 
+        // El motivo es opcional: si no se da, queda auditado igual (con Reason vacío).
+        var reason = string.IsNullOrWhiteSpace(command.Reason) ? string.Empty : command.Reason.Trim();
         var newStatus = command.Promote ? EnrollmentStatus.Promoted : EnrollmentStatus.Approved;
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
         var updated = await enrollmentRepository.AdminApproveAsync(
-            command.EnrollmentId, newStatus, command.FinalGrade, command.Reason, command.ActorUserId, now, ct);
+            command.EnrollmentId, newStatus, command.FinalGrade, reason, command.ActorUserId, now, ct);
 
         return new AdminApproveEnrollmentResult(updated.Id, updated.Status, updated.FinalGrade);
     }

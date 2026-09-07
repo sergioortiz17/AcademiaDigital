@@ -144,7 +144,9 @@ public sealed record CreateGradebookRequest(
     [Required, MinLength(1), MaxLength(20)] IReadOnlyList<GradebookEvaluationRequest> Evaluations);
 public sealed record GradebookEvaluationRequest(
     [Required, StringLength(150, MinimumLength = 1)] string Name,
-    [Range(typeof(decimal), "0.01", "100")] decimal WeightPercentage,
+    // 0 es válido para recuperaciones (no llevan peso propio); GradebookPolicy.ValidateEvaluations
+    // exige > 0 para instancias regulares y exactamente 0 para recuperaciones.
+    [Range(typeof(decimal), "0", "100")] decimal WeightPercentage,
     [Range(typeof(decimal), "0.01", "100")] decimal MaximumScore = 10m,
     bool IsRecovery = false);
 public sealed record SaveGradeEntriesRequest(

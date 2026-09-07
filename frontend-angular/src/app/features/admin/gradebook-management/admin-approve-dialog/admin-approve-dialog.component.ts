@@ -36,12 +36,8 @@ export class AdminApproveDialogComponent {
     return this.finalGrade != null && this.finalGrade >= 1 && this.finalGrade <= 10;
   }
 
-  get reasonValid(): boolean {
-    return this.reason.trim().length >= 3;
-  }
-
   get isValid(): boolean {
-    return this.gradeValid && this.reasonValid;
+    return this.gradeValid;
   }
 
   cancel(): void {
