@@ -201,6 +201,7 @@ builder.Services.AddScoped<GetPeriodDivisionCoverageQueryHandler>();
 builder.Services.AddScoped<EnrollmentPeriodFacade>();
 builder.Services.AddScoped<EnrollmentPeriodAdminFacade>();
 builder.Services.AddScoped<CreateEnrollmentCommandHandler>();
+builder.Services.AddScoped<AdminApproveEnrollmentCommandHandler>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration

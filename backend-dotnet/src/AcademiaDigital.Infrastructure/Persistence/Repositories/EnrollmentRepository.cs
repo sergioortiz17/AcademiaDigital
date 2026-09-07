@@ -165,6 +165,36 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
         return enrollment;
     }
 
+    public async Task<Enrollment> AdminApproveAsync(
+        long enrollmentId, EnrollmentStatus newStatus, decimal finalGrade, string reason, long actorUserId,
+        DateTime changedAt, CancellationToken ct = default)
+    {
+        var enrollment = await db.Enrollments
+            .FromSqlInterpolated($"SELECT * FROM \"Enrollments\" WHERE id = {enrollmentId} FOR UPDATE")
+            .SingleOrDefaultAsync(ct)
+            ?? throw new KeyNotFoundException("Inscripción no encontrada.");
+
+        if (enrollment.Status == EnrollmentStatus.Withdrawn)
+            throw new InvalidOperationException("No se puede aprobar una inscripción dada de baja (Withdrawn).");
+
+        db.EnrollmentStatusHistory.Add(new EnrollmentStatusHistory
+        {
+            EnrollmentId = enrollment.Id,
+            PreviousStatus = enrollment.Status,
+            NewStatus = newStatus,
+            PreviousFinalGrade = enrollment.FinalGrade,
+            NewFinalGrade = finalGrade,
+            Reason = reason.Trim(),
+            ChangedByUserId = actorUserId,
+            ChangedAt = changedAt
+        });
+
+        enrollment.Status = newStatus;
+        enrollment.FinalGrade = finalGrade;
+        await db.SaveChangesAsync(ct);
+        return enrollment;
+    }
+
     public async Task DeleteAsync(Enrollment enrollment, CancellationToken ct = default)
     {
         db.Enrollments.Remove(enrollment);

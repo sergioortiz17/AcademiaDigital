@@ -39,6 +39,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CooperativeEntity> CooperativeEntities => Set<CooperativeEntity>();
     public DbSet<Communication> Communications => Set<Communication>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
+    public DbSet<EnrollmentStatusHistory> EnrollmentStatusHistory => Set<EnrollmentStatusHistory>();
     public DbSet<TeacherContest> TeacherContests => Set<TeacherContest>();
     public DbSet<ContestApplication> ContestApplications => Set<ContestApplication>();
     public DbSet<CourseSection> CourseSections => Set<CourseSection>();
@@ -102,7 +103,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new CooperativeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CommunicationConfiguration());
         modelBuilder.ApplyConfiguration(new EnrollmentConfiguration());
-        modelBuilder.ApplyConfiguration(new TeacherContestConfiguration());
+        modelBuilder.ApplyConfiguration(new EnrollmentStatusHistoryConfiguration());        modelBuilder.ApplyConfiguration(new TeacherContestConfiguration());
         modelBuilder.ApplyConfiguration(new ContestApplicationConfiguration());
         modelBuilder.ApplyConfiguration(new CourseSectionConfiguration());
         modelBuilder.ApplyConfiguration(new EnrollmentPeriodConfiguration());

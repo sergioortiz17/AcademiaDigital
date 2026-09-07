@@ -139,6 +139,10 @@
           <button mat-stroked-button color="warn" [disabled]="d.gradebook.status === 'Draft' || isProcessing" (click)="reopen()">
             Reabrir
           </button>
+          <button mat-raised-button color="accent" [disabled]="isProcessing" (click)="markApproved()"
+            matTooltip="Aprobar esta materia por vía administrativa, sin pasar por la mesa de examen">
+            Marcar como aprobada
+          </button>
         </div>
       </div>
 

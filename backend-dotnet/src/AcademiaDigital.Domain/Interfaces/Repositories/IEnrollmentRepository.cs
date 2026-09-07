@@ -52,5 +52,14 @@ public interface IEnrollmentRepository
     Task<IReadOnlyList<DailyEnrollmentRow>> GetDailyCountsByPeriodAsync(int periodId, int days, CancellationToken ct = default);
     Task<Enrollment> CreateAsync(Enrollment enrollment, CancellationToken ct = default);
     Task<Enrollment> UpdateAsync(Enrollment enrollment, CancellationToken ct = default);
+
+    /// <summary>
+    /// Atajo administrativo: fija el estado (Approved/Promoted) y la nota final de una inscripción
+    /// fuera del circuito formal (planilla + mesa), registrando auditoría (EnrollmentStatusHistory).
+    /// Transaccional con lock FOR UPDATE. Devuelve la inscripción actualizada.
+    /// </summary>
+    Task<Enrollment> AdminApproveAsync(
+        long enrollmentId, EnrollmentStatus newStatus, decimal finalGrade, string reason, long actorUserId,
+        DateTime changedAt, CancellationToken ct = default);
     Task DeleteAsync(Enrollment enrollment, CancellationToken ct = default);
 }

@@ -146,6 +146,17 @@ export class GradebookService {
     return this.http.post<Gradebook>(`${this.base}v1/gradebooks/${id}/reopen`, { reason });
   }
 
+  /**
+   * Atajo administrativo: marca una materia (inscripción) como aprobada por fuera del circuito
+   * formal de planilla + mesa. Fija la nota final y el estado, registrando auditoría en el backend.
+   */
+  adminApproveEnrollment(enrollmentId: number, finalGrade: number, reason: string, promote = false): Observable<unknown> {
+    return this.http.post<unknown>(
+      `${this.base}v1/enrollments/${enrollmentId}/admin-approve`,
+      { finalGrade, reason, promote }
+    );
+  }
+
   getMyGrades(courseId?: number): Observable<StudentPublishedGradebook[]> {
     let params = new HttpParams();
     if (courseId != null) params = params.set('courseId', courseId);

@@ -6,6 +6,7 @@ import { TeachingPositionService, TeachingPosition } from '../../../core/service
 import { GradebookService, GradebookDetail, GradebookStudent } from '../../../core/services/gradebook.service';
 import { CareerService, Career } from '../../../core/services/career.service';
 import { ReopenGradebookDialogComponent } from './reopen-gradebook-dialog/reopen-gradebook-dialog.component';
+import { AdminApproveDialogComponent, AdminApproveDialogResult } from './admin-approve-dialog/admin-approve-dialog.component';
 
 const RESULT_LABELS: Record<string, string> = {
   Promoted: 'Promocionado',
@@ -185,6 +186,25 @@ export class GradebookManagementComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((reason: string | null) => {
       if (!reason) return;
       this.runTransition(this.gradebookService.reopenGradebook(this.detail!.gradebook.id, reason), 'Planilla reabierta.');
+    });
+  }
+
+  // Atajo administrativo: marca la materia del alumno seleccionado como aprobada por fuera del
+  // circuito formal (planilla + mesa), fijando nota final + motivo, y refresca el detalle.
+  markApproved(): void {
+    if (!this.detail || !this.selectedStudent || this.isProcessing) return;
+    const student = this.selectedStudent;
+    const dialogRef = this.dialog.open(AdminApproveDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { studentName: student.studentName, courseName: this.detail.gradebook.courseName }
+    });
+    dialogRef.afterClosed().subscribe((result: AdminApproveDialogResult | null) => {
+      if (!result) return;
+      this.runTransition(
+        this.gradebookService.adminApproveEnrollment(student.enrollmentId, result.finalGrade, result.reason),
+        `Materia marcada como aprobada para ${student.studentName}.`
+      );
     });
   }
 

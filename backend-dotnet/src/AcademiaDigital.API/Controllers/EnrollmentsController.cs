@@ -11,6 +11,7 @@ public class EnrollmentsController(
     EnrollmentPeriodFacade periods,
     EnrollmentPeriodAdminFacade admin,
     CreateEnrollmentCommandHandler createEnrollmentHandler,
+    AdminApproveEnrollmentCommandHandler adminApproveHandler,
     GetMyEnrollmentsQueryHandler getMyEnrollmentsHandler,
     IStudentRepository studentRepository) : ApiControllerBase
 {
@@ -176,6 +177,26 @@ public class EnrollmentsController(
         return StatusCode(StatusCodes.Status201Created, new { success = true, msg = "Inscripción realizada correctamente." });
     }
 
+    // POST /api/v1/enrollments/{enrollmentId}/admin-approve
+    // Atajo administrativo: marca una materia como aprobada por fuera del circuito formal
+    // (planilla + mesa), fijando estado y nota final, y registrando auditoría. Sólo Admin.
+    [HttpPost("{enrollmentId:long}/admin-approve")]
+    public async Task<IActionResult> AdminApprove(long enrollmentId, [FromBody] AdminApproveRequest request, CancellationToken ct)
+    {
+        var denial = RequireAdmin();
+        if (denial is not null) return denial;
+
+        var command = new AdminApproveEnrollmentCommand(
+            enrollmentId,
+            request.FinalGrade,
+            request.Reason,
+            CurrentUserId!.Value,
+            request.Promote);
+
+        var result = await adminApproveHandler.Handle(command, ct);
+        return Ok(new { success = true, msg = "Materia marcada como aprobada.", data = result });
+    }
+
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
@@ -203,3 +224,8 @@ public record EnrollRequest(
     [Required] int EnrollmentPeriodId,
     [Required] string Shift,
     [Required] IReadOnlyList<int> StudyPlanCourseIds);
+
+public record AdminApproveRequest(
+    [Required][Range(1, 10)] decimal FinalGrade,
+    [Required][MinLength(1)] string Reason,
+    bool Promote = false);
