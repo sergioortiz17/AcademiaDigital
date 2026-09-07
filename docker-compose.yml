@@ -43,6 +43,11 @@ services:
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__ExpirationDays=7
       - Cors__AllowedOrigins__0=http://localhost:4200
+      # dev-tools (:8090) llama al backend para el time-travel; se permite su origen en dev.
+      - Cors__AllowedOrigins__1=http://localhost:8090
+      # Time-travel de DevTools (SOLO desarrollo): habilita /api/v1/devtools/time. Sin esta var el
+      # controller devuelve 403. No setear en un ambiente real.
+      - ALLOW_TIME_TRAVEL=true
       # Microservicio Finance (ADR 0001). Fire-and-forget: si no está disponible, la matriculación
       # no se bloquea. finance_api se levanta con docker-compose.finance.yml en la misma red.
       - Finance__BaseUrl=http://finance_api:8091

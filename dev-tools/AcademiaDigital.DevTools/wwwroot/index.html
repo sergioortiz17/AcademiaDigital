@@ -55,6 +55,7 @@
   <button data-tab="alumno">🎒 Alumno</button>
   <button data-tab="profesor">🧑‍🏫 Profesor</button>
   <button data-tab="estado">📋 Estado actual</button>
+  <button data-tab="reloj">🕐 Reloj</button>
 </div>
 
 <main>
@@ -123,6 +124,36 @@
     <div id="overview" class="muted">Cargando…</div>
   </section>
   </div><!-- /estado -->
+
+  <div class="tabpanel" data-panel="reloj" style="grid-template-columns:1fr">
+  <section class="card full">
+    <h2>🕐 Simulación de fecha/hora <button id="rjRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
+    <p class="muted">Simula que la app corre en otra fecha/hora (ej. diciembre 2027) para probar flujos que miran el reloj real: apertura/cierre de inscripciones, sesiones de asistencia y su plazo de 48hs, asignaciones docentes, comisiones, certificados y planillas. <b>No afecta</b> login, sesiones ni expiración de JWT (esos van siempre en tiempo real, a propósito).</p>
+
+    <div id="rjDisabled" class="out err" style="display:none">🔒 Función deshabilitada en este ambiente (falta <code>ALLOW_TIME_TRAVEL=true</code> en el backend).</div>
+
+    <div id="rjPanel" style="display:none">
+      <div class="row" style="max-width:680px;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="margin:0"><input type="checkbox" id="rjToggle" style="width:auto;margin-right:6px"/>Simulación de fecha activa</label>
+        </div>
+      </div>
+
+      <div class="row" style="max-width:680px;align-items:flex-end">
+        <div><label>Fecha/hora simulada</label><input id="rjInput" type="datetime-local" step="1"/></div>
+        <div><button id="rjApply">Aplicar</button></div>
+        <div><button id="rjReset" style="background:#475569;color:#fff">Traer a fecha y hora actual</button></div>
+      </div>
+
+      <div style="display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:12px">
+        <div class="muted">Hora REAL del servidor:<br><b id="rjReal">—</b></div>
+        <div class="muted">Hora EFECTIVA (la que usan los handlers):<br><b id="rjEffective">—</b></div>
+        <div class="muted">Estado:<br><b id="rjStatus">—</b></div>
+      </div>
+      <div class="out" id="rjOut" style="display:none"></div>
+    </div>
+  </section>
+  </div><!-- /reloj -->
 
   <div class="tabpanel" data-panel="alumno" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
   <!-- Atajo A: alumno de 1° año completo -->
@@ -566,8 +597,70 @@ document.querySelectorAll('#tabbar button').forEach(btn => {
     const tab = btn.dataset.tab;
     document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.tabpanel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+    if (tab === 'reloj') rjRefresh();
   });
 });
+
+// ── Reloj: viaje en el tiempo (dev-tools -> backend :8000) ──────────────────
+const TIME_BASE = 'http://localhost:8000/api/v1/devtools/time';
+let rjTimer = null;
+
+function rjFmt(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+
+async function rjRefresh() {
+  let r;
+  try { r = await fetch(TIME_BASE); } catch { $('#rjDisabled').style.display='block'; $('#rjPanel').style.display='none'; return; }
+  if (r.status === 403 || r.status === 404) {
+    $('#rjDisabled').style.display='block'; $('#rjPanel').style.display='none';
+    if (rjTimer) { clearInterval(rjTimer); rjTimer = null; }
+    return;
+  }
+  $('#rjDisabled').style.display='none'; $('#rjPanel').style.display='block';
+  const d = await r.json().catch(()=>({}));
+  rjRender(d);
+  // Refresco periódico del reloj efectivo mientras la pestaña está visible.
+  if (!rjTimer) rjTimer = setInterval(async () => {
+    const panel = document.querySelector('.tabpanel[data-panel="reloj"]');
+    if (!panel || !panel.classList.contains('active')) return;
+    try { const rr = await fetch(TIME_BASE); if (rr.ok) rjRender(await rr.json()); } catch {}
+  }, 1000);
+}
+
+function rjRender(d) {
+  $('#rjReal').textContent = rjFmt(d.realNow);
+  $('#rjEffective').textContent = rjFmt(d.effectiveNow);
+  $('#rjToggle').checked = !!d.enabled;
+  $('#rjStatus').textContent = d.enabled ? '🟢 SIMULADO (activo)' : (d.fakeNow ? '⚪ apagado (hay fecha cargada)' : '⚪ tiempo real');
+  // Cargar el input con el fakeNow si hay y el usuario no está tipeando algo distinto.
+  if (d.fakeNow && document.activeElement !== $('#rjInput')) {
+    const dt = new Date(d.fakeNow);
+    const pad = n => String(n).padStart(2,'0');
+    $('#rjInput').value = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+  }
+}
+
+async function rjCall(method, body) {
+  const opt = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opt.body = JSON.stringify(body);
+  const r = await fetch(TIME_BASE, opt);
+  const b = await r.json().catch(()=>({}));
+  $('#rjOut').style.display='block';
+  $('#rjOut').className = 'out ' + (r.ok ? 'ok' : 'err');
+  $('#rjOut').textContent = JSON.stringify(b, null, 2);
+  if (r.ok) rjRender(b);
+  return r.ok;
+}
+
+$('#rjRefresh').addEventListener('click', rjRefresh);
+$('#rjApply').addEventListener('click', async () => {
+  const v = $('#rjInput').value;
+  if (!v) { $('#rjOut').style.display='block'; $('#rjOut').className='out err'; $('#rjOut').textContent='Elegí una fecha/hora.'; return; }
+  // datetime-local es hora local; el backend espera un instante -> lo mandamos como ISO UTC.
+  const iso = new Date(v).toISOString();
+  await rjCall('POST', { fakeNow: iso });
+});
+$('#rjToggle').addEventListener('change', async e => { await rjCall('PATCH', { enabled: e.target.checked }); });
+$('#rjReset').addEventListener('click', async () => { if (await rjCall('DELETE')) $('#rjInput').value=''; });
 
 // ── Línea de tiempo del alumno (Parte 5) ────────────────────────────────────
 const tl = { studentId: null, careerId: null, maxYear: 1, state: null };

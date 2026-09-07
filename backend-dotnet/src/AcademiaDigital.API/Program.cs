@@ -48,7 +48,12 @@ builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
 
 // Admissions
-builder.Services.AddSingleton(TimeProvider.System);
+// Time-travel (dev): un único OverridableTimeProvider reemplaza TimeProvider.System, para que todos
+// los handlers que inyectan TimeProvider usen el reloj simulable. El control se gatea por
+// ALLOW_TIME_TRAVEL en TimeTravelController. Se registra la MISMA instancia bajo ambos tipos.
+var timeProvider = new AcademiaDigital.Infrastructure.Time.OverridableTimeProvider();
+builder.Services.AddSingleton(timeProvider);
+builder.Services.AddSingleton<TimeProvider>(timeProvider);
 builder.Services.AddScoped<AdmissionApplicationPolicy>();
 builder.Services.AddScoped<AdmissionFormPolicy>();
 builder.Services.AddScoped<AdmissionStatusTransitionPolicy>();
