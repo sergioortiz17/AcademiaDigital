@@ -1,14 +1,15 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, map, takeUntil } from 'rxjs/operators';
 import { GradebookService, Gradebook, GradebookStudent } from '../../../core/services/gradebook.service';
 import { selectIsAdmin } from '../../../store/account/account.selectors';
 import {
   AdminApproveDialogComponent,
   AdminApproveDialogResult
 } from '../gradebook-management/admin-approve-dialog/admin-approve-dialog.component';
+import { ApproveReasonDialogComponent } from './approve-reason-dialog/approve-reason-dialog.component';
 
 const RESULT_LABELS: Record<string, string> = {
   Promoted: 'Promocionado',
@@ -32,6 +33,9 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
 
   students: GradebookStudent[] = [];
   searchTerm = '';
+
+  // enrollmentIds tildados para la aprobación en lote (solo alumnos Promocionados).
+  selectedIds = new Set<number>();
 
   isAdmin = false;
   isLoading = false;
@@ -106,6 +110,7 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMsg = '';
     this.students = [];
+    this.selectedIds.clear();
     this.gradebookService.getGradebook(this.selectedGradebookId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (detail) => {
         this.students = detail.students;
@@ -130,7 +135,11 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(AdminApproveDialogComponent, {
       width: '480px',
       disableClose: true,
-      data: { studentName: row.studentName, courseName: gb?.courseName ?? 'la materia' }
+      data: {
+        studentName: row.studentName,
+        courseName: gb?.courseName ?? 'la materia',
+        initialGrade: row.average
+      }
     });
     dialogRef.afterClosed().subscribe((result: AdminApproveDialogResult | null) => {
       if (!result) return;
@@ -150,6 +159,99 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           }
         });
+    });
+  }
+
+  // ── Selección múltiple (checkboxes) ─────────────────────────────────────────
+  // Solo tildable para Promocionados y solo para Admin. Regular/Libre/sin-nota no participan.
+
+  canSelect(row: GradebookStudent): boolean {
+    return this.isAdmin && this.isPromoted(row);
+  }
+
+  isSelected(row: GradebookStudent): boolean {
+    return this.selectedIds.has(row.enrollmentId);
+  }
+
+  toggleSelection(row: GradebookStudent, checked: boolean): void {
+    if (!this.canSelect(row)) return;
+    if (checked) this.selectedIds.add(row.enrollmentId);
+    else this.selectedIds.delete(row.enrollmentId);
+  }
+
+  /** Promocionados visibles bajo el filtro/búsqueda actual (candidatos a selección). */
+  get selectablePromoted(): GradebookStudent[] {
+    return this.filteredStudents.filter(row => this.canSelect(row));
+  }
+
+  get selectedCount(): number {
+    // Contar solo los que siguen visibles y seleccionables (defensa ante filtros que cambian).
+    return this.selectablePromoted.filter(row => this.isSelected(row)).length;
+  }
+
+  get allVisibleSelected(): boolean {
+    const selectable = this.selectablePromoted;
+    return selectable.length > 0 && selectable.every(row => this.isSelected(row));
+  }
+
+  get someVisibleSelected(): boolean {
+    return this.selectedCount > 0 && !this.allVisibleSelected;
+  }
+
+  toggleSelectAll(checked: boolean): void {
+    for (const row of this.selectablePromoted) {
+      if (checked) this.selectedIds.add(row.enrollmentId);
+      else this.selectedIds.delete(row.enrollmentId);
+    }
+  }
+
+  // ── Aprobación en lote ──────────────────────────────────────────────────────
+
+  approveSelected(): void {
+    if (!this.isAdmin || this.isProcessing) return;
+    // Blindaje: aprobar solo Promocionados seleccionados y visibles; excluir cualquier otro caso.
+    const targets = this.selectablePromoted.filter(row => this.isSelected(row));
+    if (targets.length === 0) return;
+
+    const gb = this.gradebooks.find(g => g.id === this.selectedGradebookId);
+    const dialogRef = this.dialog.open(ApproveReasonDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { count: targets.length, courseName: gb?.courseName ?? 'la materia' }
+    });
+
+    dialogRef.afterClosed().subscribe((reason: string | null) => {
+      if (!reason) return;
+      this.isProcessing = true;
+      this.errorMsg = '';
+
+      // Una request por alumno, cada uno con SU propio promedio como nota final. forkJoin espera
+      // a todas y no aborta el lote si una falla (catchError -> resultado ok:false por alumno).
+      forkJoin(
+        targets.map(row =>
+          this.gradebookService.adminApproveEnrollment(row.enrollmentId, row.average ?? 0, reason).pipe(
+            map(() => ({ name: row.studentName, ok: true as const })),
+            catchError(err => of({ name: row.studentName, ok: false as const, msg: err?.error?.msg || err?.message }))
+          ))
+      ).pipe(takeUntil(this.destroy$)).subscribe({
+        next: results => {
+          this.isProcessing = false;
+          const approved = results.filter(r => r.ok).length;
+          const failed = results.filter(r => !r.ok);
+          this.successMsg = `${approved}/${targets.length} materia(s) aprobada(s).`;
+          if (failed.length > 0) {
+            this.errorMsg = `No se pudieron aprobar: ${failed.map(f => f.name).join(', ')}.`;
+          }
+          this.selectedIds.clear();
+          this.onGradebookChange();
+          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
+        },
+        error: () => {
+          this.isProcessing = false;
+          this.errorMsg = 'No se pudo completar la aprobación en lote.';
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 }

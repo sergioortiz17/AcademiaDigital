@@ -197,7 +197,7 @@ export class GradebookManagementComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(AdminApproveDialogComponent, {
       width: '480px',
       disableClose: true,
-      data: { studentName: student.studentName, courseName: this.detail.gradebook.courseName }
+      data: { studentName: student.studentName, courseName: this.detail.gradebook.courseName, initialGrade: student.average }
     });
     dialogRef.afterClosed().subscribe((result: AdminApproveDialogResult | null) => {
       if (!result) return;

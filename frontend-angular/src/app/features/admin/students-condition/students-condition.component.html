@@ -22,6 +22,22 @@
           <input matInput [(ngModel)]="searchTerm">
           <mat-icon matSuffix>search</mat-icon>
         </mat-form-field>
+
+        <!-- Acciones en lote: solo Admin, habilitado cuando hay al menos un alumno tildado -->
+        <ng-container *ngIf="isAdmin && loadedOnce">
+          <button mat-raised-button color="primary"
+            [disabled]="selectedCount === 0 || isProcessing"
+            [matMenuTriggerFor]="accionesMenu">
+            <mat-icon>checklist</mat-icon>
+            Acciones<span *ngIf="selectedCount > 0"> ({{ selectedCount }})</span>
+          </button>
+          <mat-menu #accionesMenu="matMenu">
+            <button mat-menu-item (click)="approveSelected()">
+              <mat-icon>verified</mat-icon>
+              <span>Aprobar materias</span>
+            </button>
+          </mat-menu>
+        </ng-container>
       </div>
 
       <div class="loading-overlay" *ngIf="isLoading">
@@ -43,6 +59,15 @@
           <table class="students-table">
             <thead>
               <tr>
+                <th class="check-col" *ngIf="isAdmin">
+                  <mat-checkbox
+                    [checked]="allVisibleSelected"
+                    [indeterminate]="someVisibleSelected"
+                    [disabled]="selectablePromoted.length === 0 || isProcessing"
+                    (change)="toggleSelectAll($event.checked)"
+                    matTooltip="Seleccionar/deseleccionar todos los promocionados visibles">
+                  </mat-checkbox>
+                </th>
                 <th class="name-col">Alumno</th>
                 <th class="legajo-col">Legajo</th>
                 <th class="condition-col">Condición</th>
@@ -51,6 +76,14 @@
             </thead>
             <tbody>
               <tr *ngFor="let row of filteredStudents">
+                <td class="check-col" *ngIf="isAdmin">
+                  <mat-checkbox
+                    [checked]="isSelected(row)"
+                    [disabled]="!canSelect(row) || isProcessing"
+                    (change)="toggleSelection(row, $event.checked)"
+                    [matTooltip]="canSelect(row) ? '' : 'Solo se pueden aprobar alumnos promocionados'">
+                  </mat-checkbox>
+                </td>
                 <td class="name-col">{{ row.studentName }}</td>
                 <td class="legajo-col">{{ row.legajoNumber || '—' }}</td>
                 <td class="condition-col">
