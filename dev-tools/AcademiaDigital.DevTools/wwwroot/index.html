@@ -51,15 +51,14 @@
 </header>
 
 <div class="tabbar" id="tabbar">
-  <button data-tab="datos" class="active">📦 Datos base</button>
-  <button data-tab="usuarios">👥 Usuarios</button>
-  <button data-tab="flujo">🧩 Pruebas de flujo</button>
-  <button data-tab="escenarios">🧪 Escenarios</button>
+  <button data-tab="admin" class="active">⚙️ Admin</button>
+  <button data-tab="alumno">🎒 Alumno</button>
+  <button data-tab="profesor">🧑‍🏫 Profesor</button>
   <button data-tab="estado">📋 Estado actual</button>
 </div>
 
 <main>
-  <div class="tabpanel active" data-panel="datos" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+  <div class="tabpanel active" data-panel="admin" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
   <!-- (1) Reset -->
   <section class="card">
     <h2>♻️ Reset completo + reseed</h2>
@@ -89,9 +88,7 @@
     <button id="btnImport">Importar plan</button>
     <div class="out" id="outImport" style="display:none"></div>
   </section>
-  </div><!-- /datos -->
 
-  <div class="tabpanel" data-panel="usuarios" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
   <!-- (3) Usuarios -->
   <section class="card">
     <h2>👤 Alta de usuario</h2>
@@ -118,20 +115,16 @@
     <div class="out" id="outUser" style="display:none"></div>
   </section>
 
-  <!-- (4) Asignar materia a profesor -->
-  <section class="card">
-    <h2>🎓 Asignar materia a profesor</h2>
-    <label>Profesor</label><select id="aTeacher"></select>
-    <label>Carrera</label><select id="aCareer"></select>
-    <label>Materia</label><select id="aCourse"></select>
-    <div class="row">
-      <div><label>Año académico</label><input id="aYear" type="number" placeholder="2026" /></div>
-      <div><label>Cuatrimestre</label><select id="aSem"><option value="1">1</option><option value="2">2</option></select></div>
-    </div>
-    <button id="btnAssign">Asignar</button>
-    <div class="out" id="outAssign" style="display:none"></div>
-  </section>
+  </div><!-- /admin -->
 
+  <div class="tabpanel" data-panel="estado" style="grid-template-columns:1fr">
+  <section class="card full">
+    <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
+    <div id="overview" class="muted">Cargando…</div>
+  </section>
+  </div><!-- /estado -->
+
+  <div class="tabpanel" data-panel="alumno" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
   <!-- Atajo A: alumno de 1° año completo -->
   <section class="card full">
     <h2>⚡ Atajo: crear alumno de 1° año completo (con notas)</h2>
@@ -152,59 +145,6 @@
     <div class="out" id="fyOut" style="display:none"></div>
   </section>
 
-  <!-- Atajo B: profesor con materias -->
-  <section class="card full">
-    <h2>⚡ Atajo: crear profesor con sus materias</h2>
-    <p class="muted">Crea el profesor y le asigna cada materia elegida, creando/reusando la comisión y el cargo (nunca queda un cargo sin comisión).</p>
-    <div class="row" style="max-width:760px">
-      <div><label>Nombre</label><input id="tpName"/></div>
-      <div><label>Apellido</label><input id="tpLast"/></div>
-      <div><label>Email</label><input id="tpEmail" type="email"/></div>
-    </div>
-    <div class="row" style="max-width:760px">
-      <div><label>Password</label><input id="tpPass" value="Profe123!"/></div>
-      <div><label>DNI (opcional)</label><input id="tpDni" placeholder="auto"/></div>
-      <div><label>Carrera</label><select id="tpCareer"></select></div>
-    </div>
-    <div class="row" style="max-width:520px">
-      <div><label>Año académico</label><input id="tpYear" type="number" placeholder="2026"/></div>
-      <div><label>Cuatrimestre</label><select id="tpSem"><option value="1">1</option><option value="2">2</option></select></div>
-    </div>
-    <label>Materias (multi-selección)</label>
-    <select id="tpCourses" multiple size="6" style="height:auto"></select>
-    <button id="tpRun">Crear profesor con materias</button>
-    <div class="out" id="tpOut" style="display:none"></div>
-  </section>
-
-  <!-- Atajo: profesor full (todas las materias/comisiones de una carrera) -->
-  <section class="card full">
-    <h2>⚡ Atajo: profesor "full" (todas las materias de una carrera)</h2>
-    <p class="muted">Asigna al profesor TODAS las materias del plan Active de la carrera de una vez (año actual, 1er cuatrimestre). Por cada materia: reusa la comisión si ya es de este profe, usa una vacante si hay, o crea una comisión extra si las existentes tienen otro docente (no pisa otras pruebas). Ideal para loguearte y probar carga de notas de cualquier materia.</p>
-    <div class="row" style="max-width:520px">
-      <div>
-        <label>Modo</label>
-        <select id="pfMode">
-          <option value="new">Crear profesor nuevo</option>
-          <option value="existing">Usar profesor existente</option>
-        </select>
-      </div>
-      <div><label>Carrera</label><select id="pfCareer"></select></div>
-    </div>
-    <div class="row" id="pfExistingRow" style="max-width:520px;display:none">
-      <div><label>Profesor existente</label><select id="pfTeacher"></select></div>
-    </div>
-    <div class="row" id="pfNewRow" style="max-width:760px">
-      <div><label>Nombre</label><input id="pfName"/></div>
-      <div><label>Apellido</label><input id="pfLast"/></div>
-      <div><label>Email</label><input id="pfEmail" type="email"/></div>
-      <div><label>Password</label><input id="pfPass" value="Profe123!"/></div>
-    </div>
-    <button id="pfRun">Armar profesor full</button>
-    <div class="out" id="pfOut" style="display:none"></div>
-  </section>
-  </div><!-- /usuarios -->
-
-  <div class="tabpanel" data-panel="escenarios" style="grid-template-columns:1fr">
   <!-- Escenario: correlativa bloqueante -->
   <section class="card full">
     <h2>🧪 Escenario: correlativa bloqueante (DS2023)</h2>
@@ -218,9 +158,7 @@
     <div id="scenarioVerdict" style="display:none;margin-top:12px;font-weight:700;font-size:15px"></div>
     <div id="scenarioSteps" style="display:none;margin-top:10px"></div>
   </section>
-  </div><!-- /escenarios -->
 
-  <div class="tabpanel" data-panel="flujo" style="grid-template-columns:1fr">
   <!-- Línea de tiempo del alumno (Parte 5) -->
   <section class="card full">
     <h2>🕒 Línea de tiempo del alumno</h2>
@@ -296,16 +234,74 @@
       <div id="aaStateOut" class="muted">Elegí un alumno y tocá "Ver estado".</div>
     </div>
   </section>
+  </div><!-- /alumno -->
 
-  <!-- (5) Listado -->
-  </div><!-- /flujo -->
-
-  <div class="tabpanel" data-panel="estado" style="grid-template-columns:1fr">
-  <section class="card full">
-    <h2>📋 Estado actual <button id="btnRefresh" style="margin:0 0 0 auto;padding:4px 10px;font-size:12px">Refrescar</button></h2>
-    <div id="overview" class="muted">Cargando…</div>
+  <div class="tabpanel" data-panel="profesor" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+  <!-- (4) Asignar materia a profesor -->
+  <section class="card">
+    <h2>🎓 Asignar materia a profesor</h2>
+    <label>Profesor</label><select id="aTeacher"></select>
+    <label>Carrera</label><select id="aCareer"></select>
+    <label>Materia</label><select id="aCourse"></select>
+    <div class="row">
+      <div><label>Año académico</label><input id="aYear" type="number" placeholder="2026" /></div>
+      <div><label>Cuatrimestre</label><select id="aSem"><option value="1">1</option><option value="2">2</option></select></div>
+    </div>
+    <button id="btnAssign">Asignar</button>
+    <div class="out" id="outAssign" style="display:none"></div>
   </section>
-  </div><!-- /estado -->
+
+  <!-- Atajo B: profesor con materias -->
+  <section class="card full">
+    <h2>⚡ Atajo: crear profesor con sus materias</h2>
+    <p class="muted">Crea el profesor y le asigna cada materia elegida, creando/reusando la comisión y el cargo (nunca queda un cargo sin comisión).</p>
+    <div class="row" style="max-width:760px">
+      <div><label>Nombre</label><input id="tpName"/></div>
+      <div><label>Apellido</label><input id="tpLast"/></div>
+      <div><label>Email</label><input id="tpEmail" type="email"/></div>
+    </div>
+    <div class="row" style="max-width:760px">
+      <div><label>Password</label><input id="tpPass" value="Profe123!"/></div>
+      <div><label>DNI (opcional)</label><input id="tpDni" placeholder="auto"/></div>
+      <div><label>Carrera</label><select id="tpCareer"></select></div>
+    </div>
+    <div class="row" style="max-width:520px">
+      <div><label>Año académico</label><input id="tpYear" type="number" placeholder="2026"/></div>
+      <div><label>Cuatrimestre</label><select id="tpSem"><option value="1">1</option><option value="2">2</option></select></div>
+    </div>
+    <label>Materias (multi-selección)</label>
+    <select id="tpCourses" multiple size="6" style="height:auto"></select>
+    <button id="tpRun">Crear profesor con materias</button>
+    <div class="out" id="tpOut" style="display:none"></div>
+  </section>
+
+  <!-- Atajo: profesor full (todas las materias/comisiones de una carrera) -->
+  <section class="card full">
+    <h2>⚡ Atajo: profesor "full" (todas las materias de una carrera)</h2>
+    <p class="muted">Asigna al profesor TODAS las materias del plan Active de la carrera de una vez (año actual, 1er cuatrimestre). Por cada materia: reusa la comisión si ya es de este profe, usa una vacante si hay, o crea una comisión extra si las existentes tienen otro docente (no pisa otras pruebas). Ideal para loguearte y probar carga de notas de cualquier materia.</p>
+    <div class="row" style="max-width:520px">
+      <div>
+        <label>Modo</label>
+        <select id="pfMode">
+          <option value="new">Crear profesor nuevo</option>
+          <option value="existing">Usar profesor existente</option>
+        </select>
+      </div>
+      <div><label>Carrera</label><select id="pfCareer"></select></div>
+    </div>
+    <div class="row" id="pfExistingRow" style="max-width:520px;display:none">
+      <div><label>Profesor existente</label><select id="pfTeacher"></select></div>
+    </div>
+    <div class="row" id="pfNewRow" style="max-width:760px">
+      <div><label>Nombre</label><input id="pfName"/></div>
+      <div><label>Apellido</label><input id="pfLast"/></div>
+      <div><label>Email</label><input id="pfEmail" type="email"/></div>
+      <div><label>Password</label><input id="pfPass" value="Profe123!"/></div>
+    </div>
+    <button id="pfRun">Armar profesor full</button>
+    <div class="out" id="pfOut" style="display:none"></div>
+  </section>
+  </div><!-- /profesor -->
 </main>
 
 <!-- Modal confirmación reset -->
@@ -366,10 +362,10 @@ async function loadOverview() {
   const asg = (body.assignments || []).map(a => `<tr><td>${a.teacher}</td><td>${a.courseCode} · ${a.courseName}</td><td>${a.academicYear}/${a.semester}</td><td>${a.positionType}</td></tr>`).join('');
   $('#overview').innerHTML = `
     <div class="muted" style="margin-bottom:8px">Usuarios por rol → ${roles || '—'}</div>
-    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
-      <div><b>Carreras</b><table><tr><th>id</th><th>code</th><th>nombre</th><th>activa</th></tr>${careers || '<tr><td colspan=4>—</td></tr>'}</table></div>
-      <div><b>Usuarios</b> <span class="muted">(máx 200)</span><table><tr><th>id</th><th>email</th><th>nombre</th><th>rol</th></tr>${users || '<tr><td colspan=4>—</td></tr>'}</table></div>
-      <div><b>Asignaciones vigentes</b><table><tr><th>profesor</th><th>materia</th><th>año/cuat</th><th>cargo</th></tr>${asg || '<tr><td colspan=4>—</td></tr>'}</table></div>
+    <div style="display:grid;gap:20px;grid-template-columns:1fr">
+      <div><b>Carreras</b><div style="overflow-x:auto"><table><tr><th>id</th><th>code</th><th>nombre</th><th>activa</th></tr>${careers || '<tr><td colspan=4>—</td></tr>'}</table></div></div>
+      <div><b>Usuarios</b> <span class="muted">(máx 200)</span><div style="overflow-x:auto"><table><tr><th>id</th><th>email</th><th>nombre</th><th>rol</th></tr>${users || '<tr><td colspan=4>—</td></tr>'}</table></div></div>
+      <div><b>Asignaciones vigentes</b><div style="overflow-x:auto"><table><tr><th>profesor</th><th>materia</th><th>año/cuat</th><th>cargo</th></tr>${asg || '<tr><td colspan=4>—</td></tr>'}</table></div></div>
     </div>`;
 }
 
