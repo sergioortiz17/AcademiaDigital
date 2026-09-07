@@ -29,8 +29,8 @@ public sealed class CertificatesController(
     public async Task<IActionResult> RequestCertificate([FromBody] CreateCertificateRequest request, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
-        if (CurrentUserRole != UserRole.Alumno)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Only students can request certificates."));
+        if (CurrentUserRole != UserRole.Alumno && CurrentUserRole != UserRole.Profesor)
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Only students or teachers can request certificates."));
         var result = await createRequestUseCase.ExecuteAsync(
             CurrentUserId.Value, request.CertificateType, request.StudentCareerId, request.ExamRegistrationId, ct);
         return StatusCode(StatusCodes.Status201Created, new { success = true, request = result });

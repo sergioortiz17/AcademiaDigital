@@ -27,7 +27,7 @@ const MENU_PROFESOR: MenuItem[] = [
   { id: 'attendance',  title: 'Cargar Asistencia', url: '/app/attendance',      icon: 'fact_check' },
   { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'book' },
   { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
-  { id: 'enrollments', title: 'Inscripciones',    url: '/app/enrollments',       icon: 'assignment' },
+  { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
   { id: 'my-assignments', title: 'Mis asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
   //cambiar por Registro
 ];
@@ -35,7 +35,6 @@ const MENU_PROFESOR: MenuItem[] = [
 const MENU_ADMIN: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',            url: '/app/dashboard/default', icon: 'home' },
   { id: 'courses',     title: 'Carreras',           url: '/app/courses',           icon: 'book' },
-  { id: 'enrollments', title: 'Inscripciones',      url: '/app/enrollments',       icon: 'assignment' },
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'teachers',    title: 'Docentes',           icon: 'group',
     children: [

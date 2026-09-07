@@ -1,11 +1,11 @@
-<ng-container  *ngIf="userRole===UserRole.Alumno && !showMyRequests" class="certificates-wrap">
+<ng-container  *ngIf="(userRole===UserRole.Alumno || userRole===UserRole.Profesor) && !showMyRequests" class="certificates-wrap">
 <div class="page-header">
     <div *ngIf="!showMyRequests" class="certificates-tab">
       Certificados
     </div>
   <!-- <p *ngIf="userRole === UserRole.Alumno">Solicitá certificados académicos y revisá el estado de tus pedidos.</p>
      <p *ngIf="userRole === UserRole.Admin">Todas las solicitudes de certificados del sistema.</p> -->
-    <a *ngIf="userRole === UserRole.Alumno && !showMyRequests" class="my-requests-link" (click)="openMyRequests()">
+    <a *ngIf="(userRole === UserRole.Alumno || userRole === UserRole.Profesor) && !showMyRequests" class="my-requests-link" (click)="openMyRequests()">
         Ver mis solicitudes
     </a>
 </div>
@@ -83,6 +83,25 @@
       Seleccione una opción para continuar.
     </p>
 
+    <!-- Constancia docente en actividad (Profesor) -->
+    <button *ngIf="userRole === UserRole.Profesor" type="button" class="certificate-option certificate-general" (click)="selectCertificate('Constancia de docente en actividad')">
+      <div class="option-icon">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="option-content">
+        <span class="option-title">
+          Solicitar Constancia de Docente en Actividad
+        </span>
+        <span class="option-description">
+          Certifica que se encuentra activo como docente del Instituto.
+        </span>
+      </div>
+      <mat-icon class="option-arrow">
+        chevron_right
+      </mat-icon>
+    </button>
+
+    <ng-container *ngIf="userRole === UserRole.Alumno">
     <!-- Constancia General -->
     <button type="button" class="certificate-option certificate-general" (click)="selectCertificate('Certificado de alumno regular')">
       <div class="option-icon">
@@ -172,13 +191,14 @@
         chevron_right
       </mat-icon>
     </button>
+    </ng-container>
 </div>
 </ng-container>
 
 <!-- ===================== -->
-<!-- VISTA ALUMNO -->
+<!-- VISTA ALUMNO / PROFESOR -->
 <!-- ===================== -->
-<ng-container *ngIf="userRole === UserRole.Alumno && showMyRequests">
+<ng-container *ngIf="(userRole === UserRole.Alumno || userRole === UserRole.Profesor) && showMyRequests">
     <div class="table-toolbar">
       <h1>Estado de solicitud de Certificados</h1>
         <button class="back-btn" mat-stroked-button (click)="closeMyRequests()">

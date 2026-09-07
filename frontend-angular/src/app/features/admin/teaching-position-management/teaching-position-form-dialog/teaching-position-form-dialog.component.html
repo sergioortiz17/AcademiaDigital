@@ -21,7 +21,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Comisión</mat-label>
+      <mat-label>División</mat-label>
       <mat-select [(ngModel)]="commissionId" [disabled]="!selectedCareerId || commissions.length === 0">
         <mat-option *ngFor="let c of commissions" [value]="c.id">{{ c.name }} ({{ c.shift }})</mat-option>
       </mat-select>

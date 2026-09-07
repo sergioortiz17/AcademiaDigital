@@ -72,7 +72,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.select(selectUserRole).pipe(take(1)).subscribe(role => {
       this.userRole = role as UserRole;
-      if(this.userRole===UserRole.Admin){
+      if (this.userRole === UserRole.Admin) {
         this.loadRequests();
       }
     });

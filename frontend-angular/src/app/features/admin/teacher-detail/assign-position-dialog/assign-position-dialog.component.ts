@@ -1,6 +1,11 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { TeachingPositionService, TeachingPosition } from '../../../../core/services/teaching-position.service';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import {
+  TeachingPositionService,
+  TeachingPosition,
+  SaveTeachingPositionRequest
+} from '../../../../core/services/teaching-position.service';
+import { TeachingPositionFormDialogComponent } from '../../teaching-position-management/teaching-position-form-dialog/teaching-position-form-dialog.component';
 
 export interface AssignPositionDialogResult {
   courseSectionId: number;
@@ -17,6 +22,8 @@ export interface AssignPositionDialogResult {
 export class AssignPositionDialogComponent implements OnInit {
   positions: TeachingPosition[] = [];
   isLoading = false;
+  isCreating = false;
+  createErrorMsg = '';
 
   courseSectionId: number | null = null;
   startedOn: Date = new Date();
@@ -24,11 +31,16 @@ export class AssignPositionDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<AssignPositionDialogComponent>,
+    private readonly dialog: MatDialog,
     private readonly teachingPositionService: TeachingPositionService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.loadVacantPositions();
+  }
+
+  private loadVacantPositions(): void {
     this.isLoading = true;
     this.teachingPositionService.getTeachingPositions({ isVacant: true }).subscribe({
       next: (positions) => {
@@ -40,6 +52,33 @@ export class AssignPositionDialogComponent implements OnInit {
         this.isLoading = false;
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  createNewPosition(): void {
+    this.createErrorMsg = '';
+    const dialogRef = this.dialog.open(TeachingPositionFormDialogComponent, {
+      width: '520px',
+      disableClose: true,
+      data: { position: null }
+    });
+
+    dialogRef.afterClosed().subscribe((request: SaveTeachingPositionRequest | null) => {
+      if (!request) return;
+      this.isCreating = true;
+      this.teachingPositionService.createTeachingPosition(request).subscribe({
+        next: (created) => {
+          this.isCreating = false;
+          this.positions = [...this.positions, created];
+          this.courseSectionId = created.id;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.isCreating = false;
+          this.createErrorMsg = err.message || 'Error al crear la comisión.';
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 

@@ -77,7 +77,8 @@ public enum CertificateKind
     AcademicStatus = 3,
     Transcript = 4,
     GeneralAcademicStatus = 5,
-    ExamPermit = 6
+    ExamPermit = 6,
+    ActiveTeacher = 7
 }
 
 public sealed class CertificateIssuance

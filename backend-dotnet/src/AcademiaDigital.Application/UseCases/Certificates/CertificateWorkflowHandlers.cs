@@ -78,16 +78,29 @@ public sealed class IssueCertificateCommandHandler(
             if (existing is not null)
                 return (Request: request, Issuance: existing);
 
-            var academic = await repository.GetAcademicRecordAsync(
-                request.UserId, request.StudentCareerId, request.ExamRegistrationId, transactionCt)
-                ?? throw new KeyNotFoundException("Carrera del alumno no encontrada.");
-            policy.EnsureEligible(request.Kind, academic, request.ExamRegistrationId);
+            CertificateSnapshot snapshot;
             var now = timeProvider.GetUtcNow().UtcDateTime;
+            var issuer = $"Usuario {command.ActorUserId}";
+
+            if (request.Kind == CertificateKind.ActiveTeacher)
+            {
+                var teacher = await repository.GetTeacherRecordAsync(request.UserId, transactionCt)
+                    ?? throw new KeyNotFoundException("Docente no encontrado.");
+                policy.EnsureTeacherEligible(teacher);
+                snapshot = BuildTeacherSnapshot(request.CertificateType, teacher, now, issuer);
+            }
+            else
+            {
+                var academic = await repository.GetAcademicRecordAsync(
+                    request.UserId, request.StudentCareerId, request.ExamRegistrationId, transactionCt)
+                    ?? throw new KeyNotFoundException("Carrera del alumno no encontrada.");
+                policy.EnsureEligible(request.Kind, academic, request.ExamRegistrationId);
+                snapshot = BuildSnapshot(request.Kind, request.CertificateType, academic, now, issuer);
+            }
+
             request.MarkIssuing(now);
             var number = sequence.TakeNext();
             var certificateNumber = $"CERT-{number:00000000}";
-            var issuer = $"Usuario {command.ActorUserId}";
-            var snapshot = BuildSnapshot(request.Kind, request.CertificateType, academic, now, issuer);
             var issuance = new CertificateIssuance
             {
                 PublicId = Guid.NewGuid(),
@@ -158,6 +171,15 @@ public sealed class IssueCertificateCommandHandler(
                 academic.Exam.CourseCode, academic.Exam.CourseName, academic.Exam.ExamDateUtc,
                 academic.Exam.Location, academic.Exam.CallNumber));
     }
+
+    private static CertificateSnapshot BuildTeacherSnapshot(
+        string certificateType,
+        CertificateTeacherRecord teacher,
+        DateTime issuedAt,
+        string issuerName)
+        => new(
+            certificateType, teacher.FullName, teacher.Dni, teacher.EmployeeNumber,
+            teacher.Department ?? "Cuerpo docente", issuedAt, issuerName, [], null);
 
     private static CertificatePdfModel ToPdfModel(string certificateNumber, CertificateSnapshot snapshot)
         => new(

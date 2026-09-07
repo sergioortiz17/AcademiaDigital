@@ -11,6 +11,12 @@ public interface ICertificateRequestRepository
     Task<CertificateRequest?> FindForUpdateAsync(long id, CancellationToken ct = default);
     Task<bool> HasActiveRequestAsync(long userId, long studentCareerId, CertificateKind kind, long? examRegistrationId, CancellationToken ct = default);
     Task<CertificateAcademicRecord?> GetAcademicRecordAsync(long userId, long? studentCareerId, long? examRegistrationId, CancellationToken ct = default);
+
+    /// <summary>Dedupe check para certificados que no dependen de una carrera/StudentCareer (ej. docente).</summary>
+    Task<bool> HasActiveTeacherRequestAsync(long userId, CertificateKind kind, CancellationToken ct = default);
+
+    /// <summary>Datos del docente para emitir certificados propios (ej. constancia de actividad).</summary>
+    Task<CertificateTeacherRecord?> GetTeacherRecordAsync(long userId, CancellationToken ct = default);
     Task<CertificateSequence> LockSequenceAsync(CancellationToken ct = default);
     Task<CertificateIssuance?> FindIssuanceByRequestAsync(long requestId, bool tracking, CancellationToken ct = default);
     Task<CertificateIssuance?> FindIssuanceByPublicIdAsync(Guid publicId, CancellationToken ct = default);
@@ -48,3 +54,11 @@ public sealed record CertificateExamRecord(
     string Location,
     int CallNumber,
     ExamTableStatus Status);
+
+public sealed record CertificateTeacherRecord(
+    long TeacherId,
+    bool IsActive,
+    string EmployeeNumber,
+    string Dni,
+    string FullName,
+    string? Department);

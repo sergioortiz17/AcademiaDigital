@@ -31,7 +31,10 @@ public sealed class CertificatePolicy
             ["estadoacademicogeneral"] = CertificateKind.GeneralAcademicStatus,
             ["constanciadeegreso"] = CertificateKind.GeneralAcademicStatus,
             ["exampermit"] = CertificateKind.ExamPermit,
-            ["permisodeexamen"] = CertificateKind.ExamPermit
+            ["permisodeexamen"] = CertificateKind.ExamPermit,
+            ["activeteacher"] = CertificateKind.ActiveTeacher,
+            ["docenteenactividad"] = CertificateKind.ActiveTeacher,
+            ["constanciadedocenteenactividad"] = CertificateKind.ActiveTeacher
         };
 
     public CertificateKind ParseKind(string value)
@@ -52,6 +55,7 @@ public sealed class CertificatePolicy
         CertificateKind.Transcript => "Certificado analítico",
         CertificateKind.GeneralAcademicStatus => "Estado académico general",
         CertificateKind.ExamPermit => "Permiso de examen",
+        CertificateKind.ActiveTeacher => "Constancia de docente en actividad",
         _ => throw new ArgumentOutOfRangeException(nameof(kind))
     };
 
@@ -82,6 +86,14 @@ public sealed class CertificatePolicy
                     throw new InvalidOperationException("Los permisos de examen solo pueden emitirse mientras la mesa de examen está abierta.");
                 break;
         }
+    }
+
+    public void EnsureTeacherEligible(CertificateTeacherRecord record)
+    {
+        if (!record.IsActive)
+            throw new InvalidOperationException("El docente debe estar activo para emitir esta constancia.");
+        if (string.IsNullOrWhiteSpace(record.Dni) || string.IsNullOrWhiteSpace(record.FullName))
+            throw new InvalidOperationException("El nombre y el DNI del docente son obligatorios para emitir el certificado.");
     }
 
     private static string Normalize(string value)

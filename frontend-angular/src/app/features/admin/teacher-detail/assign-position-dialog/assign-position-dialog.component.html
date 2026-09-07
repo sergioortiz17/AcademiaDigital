@@ -20,6 +20,16 @@
       <mat-hint *ngIf="positions.length === 0">No hay comisiones vacantes activas.</mat-hint>
     </mat-form-field>
 
+    <div *ngIf="createErrorMsg" class="msg msg--error">{{ createErrorMsg }}</div>
+
+    <button mat-stroked-button type="button" class="create-position-btn" [disabled]="isCreating" (click)="createNewPosition()">
+      <mat-spinner diameter="16" *ngIf="isCreating"></mat-spinner>
+      <ng-container *ngIf="!isCreating">
+        <mat-icon>add</mat-icon>
+        Crear comisión nueva (materia + división)
+      </ng-container>
+    </button>
+
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Fecha de inicio</mat-label>
       <input matInput [matDatepicker]="startPicker" [(ngModel)]="startedOn">

@@ -20,6 +20,26 @@ public class CreateCertificateRequestUseCase(
         => unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {
             var kind = policy.ParseKind(certificateType);
+
+            if (kind == CertificateKind.ActiveTeacher)
+            {
+                var teacher = await repository.GetTeacherRecordAsync(userId, transactionCt)
+                    ?? throw new KeyNotFoundException("Docente no encontrado.");
+                policy.EnsureTeacherEligible(teacher);
+                if (await repository.HasActiveTeacherRequestAsync(userId, kind, transactionCt))
+                    throw new InvalidOperationException("Ya existe una solicitud activa para este certificado.");
+
+                var teacherRequest = await repository.CreateAsync(new CertificateRequest
+                {
+                    UserId = userId,
+                    CertificateType = policy.DisplayName(kind),
+                    Kind = kind,
+                    Status = CertificateStatus.Pending,
+                    CreatedAt = timeProvider.GetUtcNow().UtcDateTime
+                }, transactionCt);
+                return GetCertificateRequestsUseCase.Map(teacherRequest);
+            }
+
             var academic = await repository.GetAcademicRecordAsync(
                 userId, studentCareerId, examRegistrationId, transactionCt)
                 ?? throw new KeyNotFoundException("Carrera del alumno no encontrada.");

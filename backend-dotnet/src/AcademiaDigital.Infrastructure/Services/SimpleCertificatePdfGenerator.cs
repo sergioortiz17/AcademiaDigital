@@ -9,6 +9,7 @@ public sealed class SimpleCertificatePdfGenerator : ICertificatePdfGenerator
     public Task<byte[]> GenerateAsync(CertificatePdfModel model, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
+        var isTeacherCertificate = model.CertificateType.Contains("docente", StringComparison.OrdinalIgnoreCase);
         var lines = new List<string>
         {
             "ACADEMIA DIGITAL",
@@ -16,10 +17,10 @@ public sealed class SimpleCertificatePdfGenerator : ICertificatePdfGenerator
             $"Numero: {model.CertificateNumber}",
             $"Fecha de emision: {model.IssuedAt.ToString("yyyy-MM-dd HH:mm 'UTC'", CultureInfo.InvariantCulture)}",
             string.Empty,
-            $"Alumno: {model.StudentName}",
+            $"{(isTeacherCertificate ? "Docente" : "Alumno")}: {model.StudentName}",
             $"DNI: {model.Dni}",
             $"Legajo: {model.LegajoNumber}",
-            $"Carrera: {model.CareerName}",
+            $"{(isTeacherCertificate ? "Area" : "Carrera")}: {model.CareerName}",
             string.Empty
         };
 

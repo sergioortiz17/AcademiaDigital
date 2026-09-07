@@ -35,6 +35,21 @@
   padding: 1.5rem 0;
 }
 
+.create-position-btn {
+  width: 100%;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.msg--error {
+  color: #b3261e;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: center;

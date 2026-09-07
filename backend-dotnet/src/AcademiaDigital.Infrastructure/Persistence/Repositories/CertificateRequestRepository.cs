@@ -117,6 +117,27 @@ public class CertificateRequestRepository(AppDbContext db) : ICertificateRequest
             student.User.Dni ?? string.Empty, name, career.Career.Name, courses, exam);
     }
 
+    public Task<bool> HasActiveTeacherRequestAsync(long userId, CertificateKind kind, CancellationToken ct = default)
+        => db.CertificateRequests.AsNoTracking().AnyAsync(item =>
+            item.UserId == userId
+            && item.Kind == kind
+            && (item.Status == CertificateStatus.Pending
+                || item.Status == CertificateStatus.Approved
+                || item.Status == CertificateStatus.Issuing), ct);
+
+    public async Task<CertificateTeacherRecord?> GetTeacherRecordAsync(long userId, CancellationToken ct = default)
+    {
+        var teacher = await db.Teachers.AsNoTracking()
+            .Include(item => item.User)
+            .SingleOrDefaultAsync(item => item.UserId == userId, ct);
+        if (teacher is null) return null;
+
+        var name = $"{teacher.User.Username} {teacher.User.LastName}".Trim();
+        return new CertificateTeacherRecord(
+            teacher.Id, teacher.IsActive, teacher.EmployeeNumber, teacher.User.Dni ?? string.Empty,
+            name, teacher.Department);
+    }
+
     public Task<CertificateSequence> LockSequenceAsync(CancellationToken ct = default)
         => db.CertificateSequences
             .FromSqlRaw("SELECT * FROM \"CertificateSequences\" WHERE id = 1 FOR UPDATE")
