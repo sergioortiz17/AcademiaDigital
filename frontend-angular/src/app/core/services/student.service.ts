@@ -57,6 +57,29 @@ export interface AcademicAssignment {
   divisionId: number | null;
 }
 
+/** Una correlativa faltante para una materia (del cálculo real de elegibilidad del backend). */
+export interface MissingPrerequisite {
+  courseId: number;
+  code: string;
+  name: string;
+  prerequisiteType: string;   // 'Strict' | 'Soft'
+  requiredStatus: string;
+  currentStatus: string | null;
+}
+
+/** Materia del plan con su estado de elegibilidad calculado por el backend
+ *  (misma fuente de verdad que la validación real de inscripción). */
+export interface EligibleCourse {
+  courseId: number;
+  studyPlanCourseId: number;
+  code: string;
+  name: string;
+  yearNumber: number;
+  semester: number;
+  eligibilityStatus: 'Eligible' | 'EligibleWithWarning' | 'BlockedByStrictPrerequisite' | 'AlreadyApproved' | 'AlreadyEnrolled';
+  missingPrerequisites: MissingPrerequisite[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -88,5 +111,13 @@ export class StudentService {
   /** Crea el vínculo alumno-comisión (StudentAcademicAssignment). Backend valida carrera y deduplica. */
   assignAcademic(studentId: number, request: CreateAcademicAssignmentRequest): Observable<AcademicAssignment> {
     return this.http.post<AcademicAssignment>(`${this.baseURL}v1/students/${studentId}/academic-assignments`, request);
+  }
+
+  /** Materias del plan del alumno LOGUEADO con su estado de elegibilidad (calculado por el backend,
+   *  misma data que la validación real). El backend resuelve el studentId desde el JWT. */
+  getMyEligibleCourses(careerId?: number): Observable<EligibleCourse[]> {
+    let params = new HttpParams();
+    if (careerId != null) params = params.set('careerId', careerId);
+    return this.http.get<EligibleCourse[]>(`${this.baseURL}v1/students/me/eligible-courses`, { params });
   }
 }
