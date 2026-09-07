@@ -261,6 +261,14 @@
     align-self: flex-start;
   }
 
+  .coverage-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
   button {
     flex: 0 0 auto;
   }

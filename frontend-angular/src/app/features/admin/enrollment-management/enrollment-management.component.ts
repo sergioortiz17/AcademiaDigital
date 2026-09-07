@@ -1,6 +1,8 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import {
   EnrollmentService,
   EnrollmentPeriodDto,
@@ -135,6 +137,68 @@ export class EnrollmentManagementComponent implements OnInit {
   /** Crear una comisión para el período sin precargar un gap específico (desde el alta). */
   createCommissionForPeriod(period: EnrollmentPeriodDto): void {
     this.openCommissionDialog(period, { commission: null, presetAcademicYear: period.academicYear });
+  }
+
+  /**
+   * Atajo en bloque: crea TODAS las divisiones faltantes del período de una vez (una por gap),
+   * con código/nombre por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón
+   * manual por fila ni la pantalla "Gestionar divisiones" (que siguen para editar/borrar/agregar).
+   * Muestra una vista previa con confirm() antes de crear y refresca la cobertura al terminar.
+   */
+  createAllMissingDivisions(period: EnrollmentPeriodDto): void {
+    const gaps = this.gapsFor(period.id);
+    if (gaps.length === 0) return;
+
+    const careerCode = this.careers.find(c => c.id === period.careerId)?.code ?? `C${period.careerId}`;
+    const specs = gaps.map(g => ({
+      gap: g,
+      request: {
+        code: this.autoDivisionCode(careerCode, g.yearNumber, g.shift, period.academicYear),
+        name: `${careerCode} · ${g.yearNumber}° año · ${this.shiftLabel(g.shift)} · ${period.academicYear}`,
+        academicYear: period.academicYear,
+        yearNumber: g.yearNumber,
+        shift: g.shift
+      } as UpsertCommissionRequest
+    }));
+
+    const preview = specs.map(s => `• ${s.request.code}  (${s.gap.yearNumber}° año / ${this.shiftLabel(s.gap.shift)})`).join('\n');
+    if (!confirm(`Se van a crear ${specs.length} división(es) para ${period.careerName}:\n\n${preview}\n\n¿Confirmás?`)) return;
+
+    this.isSubmitting = true;
+    this.errorMsg = '';
+    this.cdr.detectChanges();
+
+    // Una request por división. forkJoin espera a todas y no aborta el bloque si una falla.
+    forkJoin(
+      specs.map(s => this.commissionService.createCommission(period.careerId, s.request).pipe(
+        map(() => ({ code: s.request.code, ok: true })),
+        catchError(err => of({ code: s.request.code, ok: false, msg: err?.error?.msg || err?.message }))
+      ))
+    ).subscribe({
+      next: results => {
+        this.isSubmitting = false;
+        const created = results.filter(r => r.ok).length;
+        const failed = results.filter(r => !r.ok);
+        this.successMsg = `${created}/${specs.length} división(es) creada(s) para ${period.careerName}.`;
+        if (failed.length > 0) {
+          this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
+        }
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
+        // Refrescar cobertura: los gaps creados desaparecen del aviso.
+        this.loadCoverage(period.id);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isSubmitting = false;
+        this.errorMsg = 'No se pudieron crear las divisiones.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private autoDivisionCode(careerCode: string, yearNumber: number, shift: string, academicYear: number): string {
+    const shiftAbbr: Record<string, string> = { 'Mañana': 'M', 'Tarde': 'T', 'Noche': 'N' };
+    return `${careerCode}-${yearNumber}-${shiftAbbr[shift] ?? shift.charAt(0).toUpperCase()}-${academicYear}`;
   }
 
   private openCommissionDialog(period: EnrollmentPeriodDto, data: CommissionFormDialogData): void {

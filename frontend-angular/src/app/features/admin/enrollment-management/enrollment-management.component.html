@@ -146,10 +146,16 @@
             </li>
           </ul>
         </div>
-        <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de divisiones">
-          <mat-icon>open_in_new</mat-icon>
-          Gestionar divisiones
-        </button>
+        <div class="coverage-actions">
+          <button mat-raised-button color="primary" class="coverage-auto-btn" [disabled]="isSubmitting" (click)="createAllMissingDivisions(p)">
+            <mat-icon>auto_fix_high</mat-icon>
+            Crear automáticamente ({{ gapsFor(p.id).length }})
+          </button>
+          <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de divisiones">
+            <mat-icon>open_in_new</mat-icon>
+            Gestionar divisiones
+          </button>
+        </div>
       </div>
 
       <!-- Inline edit quotas -->
