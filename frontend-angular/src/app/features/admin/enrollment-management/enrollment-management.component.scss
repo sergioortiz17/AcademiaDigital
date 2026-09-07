@@ -217,9 +217,6 @@
 
 /* Parte 11: aviso de comisiones faltantes por período */
 .coverage-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 8px;
@@ -227,9 +224,41 @@
   border: 1px solid #ffcc80;
   color: #8a5300;
 
-  > mat-icon {
-    color: #e68a00;
-    flex: 0 0 auto;
+  &.collapsed {
+    padding-bottom: 12px;
+  }
+
+  .coverage-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+
+    > mat-icon:first-child {
+      color: #e68a00;
+      flex: 0 0 auto;
+    }
+
+    .coverage-count {
+      font-size: .85rem;
+      opacity: .8;
+    }
+
+    .coverage-spacer {
+      flex: 1 1 auto;
+    }
+
+    .coverage-toggle-btn {
+      flex: 0 0 auto;
+      color: #8a5300;
+    }
+  }
+
+  .coverage-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 10px;
   }
 
   .coverage-text {

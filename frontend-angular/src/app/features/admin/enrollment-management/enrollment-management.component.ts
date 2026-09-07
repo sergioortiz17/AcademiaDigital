@@ -35,9 +35,9 @@ export class EnrollmentManagementComponent implements OnInit {
     studyPlanId: 0,
     academicYear: new Date().getFullYear(),
     semester: 1,
-    quotasMorning: 0,
-    quotasAfternoon: 0,
-    quotasEvening: 0
+    quotasMorning: 30,
+    quotasAfternoon: 30,
+    quotasEvening: 30
   };
 
 
@@ -48,6 +48,8 @@ export class EnrollmentManagementComponent implements OnInit {
   coverageByPeriod: Record<number, CommissionCoverageGap[]> = {};
   // Años (del plan) tildados para el atajo "Crear automáticamente", por período.
   bulkYearsByPeriod: Record<number, Set<number>> = {};
+  // Aviso de divisiones faltantes: expandido/colapsado por período (colapsado por defecto).
+  private readonly expandedWarnings = new Set<number>();
   private readonly shiftLabels: Record<string, string> = { 'Mañana': 'Mañana', 'Tarde': 'Tarde', 'Noche': 'Noche' };
 
   isSubmitting = false;
@@ -107,6 +109,15 @@ export class EnrollmentManagementComponent implements OnInit {
 
   gapsFor(periodId: number): CommissionCoverageGap[] {
     return this.coverageByPeriod[periodId] ?? [];
+  }
+
+  isWarningExpanded(periodId: number): boolean {
+    return this.expandedWarnings.has(periodId);
+  }
+
+  toggleWarning(periodId: number): void {
+    if (this.expandedWarnings.has(periodId)) this.expandedWarnings.delete(periodId);
+    else this.expandedWarnings.add(periodId);
   }
 
   shiftLabel(shift: string): string {
@@ -406,9 +417,9 @@ export class EnrollmentManagementComponent implements OnInit {
       studyPlanId: 0,
       academicYear: new Date().getFullYear(),
       semester: 1,
-      quotasMorning: 0,
-      quotasAfternoon: 0,
-      quotasEvening: 0
+      quotasMorning: 30,
+      quotasAfternoon: 30,
+      quotasEvening: 30
     };
     this.studyPlans = [];
   }
