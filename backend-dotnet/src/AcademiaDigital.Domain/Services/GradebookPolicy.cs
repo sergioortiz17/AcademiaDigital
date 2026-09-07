@@ -87,9 +87,22 @@ public sealed class GradebookPolicy
         var average = decimal.Round(grades.Sum(item =>
             item.Score / item.MaximumScore * 10m * item.WeightPercentage / 100m), 2, MidpointRounding.AwayFromZero);
         var minimumRegular = rule?.MinimumRegularGrade ?? 6m;
+
+        // Regla de promoción: además del flag AllowsPromotion y del promedio mínimo de la materia,
+        // se exige que TODAS las instancias cargadas tengan nota (normalizada a escala 0-10) mayor
+        // a 7. Si alguna instancia quedó en 7 o menos, el alumno no promociona aunque el promedio
+        // ponderado sea alto (cae a Regular o Libre según MinimumRegularGrade).
+        // NOTA (a revisar): "instancias" aquí = todas las evaluaciones con nota cargada en la
+        // planilla, sin distinguir tipo (evaluaciones regulares vs. recuperaciones). Es la
+        // implementación más simple pedida; si el negocio quiere excluir recuperaciones, ajustar acá.
+        const decimal promotionPerInstanceThreshold = 7m;
+        var allInstancesAbovePromotionThreshold =
+            grades.All(item => item.Score / item.MaximumScore * 10m > promotionPerInstanceThreshold);
+
         var promotion = rule?.AllowsPromotion == true
             && rule.MinimumPromotionGrade.HasValue
-            && average >= rule.MinimumPromotionGrade.Value;
+            && average >= rule.MinimumPromotionGrade.Value
+            && allInstancesAbovePromotionThreshold;
         return new GradebookResult(
             average,
             promotion ? EnrollmentStatus.Promoted

@@ -29,6 +29,7 @@ const MENU_PROFESOR: MenuItem[] = [
   { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
   { id: 'my-assignments', title: 'Mis asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
+  { id: 'students',    title: 'Alumnos',          url: '/app/admin/students-condition', icon: 'groups' },
   //cambiar por Registro
 ];
 
@@ -56,6 +57,7 @@ const MENU_ADMIN: MenuItem[] = [
     ]
   },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
+  { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
   { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
 ];

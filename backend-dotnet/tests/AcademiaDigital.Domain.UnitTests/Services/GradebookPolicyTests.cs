@@ -42,6 +42,64 @@ public sealed class GradebookPolicyTests
         Assert.Equal(EnrollmentStatus.Promoted, result.Status);
     }
 
+    [Fact]
+    public void Promotion_requires_every_instance_above_seven_even_if_weighted_average_is_high()
+    {
+        // Promedio ponderado alto (8.40) pero una instancia en 6 (<= 7): NO promociona,
+        // cae a Regular porque el promedio supera el mínimo regular.
+        var result = policy.CalculateResult(new[]
+        {
+            (6m, 10m, 20m),
+            (9m, 10m, 80m)
+        }, new CourseApprovalRule
+        {
+            MinimumRegularGrade = 6m,
+            MinimumPromotionGrade = 8m,
+            AllowsPromotion = true
+        });
+
+        Assert.Equal(8.40m, result.Average);
+        Assert.Equal(EnrollmentStatus.Regularized, result.Status);
+    }
+
+    [Fact]
+    public void Promotion_when_all_instances_above_seven_sets_status_and_average()
+    {
+        // Todas las instancias en 8 (> 7): promociona, con nota final = promedio (8.00).
+        var result = policy.CalculateResult(new[]
+        {
+            (8m, 10m, 30m),
+            (8m, 10m, 30m),
+            (8m, 10m, 40m)
+        }, new CourseApprovalRule
+        {
+            MinimumRegularGrade = 6m,
+            MinimumPromotionGrade = 8m,
+            AllowsPromotion = true
+        });
+
+        Assert.Equal(8.00m, result.Average);
+        Assert.Equal(EnrollmentStatus.Promoted, result.Status);
+    }
+
+    [Fact]
+    public void An_instance_exactly_at_seven_blocks_promotion()
+    {
+        // El umbral es estrictamente mayor a 7: una instancia en exactamente 7 bloquea la promoción.
+        var result = policy.CalculateResult(new[]
+        {
+            (7m, 10m, 20m),
+            (9m, 10m, 80m)
+        }, new CourseApprovalRule
+        {
+            MinimumRegularGrade = 6m,
+            MinimumPromotionGrade = 8m,
+            AllowsPromotion = true
+        });
+
+        Assert.Equal(EnrollmentStatus.Regularized, result.Status);
+    }
+
     [Theory]
     [InlineData(6, EnrollmentStatus.Regularized)]
     [InlineData(5.99, EnrollmentStatus.Failed)]
