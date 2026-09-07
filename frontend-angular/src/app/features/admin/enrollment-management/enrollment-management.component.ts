@@ -46,6 +46,8 @@ export class EnrollmentManagementComponent implements OnInit {
 
   // Parte 11: cobertura de comisiones por período (aviso persistente). Solo se consultan los activos.
   coverageByPeriod: Record<number, CommissionCoverageGap[]> = {};
+  // Años (del plan) tildados para el atajo "Crear automáticamente", por período.
+  bulkYearsByPeriod: Record<number, Set<number>> = {};
   private readonly shiftLabels: Record<string, string> = { 'Mañana': 'Mañana', 'Tarde': 'Tarde', 'Noche': 'Noche' };
 
   isSubmitting = false;
@@ -145,8 +147,15 @@ export class EnrollmentManagementComponent implements OnInit {
    * manual por fila ni la pantalla "Gestionar divisiones" (que siguen para editar/borrar/agregar).
    * Muestra una vista previa con confirm() antes de crear y refresca la cobertura al terminar.
    */
+  /**
+   * Atajo en bloque: crea las divisiones faltantes del período POR AÑO del plan (el admin tilda
+   * qué años crear — ej. solo 2°). Una request por gap de los años tildados, con código/nombre
+   * por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón manual por fila ni la
+   * pantalla "Gestionar divisiones". Muestra vista previa con confirm() y refresca la cobertura.
+   */
   createAllMissingDivisions(period: EnrollmentPeriodDto): void {
-    const gaps = this.gapsFor(period.id);
+    const selected = this.bulkYearsByPeriod[period.id];
+    const gaps = this.gapsFor(period.id).filter(g => selected?.has(g.yearNumber));
     if (gaps.length === 0) return;
 
     const careerCode = this.careers.find(c => c.id === period.careerId)?.code ?? `C${period.careerId}`;
@@ -184,7 +193,8 @@ export class EnrollmentManagementComponent implements OnInit {
           this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
         }
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
-        // Refrescar cobertura: los gaps creados desaparecen del aviso.
+        // Limpiar la selección y refrescar cobertura: los gaps creados desaparecen del aviso.
+        this.bulkYearsByPeriod[period.id] = new Set<number>();
         this.loadCoverage(period.id);
         this.cdr.detectChanges();
       },
@@ -194,6 +204,32 @@ export class EnrollmentManagementComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  /** Años del plan que tienen huecos en este período (para el selector del atajo bulk). */
+  gapYearsFor(periodId: number): number[] {
+    return [...new Set(this.gapsFor(periodId).map(g => g.yearNumber))].sort((a, b) => a - b);
+  }
+
+  /** Cantidad de huecos (turnos) de un año puntual en el período. */
+  gapCountForYear(periodId: number, yearNumber: number): number {
+    return this.gapsFor(periodId).filter(g => g.yearNumber === yearNumber).length;
+  }
+
+  isBulkYearSelected(periodId: number, yearNumber: number): boolean {
+    return this.bulkYearsByPeriod[periodId]?.has(yearNumber) ?? false;
+  }
+
+  toggleBulkYear(periodId: number, yearNumber: number, checked: boolean): void {
+    const set = this.bulkYearsByPeriod[periodId] ??= new Set<number>();
+    if (checked) set.add(yearNumber); else set.delete(yearNumber);
+  }
+
+  /** Total de divisiones que se crearían con los años actualmente tildados. */
+  bulkSelectedCount(periodId: number): number {
+    const selected = this.bulkYearsByPeriod[periodId];
+    if (!selected || selected.size === 0) return 0;
+    return this.gapsFor(periodId).filter(g => selected.has(g.yearNumber)).length;
   }
 
   private autoDivisionCode(careerCode: string, yearNumber: number, shift: string, academicYear: number): string {

@@ -147,9 +147,19 @@
           </ul>
         </div>
         <div class="coverage-actions">
-          <button mat-raised-button color="primary" class="coverage-auto-btn" [disabled]="isSubmitting" (click)="createAllMissingDivisions(p)">
+          <div class="coverage-year-picker">
+            <span class="picker-label">Crear divisiones de:</span>
+            <mat-checkbox *ngFor="let y of gapYearsFor(p.id)"
+              [checked]="isBulkYearSelected(p.id, y)"
+              (change)="toggleBulkYear(p.id, y, $event.checked)">
+              {{ y }}° año ({{ gapCountForYear(p.id, y) }})
+            </mat-checkbox>
+          </div>
+          <button mat-raised-button color="primary" class="coverage-auto-btn"
+            [disabled]="isSubmitting || bulkSelectedCount(p.id) === 0"
+            (click)="createAllMissingDivisions(p)">
             <mat-icon>auto_fix_high</mat-icon>
-            Crear automáticamente ({{ gapsFor(p.id).length }})
+            Crear automáticamente ({{ bulkSelectedCount(p.id) }})
           </button>
           <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de divisiones">
             <mat-icon>open_in_new</mat-icon>

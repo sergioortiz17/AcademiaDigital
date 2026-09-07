@@ -269,6 +269,19 @@
     align-self: flex-start;
   }
 
+  .coverage-year-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 4px;
+
+    .picker-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #8a5300;
+    }
+  }
+
   button {
     flex: 0 0 auto;
   }
