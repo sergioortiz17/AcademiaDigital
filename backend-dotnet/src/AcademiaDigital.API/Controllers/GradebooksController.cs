@@ -61,7 +61,7 @@ public sealed class GradebooksController(
             idempotencyKey,
             request.CourseSectionId,
             request.Evaluations.Select(item => new GradebookEvaluationInput(
-                item.Name, item.WeightPercentage, item.MaximumScore)).ToArray(),
+                item.Name, item.WeightPercentage, item.MaximumScore, item.IsRecovery)).ToArray(),
             CurrentUserId!.Value,
             CurrentUserRole == UserRole.Admin), ct);
         return StatusCode(StatusCodes.Status201Created, created);
@@ -145,7 +145,8 @@ public sealed record CreateGradebookRequest(
 public sealed record GradebookEvaluationRequest(
     [Required, StringLength(150, MinimumLength = 1)] string Name,
     [Range(typeof(decimal), "0.01", "100")] decimal WeightPercentage,
-    [Range(typeof(decimal), "0.01", "100")] decimal MaximumScore = 10m);
+    [Range(typeof(decimal), "0.01", "100")] decimal MaximumScore = 10m,
+    bool IsRecovery = false);
 public sealed record SaveGradeEntriesRequest(
     [Required, MinLength(1)] IReadOnlyList<SaveGradeEntryRequest> Grades);
 public sealed record SaveGradeEntryRequest(

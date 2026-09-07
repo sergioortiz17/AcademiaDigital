@@ -11,6 +11,7 @@ export interface GradebookEvaluation {
   weightPercentage: number;
   maximumScore: number;
   displayOrder: number;
+  isRecovery: boolean;
 }
 
 export interface GradeEntry {
@@ -87,6 +88,7 @@ export interface CreateGradebookEvaluationInput {
   name: string;
   weightPercentage: number;
   maximumScore: number;
+  isRecovery: boolean;
 }
 
 export interface SaveGradeEntryInput {

@@ -41,7 +41,7 @@ public sealed class GradebookEvaluationConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("GradebookEvaluations", table =>
         {
-            table.HasCheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage > 0 AND weight_percentage <= 100");
+            table.HasCheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage >= 0 AND weight_percentage <= 100 AND (is_recovery OR weight_percentage > 0)");
             table.HasCheckConstraint("CK_GradebookEvaluations_Maximum", "maximum_score > 0 AND maximum_score <= 100");
         });
         builder.HasKey(item => item.Id);
@@ -51,6 +51,7 @@ public sealed class GradebookEvaluationConfiguration : IEntityTypeConfiguration<
         builder.Property(item => item.WeightPercentage).HasColumnName("weight_percentage").HasPrecision(5, 2);
         builder.Property(item => item.MaximumScore).HasColumnName("maximum_score").HasPrecision(5, 2);
         builder.Property(item => item.DisplayOrder).HasColumnName("display_order");
+        builder.Property(item => item.IsRecovery).HasColumnName("is_recovery").HasDefaultValue(false);
         builder.HasIndex(item => new { item.GradebookId, item.Name }).IsUnique();
         builder.HasIndex(item => new { item.GradebookId, item.DisplayOrder }).IsUnique();
         builder.HasOne(item => item.Gradebook).WithMany(item => item.Evaluations).HasForeignKey(item => item.GradebookId).OnDelete(DeleteBehavior.Cascade);

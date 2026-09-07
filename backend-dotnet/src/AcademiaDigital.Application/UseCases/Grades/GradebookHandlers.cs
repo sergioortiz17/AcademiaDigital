@@ -6,7 +6,7 @@ using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.Grades;
 
-public sealed record GradebookEvaluationInput(string Name, decimal WeightPercentage, decimal MaximumScore = 10m);
+public sealed record GradebookEvaluationInput(string Name, decimal WeightPercentage, decimal MaximumScore = 10m, bool IsRecovery = false);
 public sealed record GradeEntryInput(long EvaluationId, long EnrollmentId, decimal Score, string? Notes);
 public sealed record GetGradebooksQuery(int? AcademicYear, int? CourseId, int? DivisionId, long ActorUserId, bool IsAdmin);
 public sealed record GetGradebookQuery(long GradebookId, long ActorUserId, bool IsAdmin);
@@ -24,7 +24,7 @@ public sealed record CloseGradebookCommand(long GradebookId, long ActorUserId);
 public sealed record ReopenGradebookCommand(long GradebookId, string Reason, long ActorUserId);
 public sealed record GetMyGradesQuery(long UserId, int? CourseId);
 
-public sealed record GradebookEvaluationDto(long Id, string Name, decimal WeightPercentage, decimal MaximumScore, int DisplayOrder);
+public sealed record GradebookEvaluationDto(long Id, string Name, decimal WeightPercentage, decimal MaximumScore, int DisplayOrder, bool IsRecovery);
 public sealed record GradeEntryDto(long? RevisionId, long EvaluationId, decimal? Score, int? Version, string? Notes, DateTime? UpdatedAt);
 public sealed record GradebookStudentDto(
     long EnrollmentId,
@@ -114,7 +114,8 @@ public sealed class CreateGradebookCommandHandler(
             Name = item.Name.Trim(),
             WeightPercentage = item.WeightPercentage,
             MaximumScore = item.MaximumScore,
-            DisplayOrder = index + 1
+            DisplayOrder = index + 1,
+            IsRecovery = item.IsRecovery
         }).ToArray();
         policy.EnsureCanCreate(position, evaluations);
         var now = timeProvider.GetUtcNow().UtcDateTime;
@@ -247,14 +248,24 @@ public sealed class CloseGradebookCommandHandler(
             var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
                 ?? throw new KeyNotFoundException("Planilla no encontrada.");
             policy.EnsureCanClose(gradebook);
-            var results = gradebook.GradeRevisions.Where(item => item.IsCurrent)
-                .GroupBy(item => item.EnrollmentId)
+            var currentByEnrollment = gradebook.GradeRevisions.Where(item => item.IsCurrent)
+                .GroupBy(item => item.EnrollmentId);
+            var results = currentByEnrollment
                 .Select(group =>
                 {
-                    var result = policy.CalculateResult(group.Select(item =>
-                        (item.Score, item.Evaluation.MaximumScore, item.Evaluation.WeightPercentage)).ToArray(),
-                        group.First().Enrollment.StudyPlanCourse?.ApprovalRule);
-                    return new EnrollmentGradebookResult(group.Key, result.Average, result.Status);
+                    var revisionsByEvaluation = group.ToDictionary(item => item.EvaluationId);
+                    var scores = gradebook.Evaluations.Select(evaluation =>
+                    {
+                        var has = revisionsByEvaluation.TryGetValue(evaluation.Id, out var revision);
+                        return new EvaluationScore(
+                            evaluation.IsRecovery, has, has ? revision!.Score : 0m,
+                            evaluation.MaximumScore, evaluation.WeightPercentage);
+                    }).ToArray();
+                    var result = policy.CalculateResult(scores, group.First().Enrollment.StudyPlanCourse?.ApprovalRule);
+                    // Al cerrar, EnsureCanSubmit ya garantizó nota en todas las instancias regulares, así
+                    // que no debería haber pendientes; si lo hubiera, se cierra conservadoramente como Libre.
+                    return new EnrollmentGradebookResult(
+                        group.Key, result.Average ?? 0m, result.Status ?? EnrollmentStatus.Failed);
                 }).ToArray();
             gradebook.Status = GradebookStatus.Closed;
             gradebook.ClosedAt = timeProvider.GetUtcNow().UtcDateTime;
@@ -383,20 +394,21 @@ internal static class GradebookMapper
 
     public static StudentPublishedGradebookDto MapStudent(Gradebook gradebook, long studentId, GradebookPolicy policy)
     {
-        var revisions = gradebook.GradeRevisions.Where(item => item.StudentId == studentId && item.IsCurrent).ToArray();
-        var result = policy.CalculateResult(revisions.Select(item =>
-            (item.Score, item.Evaluation.MaximumScore, item.Evaluation.WeightPercentage)).ToArray(),
-            revisions.First().Enrollment.StudyPlanCourse?.ApprovalRule);
+        var revisions = gradebook.GradeRevisions.Where(item => item.StudentId == studentId && item.IsCurrent)
+            .ToDictionary(item => item.EvaluationId);
+        var enrollment = revisions.Values.FirstOrDefault()?.Enrollment;
+        var result = policy.CalculateResult(
+            BuildEvaluationScores(gradebook, revisions), enrollment?.StudyPlanCourse?.ApprovalRule);
         return new StudentPublishedGradebookDto(
             gradebook.Id, gradebook.CourseSection.CourseId, gradebook.CourseSection.Course.Code, gradebook.CourseSection.Course.Name,
             gradebook.CourseSection.AcademicYear, gradebook.CourseSection.Semester, gradebook.Status,
             gradebook.Evaluations.OrderBy(item => item.DisplayOrder).Select(MapEvaluation).ToArray(),
-            gradebook.Evaluations.OrderBy(item => item.DisplayOrder).Select(evaluation =>
-            {
-                var revision = revisions.Single(item => item.EvaluationId == evaluation.Id);
-                return MapGrade(revision);
-            }).ToArray(),
-            result.Average, result.Status.ToString(), gradebook.PublishedAt!.Value);
+            gradebook.Evaluations.OrderBy(item => item.DisplayOrder)
+                .Select(evaluation => revisions.TryGetValue(evaluation.Id, out var revision)
+                    ? MapGrade(revision)
+                    : new GradeEntryDto(null, evaluation.Id, null, null, null, null))
+                .ToArray(),
+            result.Average ?? 0m, (result.Status ?? EnrollmentStatus.Failed).ToString(), gradebook.PublishedAt!.Value);
     }
 
     private static GradebookStudentDto MapStudentRow(Gradebook gradebook, GradebookRosterRow row, GradebookPolicy policy)
@@ -408,18 +420,35 @@ internal static class GradebookMapper
                 ? MapGrade(revision)
                 : new GradeEntryDto(null, evaluation.Id, null, null, null, null))
             .ToArray();
-        GradebookResult? result = null;
-        if (revisions.Count == gradebook.Evaluations.Count)
-            result = policy.CalculateResult(revisions.Values.Select(item =>
-                (item.Score, item.Evaluation.MaximumScore, item.Evaluation.WeightPercentage)).ToArray(),
-                revisions.Values.First().Enrollment.StudyPlanCourse?.ApprovalRule);
+
+        // Calcular condición siempre que haya al menos una instancia regular con nota; la exclusión
+        // de recuperaciones y el "pendiente" (instancia regular sin nota) los resuelve el policy.
+        var enrollment = revisions.Values.FirstOrDefault()?.Enrollment;
+        var result = policy.CalculateResult(
+            BuildEvaluationScores(gradebook, revisions), enrollment?.StudyPlanCourse?.ApprovalRule);
+
         return new GradebookStudentDto(
             row.EnrollmentId, row.StudentId, row.StudentName, row.LegajoNumber, row.Dni,
-            grades, result?.Average, result?.Status.ToString());
+            grades, result.Average, result.Status?.ToString());
     }
 
+    // Arma una EvaluationScore por CADA evaluación de la planilla (no solo las que tienen nota),
+    // marcando IsRecovery y HasScore, para que el policy pueda aplicar recuperaciones dinámicas.
+    private static IReadOnlyCollection<EvaluationScore> BuildEvaluationScores(
+        Gradebook gradebook, IReadOnlyDictionary<long, GradeEntryRevision> revisionsByEvaluation)
+        => gradebook.Evaluations.Select(evaluation =>
+        {
+            var hasScore = revisionsByEvaluation.TryGetValue(evaluation.Id, out var revision);
+            return new EvaluationScore(
+                IsRecovery: evaluation.IsRecovery,
+                HasScore: hasScore,
+                Score: hasScore ? revision!.Score : 0m,
+                MaximumScore: evaluation.MaximumScore,
+                WeightPercentage: evaluation.WeightPercentage);
+        }).ToArray();
+
     private static GradebookEvaluationDto MapEvaluation(GradebookEvaluation item)
-        => new(item.Id, item.Name, item.WeightPercentage, item.MaximumScore, item.DisplayOrder);
+        => new(item.Id, item.Name, item.WeightPercentage, item.MaximumScore, item.DisplayOrder, item.IsRecovery);
 
     private static GradeEntryDto MapGrade(GradeEntryRevision item)
         => new(item.Id, item.EvaluationId, item.Score, item.Version, item.Notes, item.CreatedAt);

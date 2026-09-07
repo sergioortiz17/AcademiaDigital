@@ -3,6 +3,7 @@ using System;
 using AcademiaDigital.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AcademiaDigital.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260907162336_AddIsRecoveryToGradebookEvaluation")]
+    partial class AddIsRecoveryToGradebookEvaluation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2337,7 +2340,7 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_GradebookEvaluations_Maximum", "maximum_score > 0 AND maximum_score <= 100");
 
-                            t.HasCheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage >= 0 AND weight_percentage <= 100 AND (is_recovery OR weight_percentage > 0)");
+                            t.HasCheckConstraint("CK_GradebookEvaluations_Weight", "weight_percentage > 0 AND weight_percentage <= 100");
                         });
                 });
 

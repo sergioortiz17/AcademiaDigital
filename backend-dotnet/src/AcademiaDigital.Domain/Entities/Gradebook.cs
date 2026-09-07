@@ -38,6 +38,9 @@ public sealed class GradebookEvaluation
     public decimal WeightPercentage { get; set; }
     public decimal MaximumScore { get; set; } = 10m;
     public int DisplayOrder { get; set; }
+    // Marca una evaluación como recuperación: no es una instancia regular. No lleva peso propio;
+    // por valor reemplaza a la instancia regular desaprobada más baja al calcular la condición.
+    public bool IsRecovery { get; set; }
     public ICollection<GradeEntryRevision> GradeRevisions { get; set; } = [];
 }
 

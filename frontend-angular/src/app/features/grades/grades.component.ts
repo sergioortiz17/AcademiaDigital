@@ -288,8 +288,11 @@ export class GradesComponent implements OnInit {
 
   get isComplete(): boolean {
     if (!this.detail || this.rows.length === 0) return false;
+    // Solo se exigen las instancias regulares; las recuperaciones son opcionales.
+    const regular = this.detail.evaluations.filter(ev => !ev.isRecovery);
+    if (regular.length === 0) return false;
     return this.rows.every(row =>
-      this.detail!.evaluations.every(ev => row.editableGrades[ev.id]?.score != null)
+      regular.every(ev => row.editableGrades[ev.id]?.score != null)
     );
   }
 
