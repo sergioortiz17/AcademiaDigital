@@ -44,6 +44,26 @@
 
 }
 
+.plan-image-panel {
+    margin-bottom: 25px;
+    box-shadow: none !important;
+    border: 1px solid #d0d0d0;
+
+    mat-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+    }
+}
+
+.plan-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 12px auto 0;
+}
+
 .notice{
 
     text-align:center;
