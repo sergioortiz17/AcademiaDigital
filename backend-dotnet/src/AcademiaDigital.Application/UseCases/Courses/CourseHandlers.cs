@@ -35,10 +35,10 @@ public sealed class CreateCourseCommandHandler(
     public async Task<CourseDto> Handle(CreateCourseCommand command, CancellationToken ct = default)
     {
         var career = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
 
         var existing = await courseRepository.FindByCodeAsync(career.Id, command.Request.Code.Trim(), ct);
-        if (existing is not null) throw new InvalidOperationException("Course code already exists in this career.");
+        if (existing is not null) throw new InvalidOperationException("El código de la materia ya existe en esta carrera.");
 
         var course = new Course
         {
@@ -69,9 +69,9 @@ public sealed class UpdateCourseCommandHandler(ICourseRepository courseRepositor
     public async Task Handle(UpdateCourseCommand command, CancellationToken ct = default)
     {
         var course = await courseRepository.FindByIdAsync(command.CourseId, ct)
-            ?? throw new KeyNotFoundException("Course not found.");
+            ?? throw new KeyNotFoundException("Materia no encontrada.");
 
-        if (course.CareerId != command.CareerId) throw new KeyNotFoundException("Course not found in this career.");
+        if (course.CareerId != command.CareerId) throw new KeyNotFoundException("Materia no encontrada en esta carrera.");
 
         course.Code = command.Request.Code.Trim();
         course.Name = command.Request.Name.Trim();
@@ -88,9 +88,9 @@ public sealed class DeleteCourseCommandHandler(ICourseRepository courseRepositor
     public async Task Handle(DeleteCourseCommand command, CancellationToken ct = default)
     {
         var course = await courseRepository.FindByIdAsync(command.CourseId, ct)
-            ?? throw new KeyNotFoundException("Course not found.");
+            ?? throw new KeyNotFoundException("Materia no encontrada.");
 
-        if (course.CareerId != command.CareerId) throw new KeyNotFoundException("Course not found in this career.");
+        if (course.CareerId != command.CareerId) throw new KeyNotFoundException("Materia no encontrada en esta carrera.");
 
         await courseRepository.DeleteAsync(course, ct);
     }

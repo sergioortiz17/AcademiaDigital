@@ -1,0 +1,129 @@
+<div class="page-header">
+  <h1>Importar plan de estudios</h1>
+  <p>Cargá un nuevo plan de estudios (materias, año/cuatrimestre y correlatividades) para una carrera ya existente. Podés repetir esto cada vez que cambie la resolución vigente.</p>
+</div>
+
+<mat-card class="import-card">
+  <mat-card-content>
+
+    <div *ngIf="successMsg" class="msg msg--success">
+      <mat-icon>check_circle</mat-icon> {{ successMsg }}
+    </div>
+    <div *ngIf="errorMsg" class="msg msg--error">
+      <mat-icon>error</mat-icon> {{ errorMsg }}
+    </div>
+
+    <div *ngIf="rowErrors.length > 0" class="row-errors">
+      <h3>Errores encontrados en el archivo</h3>
+      <table mat-table [dataSource]="rowErrors" class="row-errors-table">
+        <ng-container matColumnDef="row">
+          <th mat-header-cell *matHeaderCellDef>Fila</th>
+          <td mat-cell *matCellDef="let e">{{ e.row === 0 ? '-' : e.row }}</td>
+        </ng-container>
+        <ng-container matColumnDef="error">
+          <th mat-header-cell *matHeaderCellDef>Error</th>
+          <td mat-cell *matCellDef="let e">{{ e.error }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="['row', 'error']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['row', 'error'];"></tr>
+      </table>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #importForm="ngForm">
+
+      <h3 class="section-title">Carrera</h3>
+      <div class="form-grid">
+        <mat-form-field appearance="outline" *ngIf="!isCareerFixed">
+          <mat-label>Carrera</mat-label>
+          <mat-select [(ngModel)]="selectedCareerId" name="careerId" required (selectionChange)="onCareerChange()">
+            <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }} ({{ c.code }})</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="fixed-career" *ngIf="isCareerFixed">
+          <mat-icon>school</mat-icon>
+          {{ data?.career?.name }} ({{ data?.career?.code }})
+        </div>
+      </div>
+
+      <h3 class="section-title">Datos del plan de estudios</h3>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Código del plan</mat-label>
+          <input matInput [(ngModel)]="code" name="code" required maxlength="20" placeholder='Ej: "RM 999/13"' />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre del plan</mat-label>
+          <input matInput [(ngModel)]="name" name="name" required maxlength="200" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Número de versión</mat-label>
+          <input matInput type="number" min="1" [(ngModel)]="versionNumber" name="versionNumber" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vigente desde</mat-label>
+          <input matInput [matDatepicker]="pickerFrom" [(ngModel)]="effectiveFrom" name="effectiveFrom" />
+          <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFrom></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vigente hasta (opcional)</mat-label>
+          <input matInput [matDatepicker]="pickerTo" [(ngModel)]="effectiveTo" name="effectiveTo" />
+          <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
+          <mat-datepicker #pickerTo></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <h3 class="section-title">Archivo CSV de materias</h3>
+      <div class="file-row">
+        <button type="button" mat-stroked-button (click)="fileInput.click()" [disabled]="!selectedCareerId">
+          <mat-icon>upload_file</mat-icon>
+          Seleccionar archivo CSV
+        </button>
+        <input #fileInput type="file" accept=".csv" hidden (change)="onFileSelected($event)" />
+        <span class="file-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+
+        <button type="button" mat-button color="primary" (click)="downloadTemplate()">
+          <mat-icon>download</mat-icon>
+          Descargar plantilla de ejemplo
+        </button>
+      </div>
+      <p class="hint">
+        Columnas esperadas: <code>{{ csvTemplateColumns }}</code>
+      </p>
+
+      <div class="preview-row" *ngIf="selectedCareerId">
+        <button type="button" mat-stroked-button color="accent" (click)="previewChanges()" [disabled]="!canPreview || isPreviewLoading">
+          <mat-spinner *ngIf="isPreviewLoading" diameter="16" class="btn-spinner"></mat-spinner>
+          <mat-icon *ngIf="!isPreviewLoading">visibility</mat-icon>
+          Previsualizar cambios
+        </button>
+        <span class="hint" *ngIf="selectedCareerId && !activeStudyPlan">
+          Esta carrera todavía no tiene un plan activo: no hay nada contra qué previsualizar (se puede importar igual).
+        </span>
+      </div>
+
+      <div class="diff-preview" *ngIf="diffPreview">
+        <h3 class="section-title">Vista previa de cambios (vs. plan activo)</h3>
+        <app-study-plan-diff [diff]="diffPreview"></app-study-plan-diff>
+      </div>
+
+      <div class="actions">
+        <button *ngIf="dialogRef" type="button" mat-button (click)="close(!!result?.success)">
+          {{ result?.success ? 'Cerrar' : 'Cancelar' }}
+        </button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="isLoading || !isFormValid || !!result?.success">
+          <mat-spinner *ngIf="isLoading" diameter="18" class="btn-spinner"></mat-spinner>
+          <span *ngIf="!isLoading">Importar plan de estudios</span>
+          <span *ngIf="isLoading">Importando...</span>
+        </button>
+      </div>
+
+    </form>
+
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,25 @@
+<div class="dialog-header">
+  <mat-icon>lock_open</mat-icon>
+  <span>Reabrir planilla</span>
+</div>
+
+<div class="dialog-body">
+  <p>La planilla vuelve a estado Borrador y el profesor podrá volver a editar las notas. Esta acción queda auditada.</p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Motivo de la reapertura</mat-label>
+    <textarea
+      matInput
+      rows="3"
+      maxlength="1000"
+      [(ngModel)]="reason"
+      placeholder="Explicá por qué se reabre la planilla">
+    </textarea>
+    <mat-hint *ngIf="reason.trim().length < 3">Mínimo 3 caracteres.</mat-hint>
+  </mat-form-field>
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Reabrir</button>
+</div>

@@ -1,0 +1,78 @@
+.teachers-card {
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .06) !important;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--success { background: #e8f5e9; color: #2e7d32; }
+  &--error   { background: #fce4ec; color: #c62828; }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.search-field {
+  flex: 1 1 280px;
+}
+
+.table-wrap {
+  position: relative;
+  min-height: 80px;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .7);
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.teachers-table {
+  width: 100%;
+}
+
+.teacher-name { font-weight: 600; font-size: .92rem; }
+.teacher-email { font-size: .78rem; color: rgba(0, 0, 0, .5); }
+
+.status-chip {
+  font-size: .78rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 3px 12px;
+
+  &--active { background: #e8f5e9; color: #2e7d32; }
+  &--inactive { background: #eeeeee; color: #616161; }
+}
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background: #f5f9ff;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(0, 0, 0, .4);
+
+  mat-icon { font-size: 48px; width: 48px; height: 48px; }
+}

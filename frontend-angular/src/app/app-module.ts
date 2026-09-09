@@ -23,6 +23,7 @@ import { environment } from '../environments/environment';
 
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 registerLocaleData(localeEs);
 
@@ -54,6 +55,7 @@ registerLocaleData(localeEs);
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
+    { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
     ...provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' })
   ],
   bootstrap: [App]

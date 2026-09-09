@@ -9,7 +9,7 @@ public class UpdateUserRoleUseCase(IUserRepository userRepository)
     public async Task<UserSummary> ExecuteAsync(long requestingUserId, long targetUserId, UserRole newRole, CancellationToken ct = default)
     {
         if (requestingUserId == targetUserId)
-            throw new ForbiddenException("You cannot change your own role.");
+            throw new ForbiddenException("No puedes cambiar tu propio rol.");
 
         var updated = await userRepository.UpdateRoleAsync(targetUserId, newRole, ct);
 

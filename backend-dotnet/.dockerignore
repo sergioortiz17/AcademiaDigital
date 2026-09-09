@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/.env
+**/.env.*
+.vs/
+AGENTS.md
+docs/
+tests/
+src/AcademiaDigital.API/appsettings.Development.json

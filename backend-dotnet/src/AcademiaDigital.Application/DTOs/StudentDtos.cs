@@ -45,7 +45,7 @@ public sealed class CreateStudentRequest
     [MaxLength(500)]
     public string? StudyPlanMigrationReason { get; set; }
 
-    public int? CommissionId { get; set; }
+    public int? DivisionId { get; set; }
     [Range(2000, 2100)] public int? AcademicYear { get; set; }
     [Range(1, 20)] public int? YearNumber { get; set; }
     [MaxLength(300)] public string? AddressLine { get; set; }

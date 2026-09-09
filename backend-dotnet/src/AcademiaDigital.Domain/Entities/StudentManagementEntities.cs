@@ -15,7 +15,7 @@ public class StudentStatusHistory
     public User ChangedByUser { get; set; } = null!;
 }
 
-public class Commission
+public class Division
 {
     public int Id { get; set; }
     public int CareerId { get; set; }
@@ -40,8 +40,8 @@ public class StudentAcademicAssignment
     public Career Career { get; set; } = null!;
     public int StudyPlanId { get; set; }
     public StudyPlan StudyPlan { get; set; } = null!;
-    public int? CommissionId { get; set; }
-    public Commission? Commission { get; set; }
+    public int? DivisionId { get; set; }
+    public Division? Division { get; set; }
     public int AcademicYear { get; set; }
     public int YearNumber { get; set; }
     public DateTime StartedAt { get; set; } = DateTime.UtcNow;

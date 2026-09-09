@@ -25,7 +25,13 @@ public class StudyPlanCourseConfiguration : IEntityTypeConfiguration<StudyPlanCo
         builder.Property(spc => spc.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(spc => spc.CreatedAt).HasColumnName("created_at");
         builder.Property(spc => spc.UpdatedAt).HasColumnName("updated_at");
-        builder.Property(spc => spc.RowVersion).HasColumnName("row_version").IsRowVersion();
+        // Postgres no tiene un tipo "rowversion" auto-incremental como SQL Server.
+        // Se usa la columna de sistema `xmin` (siempre presente en Postgres) como
+        // concurrency token nativo en vez de mapear la propiedad RowVersion a una
+        // columna real: la propiedad queda sin mapear (Ignore) y el shadow property
+        // "xmin" cubre el optimistic concurrency check automáticamente.
+        builder.Ignore(spc => spc.RowVersion);
+        builder.UseXminAsConcurrencyToken();
 
         builder.HasIndex(spc => new { spc.StudyPlanId, spc.CourseId }).IsUnique();
         builder.HasIndex(spc => new { spc.StudyPlanId, spc.YearNumber, spc.Semester, spc.SortOrder });

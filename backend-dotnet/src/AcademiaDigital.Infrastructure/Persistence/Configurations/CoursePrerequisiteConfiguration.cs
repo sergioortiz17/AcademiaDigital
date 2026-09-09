@@ -23,7 +23,7 @@ public class CoursePrerequisiteConfiguration : IEntityTypeConfiguration<CoursePr
 
         builder.HasIndex(cp => new { cp.StudyPlanId, cp.CourseId, cp.PrerequisiteCourseId })
             .IsUnique()
-            .HasFilter("[is_active] = 1");
+            .HasFilter("is_active = true");
 
         builder.ToTable(t => t.HasCheckConstraint("CK_CoursePrerequisites_NoSelfReference", "course_id <> prerequisite_course_id"));
 

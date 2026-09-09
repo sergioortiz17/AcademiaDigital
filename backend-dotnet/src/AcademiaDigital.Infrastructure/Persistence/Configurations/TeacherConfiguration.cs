@@ -18,7 +18,19 @@ public class TeacherConfiguration : IEntityTypeConfiguration<Teacher>
         builder.Property(t => t.SpecializationArea).HasColumnName("specialization_area").HasMaxLength(200);
         builder.Property(t => t.HireDate).HasColumnName("hire_date");
         builder.Property(t => t.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+        builder.Property(t => t.PhoneNumber).HasColumnName("PhoneNumber");
+        builder.Property(t => t.AddressLine).HasColumnName("address_line").HasMaxLength(255);
+        builder.Property(t => t.City).HasColumnName("city").HasMaxLength(120);
+        builder.Property(t => t.Province).HasColumnName("province").HasMaxLength(120);
+        builder.Property(t => t.PostalCode).HasColumnName("postal_code").HasMaxLength(20);
+        builder.Property(t => t.EmergencyContactName).HasColumnName("emergency_contact_name").HasMaxLength(200);
+        builder.Property(t => t.EmergencyContactRelationship).HasColumnName("emergency_contact_relationship").HasMaxLength(100);
+        builder.Property(t => t.EmergencyContactPhone).HasColumnName("emergency_contact_phone").HasMaxLength(30);
+        builder.Property(t => t.DeactivatedAt).HasColumnName("deactivated_at");
+        builder.Property(t => t.DeactivatedByUserId).HasColumnName("deactivated_by_user_id");
+        builder.Property(t => t.DeactivationReason).HasColumnName("deactivation_reason").HasMaxLength(500);
         builder.Property(t => t.UserId).HasColumnName("user_id");
+        builder.HasIndex(t => t.UserId).IsUnique();
 
         builder.HasOne(t => t.User)
             .WithMany()

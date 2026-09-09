@@ -1,6 +1,6 @@
-# AcademiaDigital — Levantar SQL Server localmente (sin Docker completo)
+# AcademiaDigital — Levantar PostgreSQL localmente (sin Docker completo)
 
-El proyecto usa **SQL Server 2022** como base de datos. Esta guía explica cómo dejarlo corriendo en tu máquina local para poder desarrollar sin necesitar levantar todo el `docker-compose`.
+El proyecto usa **PostgreSQL 16** como base de datos. Esta guía explica cómo dejarlo corriendo en tu máquina local para poder desarrollar sin necesitar levantar todo el `docker-compose`.
 
 ---
 
@@ -8,13 +8,13 @@ El proyecto usa **SQL Server 2022** como base de datos. Esta guía explica cómo
 
 | Opción | Requisito | Recomendado para |
 |--------|-----------|-----------------|
-| [A) Docker solo para SQL Server](#opción-a-docker-solo-para-sql-server-recomendado) | Docker instalado | La mayoría de los casos — más simple y limpio |
-| [B) SQL Server nativo en Linux](#opción-b-sql-server-nativo-en-linux-ubuntu--debian) | Ubuntu/Debian 20.04+ | Si no querés usar Docker en absoluto |
-| [C) SQL Server nativo en Windows](#opción-c-sql-server-nativo-en-windows) | Windows 10/11 | Desarrolladores en Windows |
+| [A) Docker solo para PostgreSQL](#opción-a-docker-solo-para-postgresql-recomendado) | Docker instalado | La mayoría de los casos — más simple y limpio |
+| [B) PostgreSQL nativo en Linux](#opción-b-postgresql-nativo-en-linux-ubuntu--debian) | Ubuntu/Debian 20.04+ | Si no querés usar Docker en absoluto |
+| [C) PostgreSQL nativo en Windows](#opción-c-postgresql-nativo-en-windows) | Windows 10/11 | Desarrolladores en Windows |
 
 ---
 
-## Opción A: Docker solo para SQL Server (recomendado)
+## Opción A: Docker solo para PostgreSQL (recomendado)
 
 Levantás **únicamente el contenedor de la base de datos**, sin el backend ni el frontend. Docker no tiene que estar en "Docker Desktop", alcanza con tener el daemon corriendo.
 
@@ -22,236 +22,175 @@ Levantás **únicamente el contenedor de la base de datos**, sin el backend ni e
 
 ```bash
 docker run -d \
-  --name sqlserver \
-  -e ACCEPT_EULA=Y \
-  -e SA_PASSWORD=Admin1234! \
-  -e MSSQL_PID=Developer \
-  -p 1433:1433 \
-  mcr.microsoft.com/mssql/server:2022-latest
+  --name postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=Admin1234! \
+  -e POSTGRES_DB=AcademiaDigital \
+  -p 5432:5432 \
+  postgres:16-alpine
 ```
 
-> La primera vez descarga la imagen (~1.5 GB), puede tardar unos minutos.
+> La primera vez descarga la imagen (~90 MB), tarda pocos segundos.
 
 ### 2. Verificar que está corriendo
 
 ```bash
-docker ps --filter name=sqlserver
+docker ps --filter name=postgres
 ```
 
-Esperá ~20-30 segundos hasta que el estado sea `healthy` o simplemente `Up`. Podés revisar los logs con:
+Esperá unos segundos hasta que el estado sea `healthy` o simplemente `Up`. Podés revisar los logs con:
 
 ```bash
-docker logs sqlserver
+docker logs postgres
 ```
 
-Cuando veas la línea `SQL Server is now ready for client connections`, está listo.
+Cuando veas la línea `database system is ready to accept connections`, está listo.
 
 ### 3. Comandos útiles del contenedor
 
 ```bash
 # Detener sin borrar datos
-docker stop sqlserver
+docker stop postgres
 
 # Volver a iniciar
-docker start sqlserver
+docker start postgres
 
 # Borrar el contenedor (los datos se pierden)
-docker rm -f sqlserver
+docker rm -f postgres
 
 # Ver logs en tiempo real
-docker logs -f sqlserver
+docker logs -f postgres
 ```
 
 > Los datos **no persisten** si hacés `docker rm`. Para guardarlos entre sesiones usá un volumen:
 > ```bash
 > docker run -d \
->   --name sqlserver \
->   -e ACCEPT_EULA=Y \
->   -e SA_PASSWORD=Admin1234! \
->   -e MSSQL_PID=Developer \
->   -p 1433:1433 \
->   -v sqlserver_data:/var/opt/mssql \
->   mcr.microsoft.com/mssql/server:2022-latest
+>   --name postgres \
+>   -e POSTGRES_USER=postgres \
+>   -e POSTGRES_PASSWORD=Admin1234! \
+>   -e POSTGRES_DB=AcademiaDigital \
+>   -p 5432:5432 \
+>   -v postgres_data:/var/lib/postgresql/data \
+>   postgres:16-alpine
 > ```
 
 ---
 
-## Opción B: SQL Server nativo en Linux (Ubuntu / Debian)
+## Opción B: PostgreSQL nativo en Linux (Ubuntu / Debian)
 
-Si no querés usar Docker, podés instalar SQL Server for Linux directamente.
+Si no querés usar Docker, podés instalar PostgreSQL directamente desde los repos oficiales de la distro.
 
-### 1. Agregar el repositorio de Microsoft
-
-**Ubuntu 22.04:**
+### 1. Instalar PostgreSQL 16
 
 ```bash
-# Importar la clave GPG
-curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | \
-  sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-
-# Agregar el repositorio de SQL Server 2022
-curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/mssql-server-2022.list | \
-  sudo tee /etc/apt/sources.list.d/mssql-server-2022.list
-
 sudo apt-get update
+sudo apt-get install -y postgresql postgresql-contrib
 ```
 
-**Ubuntu 24.04:**
+> Si tu distro trae por defecto una versión distinta a la 16, podés agregar el repo oficial de PostgreSQL (`apt.postgresql.org`) para instalar la 16 exacta — no es estrictamente necesario para desarrollo, cualquier PostgreSQL 14+ sirve.
 
-> SQL Server 2022 no tiene paquete nativo para Ubuntu 24.04. El workaround es usar el repositorio de 22.04, cuyos binarios corren sin problema en 24.04.
+### 2. Configurar el usuario y la base
 
 ```bash
-# Importar la clave GPG
-curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | \
-  sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-
-# Usar el repositorio de Ubuntu 22.04 (workaround para 24.04)
-curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/mssql-server-2022.list | \
-  sudo tee /etc/apt/sources.list.d/mssql-server-2022.list
-
-sudo apt-get update
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'Admin1234!';"
+sudo -u postgres createdb AcademiaDigital
 ```
 
-### 2. Instalar SQL Server
+### 3. Verificar que el servicio esté corriendo
 
 ```bash
-sudo apt-get install -y mssql-server
-```
-
-### 3. Configurar SQL Server
-
-```bash
-sudo /opt/mssql/bin/mssql-conf setup
-```
-
-El asistente te va a pedir:
-1. Elegir la edición → ingresá `2` (Developer — gratis para desarrollo)
-2. Aceptar el EULA → `Yes`
-3. Ingresar y confirmar la contraseña del usuario `sa` → usá `Admin1234!` para que coincida con el `appsettings.Development.json`
-
-### 4. Verificar que el servicio esté corriendo
-
-```bash
-systemctl status mssql-server
+systemctl status postgresql
 ```
 
 Si no está corriendo:
 
 ```bash
-sudo systemctl start mssql-server
-sudo systemctl enable mssql-server  # para que arranque solo al iniciar el sistema
+sudo systemctl start postgresql
+sudo systemctl enable postgresql  # para que arranque solo al iniciar el sistema
+```
+
+### 4. Habilitar conexiones por password (si hace falta)
+
+Por defecto algunas instalaciones de PostgreSQL en Linux usan autenticación `peer` para conexiones locales. Si `psql -U postgres` te pide password y falla, editá `pg_hba.conf` (la ruta típica es `/etc/postgresql/16/main/pg_hba.conf`) y cambiá el método `peer`/`ident` de las líneas `local` a `md5`, después reiniciá el servicio:
+
+```bash
+sudo systemctl restart postgresql
 ```
 
 ---
 
-## Opción C: SQL Server nativo en Windows
+## Opción C: PostgreSQL nativo en Windows
 
-### 1. Descargar SQL Server 2022 Developer Edition
+### 1. Descargar el instalador
 
-Descargá el instalador desde la página oficial de Microsoft:
+Descargá el instalador desde la página oficial:
 
-**https://www.microsoft.com/es-es/sql-server/sql-server-downloads**
+**https://www.postgresql.org/download/windows/**
 
-Elegí la edición **Developer** (gratuita para desarrollo y testing).
+Elegí la versión **16.x**.
 
-### 2. Instalar SQL Server
+### 2. Instalar PostgreSQL
 
 1. Ejecutá el instalador descargado
-2. Elegí el tipo de instalación **Básica** (suficiente para desarrollo local)
-3. Aceptá el EULA y seguí los pasos hasta que finalice
-4. Al terminar, anotá la cadena de conexión que muestra el instalador (la vamos a ignorar — usaremos autenticación SQL)
+2. Dejá los componentes por defecto (incluye pgAdmin 4, útil para inspeccionar la base visualmente)
+3. Cuando pida la contraseña del superusuario `postgres`, ingresá `Admin1234!` para que coincida con `appsettings.Development.json`
+4. Dejá el puerto por defecto `5432`
+5. Finalizá la instalación (no hace falta correr Stack Builder al final)
 
-### 3. Habilitar autenticación SQL y el usuario `sa`
+### 3. Verificar la conexión
 
-Por defecto SQL Server en Windows viene con autenticación de Windows únicamente. Hay que habilitar el modo mixto y activar el usuario `sa`.
-
-**Con SQL Server Management Studio (SSMS):**
-
-1. Descargá e instalá [SSMS](https://aka.ms/ssmsfullsetup) si no lo tenés
-2. Conectate al servidor con autenticación de Windows
-3. Click derecho sobre el servidor → **Properties** → **Security**
-4. Cambiá a **SQL Server and Windows Authentication mode** → **OK**
-5. En **Object Explorer**: Security → Logins → `sa` → click derecho → **Properties**
-   - **Status** → Login: **Enabled**
-   - **General** → ingresá la contraseña: `Admin1234!`
-6. Reiniciá el servicio SQL Server desde **SQL Server Configuration Manager**
-
-**Con PowerShell (alternativa sin SSMS):**
+Abrí PowerShell o CMD y ejecutá (necesitás tener `psql` en el PATH, lo instala el paquete oficial en `C:\Program Files\PostgreSQL\16\bin`):
 
 ```powershell
-# Habilitar modo mixto
-$server = "localhost"
-Import-Module SqlServer
-$s = New-Object Microsoft.SqlServer.Management.Smo.Server $server
-$s.Settings.LoginMode = [Microsoft.SqlServer.Management.SMO.ServerLoginMode]::Mixed
-$s.Alter()
-
-# Reiniciar el servicio
-Restart-Service -Name MSSQLSERVER
+psql -h localhost -U postgres -d postgres -c "SELECT version();"
 ```
 
-### 4. Habilitar el protocolo TCP/IP en el puerto 1433
+Te va a pedir la contraseña (`Admin1234!`).
 
-1. Abrí **SQL Server Configuration Manager** (buscalo en el menú Inicio)
-2. Expandí **SQL Server Network Configuration** → **Protocols for MSSQLSERVER**
-3. Click derecho en **TCP/IP** → **Enable**
-4. Click derecho en **TCP/IP** → **Properties** → pestaña **IP Addresses**
-5. En **IPAll**: `TCP Port` = `1433`, `TCP Dynamic Ports` = (vacío)
-6. **OK** → reiniciá el servicio desde **SQL Server Services** → click derecho en **SQL Server (MSSQLSERVER)** → **Restart**
+### 4. Crear la base de datos
+
+```powershell
+psql -h localhost -U postgres -c "CREATE DATABASE ""AcademiaDigital"";"
+```
 
 ### 5. Abrir el firewall (si es necesario)
 
 ```powershell
 # Ejecutar como Administrador
-New-NetFirewallRule -DisplayName "SQL Server 1433" `
-  -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow
+New-NetFirewallRule -DisplayName "PostgreSQL 5432" `
+  -Direction Inbound -Protocol TCP -LocalPort 5432 -Action Allow
 ```
-
-### 6. Verificar la conexión
-
-Abrí PowerShell o CMD y ejecutá:
-
-```powershell
-sqlcmd -S localhost,1433 -U sa -P Admin1234! -Q "SELECT @@VERSION" -C
-```
-
-> Si `sqlcmd` no está en el PATH, buscalo en `C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\...\Tools\Binn\`.
 
 ---
 
-## Verificar la conexión a SQL Server
+## Verificar la conexión a PostgreSQL
 
-Una vez que tenés SQL Server corriendo (por cualquiera de las tres opciones), podés verificar la conexión con `sqlcmd`.
+Una vez que tenés PostgreSQL corriendo (por cualquiera de las tres opciones), podés verificar la conexión con `psql`.
 
-### Instalar sqlcmd (si no lo tenés)
+### Instalar el cliente `psql` (si no lo tenés, para probar desde fuera del contenedor)
 
 ```bash
-# Opción A: desde el paquete de herramientas de Microsoft
-sudo apt-get install -y mssql-tools18 unixodbc-dev
-echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
-source ~/.bashrc
-
-# Opción B (más simple): instalar sqlcmd standalone
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-sudo curl -o /etc/apt/sources.list.d/microsoft.list \
-  https://packages.microsoft.com/config/ubuntu/22.04/prod.list
-sudo apt-get update
-sudo apt-get install -y sqlcmd
+sudo apt-get install -y postgresql-client
 ```
 
 ### Probar la conexión
 
 ```bash
-sqlcmd -S localhost,1433 -U sa -P Admin1234! -Q "SELECT @@VERSION" -C
+PGPASSWORD=Admin1234! psql -h localhost -p 5432 -U postgres -d AcademiaDigital -c "SELECT version();"
 ```
 
-Si devuelve la versión de SQL Server, la conexión funciona correctamente.
+Si devuelve la versión de PostgreSQL, la conexión funciona correctamente.
+
+> Con el contenedor de Docker Compose de este repo (servicio `db`, container_name `postgres`) también podés conectarte sin instalar nada localmente, ejecutando `psql` **dentro** del contenedor:
+> ```bash
+> docker exec -it postgres psql -U postgres -d AcademiaDigital
+> ```
 
 ---
 
 ## Crear la base de datos con EF Core
 
-Una vez que SQL Server está corriendo, desde la carpeta `backend-dotnet/` ejecutá:
+Una vez que PostgreSQL está corriendo, desde la carpeta `backend-dotnet/` ejecutá:
 
 ### Primera vez (crear las tablas)
 
@@ -262,22 +201,33 @@ cd backend-dotnet
 dotnet tool install --global dotnet-ef --version "8.0.13"
 export PATH="$PATH:$HOME/.dotnet/tools"
 
+# (Este repo ya trae un manifiesto de herramientas local — alcanza con
+# "dotnet tool restore" si preferís no instalar dotnet-ef global)
+dotnet tool restore
+
 # Crear la migración inicial (si no existe la carpeta Migrations/)
 dotnet ef migrations add InitialCreate \
   --project src/AcademiaDigital.Infrastructure \
   --startup-project src/AcademiaDigital.API
 
-# Aplicar la migración — crea la DB "AcademiaDigital" y todas las tablas
+# Aplicar la migración — crea todas las tablas en la DB "AcademiaDigital"
 dotnet ef database update \
   --project src/AcademiaDigital.Infrastructure \
   --startup-project src/AcademiaDigital.API
 ```
 
+> En la práctica no hace falta correr `database update` a mano: `Program.cs` corre `db.Database.MigrateAsync()` automáticamente al iniciar la API (con reintentos acotados por si Postgres todavía no acepta conexiones).
+
 ### Verificar que las tablas se crearon
 
 ```bash
-sqlcmd -S localhost,1433 -U sa -P Admin1234! -C \
-  -Q "USE AcademiaDigital; SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+PGPASSWORD=Admin1234! psql -h localhost -p 5432 -U postgres -d AcademiaDigital -c "\dt"
+```
+
+o, contra el contenedor de Docker Compose:
+
+```bash
+docker exec -it postgres psql -U postgres -d AcademiaDigital -c "\dt"
 ```
 
 ---
@@ -287,29 +237,31 @@ sqlcmd -S localhost,1433 -U sa -P Admin1234! -C \
 El archivo [backend-dotnet/src/AcademiaDigital.API/appsettings.Development.json](backend-dotnet/src/AcademiaDigital.API/appsettings.Development.json) ya tiene configurado:
 
 ```
-Server=localhost,1433;Database=AcademiaDigital;User Id=sa;Password=Admin1234!;TrustServerCertificate=True;
+Host=localhost;Port=5432;Database=AcademiaDigital;Username=postgres;Password=Admin1234!;
 ```
 
-No hace falta modificar nada si usaste `Admin1234!` como contraseña al configurar SQL Server.
+No hace falta modificar nada si usaste `Admin1234!` como contraseña al configurar PostgreSQL.
+
+Con `docker compose` (`docker-compose.yml` en la raíz del repo), el backend recibe en cambio `ConnectionStrings__DefaultConnection` armada a partir de las variables de entorno `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_DB` definidas en tu `.env` (ver [SEED_DATA.md](SEED_DATA.md) y el `.env` de ejemplo — el archivo real está gitignored).
 
 ---
 
 ## Troubleshooting
 
-### Error: `Cannot open server 'localhost'`
+### Error: `Connection refused` / `could not connect to server`
 
-- **Linux (A):** verificá que el contenedor esté corriendo: `docker ps --filter name=sqlserver`
-- **Linux (B):** verificá el servicio: `systemctl status mssql-server`
-- **Windows (C):** abrí **SQL Server Configuration Manager** y confirmá que el servicio esté en estado *Running* y que TCP/IP esté habilitado en el puerto 1433
-- Verificá que el puerto 1433 esté escuchando:
-  - Linux: `ss -tlnp | grep 1433`
-  - Windows (PowerShell): `netstat -an | findstr 1433`
+- **Docker (A):** verificá que el contenedor esté corriendo: `docker ps --filter name=postgres`
+- **Linux (B):** verificá el servicio: `systemctl status postgresql`
+- **Windows (C):** confirmá que el servicio "postgresql-x64-16" esté *Running* en `services.msc`
+- Verificá que el puerto 5432 esté escuchando:
+  - Linux: `ss -tlnp | grep 5432`
+  - Windows (PowerShell): `netstat -an | findstr 5432`
 
-### Error: `Login failed for user 'sa'`
+### Error: `password authentication failed for user "postgres"`
 
-- Asegurate de usar exactamente `Admin1234!` como contraseña (mayúscula, número y símbolo son obligatorios por política de SQL Server)
-- **Linux (B):** revisá si el usuario `sa` está habilitado ejecutando `sudo /opt/mssql/bin/mssql-conf setup` nuevamente
-- **Windows (C):** confirmá que el modo de autenticación sea *SQL Server and Windows Authentication mode* (paso 3 de la opción C) y que el login `sa` esté en estado *Enabled*
+- Asegurate de usar exactamente `Admin1234!` como contraseña
+- **Linux (B):** si acabás de instalar el paquete y no seteaste la contraseña, corré `sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'Admin1234!';"`
+- Revisá el método de autenticación en `pg_hba.conf` (debe ser `md5` o `scram-sha-256`, no `peer`/`ident`, para conexiones desde la app)
 
 ### Error al correr `dotnet ef`
 
@@ -320,6 +272,7 @@ No hace falta modificar nada si usaste `Admin1234!` como contraseña al configur
   export PATH="$PATH:$HOME/.dotnet/tools"
   ```
   - **Windows (PowerShell):** `$env:PATH += ";$env:USERPROFILE\.dotnet\tools"`
+- Este repo también trae un manifiesto local (`backend-dotnet/.config/dotnet-tools.json`): `dotnet tool restore` alcanza sin instalar nada global.
 
 ### Error: `dotnet-ef` se instaló en versión 10 pero el proyecto es .NET 8
 
@@ -340,24 +293,18 @@ El paquete `Design` está en `AcademiaDigital.Infrastructure` pero EF también l
 dotnet add src/AcademiaDigital.API package Microsoft.EntityFrameworkCore.Design --version "8.0.13"
 ```
 
-### SQL Server consume demasiada RAM
+### Los scripts de `scripts/*.sql` fallan con `relation "careers" does not exist` (todo en minúsculas)
 
-SQL Server necesita mínimo ~2 GB de RAM. Si tu máquina tiene poco:
-- **Linux:**
-  ```bash
-  sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 1500
-  sudo systemctl restart mssql-server
-  ```
-- **Windows:** en **SQL Server Management Studio** → click derecho en el servidor → **Properties** → **Memory** → ajustá el *Maximum server memory (MB)*
+Los nombres de tabla del modelo (`Careers`, `Courses`, `StudyPlans`, etc.) son PascalCase. PostgreSQL pliega a minúsculas cualquier identificador sin comillas, así que hace falta escribir `"Careers"` (con comillas dobles) en cualquier SQL manual — los scripts de este repo ya lo hacen. Las columnas en cambio están mapeadas explícitamente en snake_case (`career_id`, `is_active`, etc.) salvo un puñado de tablas nuevas del módulo de gestión de alumnos que no tienen `HasColumnName` explícito y quedan en PascalCase (ej. `"StudentCareers"."StudentId"`) — revisá la migración (`Infrastructure/Migrations/..._InitialCreate.cs`) si tenés dudas sobre el casing real de una columna.
 
 ---
 
 ## Flujo completo de desarrollo local
 
 ```
-1. SQL Server corriendo (Docker o nativo)
+1. PostgreSQL corriendo (Docker o nativo)
         ↓
-2. dotnet ef database update  ← solo la primera vez
+2. dotnet ef database update  ← opcional, la API también migra sola al arrancar
         ↓
 3. dotnet run --project src/AcademiaDigital.API
         ↓
@@ -367,5 +314,6 @@ SQL Server necesita mínimo ~2 GB de RAM. Si tu máquina tiene poco:
 ```
 
 Ver también:
+- [SEED_DATA.md](SEED_DATA.md) — cómo cargar los datos de ejemplo (carreras, planes de estudio, usuarios demo)
 - [backend-dotnet/README.md](backend-dotnet/README.md) — cómo correr la API
 - [frontend-angular/README.md](frontend-angular/README.md) — cómo correr el frontend

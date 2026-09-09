@@ -20,4 +20,7 @@ public sealed class StudentCareerRepository(AppDbContext db) : IStudentCareerRep
         await db.SaveChangesAsync(ct);
         return studentCareer;
     }
+
+    public async Task<bool> ExistsForCareerAsync(int careerId, CancellationToken ct = default)
+        => await db.StudentCareers.AsNoTracking().AnyAsync(x => x.CareerId == careerId, ct);
 }

@@ -2,34 +2,34 @@ namespace AcademiaDigital.Domain.Exceptions;
 
 public class AuthenticationException(string message) : Exception(message);
 
-public class InvalidCredentialsException(string message = "Invalid email or password")
+public class InvalidCredentialsException(string message = "Email o contraseña inválidos")
     : AuthenticationException(message);
 
-public class InactiveUserException(string message = "User account is not active")
+public class InactiveUserException(string message = "La cuenta de usuario no está activa")
     : AuthenticationException(message);
 
 public class AccountLockedException(DateTime lockedUntil)
-    : AuthenticationException($"Account locked. Try again after {lockedUntil:O}")
+    : AuthenticationException($"Cuenta bloqueada. Volvé a intentar después de {lockedUntil:O}")
 {
     public DateTime LockedUntil { get; } = lockedUntil;
 }
 
-public class SessionNotFoundException(string message = "Session not found")
+public class SessionNotFoundException(string message = "Sesión no encontrada")
     : AuthenticationException(message);
 
-public class EmailAlreadyExistsException(string message = "Email already taken")
+public class EmailAlreadyExistsException(string message = "El email ya está en uso")
     : AuthenticationException(message);
 
-public class DniAlreadyExistsException(string message = "DNI already taken")
+public class DniAlreadyExistsException(string message = "El DNI ya está en uso")
     : AuthenticationException(message);
 
-public class UnauthorizedUserUpdateException(string message = "Error updating user")
+public class UnauthorizedUserUpdateException(string message = "Error al actualizar el usuario")
     : AuthenticationException(message);
 
 public class UserNotFoundException(long id)
-    : AuthenticationException($"User with id {id} not found");
+    : AuthenticationException($"No se encontró el usuario con id {id}");
 
-public class ForbiddenException(string message = "Access denied")
+public class ForbiddenException(string message = "Acceso denegado")
     : AuthenticationException(message);
 
 public class InvalidCurrentPasswordException(string message = "La contraseña actual es incorrecta")

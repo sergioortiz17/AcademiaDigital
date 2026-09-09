@@ -1,0 +1,90 @@
+<div class="page-header">
+  <h1>Carreras</h1>
+  <p>Administrá las carreras del sistema: creá una carrera nueva, importá planes de estudio desde CSV y comparalos entre versiones.</p>
+</div>
+
+<mat-card class="careers-card">
+  <mat-card-content>
+
+    <div *ngIf="successMsg" class="msg msg--success">
+      <mat-icon>check_circle</mat-icon> {{ successMsg }}
+    </div>
+    <div *ngIf="errorMsg" class="msg msg--error">
+      <mat-icon>error</mat-icon> {{ errorMsg }}
+    </div>
+
+    <div class="toolbar">
+      <button mat-raised-button color="primary" (click)="openCreateCareerDialog()">
+        <mat-icon>add</mat-icon>
+        Nueva carrera
+      </button>
+      <button mat-stroked-button color="primary" (click)="openImportDialog()">
+        <mat-icon>upload_file</mat-icon>
+        Importar plan de estudios
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <table mat-table [dataSource]="careers" class="careers-table">
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let c">{{ c.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Código</th>
+          <td mat-cell *matCellDef="let c">{{ c.code }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="durationYears">
+          <th mat-header-cell *matHeaderCellDef>Duración</th>
+          <td mat-cell *matCellDef="let c">{{ c.durationYears }} años</td>
+        </ng-container>
+
+        <ng-container matColumnDef="courseCount">
+          <th mat-header-cell *matHeaderCellDef>Materias</th>
+          <td mat-cell *matCellDef="let c">{{ c.courseCount ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="isActive">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let c">
+            <mat-chip-set>
+              <mat-chip [class]="c.isActive ? 'status-chip status-chip--active' : 'status-chip status-chip--inactive'">
+                {{ c.isActive ? 'Activa' : 'Inactiva' }}
+              </mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let c">
+            <button mat-icon-button color="primary" (click)="openImportDialogForCareer(c)" matTooltip="Importar plan de estudios">
+              <mat-icon>upload_file</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openComparePlansDialog(c)" matTooltip="Comparar planes de estudio">
+              <mat-icon>compare_arrows</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteCareer(c)" matTooltip="Eliminar carrera">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <div class="no-data-row" *ngIf="!isLoading && careers.length === 0">
+        No hay carreras cargadas todavía. Usá el botón "Nueva carrera" para crear la primera.
+      </div>
+    </div>
+
+  </mat-card-content>
+</mat-card>

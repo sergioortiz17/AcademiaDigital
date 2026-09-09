@@ -1,0 +1,55 @@
+<div class="history-wrap">
+  <div class="title-bar">
+    <h1>Historial académico</h1>
+    <p class="subtitle" *ngIf="progress">
+      {{ progress.careerName }} — {{ progress.studyPlanName }}
+    </p>
+  </div>
+
+  <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+  <div class="loading-overlay" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!isLoading && progress">
+    <mat-card class="year-card" *ngFor="let group of yearGroups">
+      <mat-card-header>
+        <mat-card-title>{{ group.yearNumber }}° año</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th class="subject-col">Materia</th>
+                <th class="condition-col">Condición</th>
+                <th class="grade-col">Nota final</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let course of group.courses">
+                <td class="subject-col">
+                  {{ course.name }}
+                  <span class="code">{{ course.code }}</span>
+                </td>
+                <td class="condition-col">
+                  <span class="chip" [ngClass]="statusClass(course)">{{ statusLabel(course) }}</span>
+                </td>
+                <td class="grade-col">
+                  <span *ngIf="hasGrade(course)">{{ course.finalGrade }}</span>
+                  <span *ngIf="!hasGrade(course)" class="muted">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="empty-state" *ngIf="yearGroups.length === 0">
+      <mat-icon>menu_book</mat-icon>
+      <p>Tu plan de estudios todavía no tiene materias cargadas.</p>
+    </div>
+  </ng-container>
+</div>

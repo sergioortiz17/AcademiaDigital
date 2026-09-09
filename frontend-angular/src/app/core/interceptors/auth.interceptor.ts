@@ -32,6 +32,11 @@ export class AuthInterceptor implements HttpInterceptor {
             switchMap(() => this.doRequest(this.addAuth(request), next, attempt + 1))
           );
         }
+        // Ante un 401 real (token inválido/expirado) se cierra la sesión y se redirige
+        // al login. El bug que motivó desactivar esto temporalmente (un 401 tardío de
+        // requests admin sin cancelar en ngOnDestroy expulsaba al usuario tras navegar)
+        // se resolvió de raíz agregando takeUntil(destroy$) en gradebook-management y
+        // attendance-management, que cancelan sus subscripciones al destruirse el componente.
         if (error.status === 401) {
           this.store.dispatch(logout());
           localStorage.removeItem('academia-account');

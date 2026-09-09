@@ -38,6 +38,12 @@ services:
       ConnectionStrings__DefaultConnection: "Server=db-e2e;Database=${E2E_DATABASE_NAME:-AcademiaDigitalE2E};User Id=sa;Password=${E2E_SA_PASSWORD:?E2E_SA_PASSWORD is required};TrustServerCertificate=True;"
       Jwt__SecretKey: "${E2E_JWT_SECRET:?E2E_JWT_SECRET is required}"
       Jwt__ExpirationDays: 7
+      AdmissionAntiAbuse__RateLimit__Enabled: "true"
+      AdmissionAntiAbuse__RateLimit__PermitLimit: 10
+      AdmissionAntiAbuse__RateLimit__WindowSeconds: 1
+      AdmissionAntiAbuse__RateLimit__QueueLimit: 0
+      AdmissionAntiAbuse__Challenge__Mode: StaticToken
+      AdmissionAntiAbuse__Challenge__Secret: "${E2E_ADMISSION_CHALLENGE_TOKEN:-e2e-admission-challenge-token}"
       Cors__AllowedOrigins__0: http://localhost:4200
     ports:
       - "8010:8000"

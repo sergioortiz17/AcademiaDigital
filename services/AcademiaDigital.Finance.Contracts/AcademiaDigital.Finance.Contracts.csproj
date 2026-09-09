@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Contratos de API entre el monolito y el microservicio Finance (ADR 0001).
+    SOLO objetos planos de transporte (request/response del contrato HTTP).
+    PROHIBIDO: referencias a Domain.Entities, lógica de negocio, o cualquier
+    ProjectReference. Si alguna vez hace falta una entidad de dominio acá, es señal de
+    que el contrato está mal — parar y revisar. Este proyecto no depende de nada.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AcademiaDigital.Finance.Contracts</RootNamespace>
+  </PropertyGroup>
+
+</Project>
