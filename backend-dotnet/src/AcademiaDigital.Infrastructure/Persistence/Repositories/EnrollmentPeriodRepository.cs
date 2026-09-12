@@ -25,6 +25,11 @@ public class EnrollmentPeriodRepository(AppDbContext db) : IEnrollmentPeriodRepo
             .Include(ep => ep.StudyPlan)
             .FirstOrDefaultAsync(ep => ep.Id == id, ct);
 
+    public Task<EnrollmentPeriod?> LockForEnrollmentAsync(int id, CancellationToken ct = default)
+        => db.EnrollmentPeriods
+            .FromSqlInterpolated($"SELECT *, xmin FROM \"EnrollmentPeriods\" WHERE id = {id} FOR UPDATE")
+            .SingleOrDefaultAsync(ct);
+
     public async Task<(int Morning, int Afternoon, int Evening)> GetEnrolledShiftCountsAsync(int periodId, CancellationToken ct = default)
     {
         var counts = await db.Enrollments

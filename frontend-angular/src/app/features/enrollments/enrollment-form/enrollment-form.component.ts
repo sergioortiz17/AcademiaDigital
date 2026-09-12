@@ -4,6 +4,8 @@ import { CareerService } from '../../../core/services/career.service';
 import { SubjectService } from '../../../core/services/subject.service';
 import { EnrollmentService, EnrollmentPeriodDto } from '../../../core/services/enrollment. service';
 import { EnrollmentSuccessDialogComponent } from './enrollment-success-dialog.component';
+import { HttpErrorResponse } from '@angular/common/http';
+import { EligibleCourse, StudentService } from '../../../core/services/student.service';
 
 export interface Career {
   success: boolean;
@@ -43,6 +45,7 @@ export interface Subject {
   credits: number;
   workloadHours: number;
   courseType: null;
+  eligibilityStatus?: EligibleCourse['eligibilityStatus'];
 }
 
 @Component({
@@ -93,6 +96,7 @@ export class EnrollmentFormComponent implements OnInit {
     private readonly careerService: CareerService,
     private readonly subjectService: SubjectService,
     private readonly enrollmentService: EnrollmentService,
+    private readonly studentService: StudentService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -108,6 +112,7 @@ export class EnrollmentFormComponent implements OnInit {
   }
 
   onCareerChange(): void {
+    this.errorMsg = '';
     this.activePeriod = null;
     this.subjects = [];
     this.firstYearSubjects = [];
@@ -129,7 +134,7 @@ export class EnrollmentFormComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: err => {
-        console.error(err);
+        this.errorMsg = this.enrollmentErrorMessage(err, 'No se pudo verificar el período de inscripción.');
         this.checkingPeriod = false;
         this.cdr.detectChanges();
       }
@@ -139,8 +144,26 @@ export class EnrollmentFormComponent implements OnInit {
   loadStudyPlanCourses(studyPlanId: number): void {
     this.subjectService.getSubjectsByCareer(studyPlanId).subscribe({
       next: courses => {
-        this.subjects = courses;
-        this.organizeSubjects();
+        this.studentService.getMyEligibleCourses(this.selectedCareer ?? undefined).subscribe({
+          next: eligibleCourses => {
+            const eligibilityByCourse = new Map(
+              eligibleCourses.map(course => [course.studyPlanCourseId, course])
+            );
+            this.subjects = courses.map(course => ({
+              ...course,
+              eligibilityStatus: eligibilityByCourse.get(course.id)?.eligibilityStatus
+            }));
+            this.organizeSubjects();
+            this.cdr.detectChanges();
+          },
+          error: err => {
+            this.errorMsg = this.enrollmentErrorMessage(err, 'No se pudo verificar la elegibilidad de las materias.');
+            this.cdr.detectChanges();
+          }
+        });
+      },
+      error: err => {
+        this.errorMsg = this.enrollmentErrorMessage(err, 'No se pudieron cargar las materias del plan de estudios.');
         this.cdr.detectChanges();
       }
     });
@@ -172,6 +195,9 @@ export class EnrollmentFormComponent implements OnInit {
   }
 
   toggleSubject(year: number, studyPlanCourseId: number, event: any): void {
+    const subject = this.subjectsForYear(year).find(course => course.id === studyPlanCourseId);
+    if (!subject || !this.isTildable(subject)) return;
+
     const list = this.selectedSubjectsByYear[year];
     if (event.checked) {
       if (!list.includes(studyPlanCourseId)) list.push(studyPlanCourseId);
@@ -187,18 +213,22 @@ export class EnrollmentFormComponent implements OnInit {
   }
 
   isAllSelectedForYear(year: number): boolean {
-    const subjects = this.subjectsForYear(year);
+    const subjects = this.subjectsForYear(year).filter(subject => this.isTildable(subject));
     if (subjects.length === 0) return false;
     return subjects.every(s => this.selectedSubjectsByYear[year].includes(s.id));
   }
 
   toggleSelectAllForYear(year: number): void {
-    const subjects = this.subjectsForYear(year);
+    const subjects = this.subjectsForYear(year).filter(subject => this.isTildable(subject));
     if (this.isAllSelectedForYear(year)) {
       this.selectedSubjectsByYear[year] = [];
     } else {
       this.selectedSubjectsByYear[year] = subjects.map(s => s.id);
     }
+  }
+
+  isTildable(course: Subject): boolean {
+    return course.eligibilityStatus === 'Eligible' || course.eligibilityStatus === 'EligibleWithWarning';
   }
 
   canSubmit(): boolean {
@@ -237,23 +267,59 @@ export class EnrollmentFormComponent implements OnInit {
       studyPlanCourseIds
     }).subscribe({
       next: () => {
+        this.resetForm();
         this.isSubmitting = false;
         this.cdr.detectChanges();
-        this.resetForm();
         this.dialog.open(EnrollmentSuccessDialogComponent, {
           width: '420px',
           disableClose: false
         });
       },
       error: err => {
-        this.errorMsg = err.message || err.error?.msg || 'No fue posible realizar la inscripción.';
+        this.errorMsg = this.enrollmentErrorMessage(err, 'No fue posible realizar la inscripción.');
         this.isSubmitting = false;
         this.cdr.detectChanges();
       }
     });
   }
 
+  private enrollmentErrorMessage(error: HttpErrorResponse, fallback: string): string {
+    const backendMessage = error?.error?.msg || error?.error?.title;
+    if (typeof backendMessage !== 'string' || !backendMessage.trim()) {
+      return fallback;
+    }
+
+    const normalizedMessage = backendMessage.toLowerCase();
+    if (normalizedMessage.includes('already enrolled')) {
+      return 'Ya estás inscripto en este período de inscripción.';
+    }
+    if (normalizedMessage.includes('approved or in progress')) {
+      return 'No podés inscribirte nuevamente en una materia aprobada o que ya estás cursando.';
+    }
+    if (normalizedMessage.includes('prerequisites are not satisfied')) {
+      return 'No podés inscribirte: no cumplís con la correlativa obligatoria de una o más materias seleccionadas.';
+    }
+    if (normalizedMessage.includes('no vacancies')) {
+      return 'No hay cupos disponibles para el turno seleccionado.';
+    }
+    if (normalizedMessage.includes('at least one course')) {
+      return 'Seleccioná al menos una materia para realizar la inscripción.';
+    }
+    if (normalizedMessage.includes('period is closed')) {
+      return 'El período de inscripción está cerrado.';
+    }
+    if (normalizedMessage.includes('no current study plan')) {
+      return 'No podés inscribirte todavía: un administrador debe asignarte un plan de estudio vigente para esta carrera.';
+    }
+    if (normalizedMessage.includes('does not match the student')) {
+      return 'El período corresponde a un plan de estudio diferente al que tenés asignado.';
+    }
+
+    return backendMessage;
+  }
+
   resetForm(): void {
+    this.errorMsg = '';
     this.selectedCareer = null;
     this.activePeriod = null;
     this.selectedShift = '';

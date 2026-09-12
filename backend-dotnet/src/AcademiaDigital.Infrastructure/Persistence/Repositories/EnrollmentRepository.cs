@@ -9,7 +9,7 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
     public async Task<IEnumerable<Enrollment>> GetByStudentAsync(long studentId, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Course)
-            .Include(e => e.TeachingPosition).ThenInclude(tp => tp!.Teacher).ThenInclude(t => t!.User)
+            .Include(e => e.CourseSection).ThenInclude(tp => tp!.Teacher).ThenInclude(t => t!.User)
             .Where(e => e.StudentId == studentId)
             .OrderByDescending(e => e.AcademicYear).ThenByDescending(e => e.Semester)
             .ToListAsync(ct);
@@ -20,18 +20,27 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
             .Where(e => e.CourseId == courseId && e.AcademicYear == year && e.Semester == semester)
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<Enrollment>> GetByTeachingPositionAsync(int teachingPositionId, CancellationToken ct = default)
+    public async Task<IEnumerable<Enrollment>> GetByCourseSectionAsync(int teachingPositionId, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Student).ThenInclude(s => s.User)
             .Include(e => e.Course)
-            .Where(e => e.TeachingPositionId == teachingPositionId)
+            .Where(e => e.CourseSectionId == teachingPositionId)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<Enrollment>> GetUnmatchedByCourseTermAsync(
+        int courseId, int academicYear, int semester, bool isAnnual, CancellationToken ct = default)
+        => await db.Enrollments
+            .Where(e => e.CourseSectionId == null
+                && e.CourseId == courseId
+                && e.AcademicYear == academicYear
+                && (isAnnual || e.Semester == semester))
             .ToListAsync(ct);
 
     public async Task<Enrollment?> FindByIdAsync(long id, CancellationToken ct = default)
         => await db.Enrollments.AsNoTracking()
             .Include(e => e.Student)
             .Include(e => e.Course)
-            .Include(e => e.TeachingPosition)
+            .Include(e => e.CourseSection)
             .FirstOrDefaultAsync(e => e.Id == id, ct);
 
     public async Task<Enrollment?> FindByStudentAndCourseAsync(long studentId, int courseId, int year, int semester, CancellationToken ct = default)
@@ -152,6 +161,36 @@ public class EnrollmentRepository(AppDbContext db) : IEnrollmentRepository
     public async Task<Enrollment> UpdateAsync(Enrollment enrollment, CancellationToken ct = default)
     {
         db.Enrollments.Update(enrollment);
+        await db.SaveChangesAsync(ct);
+        return enrollment;
+    }
+
+    public async Task<Enrollment> AdminApproveAsync(
+        long enrollmentId, EnrollmentStatus newStatus, decimal finalGrade, string reason, long actorUserId,
+        DateTime changedAt, CancellationToken ct = default)
+    {
+        var enrollment = await db.Enrollments
+            .FromSqlInterpolated($"SELECT * FROM \"Enrollments\" WHERE id = {enrollmentId} FOR UPDATE")
+            .SingleOrDefaultAsync(ct)
+            ?? throw new KeyNotFoundException("Inscripción no encontrada.");
+
+        if (enrollment.Status == EnrollmentStatus.Withdrawn)
+            throw new InvalidOperationException("No se puede aprobar una inscripción dada de baja (Withdrawn).");
+
+        db.EnrollmentStatusHistory.Add(new EnrollmentStatusHistory
+        {
+            EnrollmentId = enrollment.Id,
+            PreviousStatus = enrollment.Status,
+            NewStatus = newStatus,
+            PreviousFinalGrade = enrollment.FinalGrade,
+            NewFinalGrade = finalGrade,
+            Reason = reason.Trim(),
+            ChangedByUserId = actorUserId,
+            ChangedAt = changedAt
+        });
+
+        enrollment.Status = newStatus;
+        enrollment.FinalGrade = finalGrade;
         await db.SaveChangesAsync(ct);
         return enrollment;
     }

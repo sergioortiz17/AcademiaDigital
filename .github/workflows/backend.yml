@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'backend-dotnet/**'
+      - '.github/workflows/backend.yml'
   push:
     branches: [main]
     paths:
       - 'backend-dotnet/**'
+      - '.github/workflows/backend.yml'
 
 env:
   DOTNET_VERSION: '8.0.x'
@@ -36,11 +38,30 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration Release
 
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Test Domain
+        run: dotnet test backend-dotnet/tests/AcademiaDigital.Domain.UnitTests/AcademiaDigital.Domain.UnitTests.csproj --no-restore --configuration Release
+
+      - name: Test Application
+        run: dotnet test backend-dotnet/tests/AcademiaDigital.Application.UnitTests/AcademiaDigital.Application.UnitTests.csproj --no-restore --configuration Release
+
   # ── Solo en merge a main: aplica las migraciones a la DB de Azure ─────────────
   migrate:
     name: Apply Migrations
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, unit-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:

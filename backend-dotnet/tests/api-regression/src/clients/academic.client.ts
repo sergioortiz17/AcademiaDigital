@@ -20,6 +20,7 @@ export class AcademicClient {
   addStudyPlanCourse(studyPlanId: number, body: unknown) { return this.api.send({ operation: 'Asociar curso al plan', method: 'POST', path: `/api/v1/study-plans/${studyPlanId}/courses`, body }); }
   listStudyPlanCourses(studyPlanId: number) { return this.api.send({ operation: 'Listar cursos del plan', method: 'GET', path: `/api/v1/study-plans/${studyPlanId}/courses` }); }
   deleteStudyPlanCourse(studyPlanId: number, id: number) { return this.api.send({ operation: 'Eliminar curso del plan', method: 'DELETE', path: `/api/v1/study-plans/${studyPlanId}/courses/${id}` }); }
+  addCoursePrerequisite(studyPlanId: number, courseId: number, body: unknown) { return this.api.send({ operation: 'Agregar correlativa al curso', method: 'POST', path: `/api/v1/study-plans/${studyPlanId}/courses/${courseId}/prerequisites`, body }); }
 
   createCommission(careerId: number, body: unknown) { return this.api.send({ operation: 'Crear comisión', method: 'POST', path: `/api/v1/careers/${careerId}/commissions`, body }); }
   listCommissions(careerId: number, academicYear?: number) { return this.api.send({ operation: 'Listar comisiones', method: 'GET', path: `/api/v1/careers/${careerId}/commissions`, query: { academicYear } }); }

@@ -1,0 +1,499 @@
+using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Application.UseCases.Enrollments;
+using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Enums;
+using AcademiaDigital.Domain.Interfaces.Repositories;
+using AcademiaDigital.Domain.Services;
+using NSubstitute;
+using Xunit;
+
+namespace AcademiaDigital.Application.UnitTests.UseCases.Enrollments;
+
+public sealed class CreateEnrollmentCommandHandlerTests
+{
+    private const long StudentId = 42;
+    private const long StudentCareerId = 420;
+    private const int CareerId = 7;
+    private const int StudyPlanId = 70;
+    private const int PeriodId = 700;
+    private const long ActorUserId = 4242;
+
+    [Fact]
+    public async Task Handle_rejects_an_invalid_shift_before_querying_repositories()
+    {
+        var context = CreateContext();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            context.Handler.Handle(Command(shift: "Madrugada"), TestContext.Current.CancellationToken));
+
+        Assert.Contains("no válido", exception.Message);
+        await context.PeriodRepository.DidNotReceive()
+            .FindByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_rejects_a_closed_enrollment_period()
+    {
+        var period = ValidPeriod();
+        period.IsActive = false;
+        var context = CreateContext(period: period);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("El período de inscripción está cerrado.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_requires_an_active_membership_in_the_period_career()
+    {
+        var context = CreateContext(hasActiveMembership: false);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("El alumno no está matriculado activamente en la carrera del período de inscripción.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_requires_at_least_one_selected_course()
+    {
+        var context = CreateContext();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            context.Handler.Handle(Command(courseIds: []), TestContext.Current.CancellationToken));
+
+        Assert.Equal("Debe seleccionarse al menos una materia.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_rejects_a_student_already_enrolled_in_the_period()
+    {
+        var context = CreateContext(existingEnrollments:
+        [
+            new Enrollment { StudentId = StudentId, EnrollmentPeriodId = PeriodId }
+        ]);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("El alumno ya está inscripto en este período.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_rejects_when_the_selected_shift_has_no_vacancies()
+    {
+        var period = ValidPeriod();
+        period.QuotasAfternoon = 1;
+        var context = CreateContext(period: period, enrolledShiftCounts: (0, 1, 0));
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("No hay vacantes disponibles para el turno 'Tarde'.", exception.Message);
+        Assert.Empty(context.CreatedEnrollments);
+    }
+
+    [Fact]
+    public async Task Handle_rejects_missing_study_plan_courses()
+    {
+        var context = CreateContext(studyPlanCourses:
+        [
+            PlanCourse(id: 101, courseId: 1)
+        ]);
+
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            context.Handler.Handle(Command(courseIds: [101, 102]), TestContext.Current.CancellationToken));
+
+        Assert.Equal("No se encontraron una o más materias del plan de estudios.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_rejects_courses_from_a_different_study_plan()
+    {
+        var context = CreateContext(studyPlanCourses:
+        [
+            PlanCourse(id: 101, courseId: 1, studyPlanId: StudyPlanId + 1)
+        ]);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("Todas las materias seleccionadas deben pertenecer al plan de estudios del período de inscripción.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_rejects_a_period_that_does_not_match_the_current_study_plan()
+    {
+        var context = CreateContext(currentStudyPlanId: StudyPlanId + 1);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Equal("El período de inscripción no coincide con el plan de estudios actual del alumno.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_rejects_courses_with_unsatisfied_strict_prerequisites()
+    {
+        var context = CreateContext(prerequisites:
+        [
+            DomainTestFactory.Prerequisite(courseId: 1, prerequisiteCourseId: 9, studyPlanId: StudyPlanId,
+                type: PrerequisiteType.Strict, requiredStatus: MinimumRequiredStatus.Approved)
+        ]);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            context.Handler.Handle(Command(), TestContext.Current.CancellationToken));
+
+        Assert.Contains("No se cumplen las correlativas obligatorias", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_allows_soft_prerequisites_as_warnings()
+    {
+        var context = CreateContext(prerequisites:
+        [
+            DomainTestFactory.Prerequisite(courseId: 1, prerequisiteCourseId: 9, studyPlanId: StudyPlanId,
+                type: PrerequisiteType.Soft, requiredStatus: MinimumRequiredStatus.Approved)
+        ]);
+
+        await context.Handler.Handle(Command(), TestContext.Current.CancellationToken);
+
+        Assert.Single(context.CreatedEnrollments);
+    }
+
+    [Fact]
+    public async Task Handle_creates_every_enrollment_inside_one_transaction()
+    {
+        var context = CreateContext(studyPlanCourses:
+        [
+            PlanCourse(id: 101, courseId: 1),
+            PlanCourse(id: 102, courseId: 2)
+        ]);
+        var before = DateTime.UtcNow;
+
+        await context.Handler.Handle(
+            Command(courseIds: [101, 102], shift: "Mañana"),
+            TestContext.Current.CancellationToken);
+
+        var after = DateTime.UtcNow;
+        await context.UnitOfWork.Received(1).ExecuteInSerializableTransactionAsync(
+            Arg.Any<Func<CancellationToken, Task<bool>>>(),
+            Arg.Any<CancellationToken>());
+        Assert.Collection(
+            context.CreatedEnrollments.OrderBy(x => x.CourseId),
+            first => AssertEnrollment(first, courseId: 1, studyPlanCourseId: 101, before, after),
+            second => AssertEnrollment(second, courseId: 2, studyPlanCourseId: 102, before, after));
+    }
+
+    // ── Parte 6: asignación automática de comisión al inscribirse ────────────────────────────
+
+    [Fact]
+    public async Task Handle_auto_assigns_the_commission_when_exactly_one_matches()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            matchingCommissions: [Division(id: 55, yearNumber: 1, shift: "Tarde")]);
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var assignment = Assert.Single(context.CreatedAssignments);
+        Assert.Equal(55, assignment.DivisionId);
+        Assert.Equal(StudentId, assignment.StudentId);
+        Assert.Equal(StudentCareerId, assignment.StudentCareerId);
+        Assert.Equal(CareerId, assignment.CareerId);
+        Assert.Equal(StudyPlanId, assignment.StudyPlanId);
+        Assert.Equal(2026, assignment.AcademicYear);
+        Assert.Equal(1, assignment.YearNumber);
+        Assert.True(assignment.IsCurrent);
+        Assert.Equal(ActorUserId, assignment.AssignedByUserId);
+    }
+
+    [Fact]
+    public async Task Handle_does_not_auto_assign_when_two_commissions_match()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            matchingCommissions:
+            [
+                Division(id: 55, yearNumber: 1, shift: "Tarde"),
+                Division(id: 56, yearNumber: 1, shift: "Tarde")
+            ]);
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        Assert.Single(context.CreatedEnrollments);   // la inscripción igual se hace
+        Assert.Empty(context.CreatedAssignments);      // pero no se asigna comisión (ambiguo)
+    }
+
+    [Fact]
+    public async Task Handle_does_not_auto_assign_when_no_commission_matches()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            matchingCommissions: []);
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        Assert.Single(context.CreatedEnrollments);
+        Assert.Empty(context.CreatedAssignments);
+    }
+
+    [Fact]
+    public async Task Handle_does_not_auto_assign_when_courses_span_multiple_plan_years()
+    {
+        var context = CreateContext(
+            studyPlanCourses:
+            [
+                PlanCourse(id: 101, courseId: 1, yearNumber: 1),
+                PlanCourse(id: 102, courseId: 2, yearNumber: 2)
+            ],
+            matchingCommissions: [Division(id: 55, yearNumber: 1, shift: "Tarde")]);
+
+        await context.Handler.Handle(Command(courseIds: [101, 102], shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, context.CreatedEnrollments.Count);
+        Assert.Empty(context.CreatedAssignments);   // materias de varios años → ambiguo
+    }
+
+    [Fact]
+    public async Task Handle_does_not_auto_assign_when_student_already_has_a_current_assignment()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            matchingCommissions: [Division(id: 55, yearNumber: 1, shift: "Tarde")],
+            hasCurrentAssignment: true);
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        Assert.Single(context.CreatedEnrollments);
+        Assert.Empty(context.CreatedAssignments);   // no pisar una asignación manual existente
+    }
+
+    // ── Nivel 2: auto-link de la CourseSection por materia (sin filtrar por división) ─────────
+
+    [Fact]
+    public async Task Handle_links_the_course_section_when_exactly_one_matches_the_course_term()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            sectionsByCourseId: new Dictionary<int, int[]> { [1] = [77] });
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var enrollment = Assert.Single(context.CreatedEnrollments);
+        Assert.Equal(77, enrollment.CourseSectionId);
+    }
+
+    [Fact]
+    public async Task Handle_does_not_link_a_section_when_none_matches()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            sectionsByCourseId: new Dictionary<int, int[]>()); // 0 secciones
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var enrollment = Assert.Single(context.CreatedEnrollments);
+        Assert.Null(enrollment.CourseSectionId);
+    }
+
+    [Fact]
+    public async Task Handle_does_not_link_a_section_when_two_or_more_match()
+    {
+        var context = CreateContext(
+            studyPlanCourses: [PlanCourse(id: 101, courseId: 1, yearNumber: 1)],
+            sectionsByCourseId: new Dictionary<int, int[]> { [1] = [77, 78] }); // ambiguo
+
+        await context.Handler.Handle(Command(shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        var enrollment = Assert.Single(context.CreatedEnrollments);
+        Assert.Null(enrollment.CourseSectionId);
+    }
+
+    [Fact]
+    public async Task Handle_links_a_recursante_to_the_section_of_a_course_from_another_year()
+    {
+        // Recursante: alumno cuya división es de 2° año, pero inscribe una materia de 1° (courseId 9,
+        // yearNumber 1) que debe. El match de nivel 2 NO filtra por división, así que igual encuentra
+        // y linkea la sección de esa materia. (La división de nivel 1 no aplica acá: multi-año.)
+        var context = CreateContext(
+            studyPlanCourses:
+            [
+                PlanCourse(id: 201, courseId: 20, yearNumber: 2),  // materia de su año
+                PlanCourse(id: 109, courseId: 9, yearNumber: 1)    // materia recursada de 1°
+            ],
+            sectionsByCourseId: new Dictionary<int, int[]> { [20] = [88], [9] = [91] });
+
+        await context.Handler.Handle(Command(courseIds: [201, 109], shift: "Tarde"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, context.CreatedEnrollments.Count);
+        var recursada = context.CreatedEnrollments.Single(e => e.CourseId == 9);
+        Assert.Equal(91, recursada.CourseSectionId);   // la materia de OTRO año quedó linkeada
+        var regular = context.CreatedEnrollments.Single(e => e.CourseId == 20);
+        Assert.Equal(88, regular.CourseSectionId);
+        // Nivel 1 (división) no se asigna porque las materias son de años distintos (ambiguo),
+        // pero el nivel 2 igual linkeó cada sección — que es el punto del recursante.
+        Assert.Empty(context.CreatedAssignments);
+    }
+
+    private static HandlerTestContext CreateContext(
+        EnrollmentPeriod? period = null,
+        bool hasActiveMembership = true,
+        IReadOnlyList<Enrollment>? existingEnrollments = null,
+        IReadOnlyList<StudyPlanCourse>? studyPlanCourses = null,
+        int currentStudyPlanId = StudyPlanId,
+        IReadOnlyList<CoursePrerequisite>? prerequisites = null,
+        IReadOnlyList<Enrollment>? enrollmentHistory = null,
+        (int Morning, int Afternoon, int Evening)? enrolledShiftCounts = null,
+        IReadOnlyList<Division>? matchingCommissions = null,
+        bool hasCurrentAssignment = false,
+        IReadOnlyDictionary<int, int[]>? sectionsByCourseId = null)
+    {
+        var periodRepository = Substitute.For<IEnrollmentPeriodRepository>();
+        var enrollmentRepository = Substitute.For<IEnrollmentRepository>();
+        var studyPlanCourseRepository = Substitute.For<IStudyPlanCourseRepository>();
+        var studentCareerRepository = Substitute.For<IStudentCareerRepository>();
+        var studentAcademicRepository = Substitute.For<IStudentAcademicRepository>();
+        var commissionRepository = Substitute.For<IDivisionRepository>();
+        var courseSectionRepository = Substitute.For<ICourseSectionRepository>();
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        var createdEnrollments = new List<Enrollment>();
+        var createdAssignments = new List<StudentAcademicAssignment>();
+
+        period ??= ValidPeriod();
+        studyPlanCourses ??= [PlanCourse(id: 101, courseId: 1)];
+        existingEnrollments ??= [];
+        prerequisites ??= [];
+        enrollmentHistory ??= [];
+
+        periodRepository.FindByIdAsync(PeriodId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EnrollmentPeriod?>(period));
+        periodRepository.LockForEnrollmentAsync(PeriodId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EnrollmentPeriod?>(period));
+        periodRepository.GetEnrolledShiftCountsAsync(PeriodId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(enrolledShiftCounts ?? (0, 0, 0)));
+        studentCareerRepository.FindAsync(StudentId, CareerId, true, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<StudentCareer?>(hasActiveMembership
+                ? new StudentCareer { Id = StudentCareerId, StudentId = StudentId, CareerId = CareerId, IsActive = true }
+                : null));
+        studentAcademicRepository.GetCurrentStudyPlanAsync(StudentId, CareerId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<StudentStudyPlan?>(new StudentStudyPlan
+            {
+                StudentId = StudentId,
+                StudentCareerId = StudentCareerId,
+                StudyPlanId = currentStudyPlanId,
+                IsCurrent = true
+            }));
+        studentAcademicRepository.GetPrerequisitesAsync(StudyPlanId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(prerequisites));
+        studentAcademicRepository.GetEnrollmentsAsync(StudentId, CareerId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(enrollmentHistory));
+        studentAcademicRepository.HasCurrentAcademicAssignmentAsync(StudentCareerId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(hasCurrentAssignment));
+        studentAcademicRepository
+            .AddAcademicAssignmentAsync(Arg.Do<StudentAcademicAssignment>(createdAssignments.Add), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        commissionRepository.FindMatchingActiveAsync(
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(matchingCommissions ?? (IReadOnlyList<Division>)[]));
+        courseSectionRepository.FindActiveByCourseTermAsync(
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var courseId = call.ArgAt<int>(0);
+                var list = (sectionsByCourseId is not null && sectionsByCourseId.TryGetValue(courseId, out var ids))
+                    ? ids.Select(id => new CourseSection { Id = id }).ToList()
+                    : new List<CourseSection>();
+                return Task.FromResult<IReadOnlyList<CourseSection>>(list);
+            });
+        enrollmentRepository.GetByEnrollmentPeriodAsync(PeriodId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<Enrollment>>(existingEnrollments));
+        studyPlanCourseRepository.GetByIdsAsync(Arg.Any<IReadOnlyList<int>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(studyPlanCourses));
+        enrollmentRepository.CreateAsync(
+                Arg.Do<Enrollment>(createdEnrollments.Add),
+                Arg.Any<CancellationToken>())
+            .Returns(call => Task.FromResult(call.Arg<Enrollment>()));
+        unitOfWork.ExecuteInSerializableTransactionAsync(
+                Arg.Any<Func<CancellationToken, Task<bool>>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<Func<CancellationToken, Task<bool>>>()(call.ArgAt<CancellationToken>(1)));
+
+        var handler = new CreateEnrollmentCommandHandler(
+            periodRepository,
+            enrollmentRepository,
+            studyPlanCourseRepository,
+            studentCareerRepository,
+            studentAcademicRepository,
+            commissionRepository,
+            courseSectionRepository,
+            new EnrollmentEligibilityPolicy(new CourseEligibilityService()),
+            new EnrollmentCapacityPolicy(),
+            unitOfWork,
+            TimeProvider.System);
+
+        return new HandlerTestContext(handler, periodRepository, unitOfWork, createdEnrollments, createdAssignments);
+    }
+
+    private static CreateEnrollmentCommand Command(
+        IReadOnlyList<int>? courseIds = null,
+        string shift = "Tarde")
+        => new(StudentId, PeriodId, shift, courseIds ?? [101], ActorUserId);
+
+    private static EnrollmentPeriod ValidPeriod()
+        => new()
+        {
+            Id = PeriodId,
+            CareerId = CareerId,
+            StudyPlanId = StudyPlanId,
+            AcademicYear = 2026,
+            Semester = 2,
+            QuotasMorning = 10,
+            QuotasAfternoon = 10,
+            QuotasEvening = 10,
+            IsActive = true
+        };
+
+    private static StudyPlanCourse PlanCourse(int id, int courseId, int studyPlanId = StudyPlanId, int yearNumber = 1)
+        => new() { Id = id, CourseId = courseId, StudyPlanId = studyPlanId, YearNumber = yearNumber };
+
+    private static void AssertEnrollment(
+        Enrollment enrollment,
+        int courseId,
+        int studyPlanCourseId,
+        DateTime before,
+        DateTime after)
+    {
+        Assert.Equal(StudentId, enrollment.StudentId);
+        Assert.Equal(StudentCareerId, enrollment.StudentCareerId);
+        Assert.Equal(courseId, enrollment.CourseId);
+        Assert.Equal(studyPlanCourseId, enrollment.StudyPlanCourseId);
+        Assert.Equal(PeriodId, enrollment.EnrollmentPeriodId);
+        Assert.Equal("Mañana", enrollment.Shift);
+        Assert.Equal(2026, enrollment.AcademicYear);
+        Assert.Equal(2, enrollment.Semester);
+        Assert.Equal(EnrollmentStatus.Enrolled, enrollment.Status);
+        Assert.InRange(enrollment.EnrollmentDate, before, after);
+    }
+
+    private sealed record HandlerTestContext(
+        CreateEnrollmentCommandHandler Handler,
+        IEnrollmentPeriodRepository PeriodRepository,
+        IUnitOfWork UnitOfWork,
+        List<Enrollment> CreatedEnrollments,
+        List<StudentAcademicAssignment> CreatedAssignments);
+
+    private static Division Division(int id, int yearNumber = 1, string shift = "Tarde")
+        => new()
+        {
+            Id = id,
+            CareerId = CareerId,
+            Code = $"COM-{id}",
+            Name = $"Comisión {id}",
+            AcademicYear = 2026,
+            YearNumber = yearNumber,
+            Shift = shift,
+            IsActive = true
+        };
+}

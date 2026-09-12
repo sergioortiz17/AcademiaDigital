@@ -1,0 +1,158 @@
+.detail-wrap {
+  max-width: 1100px;
+  position: relative;
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+}
+
+.back-btn {
+  color: #045797;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--success { background: #e8f5e9; color: #2e7d32; }
+  &--error   { background: #fce4ec; color: #c62828; }
+}
+
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.profile-card, .assignments-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+  margin-bottom: 1rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.teacher-name {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #125081;
+}
+
+.teacher-email {
+  font-size: .85rem;
+  color: rgba(0, 0, 0, .6);
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem 1.5rem;
+  font-size: .85rem;
+  margin-top: .5rem;
+
+  .label {
+    display: block;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: rgba(0, 0, 0, .45);
+  }
+}
+
+.deactivation-info {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: #c62828;
+  font-size: .85rem;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.status-chip {
+  font-size: .78rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 3px 12px;
+
+  &--active { background: #e8f5e9; color: #2e7d32; }
+  &--inactive { background: #eeeeee; color: #616161; }
+}
+
+.assignments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h3 { margin: 0; }
+}
+
+.assignments-actions {
+  display: flex;
+  gap: .75rem;
+}
+
+.assignments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+  }
+
+  thead th {
+    background: #f5f7fa;
+    font-weight: 600;
+    color: rgba(0, 0, 0, .7);
+  }
+}
+
+.course-name { font-weight: 500; }
+.commission-name { font-size: .78rem; color: rgba(0, 0, 0, .5); }
+
+.end-btn {
+  color: #c62828;
+  font-size: .8rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem;
+  color: rgba(0, 0, 0, .4);
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+}

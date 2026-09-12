@@ -1,4 +1,3 @@
-// All styles in global styles.scss
 
 * {
   box-sizing: border-box;
@@ -156,27 +155,6 @@ form {
   font-size: 1.5rem;
   font-weight: 500;
 }
-/* Para letras y * rojos
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 0.95rem;
-
-  color: #00579c;
-
-  margin-bottom: 0.4rem;
-
-  font-weight: 500;
-}
-
-.form-group label span {
-  color: #d32f2f;
-
-  margin-left: 0.2rem;
-} */
 
 /* Fondo gris de inputs */
 ::ng-deep .mat-mdc-text-field-wrapper {
@@ -242,6 +220,7 @@ form {
   color: #dc2626;
   font-size: 0.92rem;
   font-weight: 500;
+  padding: 0px 5px 0px 5px;
 }
 
 .success-message {
@@ -249,22 +228,6 @@ form {
   font-size: 0.92rem;
   font-weight: 500;
 }
-
-/*Boton de confirmar registro
-.confirm-btn {
-  width: 100%;
-
-  height: 46px;
-
-  border-radius: 0 !important;
-
-  background: #00579c !important;
-
-  color: white !important;
-
-  font-size: 1rem;
-  font-weight: 500;
-}*/
 
 .double-row {
   display: flex;

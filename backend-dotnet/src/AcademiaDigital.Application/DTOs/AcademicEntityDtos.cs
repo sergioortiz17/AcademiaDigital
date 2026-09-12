@@ -38,4 +38,15 @@ public sealed class StudyPlanCourseDetailDto
     public decimal? Credits { get; set; }
     public int? WorkloadHours { get; set; }
     public string? CourseType { get; set; }
+    public CourseApprovalRuleDto? ApprovalRule { get; set; }
+}
+
+public sealed class CourseApprovalRuleDto
+{
+    public decimal? MinimumRegularGrade { get; set; }
+    public decimal? MinimumPromotionGrade { get; set; }
+    public decimal MinimumFinalExamGrade { get; set; }
+    public decimal? MinimumAttendancePercentage { get; set; }
+    public bool RequiresFinalExam { get; set; }
+    public bool AllowsPromotion { get; set; }
 }

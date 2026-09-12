@@ -1,5 +1,7 @@
 using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Interfaces.Repositories;
+using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.Enrollments;
 
@@ -81,7 +83,7 @@ public sealed class GetEnrolledStudentsQueryHandler(
     public async Task<(int Total, IReadOnlyList<EnrolledStudentDto> Students)> Handle(GetEnrolledStudentsQuery query, CancellationToken ct = default)
     {
         _ = await periodRepository.FindByIdAsync(query.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         // One SQL query projecting only needed columns
         var rows = await enrollmentRepository.GetStudentRowsByPeriodAsync(query.PeriodId, ct);
@@ -114,19 +116,26 @@ public sealed class GetEnrolledStudentsQueryHandler(
 public sealed class OpenEnrollmentPeriodCommandHandler(
     IEnrollmentPeriodRepository repository,
     ICareerRepository careerRepository,
-    IStudyPlanRepository studyPlanRepository)
+    IStudyPlanRepository studyPlanRepository,
+    EnrollmentCapacityPolicy capacityPolicy,
+    TimeProvider timeProvider)
 {
     public async Task<EnrollmentPeriodDto> Handle(OpenEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
+        capacityPolicy.EnsureValidQuotas(
+            command.QuotasMorning,
+            command.QuotasAfternoon,
+            command.QuotasEvening);
+
         _ = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
 
         _ = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
         var existing = await repository.GetActiveByCareerAsync(command.CareerId, ct);
         if (existing is not null && existing.AcademicYear == command.AcademicYear && existing.Semester == command.Semester)
-            throw new InvalidOperationException("There is already an active enrollment period for this career, year and semester.");
+            throw new InvalidOperationException("Ya existe un período de inscripción activo para esta carrera, año y cuatrimestre.");
 
         var period = new EnrollmentPeriod
         {
@@ -138,7 +147,7 @@ public sealed class OpenEnrollmentPeriodCommandHandler(
             QuotasAfternoon = command.QuotasAfternoon,
             QuotasEvening = command.QuotasEvening,
             IsActive = true,
-            StartDate = DateTime.UtcNow
+            StartDate = timeProvider.GetUtcNow().UtcDateTime
         };
 
         var created = await repository.CreateAsync(period, ct);
@@ -151,7 +160,7 @@ public sealed class CloseEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposit
     public async Task Handle(CloseEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
         var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         period.IsActive = false;
         period.EndDate = DateTime.UtcNow;
@@ -167,22 +176,42 @@ public sealed record ActivateEnrollmentPeriodCommand(int PeriodId);
 public sealed record DeleteEnrollmentPeriodCommand(int PeriodId);
 public sealed record GetPeriodReportQuery(int PeriodId);
 
-public sealed class UpdatePeriodQuotasCommandHandler(IEnrollmentPeriodRepository repository)
+public sealed class UpdatePeriodQuotasCommandHandler(
+    IEnrollmentPeriodRepository repository,
+    EnrollmentCapacityPolicy capacityPolicy,
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider)
 {
     public async Task<EnrollmentPeriodDto> Handle(UpdatePeriodQuotasCommand command, CancellationToken ct = default)
     {
-        var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+        capacityPolicy.EnsureValidQuotas(
+            command.QuotasMorning,
+            command.QuotasAfternoon,
+            command.QuotasEvening);
 
-        period.QuotasMorning = command.QuotasMorning;
-        period.QuotasAfternoon = command.QuotasAfternoon;
-        period.QuotasEvening = command.QuotasEvening;
-        period.UpdatedAt = DateTime.UtcNow;
+        await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
+        {
+            var period = await repository.LockForEnrollmentAsync(command.PeriodId, transactionCt)
+                ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
+            var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, transactionCt);
+            capacityPolicy.EnsureQuotasCoverCurrentEnrollment(
+                counts,
+                command.QuotasMorning,
+                command.QuotasAfternoon,
+                command.QuotasEvening);
 
-        await repository.UpdateAsync(period, ct);
+            period.QuotasMorning = command.QuotasMorning;
+            period.QuotasAfternoon = command.QuotasAfternoon;
+            period.QuotasEvening = command.QuotasEvening;
+            period.UpdatedAt = timeProvider.GetUtcNow().UtcDateTime;
+            await repository.UpdateAsync(period, transactionCt);
+            return true;
+        }, ct);
 
-        var counts = await repository.GetEnrolledShiftCountsAsync(period.Id, ct);
-        return Mapper.Map(period, counts);
+        var updated = await repository.FindByIdAsync(command.PeriodId, ct)
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
+        var updatedCounts = await repository.GetEnrolledShiftCountsAsync(updated.Id, ct);
+        return Mapper.Map(updated, updatedCounts);
     }
 }
 
@@ -200,7 +229,7 @@ public sealed class GetMyEnrollmentsQueryHandler(IEnrollmentRepository enrollmen
 {
     public async Task<IReadOnlyList<MyEnrollmentPeriodDto>> Handle(GetMyEnrollmentsQuery query, CancellationToken ct = default)
     {
-        // Projected query — no TeachingPosition/Teacher/User joins, only course name needed
+        // Projected query — no CourseSection/Teacher/User joins, only course name needed
         var rows = await enrollmentRepository.GetMyEnrollmentRowsAsync(query.StudentId, ct);
 
         // Group by (year, semester) with dictionary — O(n) single pass
@@ -238,7 +267,7 @@ public sealed class RemoveStudentFromPeriodCommandHandler(
     public async Task Handle(RemoveStudentFromPeriodCommand command, CancellationToken ct = default)
     {
         _ = await periodRepository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         await enrollmentRepository.DeleteByStudentAndPeriodAsync(command.StudentId, command.PeriodId, ct);
     }
@@ -249,7 +278,7 @@ public sealed class ActivateEnrollmentPeriodCommandHandler(IEnrollmentPeriodRepo
     public async Task Handle(ActivateEnrollmentPeriodCommand command, CancellationToken ct = default)
     {
         var period = await repository.FindByIdAsync(command.PeriodId, ct)
-            ?? throw new KeyNotFoundException("Enrollment period not found.");
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
 
         period.IsActive = true;
         period.EndDate = null;
@@ -263,6 +292,75 @@ public sealed class DeleteEnrollmentPeriodCommandHandler(IEnrollmentPeriodReposi
 {
     public async Task Handle(DeleteEnrollmentPeriodCommand command, CancellationToken ct = default)
         => await repository.DeleteAsync(command.PeriodId, ct);
+}
+
+// ── Cobertura de comisiones de un período (Parte 11, read-only, NO bloquea la activación) ──────
+
+public sealed record GetPeriodDivisionCoverageQuery(int PeriodId);
+
+/// <summary>Un turno (con cupo &gt; 0) de un año del plan que NO tiene comisión activa que matchee.</summary>
+public sealed record DivisionCoverageGap(int YearNumber, string Shift);
+
+public sealed class PeriodDivisionCoverageDto
+{
+    public int PeriodId { get; set; }
+    public int CareerId { get; set; }
+    public int AcademicYear { get; set; }
+    /// <summary>Combinaciones (Año del plan, Turno con cupo) sin comisión activa que matchee.
+    /// Vacío = todo cubierto. El auto-match de la Parte 6 no falla igual; esto es solo un aviso.</summary>
+    public IReadOnlyList<DivisionCoverageGap> Gaps { get; set; } = [];
+}
+
+/// <summary>
+/// Reporta, para un período, qué combinaciones (YearNumber-con-materias × turno-con-cupo&gt;0) no
+/// tienen una comisión activa que matchee (misma clave que el auto-match de la Parte 6:
+/// Career + AcademicYear + YearNumber + Shift). No modifica nada ni bloquea la activación: es un
+/// diagnóstico para avisarle al admin que ciertos alumnos quedarían sin comisión automática.
+/// </summary>
+public sealed class GetPeriodDivisionCoverageQueryHandler(
+    IEnrollmentPeriodRepository periodRepository,
+    IStudyPlanCourseRepository studyPlanCourseRepository,
+    IDivisionRepository commissionRepository)
+{
+    public async Task<PeriodDivisionCoverageDto> Handle(GetPeriodDivisionCoverageQuery query, CancellationToken ct = default)
+    {
+        var period = await periodRepository.FindByIdAsync(query.PeriodId, ct)
+            ?? throw new KeyNotFoundException("Período de inscripción no encontrado.");
+
+        // Años del plan que realmente tienen materias activas (el período abarca todo el plan, pero
+        // las comisiones son por año; solo tiene sentido exigir comisiones para años con materias).
+        var years = (await studyPlanCourseRepository.GetByStudyPlanIdAsync(period.StudyPlanId, ct))
+            .Select(spc => spc.YearNumber)
+            .Distinct()
+            .OrderBy(y => y)
+            .ToList();
+
+        // Turnos con cupo abierto (> 0): un turno sin cupo no admite inscripciones, no exige comisión.
+        var shiftsWithQuota = new List<string>();
+        if (period.QuotasMorning > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.MorningShift);
+        if (period.QuotasAfternoon > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.AfternoonShift);
+        if (period.QuotasEvening > 0) shiftsWithQuota.Add(EnrollmentCapacityPolicy.EveningShift);
+
+        var gaps = new List<DivisionCoverageGap>();
+        foreach (var year in years)
+        {
+            foreach (var shift in shiftsWithQuota)
+            {
+                var matches = await commissionRepository.FindMatchingActiveAsync(
+                    period.CareerId, period.AcademicYear, year, shift, ct);
+                if (matches.Count == 0)
+                    gaps.Add(new DivisionCoverageGap(year, shift));
+            }
+        }
+
+        return new PeriodDivisionCoverageDto
+        {
+            PeriodId = period.Id,
+            CareerId = period.CareerId,
+            AcademicYear = period.AcademicYear,
+            Gaps = gaps
+        };
+    }
 }
 
 public sealed class PeriodReportDto

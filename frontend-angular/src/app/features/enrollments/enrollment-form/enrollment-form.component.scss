@@ -313,7 +313,8 @@ mat-form-field{
 
     text-align:center;
 
-    font-size:13px;
+    font-size:14px;
+    font-weight:600;
 
     line-height:1.5;
 
@@ -373,4 +374,16 @@ mat-form-field{
 
     color:#444;
 
+}
+
+/* Materias bloqueadas por correlativa estricta: se muestran pero no tildables */
+.subject-row.blocked-row {
+  opacity: 0.6;
+}
+.subject-row .block-hint {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.78rem;
+  color: #b26a00;
+  font-style: italic;
 }
