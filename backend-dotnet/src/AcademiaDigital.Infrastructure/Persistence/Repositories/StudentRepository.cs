@@ -27,6 +27,7 @@ public class StudentRepository(AppDbContext db) : IStudentRepository
 
     public async Task<Student?> FindByUserIdAsync(long userId, CancellationToken ct = default)
         => await db.Students.AsNoTracking()
+            .Include(s => s.User)
             .Include(s => s.Career)
             .FirstOrDefaultAsync(s => s.UserId == userId, ct);
 

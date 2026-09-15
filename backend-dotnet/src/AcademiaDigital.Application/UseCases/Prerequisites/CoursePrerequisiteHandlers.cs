@@ -38,31 +38,29 @@ public sealed class AddCoursePrerequisiteCommandHandler(
     public async Task<CoursePrerequisiteDto> Handle(AddCoursePrerequisiteCommand command, CancellationToken ct = default)
     {
         if (command.CourseId == command.Request.PrerequisiteCourseId)
-            throw new InvalidOperationException("A course cannot be prerequisite of itself.");
+            throw new InvalidOperationException("Una materia no puede ser correlativa de sí misma.");
 
         var studyPlan = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
         var courseInCareer = await courseRepository.ExistsInCareerAsync(command.CourseId, studyPlan.CareerId, ct);
         var prerequisiteInCareer = await courseRepository.ExistsInCareerAsync(command.Request.PrerequisiteCourseId, studyPlan.CareerId, ct);
         if (!courseInCareer || !prerequisiteInCareer)
-            throw new InvalidOperationException("Both courses must belong to the study plan career.");
+            throw new InvalidOperationException("Ambas materias deben pertenecer a la carrera del plan de estudios.");
 
         var exists = await prerequisiteRepository.ExistsAsync(command.StudyPlanId, command.CourseId, command.Request.PrerequisiteCourseId, ct);
-        if (exists) throw new InvalidOperationException("Prerequisite already exists.");
+        if (exists) throw new InvalidOperationException("La correlativa ya existe.");
 
         var currentPrerequisites = await prerequisiteRepository.GetByStudyPlanIdAsync(command.StudyPlanId, ct);
         if (cycleValidator.WouldCreateCycle(currentPrerequisites, command.CourseId, command.Request.PrerequisiteCourseId))
-            throw new InvalidOperationException("The prerequisite would create a cycle.");
+            throw new InvalidOperationException("La correlativa generaría un ciclo.");
 
-        var prerequisite = new CoursePrerequisite
-        {
-            StudyPlanId = command.StudyPlanId,
-            CourseId = command.CourseId,
-            PrerequisiteCourseId = command.Request.PrerequisiteCourseId,
-            PrerequisiteType = Enum.Parse<PrerequisiteType>(command.Request.PrerequisiteType, ignoreCase: true),
-            MinimumRequiredStatus = Enum.Parse<MinimumRequiredStatus>(command.Request.MinimumRequiredStatus, ignoreCase: true)
-        };
+        var prerequisite = CoursePrerequisite.Create(
+            command.StudyPlanId,
+            command.CourseId,
+            command.Request.PrerequisiteCourseId,
+            Enum.Parse<PrerequisiteType>(command.Request.PrerequisiteType, ignoreCase: true),
+            Enum.Parse<MinimumRequiredStatus>(command.Request.MinimumRequiredStatus, ignoreCase: true));
 
         var created = await prerequisiteRepository.CreateAsync(prerequisite, ct);
         var hydrated = (await prerequisiteRepository.GetByCourseAsync(command.StudyPlanId, command.CourseId, ct))

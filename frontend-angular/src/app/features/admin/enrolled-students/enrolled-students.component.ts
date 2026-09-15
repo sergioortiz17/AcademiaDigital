@@ -79,6 +79,6 @@ export class EnrolledStudentsComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/admin/enrollments']);
+    this.router.navigate(['/app/admin/enrollments']);
   }
 }

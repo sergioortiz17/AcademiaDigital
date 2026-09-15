@@ -7,7 +7,9 @@ using AcademiaDigital.Application.Interfaces;
 namespace AcademiaDigital.Application.UseCases.Authentication;
 
 public class RegisterUseCase(IUserRepository userRepository, IStudentRepository studentRepository,
-    IStudentCareerRepository studentCareerRepository, ICareerRepository careerRepository, IUnitOfWork unitOfWork)
+    IStudentCareerRepository studentCareerRepository, ICareerRepository careerRepository,
+    IStudyPlanRepository studyPlanRepository, IStudentAcademicRepository studentAcademicRepository,
+    IUnitOfWork unitOfWork)
 {
     public async Task<RegisterResult> ExecuteAsync(
         string email, string name, string lastName, string password, string dni, int careerId,
@@ -17,8 +19,15 @@ public class RegisterUseCase(IUserRepository userRepository, IStudentRepository 
         var normalizedDni = dni.Trim();
 
         var career = await careerRepository.FindByIdAsync(careerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
-        if (!career.IsActive) throw new InvalidOperationException("Career is inactive.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
+        if (!career.IsActive) throw new InvalidOperationException("La carrera está inactiva.");
+
+        // El alumno necesita un plan de estudios vigente para poder inscribirse. Si la carrera no
+        // tiene un StudyPlan Active, fallamos el registro con un mensaje claro (en vez de dejar al
+        // alumno sin plan y que el error recién aparezca en su primera inscripción).
+        var activePlan = await studyPlanRepository.GetActiveByCareerIdAsync(career.Id, ct)
+            ?? throw new InvalidOperationException(
+                "La carrera no tiene un plan de estudios vigente. Un administrador debe publicar uno antes de que los alumnos puedan registrarse en ella.");
 
         var existingEmail = await userRepository.FindByEmailAsync(normalizedEmail, ct);
         if (existingEmail != null)
@@ -41,11 +50,20 @@ public class RegisterUseCase(IUserRepository userRepository, IStudentRepository 
                 EnrollmentDate = enrolledAt,
                 Status = StudentStatus.Regular
             }, transactionCt);
-            await studentCareerRepository.CreateAsync(new StudentCareer
+            var membership = await studentCareerRepository.CreateAsync(new StudentCareer
             {
                 StudentId = student.Id,
                 CareerId = career.Id,
-                EnrollmentDate = enrolledAt
+                EnrollmentDate = enrolledAt,
+                AdmissionYear = enrolledAt.Year
+            }, transactionCt);
+            // Plan de estudios actual del alumno (IsCurrent=true). Sin esto, la primera inscripción
+            // fallaba con "El alumno no tiene un plan de estudios actual para la carrera...".
+            await studentAcademicRepository.AssignStudyPlanAsync(new StudentStudyPlan
+            {
+                StudentId = student.Id,
+                StudentCareerId = membership.Id,
+                StudyPlanId = activePlan.Id
             }, transactionCt);
             return new RegisterResult(true, user.Id, "The user was successfully registered");
         }, ct);

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Panel de administración de datos para DESARROLLO/TESTING.
+    NO forma parte de la solución ni de las imágenes de producción: es un proyecto
+    aparte, en dev-tools/, con su propio Dockerfile y docker-compose.dev-tools.yml.
+    Reutiliza Infrastructure (AppDbContext + repos) y Application (use-cases/handlers)
+    del backend real vía ProjectReference, sin duplicar lógica.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AcademiaDigital.DevTools</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\backend-dotnet\src\AcademiaDigital.Application\AcademiaDigital.Application.csproj" />
+    <ProjectReference Include="..\..\backend-dotnet\src\AcademiaDigital.Infrastructure\AcademiaDigital.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!--
+    El startup project debe fijar la misma versión de EF Core que Infrastructure fue
+    compilada (8.0.13); si no, el publish puede resolver una versión distinta de
+    Microsoft.EntityFrameworkCore.Relational y fallar en runtime al migrar
+    (Could not load file or assembly 'Microsoft.EntityFrameworkCore.Relational, 8.0.13').
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.13" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.13">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

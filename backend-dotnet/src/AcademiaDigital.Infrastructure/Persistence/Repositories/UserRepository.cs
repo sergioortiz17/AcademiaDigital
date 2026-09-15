@@ -3,8 +3,8 @@ using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
 using AcademiaDigital.Domain.Interfaces.Services;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
 
@@ -84,7 +84,7 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
     private static bool IsUniqueConstraintViolation(DbUpdateException ex, string column)
     {
         var message = ex.InnerException?.Message ?? ex.Message;
-        var isUniqueViolation = ex.InnerException is SqlException { Number: 2601 or 2627 }
+        var isUniqueViolation = ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }
             || message.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
             || message.Contains("duplicada", StringComparison.OrdinalIgnoreCase)
             || message.Contains("unique", StringComparison.OrdinalIgnoreCase);

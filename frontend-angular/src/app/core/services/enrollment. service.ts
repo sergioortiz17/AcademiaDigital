@@ -56,6 +56,19 @@ export interface CreateEnrollmentRequest {
   studyPlanCourseIds: number[];
 }
 
+/** Parte 11: un (año del plan, turno con cupo) sin comisión activa que matchee. */
+export interface CommissionCoverageGap {
+  yearNumber: number;
+  shift: string;
+}
+
+export interface PeriodCommissionCoverageDto {
+  periodId: number;
+  careerId: number;
+  academicYear: number;
+  gaps: CommissionCoverageGap[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class EnrollmentService {
   private readonly baseURL = environment.apiServer;
@@ -135,6 +148,13 @@ export class EnrollmentService {
   getPeriodReport(periodId: number): Observable<{ success: boolean; data: any }> {
     return this.http.get<{ success: boolean; data: any }>(
       `${this.baseURL}v1/enrollments/periods/${periodId}/report`
+    );
+  }
+
+  /** Parte 11: diagnóstico de comisiones faltantes para un período (read-only, no bloquea). */
+  getCommissionCoverage(periodId: number): Observable<{ success: boolean; data: PeriodCommissionCoverageDto }> {
+    return this.http.get<{ success: boolean; data: PeriodCommissionCoverageDto }>(
+      `${this.baseURL}v1/enrollments/periods/${periodId}/commission-coverage`
     );
   }
 

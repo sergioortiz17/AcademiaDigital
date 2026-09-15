@@ -3,16 +3,20 @@
   <ItemGroup>
     <ProjectReference Include="..\AcademiaDigital.Domain\AcademiaDigital.Domain.csproj" />
     <ProjectReference Include="..\AcademiaDigital.Application\AcademiaDigital.Application.csproj" />
+    <!-- Contratos del microservicio Finance (solo DTOs de transporte, ADR 0001). -->
+    <ProjectReference Include="..\..\..\services\AcademiaDigital.Finance.Contracts\AcademiaDigital.Finance.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.13">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.13" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1" />
   </ItemGroup>
 

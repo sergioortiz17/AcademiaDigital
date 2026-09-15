@@ -214,3 +214,104 @@
   height: 30px;
   line-height: 28px;
 }
+
+/* Parte 11: aviso de comisiones faltantes por período */
+.coverage-warning {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff4e5;
+  border: 1px solid #ffcc80;
+  color: #8a5300;
+
+  &.collapsed {
+    padding-bottom: 12px;
+  }
+
+  .coverage-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+
+    > mat-icon:first-child {
+      color: #e68a00;
+      flex: 0 0 auto;
+    }
+
+    .coverage-count {
+      font-size: .85rem;
+      opacity: .8;
+    }
+
+    .coverage-spacer {
+      flex: 1 1 auto;
+    }
+
+    .coverage-toggle-btn {
+      flex: 0 0 auto;
+      color: #8a5300;
+    }
+  }
+
+  .coverage-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .coverage-text {
+    flex: 1 1 auto;
+    font-size: .88rem;
+    line-height: 1.35;
+  }
+
+  .coverage-gaps {
+    margin: 6px 0 0;
+    padding-left: 18px;
+
+    li {
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .gap-create-btn {
+      line-height: 28px;
+      min-width: 0;
+      padding: 0 10px;
+    }
+  }
+
+  .coverage-nav-btn {
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
+  .coverage-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
+  .coverage-year-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 4px;
+
+    .picker-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #8a5300;
+    }
+  }
+
+  button {
+    flex: 0 0 auto;
+  }
+}
