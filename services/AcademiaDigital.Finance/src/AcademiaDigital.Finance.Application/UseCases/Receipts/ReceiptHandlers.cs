@@ -159,7 +159,7 @@ public sealed class ReceiptWorkflowService(
         if (items.Length == 0 || items.Sum(item => item.Amount) != payment.Amount)
             throw new InvalidOperationException("Receipt items must reproduce the complete payment amount.");
         return new ReceiptSnapshot(
-            "Academia Digital",
+            "Instituto Tecnológico Superior Córdoba",
             payment.PublicId,
             payment.StudentId,
             payment.StudentName,
@@ -172,7 +172,7 @@ public sealed class ReceiptWorkflowService(
             actorUserId,
             $"Usuario {actorUserId}",
             items,
-            "COMPROBANTE INTERNO NO FISCAL");
+            "COMPROBANTE INTERNO - NO VÁLIDO COMO FACTURA");
     }
 }
 

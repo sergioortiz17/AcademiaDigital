@@ -185,7 +185,7 @@ public sealed class IssueCertificateCommandHandler(
         => new(
             certificateNumber, snapshot.CertificateType, snapshot.StudentName, snapshot.Dni,
             snapshot.LegajoNumber, snapshot.CareerName, snapshot.IssuedAt, snapshot.IssuerName,
-            "Firma autorizada - Secretaría Académica", "Sello institucional - Academia Digital",
+            "Firma autorizada - Secretaría Académica", "Sello institucional - Instituto Tecnológico Superior Córdoba",
             snapshot.Courses.Select(course => new CertificatePdfCourse(
                 course.Code, course.Name, course.AcademicYear, course.Semester,
                 course.Status, course.FinalGrade)).ToArray(),

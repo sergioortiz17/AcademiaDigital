@@ -27,8 +27,9 @@ public sealed class ReceiptsController(
     {
         var guard = RequireAdminOrStudent();
         if (guard is not null) return guard;
-        var isAdmin = CurrentUserRole == UserRole.Admin;
-        return Ok(await receiptHandler.Handle(new(publicId, isAdmin, isAdmin ? null : studentId), ct));
+        // Admin y Profesor pueden ver cualquier comprobante; el Alumno solo los propios.
+        var canReadAny = CurrentUserRole is UserRole.Admin or UserRole.Profesor;
+        return Ok(await receiptHandler.Handle(new(publicId, canReadAny, canReadAny ? null : studentId), ct));
     }
 
     [HttpPost("{publicId:guid}/generate")]
@@ -44,8 +45,9 @@ public sealed class ReceiptsController(
     {
         var guard = RequireAdminOrStudent();
         if (guard is not null) return guard;
-        var isAdmin = CurrentUserRole == UserRole.Admin;
-        var file = await downloadHandler.Handle(new(publicId, isAdmin, isAdmin ? null : studentId), ct);
+        // Admin y Profesor pueden descargar cualquier comprobante; el Alumno solo los propios.
+        var canReadAny = CurrentUserRole is UserRole.Admin or UserRole.Profesor;
+        var file = await downloadHandler.Handle(new(publicId, canReadAny, canReadAny ? null : studentId), ct);
         return File(file.Content, file.ContentType, file.FileName);
     }
 
@@ -60,8 +62,8 @@ public sealed class ReceiptsController(
     private IActionResult? RequireAdminOrStudent()
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
-        return CurrentUserRole is UserRole.Admin or UserRole.Alumno
+        return CurrentUserRole is UserRole.Admin or UserRole.Alumno or UserRole.Profesor
             ? null
-            : StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin or student only."));
+            : StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin, student or professor only."));
     }
 }

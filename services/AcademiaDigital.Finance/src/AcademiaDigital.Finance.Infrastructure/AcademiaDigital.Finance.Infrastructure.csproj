@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\itsc-logo.rgbz" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AcademiaDigital.Finance.Domain\AcademiaDigital.Finance.Domain.csproj" />
     <ProjectReference Include="..\AcademiaDigital.Finance.Application\AcademiaDigital.Finance.Application.csproj" />
   </ItemGroup>
