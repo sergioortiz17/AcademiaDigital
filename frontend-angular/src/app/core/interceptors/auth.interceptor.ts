@@ -32,7 +32,8 @@ export class AuthInterceptor implements HttpInterceptor {
             switchMap(() => this.doRequest(this.addAuth(request), next, attempt + 1))
           );
         }
-        if (error.status === 401) {
+        
+        if (error.status === 401 && !this.isLoginRequest(request) ) {
           this.store.dispatch(logout());
           localStorage.removeItem('academia-account');
           if (this.router.url !== '/auth/signin') {
@@ -40,9 +41,13 @@ export class AuthInterceptor implements HttpInterceptor {
           }
         }
         const message = error.error?.msg || error.message || 'An error occurred';
-        return throwError(() => new Error(message));
+        return throwError(() => error);
       })
     );
+  }
+
+  private isLoginRequest(request: HttpRequest<any>): boolean {
+    return request.url.endsWith('/v1/users/login');
   }
 
   private addAuth(request: HttpRequest<any>): HttpRequest<any> {

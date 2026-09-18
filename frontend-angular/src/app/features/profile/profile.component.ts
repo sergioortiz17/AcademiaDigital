@@ -1,6 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { UserService, ProfileData } from '../../core/services/user.service';
+import { Student, StudentService } from '../../core/services/student.service';
+import { of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-profile',
@@ -11,6 +14,7 @@ import { UserService, ProfileData } from '../../core/services/user.service';
 export class ProfileComponent implements OnInit {
 
   profile: ProfileData | null = null;
+  student: Student | null = null;
   isLoadingProfile = true;
 
   profileForm: FormGroup;
@@ -32,6 +36,7 @@ export class ProfileComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly userService: UserService,
+    private readonly studentService: StudentService,
     private readonly cdr: ChangeDetectorRef
   ) {
     this.profileForm = this.fb.group({
@@ -56,8 +61,8 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userService.getProfile().subscribe({
-      next: (data) => {
+    this.userService.getProfile().pipe(
+      switchMap((data) => {
         this.profile = data;
         this.profileForm.patchValue({
           username:  data.username,
@@ -68,6 +73,15 @@ export class ProfileComponent implements OnInit {
           phoneCode: data.phoneCode ?? '',
           phone:     data.phone ?? ''
         });
+
+        return this.studentService.getMyAcademicProgress().pipe(
+          switchMap((progress) => this.studentService.getStudent(progress.studentId)),
+          catchError(() => this.studentService.getStudent(data.id).pipe(catchError(() => of(null))))
+        );
+      })
+    ).subscribe({
+      next: (student) => {
+        this.student = student;
         this.isLoadingProfile = false;
         this.cdr.detectChanges();
       },
@@ -117,7 +131,16 @@ export class ProfileComponent implements OnInit {
       next: (res) => {
         this.profileSaving = false;
         this.profileSuccess = 'Datos actualizados correctamente';
-        if (this.profile) Object.assign(this.profile, res);
+        this.profile = res;
+        this.profileForm.patchValue({
+          username: res.username,
+          lastName: res.lastName,
+          gender: res.gender ?? '',
+          cuil: res.cuil ?? '',
+          birthDate: res.birthDate ? new Date(res.birthDate) : null,
+          phoneCode: res.phoneCode ?? '',
+          phone: res.phone ?? ''
+        });
         this.cdr.detectChanges();
       },
       error: (err) => {

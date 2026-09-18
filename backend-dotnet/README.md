@@ -31,6 +31,24 @@ API REST construida con **ASP.NET Core 8** siguiendo **Clean Architecture**. Usa
 ## Estructura del proyecto
 
 ```
+
+## Estado del MVP
+
+Los módulos M1–M11 están completos para el alcance MVP. M11 incorpora recibos digitales internos no fiscales, emitidos automáticamente al confirmar un pago o aprobar la conciliación de una transferencia:
+
+- correlativo global `REC-########` reservado transaccionalmente;
+- snapshot histórico, PDF local-first y hash SHA-256;
+- historial y descarga para Admin/Tesorería o alumno propietario;
+- regeneración idempotente sobre el mismo número;
+- almacenamiento Docker durable y backup coordinado con SQL Server.
+
+Documentación operativa y de alcance:
+
+- [Roadmap M4–M11](docs/ROADMAP_M4_M11.md)
+- [Guía funcional M4–M11 para frontend](docs/GUIA_FUNCIONAL_M4_M11_FRONTEND.md)
+- [Matriz de cobertura de API](docs/API_COVERAGE_MATRIX.md)
+- [Cobertura de calidad y arquitectura](docs/COBERTURA_CALIDAD_ARQUITECTURA.md)
+- [Backup y restauración de recibos](docs/BACKUP_RECEIPTS.md)
 backend-dotnet/
 └── src/
     ├── AcademiaDigital.API/            # Capa de presentación: controllers, program.cs
@@ -152,7 +170,7 @@ dotnet build
 # Correr la API
 dotnet run --project src/AcademiaDigital.API
 
-# Correr tests (si existen)
+# Correr todos los tests .NET
 dotnet test
 
 # Ver migraciones aplicadas
@@ -160,6 +178,24 @@ dotnet ef migrations list \
   --project src/AcademiaDigital.Infrastructure \
   --startup-project src/AcademiaDigital.API
 ```
+
+### Regresión API M1–M11
+
+La suite integrada está en `tests/api-regression` y requiere Docker. El slice específico de recibos se ejecuta con `npm run test:api:m11`; la suite completa usa `npm run test:api`.
+
+```bash
+cd tests/api-regression
+npm install
+npm run e2e:up
+npm run typecheck
+npm run test:migration
+npm run test:api:m11
+npm run test:api
+npm run allure:generate
+npm run e2e:down
+```
+
+El último baseline validado es 291/291 unitarios, ArchUnitNET 8/8, migración M1–M11 y API Regression 34/34. Swagger expone 196 operaciones, incluidas las 5 de recibos.
 
 ---
 

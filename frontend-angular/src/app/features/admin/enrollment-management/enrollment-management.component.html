@@ -8,6 +8,10 @@
   </div>
 
   <div *ngIf="successMsg" class="success-banner">{{ successMsg }}</div>
+  <div *ngIf="errorMsg && !showOpenForm" class="error-banner" style="margin-bottom: 12px;">
+    {{ errorMsg }}
+    <button mat-icon-button (click)="errorMsg = ''" matTooltip="Descartar"><mat-icon>close</mat-icon></button>
+  </div>
 
   <!-- Open period form -->
   <mat-card *ngIf="showOpenForm" class="open-form-card">
@@ -123,6 +127,54 @@
           <button mat-icon-button color="warn" matTooltip="Eliminar período" (click)="deletePeriod(p)">
             <mat-icon>delete</mat-icon>
           </button>
+        </div>
+      </div>
+
+      <!-- Parte 11/13: aviso persistente de divisiones faltantes (solo períodos activos) -->
+      <div class="coverage-warning" *ngIf="p.isActive && gapsFor(p.id).length > 0" [class.collapsed]="!isWarningExpanded(p.id)">
+        <div class="coverage-header" (click)="toggleWarning(p.id)">
+          <mat-icon>warning</mat-icon>
+          <strong>Faltan divisiones para este período.</strong>
+          <span class="coverage-count">({{ gapsFor(p.id).length }})</span>
+          <span class="coverage-spacer"></span>
+          <button mat-icon-button class="coverage-toggle-btn" [matTooltip]="isWarningExpanded(p.id) ? 'Ocultar' : 'Mostrar'" (click)="$event.stopPropagation(); toggleWarning(p.id)">
+            <mat-icon>{{ isWarningExpanded(p.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+        </div>
+
+        <div class="coverage-body" *ngIf="isWarningExpanded(p.id)">
+          <div class="coverage-text">
+            Los alumnos que se inscriban en estos turnos van a quedar sin división hasta que las crees o los asignes a mano.
+            Podés crear cada una acá mismo, sin salir de esta pantalla:
+            <ul class="coverage-gaps">
+              <li *ngFor="let g of gapsFor(p.id)">
+                <span>{{ g.yearNumber }}° año — Turno {{ shiftLabel(g.shift) }}</span>
+                <button mat-stroked-button color="primary" class="gap-create-btn" (click)="createCommissionForGap(p, g)">
+                  <mat-icon>add</mat-icon> Crear
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="coverage-actions">
+            <div class="coverage-year-picker">
+              <span class="picker-label">Crear divisiones de:</span>
+              <mat-checkbox *ngFor="let y of gapYearsFor(p.id)"
+                [checked]="isBulkYearSelected(p.id, y)"
+                (change)="toggleBulkYear(p.id, y, $event.checked)">
+                {{ y }}° año ({{ gapCountForYear(p.id, y) }})
+              </mat-checkbox>
+            </div>
+            <button mat-raised-button color="primary" class="coverage-auto-btn"
+              [disabled]="isSubmitting || bulkSelectedCount(p.id) === 0"
+              (click)="createAllMissingDivisions(p)">
+              <mat-icon>auto_fix_high</mat-icon>
+              Crear automáticamente ({{ bulkSelectedCount(p.id) }})
+            </button>
+            <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de divisiones">
+              <mat-icon>open_in_new</mat-icon>
+              Gestionar divisiones
+            </button>
+          </div>
         </div>
       </div>
 

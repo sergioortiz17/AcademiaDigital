@@ -38,4 +38,7 @@ public class StudyPlanRepository(AppDbContext db) : IStudyPlanRepository
         await db.SaveChangesAsync(ct);
         return studyPlan;
     }
+
+    public async Task DeleteByCareerIdAsync(int careerId, CancellationToken ct = default)
+        => await db.StudyPlans.Where(sp => sp.CareerId == careerId).ExecuteDeleteAsync(ct);
 }

@@ -1,0 +1,37 @@
+# Compose SEPARADO para la herramienta de desarrollo.
+# NO se levanta con el `docker compose up` normal del proyecto: hay que invocarlo
+# explícitamente con -f, para que nunca corra por accidente junto a producción:
+#
+#   docker compose -f docker-compose.dev-tools.yml up --build
+#
+# Requisitos:
+#   - La base ya corriendo (el `db` del docker-compose.yml principal), en la red
+#     academiadigital_app_network. Levantala antes con:  docker compose up -d db
+#   - El .env de la raíz (POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB) — se reutiliza,
+#     no se inventan credenciales nuevas.
+
+services:
+  dev_tools:
+    container_name: academiadigital_devtools
+    build:
+      context: .                       # raíz del repo: el Dockerfile necesita backend-dotnet/src
+      dockerfile: dev-tools/Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      # Salvaguarda anti-producción: sin esto la app no arranca.
+      - ALLOW_DESTRUCTIVE_DB_TOOLS=true
+      # Apunta al MISMO Postgres del compose principal (servicio 'db', host de dev conocido).
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-AcademiaDigital};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!}
+      - DevTools__SeedsPath=/seeds
+    volumes:
+      # Monta los seeds del repo (no se hornean en la imagen: siempre usa los actuales).
+      - ./seeds:/seeds:ro
+    networks:
+      - app_network
+
+networks:
+  # Reusa la red que ya creó el docker-compose.yml principal.
+  app_network:
+    external: true
+    name: academiadigital_app_network

@@ -9,4 +9,5 @@ public interface ICoursePrerequisiteRepository
     Task<bool> ExistsAsync(int studyPlanId, int courseId, int prerequisiteCourseId, CancellationToken ct = default);
     Task<CoursePrerequisite> CreateAsync(CoursePrerequisite prerequisite, CancellationToken ct = default);
     Task RemoveAsync(int studyPlanId, int courseId, int prerequisiteCourseId, CancellationToken ct = default);
+    Task DeleteByStudyPlanIdsAsync(IReadOnlyList<int> studyPlanIds, CancellationToken ct = default);
 }
