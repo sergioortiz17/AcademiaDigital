@@ -15,13 +15,29 @@
 
     <!-- Pills de filtro por rol -->
     <div class="role-pills">
-      <button
-        *ngFor="let f of roleFilters"
-        class="role-pill"
-        [class.role-pill--active]="selectedRole === f.value"
-        (click)="onRoleFilter(f.value)">
-        {{ f.label }}
-      </button>
+      <div class="role-pill role-filter-pill role-pill--active">
+        <button class="role-pill__option role-pill__all" (click)="onRoleFilter(selectedRole)">
+          {{ selectedRoleLabel }}
+        </button>
+        <button
+          class="role-pill__toggle"
+          type="button"
+          (click)="toggleRoleFilters()"
+          [attr.aria-expanded]="roleFiltersOpen"
+          aria-label="Mostrar filtros por rol">
+          <mat-icon>{{ roleFiltersOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+
+        <div class="role-pill__options" *ngIf="roleFiltersOpen">
+          <button
+            *ngFor="let f of visibleRoleFilters"
+            class="role-pill__option"
+            [class.role-pill__option--active]="selectedRole === f.value"
+            (click)="onRoleFilter(f.value)">
+            {{ f.label }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Toolbar: buscador + selector de cantidad -->
@@ -94,35 +110,44 @@
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
           <td mat-cell *matCellDef="let u">
             <div class="actions-wrap" *ngIf="!isCurrentUser(u); else selfRow">
-
-               <!-- ACTIVAR / DESACTIVAR -->
-              <button *ngIf="u.isActive" mat-icon-button class="btn-color" (click)="disableUser(u)" matTooltip="Desactivar usuario">
-                <mat-icon>pause</mat-icon>
-              </button>
-              <button *ngIf="!u.isActive" mat-icon-button class="btn-color" (click)="activateUser(u)" matTooltip="Activar usuario">
-                <mat-icon>play_circle</mat-icon>
+              <button mat-icon-button [matMenuTriggerFor]="actionsMenu" matTooltip="Acciones del usuario" class="btn-color">
+                <mat-icon>more_vert</mat-icon>
               </button>
 
-              <!-- Change role menu -->
-              <button mat-icon-button [matMenuTriggerFor]="roleMenu" matTooltip="Cambiar rol" class="btn-color">
-                <mat-icon>swap_horiz</mat-icon>
-              </button>
-              <mat-menu #roleMenu="matMenu">
-                <button mat-menu-item (click)="changeRole(u, UserRole.Alumno)" [disabled]="u.role === UserRole.Alumno">
-                  <mat-icon>school</mat-icon> Alumno
+              <mat-menu #actionsMenu="matMenu">
+                <!-- ACTIVAR / DESACTIVAR -->
+                <button *ngIf="u.isActive" mat-menu-item (click)="disableUser(u)">
+                  <mat-icon>pause</mat-icon>
+                  <span>Desactivar usuario</span>
                 </button>
-                <button mat-menu-item (click)="changeRole(u, UserRole.Profesor)" [disabled]="u.role === UserRole.Profesor">
-                  <mat-icon>person_pin</mat-icon> Profesor
+                <button *ngIf="!u.isActive" mat-menu-item (click)="activateUser(u)">
+                  <mat-icon>play_circle</mat-icon>
+                  <span>Activar usuario</span>
                 </button>
-                <button mat-menu-item (click)="changeRole(u, UserRole.Admin)" [disabled]="u.role === UserRole.Admin">
-                  <mat-icon>admin_panel_settings</mat-icon> Admin
+
+                <!-- Change role menu -->
+                <button mat-menu-item [matMenuTriggerFor]="roleMenu">
+                  <mat-icon>swap_horiz</mat-icon>
+                  <span>Cambiar rol</span>
+                </button>
+                <mat-menu #roleMenu="matMenu">
+                  <button mat-menu-item (click)="changeRole(u, UserRole.Alumno)" [disabled]="u.role === UserRole.Alumno">
+                    <mat-icon>school</mat-icon> Alumno
+                  </button>
+                  <button mat-menu-item (click)="changeRole(u, UserRole.Profesor)" [disabled]="u.role === UserRole.Profesor">
+                    <mat-icon>person_pin</mat-icon> Profesor
+                  </button>
+                  <button mat-menu-item (click)="changeRole(u, UserRole.Admin)" [disabled]="u.role === UserRole.Admin">
+                    <mat-icon>admin_panel_settings</mat-icon> Admin
+                  </button>
+                </mat-menu>
+
+                <!-- Delete -->
+                <button mat-menu-item (click)="deleteUser(u)">
+                  <mat-icon color="warn">delete_outline</mat-icon>
+                  <span>Eliminar usuario</span>
                 </button>
               </mat-menu>
-
-              <!-- Delete -->
-              <button mat-icon-button color="warn" (click)="deleteUser(u)" matTooltip="Eliminar usuario">
-                <mat-icon>delete_outline</mat-icon>
-              </button>
             </div>
 
             <ng-template #selfRow>

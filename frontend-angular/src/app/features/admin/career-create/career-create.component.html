@@ -7,27 +7,27 @@
 
   <form (ngSubmit)="onSubmit()" #createForm="ngForm">
     <div class="form-grid">
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Nombre de la carrera</mat-label>
         <input matInput [(ngModel)]="name" name="name" required maxlength="200" />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Código de la carrera</mat-label>
         <input matInput [(ngModel)]="code" name="code" required maxlength="20" placeholder="Ej: ENF2025" />
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="fill" class="full-width">
         <mat-label>Descripción</mat-label>
         <textarea matInput [(ngModel)]="description" name="description" maxlength="1000" rows="2"></textarea>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Créditos totales</mat-label>
         <input matInput type="number" min="0" [(ngModel)]="totalCredits" name="totalCredits" required />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Duración (años)</mat-label>
         <input matInput type="number" min="1" max="20" [(ngModel)]="durationYears" name="durationYears" required />
       </mat-form-field>

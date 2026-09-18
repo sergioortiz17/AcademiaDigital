@@ -90,16 +90,17 @@
 
   .students-btn {
     position: relative;
+    padding-right: 30px;
 
     .badge {
       position: absolute;
-      top: -6px;
-      right: -6px;
+      top: -3px;
+      right: -24px;
       background: #c62828;
       color: white;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       font-size: 0.7rem;
       display: flex;
       align-items: center;

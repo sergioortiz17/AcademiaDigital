@@ -89,18 +89,16 @@ export class StudentService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getStudentByUserId(studentId: number): Observable<Student> {
-    return this.http.get<Student>(
-      `${this.baseURL}v1/students/${studentId}`
-    );
-  }
-
-  /** Ficha completa del alumno (incluye currentStudyPlanId, necesario para asignar comisión). */
+  /** Ficha completa del alumno (incluye currentStudyPlanId) */
   getStudent(studentId: number): Observable<Student> {
     return this.http.get<Student>(`${this.baseURL}v1/students/${studentId}`);
   }
 
-  /** Listado paginado de alumnos (admin). Sirve para el selector de "Asignar comisión". */
+  getStudentByUserId(studentId: number): Observable<Student> {
+    return this.getStudent(studentId);
+  }
+
+  /** Listado paginado de alumnos*/
   searchStudents(search?: string, careerId?: number, page = 1, pageSize = 50): Observable<PagedResult<StudentListItem>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search) params = params.set('search', search);
@@ -113,16 +111,14 @@ export class StudentService {
     return this.http.post<AcademicAssignment>(`${this.baseURL}v1/students/${studentId}/academic-assignments`, request);
   }
 
-  /** Materias del plan del alumno LOGUEADO con su estado de elegibilidad (calculado por el backend,
-   *  misma data que la validación real). El backend resuelve el studentId desde el JWT. */
+  /** Materias del plan del alumno con su estado de elegibilidad */
   getMyEligibleCourses(careerId?: number): Observable<EligibleCourse[]> {
     let params = new HttpParams();
     if (careerId != null) params = params.set('careerId', careerId);
     return this.http.get<EligibleCourse[]>(`${this.baseURL}v1/students/me/eligible-courses`, { params });
   }
 
-  /** Historial académico del alumno LOGUEADO: materias del plan con su estado real por materia
-   *  (EnrollmentStatus sin agrupar). El backend resuelve el studentId desde el JWT. Solo lectura. */
+  /** Historial académico del alumno: materias del plan con su estado real por materia */
   getMyAcademicProgress(careerId?: number): Observable<StudentAcademicProgress> {
     let params = new HttpParams();
     if (careerId != null) params = params.set('careerId', careerId);
