@@ -11,7 +11,14 @@
         <mat-icon>chevron_right</mat-icon>
       </button>
     </div>
-    <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+
+    <div class="cal-actions">
+      <button mat-flat-button class="btn-create" *ngIf="canCreateEvents" (click)="openCreateDialog()">
+        <mat-icon>add</mat-icon>
+        Nuevo evento
+      </button>
+      <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+    </div>
   </div>
 
   <p *ngIf="error" class="error-msg">{{ error }}</p>
@@ -32,19 +39,23 @@
           [class.empty]="!day.isCurrentMonth"
           [class.today]="day.isToday"
           [class.has-events]="day.events.length > 0"
+          [class.holiday]="day.isHoliday"
           [class.selected]="selectedDay?.date?.getTime() === day.date?.getTime()"
-          [attr.tabindex]="day.isCurrentMonth && day.events.length > 0 ? 0 : null"
-          [attr.role]="day.isCurrentMonth && day.events.length > 0 ? 'button' : null"
+          [ngClass]="day.events.length > 0 ? 'painted ' + dayDominantType(day) : ''"
+          [attr.tabindex]="day.isCurrentMonth ? 0 : null"
+          [attr.role]="day.isCurrentMonth ? 'button' : null"
           (click)="selectDay(day)"
+          (dblclick)="onDayDoubleClick(day)"
           (keydown.enter)="selectDay(day)"
           (keydown.space)="selectDay(day)"
         >
           <span class="day-number" *ngIf="day.dayNumber">{{ day.dayNumber }}</span>
+          <span class="holiday-flag" *ngIf="day.isHoliday" matTooltip="Feriado nacional">&#9733;</span>
 
           <div class="event-pills" *ngIf="day.events.length > 0">
             <div
               class="event-pill"
-              [class]="'event-pill ' + eventTypeClass(day.events[0].eventType)"
+              [ngClass]="'event-pill ' + eventTypeClass(day.events[0].eventType)"
             >
               <span class="pill-time" *ngIf="day.events[0].startTime">{{ day.events[0].startTime }}</span>
               <span class="pill-title">{{ day.events[0].title }}</span>
@@ -57,7 +68,7 @@
 
     <!-- Day detail panel -->
     <div class="day-detail" *ngIf="selectedDay">
-      <div class="detail-header">
+      <div class="detail-header" [class.detail-header-holiday]="selectedDay.isHoliday">
         <span class="detail-date">
           {{ weekDays[(selectedDay.date!.getDay() + 6) % 7] }},
           {{ selectedDay.dayNumber }} de {{ monthNames[currentMonth - 1] }}
@@ -65,18 +76,39 @@
         <button mat-icon-button (click)="closeDetail()"><mat-icon>close</mat-icon></button>
       </div>
 
-      <div class="detail-events">
+      <div class="detail-events" *ngIf="selectedDay.events.length > 0">
         <div class="detail-event" *ngFor="let ev of selectedDay.events">
-          <div class="detail-event-bar" [class]="eventTypeClass(ev.eventType)"></div>
+          <div class="detail-event-bar" [ngClass]="eventTypeClass(ev.eventType)"></div>
           <div class="detail-event-content">
             <span class="detail-event-time" *ngIf="ev.startTime">{{ ev.startTime }} hs</span>
             <span class="detail-event-title">{{ ev.title }}</span>
             <span class="detail-event-desc" *ngIf="ev.description">{{ ev.description }}</span>
-            <span class="detail-event-type-badge" [class]="eventTypeClass(ev.eventType)">
-              {{ eventTypeLabel(ev.eventType) }}
-            </span>
+            <div class="detail-event-meta">
+              <span class="detail-event-type-badge" [ngClass]="eventTypeClass(ev.eventType)">
+                {{ eventTypeLabel(ev.eventType) }}
+              </span>
+              <span class="detail-event-scope-badge"
+                [class.scope-global]="ev.scope === 'Global' && !ev.isHoliday"
+                [class.scope-section]="ev.scope !== 'Global'"
+                [class.scope-holiday]="ev.isHoliday">
+                {{ scopeLabel(ev) }}
+              </span>
+              <span class="detail-event-modality-badge" *ngIf="ev.modality"
+                [class.modality-presencial]="ev.modality === 'Presencial'"
+                [class.modality-virtual]="ev.modality === 'Virtual'">
+                {{ ev.modality }}
+              </span>
+            </div>
+            <button mat-icon-button class="btn-delete-event" *ngIf="canDeleteEvent(ev)" (click)="deleteEvent(ev)" matTooltip="Eliminar evento">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
           </div>
         </div>
+      </div>
+
+      <div class="detail-empty" *ngIf="selectedDay.events.length === 0">
+        <mat-icon>event_busy</mat-icon>
+        <span>Sin eventos este dia</span>
       </div>
     </div>
 
@@ -84,10 +116,12 @@
 
   <!-- Legend -->
   <div class="legend">
+    <div class="legend-item"><span class="legend-dot type-feriado"></span> Feriado</div>
     <div class="legend-item"><span class="legend-dot type-examen"></span> Examen</div>
     <div class="legend-item"><span class="legend-dot type-entrega"></span> Entrega TP</div>
     <div class="legend-item"><span class="legend-dot type-clase"></span> Clase</div>
     <div class="legend-item"><span class="legend-dot type-otro"></span> Evento</div>
+    <span class="legend-hint" *ngIf="canCreateEvents">Doble clic en un dia para crear evento</span>
   </div>
 
 </div>

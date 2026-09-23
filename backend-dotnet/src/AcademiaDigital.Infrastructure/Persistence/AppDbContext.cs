@@ -122,6 +122,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new AdmissionApplicationStatusHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new AdmissionApplicationDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new AdmissionAgreementConfiguration());
+        modelBuilder.ApplyConfiguration(new AcademicEventConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
         base.OnModelCreating(modelBuilder);
     }

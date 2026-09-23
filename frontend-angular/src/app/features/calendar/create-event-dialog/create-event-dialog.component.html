@@ -1,0 +1,68 @@
+<div class="dialog-header">
+  <mat-icon>event</mat-icon>
+  <span>Nuevo evento</span>
+</div>
+
+<div class="dialog-body">
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Titulo</mat-label>
+    <input matInput [(ngModel)]="title" maxlength="200" required>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Descripcion</mat-label>
+    <textarea matInput [(ngModel)]="description" maxlength="1000" rows="2"></textarea>
+  </mat-form-field>
+
+  <div class="row-fields">
+    <mat-form-field appearance="outline" class="field-date">
+      <mat-label>Fecha</mat-label>
+      <input matInput [matDatepicker]="picker" [(ngModel)]="eventDate" required>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="field-time">
+      <mat-label>Hora</mat-label>
+      <input matInput type="time" [(ngModel)]="startTime">
+    </mat-form-field>
+  </div>
+
+  <div class="row-fields">
+    <mat-form-field appearance="outline" class="field-type">
+      <mat-label>Tipo de evento</mat-label>
+      <mat-select [(ngModel)]="eventType">
+        <mat-option *ngFor="let t of eventTypes" [value]="t.value">{{ t.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Solo admin: modalidad -->
+    <mat-form-field appearance="outline" class="field-modality" *ngIf="isAdmin">
+      <mat-label>Modalidad</mat-label>
+      <mat-select [(ngModel)]="modality">
+        <mat-option *ngFor="let m of modalities" [value]="m.value">{{ m.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Solo profesores: selector de comision -->
+  <ng-container *ngIf="isProfesor">
+    <mat-form-field appearance="outline" class="full-width" *ngIf="!loadingSections">
+      <mat-label>Comision / Materia</mat-label>
+      <mat-select [(ngModel)]="courseSectionId" required>
+        <mat-option *ngFor="let s of sections" [value]="s.id">
+          {{ s.courseName }} ({{ s.courseCode }}) - {{ s.academicYear }}C{{ s.semester }}
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="sections.length === 0">No tiene comisiones asignadas.</mat-hint>
+    </mat-form-field>
+    <mat-spinner *ngIf="loadingSections" diameter="24" class="section-spinner"></mat-spinner>
+  </ng-container>
+
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear evento</button>
+</div>

@@ -3,7 +3,7 @@
 
   <section class="welcome-card">
     <div class="welcome-content">
-      <h1>¡Hola, {{ (user$ | async)?.username || 'Usuario' }}! 👋</h1>
+      <h1>¡Hola, {{ (user$ | async)?.username || 'Usuario' }}!</h1>
     </div>
   </section>
 
@@ -54,7 +54,7 @@
     <div class="quick-access-grid" *ngIf="role === UserRole.Admin">
       <a mat-card routerLink="/app/admin/users" class="quick-card quick-card--teal">
         <mat-icon>manage_accounts</mat-icon>
-        <span>Gestión de Usuarios</span>
+        <span>Gestion de Usuarios</span>
       </a>
       <a mat-card routerLink="/app/certificates" class="quick-card quick-card--blue">
         <mat-icon>military_tech</mat-icon>
@@ -88,14 +88,30 @@
 
     <mat-card class="alerts-card">
       <div class="alerts-header">
-        <h2>Avisos Importantes</h2>
+        <h2>Proximos Eventos</h2>
         <mat-icon>notifications</mat-icon>
       </div>
       <mat-card-content class="alerts-content">
-        <p>Examen de Programación 12/05</p>
-        <p>Entrega de Trabajo Práctico hasta el 10/05</p>
-        <p>Inscripciones abiertas para el próximo cuatrimestre</p>
+        <mat-spinner *ngIf="loadingEvents" diameter="24" class="events-spinner"></mat-spinner>
+
+        <ng-container *ngIf="!loadingEvents">
+          <div class="upcoming-event" *ngFor="let ev of upcomingEvents">
+            <div class="upcoming-event-bar" [ngClass]="eventTypeClass(ev.eventType)"></div>
+            <div class="upcoming-event-info">
+              <span class="upcoming-event-date">{{ formatEventDate(ev.date) }}</span>
+              <span class="upcoming-event-title">{{ ev.title }}</span>
+              <span class="upcoming-event-badge" [ngClass]="eventTypeClass(ev.eventType)">{{ eventTypeLabel(ev.eventType) }}</span>
+            </div>
+          </div>
+
+          <p class="no-events" *ngIf="upcomingEvents.length === 0">No hay eventos proximos</p>
+        </ng-container>
       </mat-card-content>
+
+      <a routerLink="/app/calendar" class="see-all-link" *ngIf="upcomingEvents.length > 0">
+        Ver calendario completo
+        <mat-icon>arrow_forward</mat-icon>
+      </a>
     </mat-card>
   </div>
 </div>
