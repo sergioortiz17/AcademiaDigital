@@ -24,6 +24,10 @@ npm.cmd run allure:open
 
 La API E2E queda en `http://localhost:8010` y SQL Server en `localhost:1434`. Este modo usa `AcademiaDigitalE2E` y limpia los datos de cada escenario.
 
+El compose E2E habilita el desafío `StaticToken` y el cliente agrega `E2E_ADMISSION_CHALLENGE_TOKEN` solamente a las postulaciones válidas. Esto permite comprobar rechazos `403` y el límite `429` sin depender de un proveedor externo. `StaticToken` es exclusivo de automatización o entornos controlados; producción debe configurar `AdmissionAntiAbuse__Challenge__Mode=Turnstile` e inyectar el secreto fuera del repositorio.
+
+No reutilizar `.env.development.example` para este flujo: `e2e:reset` toma las variables del `.env` vigente. Antes de borrar el volumen, confirmar que `E2E_DATABASE_NAME=AcademiaDigitalE2E`. La última ejecución completa está documentada en [analysis/m11-receipts-2026-08-24.md](analysis/m11-receipts-2026-08-24.md); la evidencia M10 permanece en [analysis/m10-payments-2026-08-24.md](analysis/m10-payments-2026-08-24.md) y el baseline inicial en [analysis/baseline-2026-08-22.md](analysis/baseline-2026-08-22.md).
+
 ## Base de desarrollo Docker y datos persistentes
 
 Para ejecutar contra el backend local `http://localhost:5073` y la base Docker `AcademiaDigital` de `localhost:1433`:
@@ -66,6 +70,14 @@ npm run test:api:regression  Regresión
 npm run test:api:negative    Validaciones negativas
 npm run test:api:auth        Autorización
 npm run test:api:p1          Documentos, becas y campos personalizados
+npm run test:api:m4          Inscripciones, admisión, cupos FIFO, rematriculación y administración M4
+npm run test:api:m5          Legajo, documentos, cargos y asignaciones docentes M5
+npm run test:api:m6          Sesiones, carga, riesgo, justificaciones y reapertura de asistencias M6
+npm run test:api:m7          Planillas, publicación, cierre, mesas, llamados y actas M7
+npm run test:api:m8          Solicitud, revisión, emisión concurrente, historial y PDF M8
+npm run test:api:m9          Conceptos, tarifas, beneficios, planes, generación y deuda M9
+npm run test:api:m10         Pagos, conciliación, idempotencia, reversión e historial M10
+npm run test:api:m11         Recibos, correlativo, PDF/hash, reversión e historial aislado M11
 npm run test:api:populate    Flujos y consultas conservando los datos creados
 npm run db:population-summary Contar datos de automatización conservados
 npm run typecheck            Validación TypeScript
@@ -87,6 +99,6 @@ El administrador y los usuarios Alumno sin Student son fixtures SQL porque la AP
 
 Con `E2E_PRESERVE_DATA=true` no se ejecuta cleanup de escenarios. El teardown solamente revoca las sesiones del administrador de automatización.
 
-La regresión de migración crea y elimina exclusivamente `AcademiaDigitalMigrationE2E` en el SQL Server local configurado. Comprueba el backfill de membresías, planes y asignaciones, y que la migración aborte si existe más de un Student para un mismo User.
+La regresión de migración crea y elimina exclusivamente `AcademiaDigitalMigrationE2E` en el SQL Server local configurado. Comprueba los backfills de membresías, planes y asignaciones, los esquemas completos M6 de asistencias, M7 de calificaciones/mesas, M8 de certificados, M9 financiero y M10 de pagos —tablas, FKs, constraints, seeds, índices filtrados/unicidad y precisión monetaria—, y que la migración aborte si existe más de un Student para un mismo User.
 
 El bloque `@p1` comprueba que los catálogos activos no incluyan bajas lógicas; una definición de custom field desactivada deja de aparecer en el listado y responde `404` por ID.

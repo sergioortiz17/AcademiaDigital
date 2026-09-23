@@ -1,0 +1,220 @@
+<div class="my-attendance-wrap">
+<div class="my-attendance-title-bar">
+  <h1>Mis asistencias</h1>
+</div>
+
+<mat-card class="my-attendance-card">
+  <mat-card-content>
+
+    <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field filter-field--small">
+        <mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="selectedCareerId">
+          <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Materia</mat-label>
+        <mat-select [(ngModel)]="selectedCourseId">
+          <mat-option [value]="null">Todas las materias</mat-option>
+          <mat-option *ngFor="let g of allGroups" [value]="g.courseId">{{ g.courseName }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field--date">
+        <mat-label>Desde</mat-label>
+        <input matInput [matDatepicker]="fromPicker" [(ngModel)]="dateFrom">
+        <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #fromPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field--date">
+        <mat-label>Hasta</mat-label>
+        <input matInput [matDatepicker]="toPicker" [(ngModel)]="dateTo">
+        <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+        <mat-datepicker #toPicker></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" class="search-btn" (click)="buscar()">
+        <mat-icon>search</mat-icon>
+        Buscar
+      </button>
+    </div>
+
+    <div class="loading-overlay" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+
+      <div class="empty-state" *ngIf="allGroups.length === 0">
+        <mat-icon>event_busy</mat-icon>
+        <p>Todavía no tenés asistencias registradas.</p>
+      </div>
+
+      <ng-container *ngIf="allGroups.length > 0">
+
+        <div class="stats-row">
+          <div class="stat-block">
+            <span class="stat-value">{{ generalAverageLabel }}</span>
+            <span class="stat-label">Promedio general</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-block">
+            <span class="stat-value">{{ totalMaterias }}</span>
+            <span class="stat-label">Materias ({{ totalCursadas }} cursadas)</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-block">
+            <span class="stat-value stat-value--risk">{{ totalAtRisk }}</span>
+            <span class="stat-label">En riesgo</span>
+          </div>
+
+          <div class="legend">
+            <span class="legend-item"><span class="dot dot--low"></span> &gt;85%</span>
+            <span class="legend-item"><span class="dot dot--medium"></span> 70-84%</span>
+            <span class="legend-item"><span class="dot dot--high"></span> &lt;70%</span>
+          </div>
+        </div>
+
+        <div class="sort-row">
+          <button
+            type="button"
+            class="sort-btn"
+            [class.sort-btn--active]="sortMode === 'lowest'"
+            (click)="setSortMode('lowest')">
+            Menor asistencia
+          </button>
+          <button
+            type="button"
+            class="sort-btn"
+            [class.sort-btn--active]="sortMode === 'alpha'"
+            (click)="setSortMode('alpha')">
+            A-Z
+          </button>
+        </div>
+
+        <div class="materias-section" *ngIf="atRiskGroups.length > 0">
+          <div class="section-header section-header--risk">Requiere atención</div>
+          <div class="materia-row-wrap" *ngFor="let group of atRiskGroups">
+            <div
+              class="materia-row"
+              [class.materia-row--selected]="selectedGroup === group"
+              (click)="selectGroup(group)">
+              <span class="risk-dot" [ngClass]="'dot--' + riskLevel(group.current.attendancePercentage)"></span>
+              <span class="materia-name">{{ group.courseName }}</span>
+              <button
+                type="button"
+                class="expand-toggle"
+                *ngIf="group.isRepeat"
+                (click)="toggleExpand(group, $event)">
+                {{ group.expanded ? 'ocultar' : 'ver años' }}
+                <mat-icon>{{ group.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+              </button>
+              <div class="progress-bar">
+                <div class="progress-fill" [ngClass]="'progress-fill--' + riskLevel(group.current.attendancePercentage)"
+                     [style.width.%]="group.current.attendancePercentage ?? 0"></div>
+              </div>
+              <span class="materia-pct">{{ formatPercentage(group.current.attendancePercentage) }}</span>
+            </div>
+
+            <ng-container *ngIf="group.expanded">
+              <div class="year-row" *ngFor="let item of group.years">
+                <span class="year-chip">{{ item.academicYear }}</span>
+                <div class="progress-bar" (click)="selectGroup(group, item)">
+                  <div class="progress-fill" [ngClass]="'progress-fill--' + riskLevel(item.attendancePercentage)"
+                       [style.width.%]="item.attendancePercentage ?? 0"></div>
+                </div>
+                <span class="materia-pct">{{ formatPercentage(item.attendancePercentage) }}</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="materias-section" *ngIf="restGroups.length > 0">
+          <div class="section-header section-header--rest">Resto de materias</div>
+          <div class="materia-row-wrap" *ngFor="let group of restGroups">
+            <div
+              class="materia-row"
+              [class.materia-row--selected]="selectedGroup === group"
+              (click)="selectGroup(group)">
+              <span class="risk-dot" [ngClass]="'dot--' + riskLevel(group.current.attendancePercentage)"></span>
+              <span class="materia-name">{{ group.courseName }}</span>
+              <button
+                type="button"
+                class="expand-toggle"
+                *ngIf="group.isRepeat"
+                (click)="toggleExpand(group, $event)">
+                {{ group.expanded ? 'ocultar' : 'ver años' }}
+                <mat-icon>{{ group.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+              </button>
+              <div class="progress-bar">
+                <div class="progress-fill" [ngClass]="'progress-fill--' + riskLevel(group.current.attendancePercentage)"
+                     [style.width.%]="group.current.attendancePercentage ?? 0"></div>
+              </div>
+              <span class="materia-pct">{{ formatPercentage(group.current.attendancePercentage) }}</span>
+            </div>
+
+            <ng-container *ngIf="group.expanded">
+              <div class="year-row" *ngFor="let item of group.years">
+                <span class="year-chip">{{ item.academicYear }}</span>
+                <div class="progress-bar" (click)="selectGroup(group, item)">
+                  <div class="progress-fill" [ngClass]="'progress-fill--' + riskLevel(item.attendancePercentage)"
+                       [style.width.%]="item.attendancePercentage ?? 0"></div>
+                </div>
+                <span class="materia-pct">{{ formatPercentage(item.attendancePercentage) }}</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="detail-card" *ngIf="selectedGroup && selectedYearItem as it">
+          <div class="detail-header">
+            <span class="detail-course">{{ selectedGroup.courseName }}</span>
+            <span class="year-chip">{{ it.academicYear }}</span>
+            <span class="detail-condition" [ngClass]="'detail-condition--' + riskLevel(it.attendancePercentage)">
+              {{ riskLevel(it.attendancePercentage) === 'high' ? 'En riesgo' : 'Al día' }}
+            </span>
+          </div>
+
+          <div class="detail-breakdown">
+            <div class="breakdown-item breakdown-item--present">
+              <span class="breakdown-value">{{ it.presentCount }}</span>
+              <span class="breakdown-label">Presentes</span>
+            </div>
+            <div class="breakdown-item breakdown-item--late">
+              <span class="breakdown-value">{{ it.lateCount }}</span>
+              <span class="breakdown-label">Tardanzas</span>
+            </div>
+            <div class="breakdown-item breakdown-item--absent">
+              <span class="breakdown-value">{{ it.absentCount }}</span>
+              <span class="breakdown-label">Ausentes</span>
+            </div>
+            <div class="breakdown-item breakdown-item--justified">
+              <span class="breakdown-value">{{ it.justifiedCount }}</span>
+              <span class="breakdown-label">Justificadas</span>
+            </div>
+            <div class="breakdown-item breakdown-item--pct">
+              <span class="breakdown-value">{{ formatPercentage(it.attendancePercentage) }}</span>
+              <span class="breakdown-label">Asistencia</span>
+            </div>
+          </div>
+
+          <div class="detail-actions">
+            <button class="download-link" type="button" (click)="downloadSummary()">
+              Descargar Resúmen
+              <mat-icon>file_download</mat-icon>
+            </button>
+          </div>
+        </div>
+
+      </ng-container>
+
+    </ng-container>
+
+  </mat-card-content>
+</mat-card>
+</div>

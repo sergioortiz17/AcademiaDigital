@@ -1,12 +1,22 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import {
   EnrollmentService,
   EnrollmentPeriodDto,
-  OpenPeriodRequest
+  OpenPeriodRequest,
+  PeriodCommissionCoverageDto,
+  CommissionCoverageGap
 } from '../../../core/services/enrollment. service';
 import { CareerService, Career } from '../../../core/services/career.service';
 import { SubjectService, StudyPlan } from '../../../core/services/subject.service';
+import { CommissionService, UpsertCommissionRequest } from '../../../core/services/commission.service';
+import {
+  CommissionFormDialogComponent,
+  CommissionFormDialogData
+} from '../commission-management/commission-form-dialog/commission-form-dialog.component';
 
 @Component({
   selector: 'app-enrollment-management',
@@ -25,14 +35,22 @@ export class EnrollmentManagementComponent implements OnInit {
     studyPlanId: 0,
     academicYear: new Date().getFullYear(),
     semester: 1,
-    quotasMorning: 0,
-    quotasAfternoon: 0,
-    quotasEvening: 0
+    quotasMorning: 30,
+    quotasAfternoon: 30,
+    quotasEvening: 30
   };
 
 
   editingPeriod: EnrollmentPeriodDto | null = null;
   editQuotas = { quotasMorning: 0, quotasAfternoon: 0, quotasEvening: 0 };
+
+  // Parte 11: cobertura de comisiones por período (aviso persistente). Solo se consultan los activos.
+  coverageByPeriod: Record<number, CommissionCoverageGap[]> = {};
+  // Años (del plan) tildados para el atajo "Crear automáticamente", por período.
+  bulkYearsByPeriod: Record<number, Set<number>> = {};
+  // Aviso de divisiones faltantes: expandido/colapsado por período (colapsado por defecto).
+  private readonly expandedWarnings = new Set<number>();
+  private readonly shiftLabels: Record<string, string> = { 'Mañana': 'Mañana', 'Tarde': 'Tarde', 'Noche': 'Noche' };
 
   isSubmitting = false;
   loadingPeriods = false;
@@ -43,6 +61,8 @@ export class EnrollmentManagementComponent implements OnInit {
     private readonly enrollmentService: EnrollmentService,
     private readonly careerService: CareerService,
     private readonly subjectService: SubjectService,
+    private readonly commissionService: CommissionService,
+    private readonly dialog: MatDialog,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -64,12 +84,189 @@ export class EnrollmentManagementComponent implements OnInit {
         this.periods = res.data;
         this.loadingPeriods = false;
         this.cdr.detectChanges();
+        // Aviso persistente: consultar cobertura de comisiones de cada período ACTIVO.
+        this.coverageByPeriod = {};
+        this.periods.filter(p => p.isActive).forEach(p => this.loadCoverage(p.id));
       },
       error: err => {
         console.error(err);
         this.loadingPeriods = false;
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  /** Consulta (read-only) qué comisiones faltan para un período y guarda los faltantes. */
+  private loadCoverage(periodId: number): void {
+    this.enrollmentService.getCommissionCoverage(periodId).subscribe({
+      next: res => {
+        this.coverageByPeriod[periodId] = res.data.gaps;
+        this.cdr.detectChanges();
+      },
+      error: () => { /* el aviso es best-effort; si falla, no rompe la pantalla */ }
+    });
+  }
+
+  gapsFor(periodId: number): CommissionCoverageGap[] {
+    return this.coverageByPeriod[periodId] ?? [];
+  }
+
+  isWarningExpanded(periodId: number): boolean {
+    return this.expandedWarnings.has(periodId);
+  }
+
+  toggleWarning(periodId: number): void {
+    if (this.expandedWarnings.has(periodId)) this.expandedWarnings.delete(periodId);
+    else this.expandedWarnings.add(periodId);
+  }
+
+  shiftLabel(shift: string): string {
+    return this.shiftLabels[shift] ?? shift;
+  }
+
+  /** Atajo al alta de comisiones (Parte 7), precargando carrera + año del período. */
+  goToCreateCommission(period: EnrollmentPeriodDto): void {
+    this.router.navigate(['/app/admin/commissions'], {
+      queryParams: { careerId: period.careerId, academicYear: period.academicYear }
+    });
+  }
+
+  /**
+   * Parte 13: crear la comisión faltante SIN salir de la pantalla. Abre el mismo
+   * CommissionFormDialogComponent como modal, precargando carrera+año del período y
+   * año-del-plan+turno del gap puntual clickeado (un solo click para tapar ese hueco). Al
+   * confirmar, crea la comisión y refresca la cobertura del período en el momento.
+   */
+  createCommissionForGap(period: EnrollmentPeriodDto, gap: CommissionCoverageGap): void {
+    const data: CommissionFormDialogData = {
+      commission: null,
+      presetAcademicYear: period.academicYear,
+      presetYearNumber: gap.yearNumber,
+      presetShift: gap.shift
+    };
+    this.openCommissionDialog(period, data);
+  }
+
+  /** Crear una comisión para el período sin precargar un gap específico (desde el alta). */
+  createCommissionForPeriod(period: EnrollmentPeriodDto): void {
+    this.openCommissionDialog(period, { commission: null, presetAcademicYear: period.academicYear });
+  }
+
+  /**
+   * Atajo en bloque: crea TODAS las divisiones faltantes del período de una vez (una por gap),
+   * con código/nombre por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón
+   * manual por fila ni la pantalla "Gestionar divisiones" (que siguen para editar/borrar/agregar).
+   * Muestra una vista previa con confirm() antes de crear y refresca la cobertura al terminar.
+   */
+  /**
+   * Atajo en bloque: crea las divisiones faltantes del período POR AÑO del plan (el admin tilda
+   * qué años crear — ej. solo 2°). Una request por gap de los años tildados, con código/nombre
+   * por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón manual por fila ni la
+   * pantalla "Gestionar divisiones". Muestra vista previa con confirm() y refresca la cobertura.
+   */
+  createAllMissingDivisions(period: EnrollmentPeriodDto): void {
+    const selected = this.bulkYearsByPeriod[period.id];
+    const gaps = this.gapsFor(period.id).filter(g => selected?.has(g.yearNumber));
+    if (gaps.length === 0) return;
+
+    const careerCode = this.careers.find(c => c.id === period.careerId)?.code ?? `C${period.careerId}`;
+    const specs = gaps.map(g => ({
+      gap: g,
+      request: {
+        code: this.autoDivisionCode(careerCode, g.yearNumber, g.shift, period.academicYear),
+        name: `${careerCode} · ${g.yearNumber}° año · ${this.shiftLabel(g.shift)} · ${period.academicYear}`,
+        academicYear: period.academicYear,
+        yearNumber: g.yearNumber,
+        shift: g.shift
+      } as UpsertCommissionRequest
+    }));
+
+    const preview = specs.map(s => `• ${s.request.code}  (${s.gap.yearNumber}° año / ${this.shiftLabel(s.gap.shift)})`).join('\n');
+    if (!confirm(`Se van a crear ${specs.length} división(es) para ${period.careerName}:\n\n${preview}\n\n¿Confirmás?`)) return;
+
+    this.isSubmitting = true;
+    this.errorMsg = '';
+    this.cdr.detectChanges();
+
+    // Una request por división. forkJoin espera a todas y no aborta el bloque si una falla.
+    forkJoin(
+      specs.map(s => this.commissionService.createCommission(period.careerId, s.request).pipe(
+        map(() => ({ code: s.request.code, ok: true })),
+        catchError(err => of({ code: s.request.code, ok: false, msg: err?.error?.msg || err?.message }))
+      ))
+    ).subscribe({
+      next: results => {
+        this.isSubmitting = false;
+        const created = results.filter(r => r.ok).length;
+        const failed = results.filter(r => !r.ok);
+        this.successMsg = `${created}/${specs.length} división(es) creada(s) para ${period.careerName}.`;
+        if (failed.length > 0) {
+          this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
+        }
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
+        // Limpiar la selección y refrescar cobertura: los gaps creados desaparecen del aviso.
+        this.bulkYearsByPeriod[period.id] = new Set<number>();
+        this.loadCoverage(period.id);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isSubmitting = false;
+        this.errorMsg = 'No se pudieron crear las divisiones.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** Años del plan que tienen huecos en este período (para el selector del atajo bulk). */
+  gapYearsFor(periodId: number): number[] {
+    return [...new Set(this.gapsFor(periodId).map(g => g.yearNumber))].sort((a, b) => a - b);
+  }
+
+  /** Cantidad de huecos (turnos) de un año puntual en el período. */
+  gapCountForYear(periodId: number, yearNumber: number): number {
+    return this.gapsFor(periodId).filter(g => g.yearNumber === yearNumber).length;
+  }
+
+  isBulkYearSelected(periodId: number, yearNumber: number): boolean {
+    return this.bulkYearsByPeriod[periodId]?.has(yearNumber) ?? false;
+  }
+
+  toggleBulkYear(periodId: number, yearNumber: number, checked: boolean): void {
+    const set = this.bulkYearsByPeriod[periodId] ??= new Set<number>();
+    if (checked) set.add(yearNumber); else set.delete(yearNumber);
+  }
+
+  /** Total de divisiones que se crearían con los años actualmente tildados. */
+  bulkSelectedCount(periodId: number): number {
+    const selected = this.bulkYearsByPeriod[periodId];
+    if (!selected || selected.size === 0) return 0;
+    return this.gapsFor(periodId).filter(g => selected.has(g.yearNumber)).length;
+  }
+
+  private autoDivisionCode(careerCode: string, yearNumber: number, shift: string, academicYear: number): string {
+    const shiftAbbr: Record<string, string> = { 'Mañana': 'M', 'Tarde': 'T', 'Noche': 'N' };
+    return `${careerCode}-${yearNumber}-${shiftAbbr[shift] ?? shift.charAt(0).toUpperCase()}-${academicYear}`;
+  }
+
+  private openCommissionDialog(period: EnrollmentPeriodDto, data: CommissionFormDialogData): void {
+    const ref = this.dialog.open(CommissionFormDialogComponent, {
+      width: '520px', maxWidth: '95vw', disableClose: true, data
+    });
+    ref.afterClosed().subscribe((request: UpsertCommissionRequest | null) => {
+      if (!request) return;
+      this.commissionService.createCommission(period.careerId, request).subscribe({
+        next: () => {
+          this.successMsg = `División "${request.code}" creada para ${period.careerName}.`;
+          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+          // Refrescar cobertura del período en el momento (sin recargar la página).
+          this.loadCoverage(period.id);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la división.';
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 
@@ -100,13 +297,15 @@ export class EnrollmentManagementComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMsg = '';
     this.enrollmentService.openPeriod(this.openingForm).subscribe({
-      next: () => {
+      next: (res) => {
         this.showOpenForm = false;
         this.resetForm();
         this.isSubmitting = false;
         this.successMsg = 'Período de inscripción activado correctamente.';
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
         this.loadPeriods();
+        // Chequeo inmediato: avisar en el momento si el período recién abierto ya tiene faltantes.
+        if (res?.data?.id) this.checkCoverageNow(res.data);
         this.cdr.detectChanges();
       },
       error: err => {
@@ -143,9 +342,30 @@ export class EnrollmentManagementComponent implements OnInit {
       next: () => {
         const idx = this.periods.findIndex(p => p.id === period.id);
         if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: true, endDate: null };
+        this.loadCoverage(period.id);
+        this.checkCoverageNow(period);
         this.cdr.detectChanges();
       },
       error: err => alert(err.message || 'No se pudo activar el período.')
+    });
+  }
+
+  /**
+   * Chequeo inmediato al abrir/activar: consulta la cobertura y, si faltan comisiones, muestra un
+   * aviso puntual en el momento (además del banner persistente por período).
+   */
+  private checkCoverageNow(period: EnrollmentPeriodDto): void {
+    this.enrollmentService.getCommissionCoverage(period.id).subscribe({
+      next: res => {
+        this.coverageByPeriod[period.id] = res.data.gaps;
+        if (res.data.gaps.length > 0) {
+          const detalle = res.data.gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
+          this.errorMsg = `⚠️ Faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos ` +
+            `van a quedar sin división hasta que las crees o los asignes a mano.`;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => { /* best-effort */ }
     });
   }
 
@@ -197,9 +417,9 @@ export class EnrollmentManagementComponent implements OnInit {
       studyPlanId: 0,
       academicYear: new Date().getFullYear(),
       semester: 1,
-      quotasMorning: 0,
-      quotasAfternoon: 0,
-      quotasEvening: 0
+      quotasMorning: 30,
+      quotasAfternoon: 30,
+      quotasEvening: 30
     };
     this.studyPlans = [];
   }

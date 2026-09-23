@@ -1,0 +1,51 @@
+<div class="dialog-header">
+  <mat-icon>assignment_ind</mat-icon>
+  <span>Asignar comisión</span>
+</div>
+
+<div class="dialog-body">
+
+  <div class="loading-row" *ngIf="isLoading">
+    <mat-spinner diameter="28"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Comisión vacante</mat-label>
+      <mat-select [(ngModel)]="courseSectionId">
+        <mat-option *ngFor="let p of positions" [value]="p.id">
+          {{ p.courseName }} — {{ p.divisionName }}{{ p.divisionCode ? ' [' + p.divisionCode + ']' : '' }} ({{ p.academicYear }}, {{ p.positionType }})
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="positions.length === 0">No hay comisiones vacantes activas.</mat-hint>
+    </mat-form-field>
+
+    <div *ngIf="createErrorMsg" class="msg msg--error">{{ createErrorMsg }}</div>
+
+    <button mat-stroked-button type="button" class="create-position-btn" [disabled]="isCreating" (click)="createNewPosition()">
+      <mat-spinner diameter="16" *ngIf="isCreating"></mat-spinner>
+      <ng-container *ngIf="!isCreating">
+        <mat-icon>add</mat-icon>
+        Crear comisión nueva (materia + división)
+      </ng-container>
+    </button>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha de inicio</mat-label>
+      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startedOn">
+      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Motivo (opcional)</mat-label>
+      <textarea matInput rows="2" maxlength="500" [(ngModel)]="reason"></textarea>
+    </mat-form-field>
+  </ng-container>
+
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Asignar</button>
+</div>

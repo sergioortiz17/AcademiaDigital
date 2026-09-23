@@ -1,0 +1,259 @@
+.attendance-wrap {
+  max-width: 1200px;
+}
+
+.attendance-title-bar {
+  display: inline-block;
+  background: #125081;
+  color: #fff;
+  padding: 12px 32px;
+  border-radius: 16px 16px 0 0;
+  margin-bottom: -1px;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.attendance-card {
+  border-radius: 0 20px 20px 20px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--success { background: #e8f5e9; color: #2e7d32; }
+  &--error   { background: #fce4ec; color: #c62828; }
+}
+
+.filters-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: .5rem;
+}
+
+.filter-field {
+  flex: 1 1 320px;
+  min-width: 260px;
+
+  &--small {
+    flex: 0 1 180px;
+    min-width: 150px;
+  }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: .5rem 0 1rem;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  background: #125081;
+  color: #fff;
+  border-radius: 20px;
+  padding: 2px 6px;
+
+  .mat-icon { color: #fff; }
+}
+
+.month-label {
+  min-width: 130px;
+  text-align: center;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.search-field {
+  flex: 0 1 320px;
+}
+
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.table-wrap {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, .08);
+  border-radius: 8px;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+
+  th, td {
+    padding: 8px 10px;
+    text-align: center;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+  }
+
+  thead th {
+    background: #f5f7fa;
+    font-weight: 600;
+    color: rgba(0, 0, 0, .7);
+  }
+
+  .student-col {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: #fff;
+    font-weight: 500;
+    min-width: 160px;
+  }
+
+  thead .student-col {
+    background: #f5f7fa;
+  }
+
+  .day-col {
+    min-width: 60px;
+  }
+
+  .avg-col {
+    font-weight: 600;
+    color: #125081;
+    position: sticky;
+    right: 0;
+    background: #fff;
+    box-shadow: -2px 0 4px rgba(0, 0, 0, .06);
+    min-width: 110px;
+  }
+
+  thead .avg-col {
+    background: #f5f7fa;
+  }
+
+  tbody tr {
+    cursor: pointer;
+
+    &:hover {
+      background: #f5f9ff;
+    }
+  }
+
+  .selected-row {
+    box-shadow: inset 0 0 0 2px #125081;
+
+    td {
+      background: #eaf2fb;
+    }
+  }
+}
+
+.close-btn {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+
+  .mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: #b8860b;
+  }
+}
+
+.closed-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: rgba(0, 0, 0, .35);
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+.status-cell select {
+  border: 1px solid rgba(0, 0, 0, .15);
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: .85rem;
+  font-weight: 600;
+  text-align: center;
+  width: 48px;
+
+  &:disabled {
+    background: #f5f5f5;
+    color: rgba(0, 0, 0, .4);
+  }
+}
+
+.justified-badge {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #6a1b9a;
+  background: #f3e5f5;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem;
+  color: rgba(0, 0, 0, .4);
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+}
+
+.student-detail {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.detail-info p {
+  margin: 0 0 4px;
+  font-size: .92rem;
+  color: rgba(0, 0, 0, .75);
+
+  strong { color: #125081; }
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: none;
+  border: none;
+  color: #125081;
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover { text-decoration: underline; }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}

@@ -19,16 +19,20 @@ public class StudentStatusHistoryConfiguration : IEntityTypeConfiguration<Studen
     }
 }
 
-public class CommissionConfiguration : IEntityTypeConfiguration<Commission>
+public class DivisionConfiguration : IEntityTypeConfiguration<Division>
 {
-    public void Configure(EntityTypeBuilder<Commission> b)
+    public void Configure(EntityTypeBuilder<Division> b)
     {
-        b.ToTable("Commissions");
+        b.ToTable("Divisions");
         b.HasKey(x => x.Id);
         b.Property(x => x.Code).HasMaxLength(30).IsRequired();
         b.Property(x => x.Name).HasMaxLength(100).IsRequired();
         b.Property(x => x.Shift).HasMaxLength(20).IsRequired();
         b.HasIndex(x => new { x.CareerId, x.AcademicYear, x.Code }).IsUnique();
+        // Mismo patrón que Code: el Name tampoco puede repetirse dentro de la misma carrera+año,
+        // para que un profesor nunca vea dos comisiones con el mismo nombre y cargue notas en la
+        // equivocada (Parte 10 - doble mitigación con el frontend que además muestra el Code).
+        b.HasIndex(x => new { x.CareerId, x.AcademicYear, x.Name }).IsUnique();
         b.HasOne(x => x.Career).WithMany().HasForeignKey(x => x.CareerId).OnDelete(DeleteBehavior.Restrict);
     }
 }
@@ -41,12 +45,12 @@ public class StudentAcademicAssignmentConfiguration : IEntityTypeConfiguration<S
         b.HasKey(x => x.Id);
         b.Property(x => x.Reason).HasMaxLength(500);
         b.HasIndex(x => new { x.StudentId, x.AcademicYear });
-        b.HasIndex(x => x.StudentCareerId).IsUnique().HasFilter("[IsCurrent] = 1");
+        b.HasIndex(x => x.StudentCareerId).IsUnique().HasFilter("\"IsCurrent\" = true");
         b.HasOne(x => x.Student).WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.StudentCareer).WithMany(x => x.AcademicAssignments).HasForeignKey(x => x.StudentCareerId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.Career).WithMany().HasForeignKey(x => x.CareerId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.StudyPlan).WithMany().HasForeignKey(x => x.StudyPlanId).OnDelete(DeleteBehavior.Restrict);
-        b.HasOne(x => x.Commission).WithMany().HasForeignKey(x => x.CommissionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Division).WithMany().HasForeignKey(x => x.DivisionId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.AssignedByUser).WithMany().HasForeignKey(x => x.AssignedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -21,7 +21,7 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
         builder.Property(e => e.StudentCareerId).HasColumnName("student_career_id");
         builder.Property(e => e.CourseId).HasColumnName("course_id");
         builder.Property(e => e.StudyPlanCourseId).HasColumnName("study_plan_course_id");
-        builder.Property(e => e.TeachingPositionId).HasColumnName("teaching_position_id");
+        builder.Property(e => e.CourseSectionId).HasColumnName("course_section_id");
         builder.Property(e => e.EnrollmentPeriodId).HasColumnName("enrollment_period_id");
         builder.Property(e => e.Shift).HasColumnName("shift").HasMaxLength(20);
 
@@ -49,9 +49,9 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Enrollment>
             .HasForeignKey(e => e.StudyPlanCourseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(e => e.TeachingPosition)
+        builder.HasOne(e => e.CourseSection)
             .WithMany(tp => tp.Enrollments)
-            .HasForeignKey(e => e.TeachingPositionId)
+            .HasForeignKey(e => e.CourseSectionId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

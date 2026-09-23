@@ -24,6 +24,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatRadioModule } from '@angular/material/radio';
 
 const MATERIAL_MODULES = [
   MatSidenavModule, MatToolbarModule, MatListModule, MatIconModule,
@@ -32,7 +33,7 @@ const MATERIAL_MODULES = [
   MatDividerModule, MatTooltipModule, MatSnackBarModule, MatSelectModule,
   MatChipsModule, MatBadgeModule, MatRippleModule, MatCheckboxModule,
   MatTableModule, MatDatepickerModule, MatNativeDateModule, MatDialogModule,
-  MatExpansionModule, MatSortModule, MatPaginatorModule
+  MatExpansionModule, MatSortModule, MatPaginatorModule, MatRadioModule
 ];
 
 @NgModule({ imports: MATERIAL_MODULES, exports: MATERIAL_MODULES })

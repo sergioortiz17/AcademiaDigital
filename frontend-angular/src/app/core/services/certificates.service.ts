@@ -3,6 +3,19 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface CertificateIssuance {
+  id: string;                 // publicId (Guid) del certificado emitido
+  certificateNumber: string;
+  certificateType: string;
+  status: string;             // Ready cuando el PDF está disponible
+  fileName: string;
+  sha256?: string | null;
+  createdAt: string;
+  generatedAt?: string | null;
+  downloadPath?: string | null; // /api/v1/certificates/issued/{publicId}/download
+  lastError?: string | null;
+}
+
 export interface CertificateRequest {
   id: number;
   userId: number;
@@ -12,6 +25,13 @@ export interface CertificateRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
   createdAt: string;
   updatedAt: string | null;
+  kind?: string;
+  studentCareerId?: number | null;
+  examRegistrationId?: number | null;
+  reviewedAt?: string | null;
+  reviewedByUserId?: number | null;
+  rejectionReason?: string | null;
+  issuance?: CertificateIssuance | null;
 }
 
 export const CERTIFICATE_TYPES = [
@@ -41,5 +61,23 @@ export class CertificatesService {
     if (search?.trim()) params = params.set('search', search.trim());
     if (status) params = params.set('status', status);
     return this.http.get<{ success: boolean; requests: CertificateRequest[] }>(`${this.base}v1/certificates/all`, { params });
+  }
+
+  approveCertificate(id: number): Observable<CertificateRequest> {
+    return this.http.post<CertificateRequest>(`${this.base}v1/certificates/${id}/approve`, {});
+  }
+
+  rejectCertificate(id: number, reason: string): Observable<CertificateRequest> {
+    return this.http.post<CertificateRequest>(`${this.base}v1/certificates/${id}/reject`, { reason });
+  }
+
+  /**
+   * Descarga el PDF del certificado emitido (issued) como blob.
+   * @param publicId Guid del certificado emitido (request.issuance.id).
+   */
+  downloadCertificate(publicId: string): Observable<Blob> {
+    return this.http.get(`${this.base}v1/certificates/issued/${publicId}/download`, {
+      responseType: 'blob'
+    });
   }
 }

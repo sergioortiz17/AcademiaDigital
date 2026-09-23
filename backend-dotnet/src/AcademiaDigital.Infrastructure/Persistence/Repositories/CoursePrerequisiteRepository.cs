@@ -41,4 +41,7 @@ public class CoursePrerequisiteRepository(AppDbContext db) : ICoursePrerequisite
                 && cp.PrerequisiteCourseId == prerequisiteCourseId)
             .ExecuteDeleteAsync(ct);
     }
+
+    public async Task DeleteByStudyPlanIdsAsync(IReadOnlyList<int> studyPlanIds, CancellationToken ct = default)
+        => await db.CoursePrerequisites.Where(cp => studyPlanIds.Contains(cp.StudyPlanId)).ExecuteDeleteAsync(ct);
 }

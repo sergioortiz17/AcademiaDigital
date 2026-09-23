@@ -88,4 +88,14 @@ public class StudentAcademicRepository(AppDbContext db) : IStudentAcademicReposi
         await db.SaveChangesAsync(ct);
         return studentStudyPlan;
     }
+
+    public Task<bool> HasCurrentAcademicAssignmentAsync(long studentCareerId, CancellationToken ct = default)
+        => db.StudentAcademicAssignments.AsNoTracking()
+            .AnyAsync(a => a.StudentCareerId == studentCareerId && a.IsCurrent, ct);
+
+    public async Task AddAcademicAssignmentAsync(StudentAcademicAssignment assignment, CancellationToken ct = default)
+    {
+        db.StudentAcademicAssignments.Add(assignment);
+        await db.SaveChangesAsync(ct);
+    }
 }
