@@ -82,6 +82,9 @@ summary::-webkit-details-marker { display: none; }
 .active-link,
 .nav-group[open] > summary {
   background: var(--navigation-active);
+}
+
+.active-link {
   box-shadow: inset 0 -2px nav.$indicator;
 }
 
