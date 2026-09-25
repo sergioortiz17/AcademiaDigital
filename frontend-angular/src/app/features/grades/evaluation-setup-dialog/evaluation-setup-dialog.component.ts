@@ -26,6 +26,8 @@ const DEFAULT_EVALUATIONS: EditableEvaluation[] = [
 export class EvaluationSetupDialogComponent {
   evaluations: EditableEvaluation[] = DEFAULT_EVALUATIONS.map(e => ({ ...e }));
 
+  private readonly regularWeights = new WeakMap<EditableEvaluation, number>();
+
   constructor(
     public dialogRef: MatDialogRef<EvaluationSetupDialogComponent>,
     private readonly cdr: ChangeDetectorRef
@@ -53,7 +55,12 @@ export class EvaluationSetupDialogComponent {
 
   onRecoveryToggle(e: EditableEvaluation): void {
     // Al marcar recuperación forzamos peso 0 (no lleva peso propio).
-    if (e.isRecovery) e.weightPercentage = 0;
+    if (e.isRecovery) {
+      this.regularWeights.set(e, e.weightPercentage);
+      e.weightPercentage = 0;
+    } else {
+      e.weightPercentage = this.regularWeights.get(e) ?? 0;
+    }
     this.cdr.detectChanges();
   }
 
