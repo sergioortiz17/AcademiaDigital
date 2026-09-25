@@ -62,4 +62,17 @@ describe('Enrollment activation feedback', () => {
     expect(Swal.fire).toHaveBeenCalledTimes(1);
     expect(service.getCommissionCoverage).not.toHaveBeenCalled();
   });
+  it('shows creation errors in a dialog and preserves the form for retry', () => {
+    component.showOpenForm = true;
+    service.openPeriod.mockReturnValue(throwError(() => ({ error: { msg: 'El periodo ya existe.' } })));
+    component.submitOpen();
+    expect(Swal.fire).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      icon: 'error', text: 'El periodo ya existe.'
+    }));
+    expect(component.showOpenForm).toBe(true);
+    expect(component.openingForm.careerId).toBe(1);
+    expect(component.isSubmitting).toBe(false);
+    expect(service.getCommissionCoverage).not.toHaveBeenCalled();
+  });
+
 });

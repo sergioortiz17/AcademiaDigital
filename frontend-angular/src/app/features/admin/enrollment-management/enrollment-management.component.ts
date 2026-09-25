@@ -55,7 +55,6 @@ export class EnrollmentManagementComponent implements OnInit {
 
   isSubmitting = false;
   loadingPeriods = false;
-  errorMsg = '';
   successMsg = '';
 
   constructor(
@@ -186,7 +185,6 @@ export class EnrollmentManagementComponent implements OnInit {
     if (!confirm(`Se van a crear ${specs.length} división(es) para ${period.careerName}:\n\n${preview}\n\n¿Confirmás?`)) return;
 
     this.isSubmitting = true;
-    this.errorMsg = '';
     this.cdr.detectChanges();
 
     // Una request por división. forkJoin espera a todas y no aborta el bloque si una falla.
@@ -202,7 +200,7 @@ export class EnrollmentManagementComponent implements OnInit {
         const failed = results.filter(r => !r.ok);
         this.successMsg = `${created}/${specs.length} división(es) creada(s) para ${period.careerName}.`;
         if (failed.length > 0) {
-          this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
+          this.showError(`No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`);
         }
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
         // Limpiar la selección y refrescar cobertura: los gaps creados desaparecen del aviso.
@@ -212,7 +210,7 @@ export class EnrollmentManagementComponent implements OnInit {
       },
       error: () => {
         this.isSubmitting = false;
-        this.errorMsg = 'No se pudieron crear las divisiones.';
+        this.showError('No se pudieron crear las divisiones.');
         this.cdr.detectChanges();
       }
     });
@@ -264,7 +262,7 @@ export class EnrollmentManagementComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (err) => {
-          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la división.';
+          this.showError(err.error?.msg || err.message || 'No se pudo crear la división.');
           this.cdr.detectChanges();
         }
       });
@@ -296,7 +294,6 @@ export class EnrollmentManagementComponent implements OnInit {
   submitOpen(): void {
     if (!this.canOpen()) return;
     this.isSubmitting = true;
-    this.errorMsg = '';
     this.enrollmentService.openPeriod(this.openingForm).subscribe({
       next: (res) => {
         this.showOpenForm = false;
@@ -310,7 +307,7 @@ export class EnrollmentManagementComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: err => {
-        this.errorMsg = err.error?.msg || err.error?.title || 'No se pudo abrir el período.';
+        this.showError(err.error?.msg || err.error?.title || 'No se pudo abrir el período.');
         this.isSubmitting = false;
         this.cdr.detectChanges();
       }
@@ -325,7 +322,7 @@ export class EnrollmentManagementComponent implements OnInit {
         if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: false };
         this.cdr.detectChanges();
       },
-      error: err => alert(err.error?.msg || 'No se pudo cerrar el período.')
+      error: err => this.showError(err.error?.msg || 'No se pudo cerrar el período.')
     });
   }
 
@@ -347,7 +344,7 @@ export class EnrollmentManagementComponent implements OnInit {
         this.checkCoverageNow(period);
         this.cdr.detectChanges();
       },
-      error: err => alert(err.message || 'No se pudo activar el período.')
+      error: err => this.showError(err.message || 'No se pudo activar el período.')
     });
   }
 
@@ -394,6 +391,18 @@ export class EnrollmentManagementComponent implements OnInit {
     });
   }
 
+  private showError(message: string): void {
+    void Swal.fire({
+      icon: 'error',
+      titleText: 'No se pudo completar la acción',
+      text: message,
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#00579c',
+      allowOutsideClick: false,
+      heightAuto: false
+    });
+  }
+
   private showCoverageUnavailable(): void {
     void Swal.fire({
       icon: 'warning',
@@ -414,7 +423,7 @@ export class EnrollmentManagementComponent implements OnInit {
         this.periods = this.periods.filter(p => p.id !== period.id);
         this.cdr.detectChanges();
       },
-      error: err => alert(err.message || 'No se pudo eliminar el período.')
+      error: err => this.showError(err.message || 'No se pudo eliminar el período.')
     });
   }
 
@@ -445,7 +454,7 @@ export class EnrollmentManagementComponent implements OnInit {
         this.editingPeriod = null;
         this.cdr.detectChanges();
       },
-      error: err => alert(err.error?.msg || 'No se pudo actualizar los cupos.')
+      error: err => this.showError(err.error?.msg || 'No se pudo actualizar los cupos.')
     });
   }
 
