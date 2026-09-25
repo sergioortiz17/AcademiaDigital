@@ -1,8 +1,9 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, timeout } from 'rxjs/operators';
 import {
   EnrollmentService,
   EnrollmentPeriodDto,
@@ -301,11 +302,11 @@ export class EnrollmentManagementComponent implements OnInit {
         this.showOpenForm = false;
         this.resetForm();
         this.isSubmitting = false;
-        this.successMsg = 'Período de inscripción activado correctamente.';
-        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+        this.successMsg = '';
         this.loadPeriods();
         // Chequeo inmediato: avisar en el momento si el período recién abierto ya tiene faltantes.
         if (res?.data?.id) this.checkCoverageNow(res.data);
+        else this.showCoverageUnavailable();
         this.cdr.detectChanges();
       },
       error: err => {
@@ -355,17 +356,54 @@ export class EnrollmentManagementComponent implements OnInit {
    * aviso puntual en el momento (además del banner persistente por período).
    */
   private checkCoverageNow(period: EnrollmentPeriodDto): void {
-    this.enrollmentService.getCommissionCoverage(period.id).subscribe({
+    this.enrollmentService.getCommissionCoverage(period.id).pipe(timeout(10000)).subscribe({
       next: res => {
+        if (!res.success || !Array.isArray(res.data?.gaps)) {
+          this.showCoverageUnavailable();
+          return;
+        }
         this.coverageByPeriod[period.id] = res.data.gaps;
         if (res.data.gaps.length > 0) {
           const detalle = res.data.gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
-          this.errorMsg = `⚠️ Faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos ` +
-            `van a quedar sin división hasta que las crees o los asignes a mano.`;
+          void Swal.fire({
+            icon: 'warning',
+            titleText: 'Faltan divisiones',
+            text: `El período de inscripción de ${period.careerName} está activo. ` +
+              `Faltan divisiones para: ${detalle}. ` +
+              'Los alumnos que se inscriban en esos turnos van a quedar sin división ' +
+              'hasta que las crees o los asignes manualmente.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#00579c',
+            allowOutsideClick: false,
+            heightAuto: false
+          });
+        } else {
+          void Swal.fire({
+            icon: 'success',
+            titleText: 'Inscripción activada',
+            text: `El período de inscripción de ${period.careerName} se activó correctamente. No faltan divisiones.`,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#00579c',
+            allowOutsideClick: false,
+            heightAuto: false
+          });
         }
         this.cdr.detectChanges();
       },
-      error: () => { /* best-effort */ }
+      error: () => this.showCoverageUnavailable()
+    });
+  }
+
+  private showCoverageUnavailable(): void {
+    void Swal.fire({
+      icon: 'warning',
+      titleText: 'Inscripción activada',
+      text: 'El período se activó correctamente, pero no se pudo verificar si faltan divisiones. ' +
+        'Revisá las divisiones antes de continuar. No es necesario volver a crear la inscripción.',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#00579c',
+      allowOutsideClick: false,
+      heightAuto: false
     });
   }
 
