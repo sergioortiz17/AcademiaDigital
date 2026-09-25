@@ -16,90 +16,76 @@
   text-transform: uppercase;
 }
 
-mat-nav-list {
-  padding: 0;
+// Una misma caja para enlaces y controles de grupos, sin medidas de Material.
+.nav-row {
+  display: grid;
+  grid-template-columns: nav.$icon-size minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: nav.$gap;
+  box-sizing: border-box;
+  width: 100%;
+  height: nav.$row-height;
+  margin: 0;
+  padding: 0 nav.$inset;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--navigation-text);
+  font: inherit;
+  font-size: nav.$font-size;
+  line-height: nav.$line-height;
+  text-decoration: none;
+  list-style: none;
+  cursor: pointer;
 }
 
-a[mat-list-item] {
-  height: auto;
-  min-height: nav.$row-height;
-  margin: 0;
-  padding: 6px nav.$inset;
-  border-radius: 0;
-  --mdc-list-list-item-label-text-color: var(--navigation-text);
-  --mdc-list-list-item-leading-icon-color: #{nav.$accent};
+.nav-label {
+  min-width: 0;
+  letter-spacing: normal;
+  white-space: nowrap;
 }
 
 mat-icon {
-  flex-shrink: 0;
+  display: block;
   width: nav.$icon-size;
   height: nav.$icon-size;
   font-size: nav.$icon-size;
   color: nav.$accent;
 }
 
-mat-icon[matListItemIcon] {
-  margin: 0 nav.$gap 0 0;
-}
-
-span[matListItemTitle], .menu-title {
-  color: var(--navigation-text);
-  font-size: nav.$font-size;
-  line-height: nav.$line-height;
-  letter-spacing: normal;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.menu-panel.mat-expansion-panel {
+.nav-group {
   margin: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.menu-panel .mat-expansion-panel-header {
-  height: auto;
-  min-height: nav.$row-height;
-  padding: 6px nav.$inset;
-  box-sizing: border-box;
-  border-radius: 0;
-}
-
-mat-panel-title {
-  gap: nav.$gap;
-  margin-right: nav.$gap;
-  min-width: 0;
-}
-
-// Material encapsula este contenedor: excepción acotada a este componente.
-:host ::ng-deep .menu-panel .mat-expansion-panel-body {
   padding: 0;
 }
 
-a.submenu-link {
-  min-height: nav.$child-height;
-  padding: 4px nav.$inset 4px nav.$child-inset;
+summary::-webkit-details-marker { display: none; }
+
+.nav-chevron {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  color: var(--navigation-text);
 }
 
-.submenu-link span[matListItemTitle] {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  &::before {
-    content: '\2022';
-    flex-shrink: 0;
-  }
+.nav-group[open] > summary .nav-chevron { transform: rotate(180deg); }
+
+.nav-child {
+  grid-template-columns: 6px minmax(0, 1fr);
+  column-gap: 6px;
+  height: nav.$child-height;
+  padding-left: nav.$child-inset;
+  font-size: nav.$child-font-size;
 }
+
+.nav-row:hover { background: var(--navigation-active); }
 
 .active-link,
-.menu-panel .mat-expansion-panel-header.mat-expanded {
+.nav-group[open] > summary {
   background: var(--navigation-active);
   box-shadow: inset 0 -2px nav.$indicator;
 }
 
-a[mat-list-item]:focus-visible,
-.mat-expansion-panel-header:focus-visible {
+.nav-row:focus-visible {
   outline: 2px solid nav.$accent;
   outline-offset: -2px;
 }
@@ -110,7 +96,5 @@ a[mat-list-item]:focus-visible,
 }
 
 @media (pointer: coarse) {
-  a[mat-list-item], .menu-panel .mat-expansion-panel-header {
-    min-height: nav.$touch-height;
-  }
+  .nav-row { height: nav.$touch-height; }
 }

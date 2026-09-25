@@ -1,25 +1,25 @@
-<span class="nav-group-label" id="navigation-label">Navegación</span>
-<mat-nav-list aria-labelledby="navigation-label">
+<nav aria-label="Navegaci&#243;n principal">
+  <span class="nav-group-label">Navegaci&#243;n</span>
   <ng-container *ngFor="let item of menuItems">
-    <a *ngIf="!item.children" mat-list-item
+    <a *ngIf="!item.children" class="nav-row"
        [routerLink]="item.url" routerLinkActive="active-link"
        ariaCurrentWhenActive="page" (click)="onItemClick()">
-      <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-      <span matListItemTitle>{{ item.title }}</span>
+      <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+      <span class="nav-label">{{ item.title }}</span>
     </a>
 
-    <mat-expansion-panel *ngIf="item.children" class="menu-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>{{ item.icon }}</mat-icon>
-          <span class="menu-title">{{ item.title }}</span>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <a mat-list-item class="submenu-link" *ngFor="let child of item.children"
+    <details *ngIf="item.children" class="nav-group">
+      <summary class="nav-row">
+        <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+        <span class="nav-label">{{ item.title }}</span>
+        <mat-icon class="nav-chevron" aria-hidden="true">expand_more</mat-icon>
+      </summary>
+      <a class="nav-row nav-child" *ngFor="let child of item.children"
          [routerLink]="child.url" routerLinkActive="active-link"
          ariaCurrentWhenActive="page" (click)="onItemClick()">
-        <span matListItemTitle>{{ child.title }}</span>
+        <span class="nav-bullet" aria-hidden="true">&#8226;</span>
+        <span class="nav-label">{{ child.title }}</span>
       </a>
-    </mat-expansion-panel>
+    </details>
   </ng-container>
-</mat-nav-list>
+</nav>
