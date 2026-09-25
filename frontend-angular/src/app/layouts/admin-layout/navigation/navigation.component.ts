@@ -40,21 +40,21 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'teachers',    title: 'Docentes',           icon: 'group',
     children: [
-      { id: 'teacher-list',       title: '• Legajos', url: '/app/admin/teachers',           icon: '' },
-      { id: 'teaching-positions', title: '• Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
-      { id: 'commissions',        title: '• Divisiones', url: '/app/admin/commissions',      icon: '' },
-      { id: 'student-commission', title: '• Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
+      { id: 'teacher-list',       title: 'Legajos', url: '/app/admin/teachers',           icon: '' },
+      { id: 'teaching-positions', title: 'Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
+      { id: 'commissions',        title: 'Divisiones', url: '/app/admin/commissions',      icon: '' },
+      { id: 'student-commission', title: 'Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
     ]
   },
   { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
     children: [
-      { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
-      { id: 'gradebooks', title: '• Calificaciones', url: '/app/admin/gradebooks', icon: '' }
+      { id: 'attendance', title: 'Asistencias', url: '/app/admin/attendance', icon: '' },
+      { id: 'gradebooks', title: 'Calificaciones', url: '/app/admin/gradebooks', icon: '' }
     ]
   },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
     children: [
-      { id: 'certificate-requests', title: '• Peticiones',url: '/app/certificates',icon: '' }
+      { id: 'certificate-requests', title: 'Peticiones',url: '/app/certificates',icon: '' }
     ]
   },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },

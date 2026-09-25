@@ -1,84 +1,25 @@
-<!-- <div class="sidenav-header">
-  <img src="assets/images/logo.svg" alt="ITSC" class="sidenav-logo" />
-  <div>
-    <div class="app-name">ITSC</div>
-    <div class="app-logo">AcademiaDigital</div>
-  </div> 
-</div> 
-
-<span class="nav-group-label">Navegación</span>
-
-<mat-nav-list>
-  <a mat-list-item
-     *ngFor="let item of menuItems"
-     [routerLink]="item.url"
-     routerLinkActive="active-link"
-     (click)="onItemClick()">
-    <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-    <span matListItemTitle>{{ item.title }}</span>
-  </a>
-</mat-nav-list> -->
-
-<mat-nav-list>
-
+<span class="nav-group-label" id="navigation-label">Navegación</span>
+<mat-nav-list aria-labelledby="navigation-label">
   <ng-container *ngFor="let item of menuItems">
-
-    <!-- Item normal -->
-    <a
-      *ngIf="!item.children"
-      mat-list-item
-      [routerLink]="item.url"
-      routerLinkActive="active-link"
-      (click)="onItemClick()">
-
-      <mat-icon matListItemIcon>
-        {{ item.icon }}
-      </mat-icon>
-
-      <span matListItemTitle>
-        {{ item.title }}
-      </span>
-
+    <a *ngIf="!item.children" mat-list-item
+       [routerLink]="item.url" routerLinkActive="active-link"
+       ariaCurrentWhenActive="page" (click)="onItemClick()">
+      <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+      <span matListItemTitle>{{ item.title }}</span>
     </a>
 
-    <!-- Item con submenú -->
-    <mat-expansion-panel *ngIf="item.children" class="menu-panel" hideToggle>
-
+    <mat-expansion-panel *ngIf="item.children" class="menu-panel">
       <mat-expansion-panel-header>
-
         <mat-panel-title>
-
-          <mat-icon matListItemIcon>
-            {{ item.icon }}
-          </mat-icon>
-
-          <span class="menu-title">
-            {{ item.title }}
-          </span>
-
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span class="menu-title">{{ item.title }}</span>
         </mat-panel-title>
-
       </mat-expansion-panel-header>
-
-      <a
-        mat-list-item
-        *ngFor="let child of item.children"
-        [routerLink]="child.url"
-        routerLinkActive="active-link"
-        (click)="onItemClick()">
-
-        <mat-icon>
-          {{ child.icon }}
-        </mat-icon>
-
-        <span matListItemTitle>
-          {{ child.title }}
-        </span>
-
+      <a mat-list-item class="submenu-link" *ngFor="let child of item.children"
+         [routerLink]="child.url" routerLinkActive="active-link"
+         ariaCurrentWhenActive="page" (click)="onItemClick()">
+        <span matListItemTitle>{{ child.title }}</span>
       </a>
-
     </mat-expansion-panel>
-
   </ng-container>
-
 </mat-nav-list>

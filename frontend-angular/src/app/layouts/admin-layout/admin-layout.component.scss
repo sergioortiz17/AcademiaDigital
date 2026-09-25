@@ -1,4 +1,4 @@
-// All styles in global styles.scss
+@use '../../../assets/scss/navigation-tokens' as nav;
 .layout-container {
   height: 100vh;
   background: #f4f7fb;
@@ -6,11 +6,11 @@
 }
 
 .sidenav {
-  width: 280px;
+  width: nav.$width;
   background: white;
   /*color: white;*/
   border-right: none;
-  padding: 1rem 0.5rem;
+  padding: 0;
   /*overflow: hidden; */
 }
 
