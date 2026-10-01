@@ -80,6 +80,48 @@ export interface EligibleCourse {
   missingPrerequisites: MissingPrerequisite[];
 }
 
+export interface StudentCourseProgress {
+  courseId: number;
+  code: string;
+  name: string;
+  yearNumber: number;
+  semester: number;
+  academicStatus: string;
+  // Estado real sin agrupar: Enrolled | Regularized | Failed | Approved | Promoted | null
+  enrollmentStatus: string | null;
+  finalGrade: number | null;
+  academicYear: number | null;
+}
+
+export interface StudentAcademicProgress {
+  studentId: number;
+  careerId: number;
+  careerName: string;
+  studyPlanId: number;
+  studyPlanName: string;
+  totalCourses: number;
+  approvedCourses: number;
+  inProgressCourses: number;
+  pendingCourses: number;
+  progressPercentage: number;
+  courses: StudentCourseProgress[];
+}
+
+export interface StudentExamTable {
+  examTable: {
+    courseId: number;
+    academicYear: number;
+    examDateUtc: string;
+    status: string;
+  };
+  registrationId: number | null;
+  attemptNumber: number | null;
+  result: {
+    grade: number | null;
+    outcome: string;
+  } | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -124,31 +166,8 @@ export class StudentService {
     if (careerId != null) params = params.set('careerId', careerId);
     return this.http.get<StudentAcademicProgress>(`${this.baseURL}v1/students/me/academic-progress`, { params });
   }
-}
 
-export interface StudentCourseProgress {
-  courseId: number;
-  code: string;
-  name: string;
-  yearNumber: number;
-  semester: number;
-  academicStatus: string;
-  // Estado real sin agrupar: Enrolled | Regularized | Failed | Approved | Promoted | null
-  enrollmentStatus: string | null;
-  finalGrade: number | null;
-  academicYear: number | null;
-}
-
-export interface StudentAcademicProgress {
-  studentId: number;
-  careerId: number;
-  careerName: string;
-  studyPlanId: number;
-  studyPlanName: string;
-  totalCourses: number;
-  approvedCourses: number;
-  inProgressCourses: number;
-  pendingCourses: number;
-  progressPercentage: number;
-  courses: StudentCourseProgress[];
+  getMyExamTables(): Observable<StudentExamTable[]> {
+    return this.http.get<StudentExamTable[]>(`${this.baseURL}v1/exam-tables/me`);
+  }
 }

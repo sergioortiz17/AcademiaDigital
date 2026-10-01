@@ -49,7 +49,7 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
     children: [
       { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
-      { id: 'gradebooks', title: '• Calificaciones', url: '/app/admin/gradebooks', icon: '' }
+      { id: 'gradebooks-shared', title: '• Calificaciones', url: '/app/grades', icon: '' }
     ]
   },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
