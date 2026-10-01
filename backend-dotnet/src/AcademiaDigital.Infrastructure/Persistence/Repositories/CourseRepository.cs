@@ -27,6 +27,9 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
     public async Task<bool> ExistsInCareerAsync(int courseId, int careerId, CancellationToken ct = default)
         => await db.Courses.AsNoTracking().AnyAsync(c => c.Id == courseId && c.CareerId == careerId, ct);
 
+    public async Task<int> CountByCareerIdAsync(int careerId, CancellationToken ct = default)
+        => await db.Courses.AsNoTracking().CountAsync(c => c.CareerId == careerId, ct);
+
     public async Task<Course> CreateAsync(Course course, CancellationToken ct = default)
     {
         db.Courses.Add(course);
@@ -46,4 +49,7 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
         db.Courses.Remove(course);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task DeleteByCareerIdAsync(int careerId, CancellationToken ct = default)
+        => await db.Courses.Where(c => c.CareerId == careerId).ExecuteDeleteAsync(ct);
 }

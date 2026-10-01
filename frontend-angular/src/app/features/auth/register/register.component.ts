@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import {
   FormBuilder,
@@ -108,11 +109,16 @@ export class RegisterComponent implements OnInit {
           this.cdr.detectChanges();
         } else {
           this.errorMessage = response.msg || 'Error en el registro';
+          this.cdr.detectChanges();
         }
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.msg || err.message || 'Error en el registro';
+        const serverMessage = err.error?.msg || err.message;
+        this.errorMessage = err.status === 409 && /dni/i.test(serverMessage || '')
+          ? 'El usuario con este DNI ya se encuentra registrado.'
+          : serverMessage || 'Error en el registro';
+        this.cdr.detectChanges();
       }
     });
   }

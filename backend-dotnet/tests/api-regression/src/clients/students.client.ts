@@ -17,6 +17,7 @@ export class StudentsClient {
   eligibleCourses(id: number, careerId?: number) { return this.api.send({ operation: 'Consultar cursos elegibles', method: 'GET', path: `/api/v1/students/${id}/eligible-courses`, query: { careerId } }); }
   academicProgress(id: number, careerId?: number) { return this.api.send({ operation: 'Consultar progreso académico', method: 'GET', path: `/api/v1/students/${id}/academic-progress`, query: { careerId } }); }
   academicHistory(id: number, academicYear?: number) { return this.api.send({ operation: 'Consultar historial académico', method: 'GET', path: `/api/v1/students/${id}/academic-history`, query: { academicYear, page: 1, pageSize: 20 } }); }
+  rematriculate(id: number, body: unknown) { return this.api.send({ operation: 'Rematricular estudiante', method: 'POST', path: `/api/v1/students/${id}/rematriculations`, body }); }
   listDocuments(id: number) { return this.api.send({ operation: 'Listar documentos del estudiante', method: 'GET', path: `/api/v1/students/${id}/documents` }); }
   getDocument(id: number, documentId: number | string) { return this.api.send({ operation: 'Consultar documento del estudiante', method: 'GET', path: `/api/v1/students/${id}/documents/${documentId}` }); }
   addDocument(id: number, body: unknown) { return this.api.send({ operation: 'Registrar documento del estudiante', method: 'POST', path: `/api/v1/students/${id}/documents`, body }); }

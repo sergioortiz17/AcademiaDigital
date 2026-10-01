@@ -90,6 +90,10 @@ public sealed class StudentCourseProgressDto
     public int YearNumber { get; set; }
     public int Semester { get; set; }
     public string AcademicStatus { get; set; } = null!;
+    // Estado específico y sin agrupar de la inscripción (Enrolled/Regularized/Failed/Approved/
+    // Promoted), o null si el alumno todavía no cursó la materia. Complementa a AcademicStatus
+    // (que agrupa Approved+Promoted y Enrolled+Regularized) para la pantalla de historial.
+    public string? EnrollmentStatus { get; set; }
     public decimal? FinalGrade { get; set; }
     public int? AcademicYear { get; set; }
 }

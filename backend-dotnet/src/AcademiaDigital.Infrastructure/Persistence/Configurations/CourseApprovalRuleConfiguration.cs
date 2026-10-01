@@ -8,13 +8,15 @@ public class CourseApprovalRuleConfiguration : IEntityTypeConfiguration<CourseAp
 {
     public void Configure(EntityTypeBuilder<CourseApprovalRule> builder)
     {
-        builder.ToTable("CourseApprovalRules");
+        builder.ToTable("CourseApprovalRules", table =>
+            table.HasCheckConstraint("CK_CourseApprovalRules_FinalExamGrade", "minimum_final_exam_grade >= 1 AND minimum_final_exam_grade <= 10"));
 
         builder.HasKey(car => car.Id);
         builder.Property(car => car.Id).HasColumnName("id").ValueGeneratedOnAdd();
         builder.Property(car => car.StudyPlanCourseId).HasColumnName("study_plan_course_id");
         builder.Property(car => car.MinimumRegularGrade).HasColumnName("minimum_regular_grade").HasPrecision(5, 2);
         builder.Property(car => car.MinimumPromotionGrade).HasColumnName("minimum_promotion_grade").HasPrecision(5, 2);
+        builder.Property(car => car.MinimumFinalExamGrade).HasColumnName("minimum_final_exam_grade").HasPrecision(4, 2).HasDefaultValue(6m);
         builder.Property(car => car.MinimumAttendancePercentage).HasColumnName("minimum_attendance_percentage").HasPrecision(5, 2);
         builder.Property(car => car.RequiresFinalExam).HasColumnName("requires_final_exam").HasDefaultValue(true);
         builder.Property(car => car.AllowsPromotion).HasColumnName("allows_promotion").HasDefaultValue(false);

@@ -40,17 +40,15 @@ public sealed class CreateStudyPlanCommandHandler(
     public async Task<StudyPlanDto> Handle(CreateStudyPlanCommand command, CancellationToken ct = default)
     {
         var career = await careerRepository.FindByIdAsync(command.CareerId, ct)
-            ?? throw new KeyNotFoundException("Career not found.");
+            ?? throw new KeyNotFoundException("Carrera no encontrada.");
 
-        var studyPlan = new StudyPlan
-        {
-            CareerId = career.Id,
-            Code = command.Request.Code.Trim(),
-            Name = command.Request.Name.Trim(),
-            VersionNumber = command.Request.VersionNumber,
-            EffectiveFrom = command.Request.EffectiveFrom,
-            EffectiveTo = command.Request.EffectiveTo
-        };
+        var studyPlan = StudyPlan.Create(
+            career.Id,
+            command.Request.Code,
+            command.Request.Name,
+            command.Request.VersionNumber,
+            command.Request.EffectiveFrom,
+            command.Request.EffectiveTo);
 
         var created = await studyPlanRepository.CreateAsync(studyPlan, ct);
         return Map(created);
@@ -75,16 +73,16 @@ public sealed class UpdateStudyPlanCommandHandler(IStudyPlanRepository studyPlan
     public async Task Handle(UpdateStudyPlanCommand command, CancellationToken ct = default)
     {
         var studyPlan = await studyPlanRepository.GetByIdAsync(command.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
-        if (studyPlan.CareerId != command.CareerId) throw new KeyNotFoundException("Study plan not found in this career.");
+        if (studyPlan.CareerId != command.CareerId) throw new KeyNotFoundException("Plan de estudios no encontrado en esta carrera.");
 
-        studyPlan.Code = command.Request.Code.Trim();
-        studyPlan.Name = command.Request.Name.Trim();
-        studyPlan.VersionNumber = command.Request.VersionNumber;
-        studyPlan.EffectiveFrom = command.Request.EffectiveFrom;
-        studyPlan.EffectiveTo = command.Request.EffectiveTo;
-        studyPlan.UpdatedAt = DateTime.UtcNow;
+        studyPlan.Update(
+            command.Request.Code,
+            command.Request.Name,
+            command.Request.VersionNumber,
+            command.Request.EffectiveFrom,
+            command.Request.EffectiveTo);
 
         await studyPlanRepository.UpdateAsync(studyPlan, ct);
     }
@@ -96,12 +94,14 @@ public sealed class ActivateStudyPlanCommandHandler(IStudyPlanRepository studyPl
     {
         var studyPlans = (await studyPlanRepository.GetByCareerIdAsync(command.CareerId, ct)).ToList();
         var target = studyPlans.FirstOrDefault(sp => sp.Id == command.StudyPlanId)
-            ?? throw new KeyNotFoundException("Study plan not found in this career.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado en esta carrera.");
 
         foreach (var studyPlan in studyPlans)
         {
-            studyPlan.Status = studyPlan.Id == target.Id ? StudyPlanStatus.Active : StudyPlanStatus.Archived;
-            studyPlan.UpdatedAt = DateTime.UtcNow;
+            if (studyPlan.Id == target.Id)
+                studyPlan.Activate();
+            else
+                studyPlan.Archive();
             await studyPlanRepository.UpdateAsync(studyPlan, ct);
         }
     }
@@ -115,9 +115,9 @@ public sealed class GetCareerStudyPlanGroupedQueryHandler(
     public async Task<CareerStudyPlanDto> Handle(GetCareerStudyPlanGroupedQuery query, CancellationToken ct = default)
     {
         var studyPlan = await studyPlanRepository.GetByIdAsync(query.StudyPlanId, ct)
-            ?? throw new KeyNotFoundException("Study plan not found.");
+            ?? throw new KeyNotFoundException("Plan de estudios no encontrado.");
 
-        if (studyPlan.CareerId != query.CareerId) throw new KeyNotFoundException("Study plan not found in this career.");
+        if (studyPlan.CareerId != query.CareerId) throw new KeyNotFoundException("Plan de estudios no encontrado en esta carrera.");
 
         var courses = await studyPlanCourseRepository.GetByStudyPlanIdAsync(studyPlan.Id, ct);
         var prerequisites = await prerequisiteRepository.GetByStudyPlanIdAsync(studyPlan.Id, ct);

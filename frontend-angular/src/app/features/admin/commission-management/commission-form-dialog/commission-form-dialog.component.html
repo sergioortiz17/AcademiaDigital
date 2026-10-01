@@ -1,0 +1,44 @@
+<div class="dialog-header">
+  <mat-icon>groups</mat-icon>
+  <span>{{ isEdit ? 'Editar división' : 'Nueva división' }}</span>
+</div>
+
+<div class="dialog-body">
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Código</mat-label>
+    <input matInput [(ngModel)]="code" maxlength="50" placeholder="Ej: A-M-2026" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Nombre</mat-label>
+    <input matInput [(ngModel)]="name" maxlength="200" placeholder="Ej: División A - Mañana" />
+  </mat-form-field>
+
+  <div class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Año académico</mat-label>
+      <input matInput type="number" min="2000" max="2100" [(ngModel)]="academicYear" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Año del plan</mat-label>
+      <input matInput type="number" min="1" max="20" [(ngModel)]="yearNumber" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Turno</mat-label>
+      <mat-select [(ngModel)]="shift">
+        <mat-option *ngFor="let s of shifts" [value]="s.value">{{ s.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">
+    {{ isEdit ? 'Guardar cambios' : 'Crear comisión' }}
+  </button>
+</div>

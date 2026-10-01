@@ -23,8 +23,8 @@ public class Enrollment
     public int? StudyPlanCourseId { get; set; }
     public StudyPlanCourse? StudyPlanCourse { get; set; }
 
-    public int? TeachingPositionId { get; set; }
-    public TeachingPosition? TeachingPosition { get; set; }
+    public int? CourseSectionId { get; set; }
+    public CourseSection? CourseSection { get; set; }
 
     public int? EnrollmentPeriodId { get; set; }
     public EnrollmentPeriod? EnrollmentPeriod { get; set; }

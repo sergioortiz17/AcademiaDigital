@@ -1,0 +1,31 @@
+<div class="dialog-header">
+  <mat-icon>verified</mat-icon>
+  <span>Aprobar materias en lote</span>
+</div>
+
+<div class="dialog-body">
+  <p>
+    Vas a aprobar <strong>{{ data.courseName }}</strong> para <strong>{{ data.count }}</strong>
+    alumno(s) promocionado(s), por vía administrativa. Cada uno usa su propio promedio ya calculado
+    como nota final. El motivo se aplica a todos. Esta acción queda auditada.
+  </p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Motivo</mat-label>
+    <textarea
+      matInput
+      rows="3"
+      maxlength="500"
+      [(ngModel)]="reason"
+      placeholder="Explicá por qué se aprueba manualmente a este grupo">
+    </textarea>
+    <mat-hint *ngIf="!reasonValid">Mínimo 3 caracteres.</mat-hint>
+  </mat-form-field>
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!reasonValid" (click)="confirm()">
+    Aprobar {{ data.count }} materia(s)
+  </button>
+</div>

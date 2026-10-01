@@ -1,0 +1,91 @@
+<div class="rules-wrap">
+  <div class="title-bar">
+    <h1>Reglas de aprobación</h1>
+    <p class="subtitle">Configurá por materia si permite promoción y las notas mínimas. Se usa para calcular la condición de cada alumno.</p>
+  </div>
+
+  <mat-card class="rules-card">
+    <mat-card-content>
+
+      <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Carrera</mat-label>
+          <mat-select [(ngModel)]="selectedCareerId" (selectionChange)="onCareerChange()">
+            <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <span class="plan-chip" *ngIf="studyPlan">Plan: {{ studyPlan.name }}</span>
+      </div>
+
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && !loadedOnce">
+        <mat-icon>rule</mat-icon>
+        <p>Elegí una carrera para ver y editar las reglas de aprobación de sus materias.</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="!isLoading && loadedOnce && rows.length > 0">
+        <table class="rules-table">
+          <thead>
+            <tr>
+              <th class="subject-col">Materia</th>
+              <th class="year-col">Año</th>
+              <th class="check-col">Promociona</th>
+              <th class="num-col">Nota mín. promoción</th>
+              <th class="num-col">Nota mín. regular</th>
+              <th class="num-col">Nota mín. mesa final</th>
+              <th class="check-col">Requiere mesa final</th>
+              <th class="save-col">Guardar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rows">
+              <td class="subject-col">
+                {{ row.subject.courseName }}
+                <span class="code">{{ row.subject.courseCode }}</span>
+                <span *ngIf="!row.subject.approvalRule" class="badge-missing" matTooltip="Todavía no tiene regla guardada; se muestran valores por defecto">sin regla</span>
+              </td>
+              <td class="year-col">{{ row.subject.yearNumber }}°</td>
+              <td class="check-col">
+                <mat-checkbox [(ngModel)]="row.draft.allowsPromotion"></mat-checkbox>
+              </td>
+              <td class="num-col">
+                <input type="number" min="1" max="10" step="0.5" class="cell-input"
+                  [(ngModel)]="row.draft.minimumPromotionGrade"
+                  [disabled]="!row.draft.allowsPromotion">
+              </td>
+              <td class="num-col">
+                <input type="number" min="1" max="10" step="0.5" class="cell-input"
+                  [(ngModel)]="row.draft.minimumRegularGrade">
+              </td>
+              <td class="num-col">
+                <input type="number" min="1" max="10" step="0.5" class="cell-input"
+                  [(ngModel)]="row.draft.minimumFinalExamGrade">
+              </td>
+              <td class="check-col">
+                <mat-checkbox [(ngModel)]="row.draft.requiresFinalExam"></mat-checkbox>
+              </td>
+              <td class="save-col">
+                <button mat-stroked-button color="primary" [disabled]="row.saving" (click)="save(row)">
+                  <mat-icon *ngIf="row.savedOk">check</mat-icon>
+                  {{ row.saving ? 'Guardando…' : (row.savedOk ? 'Guardado' : 'Guardar') }}
+                </button>
+                <div class="row-error" *ngIf="row.error">{{ row.error }}</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && loadedOnce && rows.length === 0 && !errorMsg">
+        <mat-icon>menu_book</mat-icon>
+        <p>El plan no tiene materias cargadas.</p>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+</div>

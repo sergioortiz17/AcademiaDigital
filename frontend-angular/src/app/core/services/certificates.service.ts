@@ -12,6 +12,12 @@ export interface CertificateRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
   createdAt: string;
   updatedAt: string | null;
+  kind?: string;
+  studentCareerId?: number | null;
+  examRegistrationId?: number | null;
+  reviewedAt?: string | null;
+  reviewedByUserId?: number | null;
+  rejectionReason?: string | null;
 }
 
 export const CERTIFICATE_TYPES = [
@@ -41,5 +47,13 @@ export class CertificatesService {
     if (search?.trim()) params = params.set('search', search.trim());
     if (status) params = params.set('status', status);
     return this.http.get<{ success: boolean; requests: CertificateRequest[] }>(`${this.base}v1/certificates/all`, { params });
+  }
+
+  approveCertificate(id: number): Observable<CertificateRequest> {
+    return this.http.post<CertificateRequest>(`${this.base}v1/certificates/${id}/approve`, {});
+  }
+
+  rejectCertificate(id: number, reason: string): Observable<CertificateRequest> {
+    return this.http.post<CertificateRequest>(`${this.base}v1/certificates/${id}/reject`, { reason });
   }
 }
