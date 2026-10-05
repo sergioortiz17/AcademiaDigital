@@ -44,8 +44,10 @@ export class AuthInterceptor implements HttpInterceptor {
             this.router.navigate(['/auth/signin']);
           }
         }
-        const message = error.error?.msg || error.message || 'An error occurred';
-        return throwError(() => new Error(message));
+        // Se propaga el HttpErrorResponse tal cual: ErrorInterceptor lo normaliza
+        // y muestra la alerta. Aplanarlo acá en un Error perdía `error.error.msg`,
+        // que es justo lo que leen los componentes.
+        return throwError(() => error);
       })
     );
   }

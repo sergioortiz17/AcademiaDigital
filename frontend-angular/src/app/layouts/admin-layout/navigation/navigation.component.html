@@ -16,6 +16,7 @@
       </summary>
       <a class="nav-row nav-child" *ngFor="let child of item.children"
          [routerLink]="child.url" routerLinkActive="active-link"
+         [routerLinkActiveOptions]="{ exact: child.id === 'course-enrollments' }"
          ariaCurrentWhenActive="page" (click)="onItemClick()">
         <span class="nav-bullet" aria-hidden="true">&#8226;</span>
         <span class="nav-label">{{ child.title }}</span>
