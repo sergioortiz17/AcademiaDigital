@@ -60,6 +60,7 @@ const MENU_ADMIN: MenuItem[] = [
       { id: 'certificate-requests', title: 'Peticiones',url: '/app/certificates',icon: '' }
     ]
   },
+  { id: 'admin-exam-form', title: 'Mesa de examen', url: '/app/admin/exam-form', icon: 'event_note' },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
