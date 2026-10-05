@@ -14,7 +14,10 @@ export interface MenuItem {
 const MENU_ALUMNO: MenuItem[] = [
   { id: 'dashboard',    title: 'Inicio',         url: '/app/dashboard/default', icon: 'home' },
   { id: 'courses',      title: 'Carreras',        url: '/app/courses',           icon: 'book' },
-  { id: 'enrollments',  title: 'Inscripciones',   url: '/app/enrollments',       icon: 'assignment' },
+  { id: 'enrollments', title: 'Inscripciones', icon: 'assignment', children: [
+    { id: 'course-enrollments', title: 'Insc. Materias', url: '/app/enrollments' },
+    { id: 'exam-enrollments', title: 'Mesa de examen', url: '/app/enrollments/exam' }
+  ] },
   { id: 'calendar',     title: 'Calendario',      url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
   { id: 'grades',       title: 'Calificaciones',  url: '/app/grades',            icon: 'grade' },

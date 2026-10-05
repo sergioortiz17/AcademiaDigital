@@ -50,3 +50,8 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   .schedule-pending { min-height: 240px; }
   .send-button { min-width: 180px; }
 }
+
+.exam-detail { display: block; margin-top: 5px; font-size: 12px; font-weight: 400; }
+.schedule-row { display: flex; flex-direction: column; gap: 5px; padding: 16px 0; border-bottom: 1px solid #ddd; }
+.schedule-panel h2 { color: #07568b; font-size: 20px; }
+button:disabled { opacity: 0.6; cursor: default; }
