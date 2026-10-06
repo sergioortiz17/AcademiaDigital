@@ -7,6 +7,7 @@ public class CourseApprovalRule
     public StudyPlanCourse StudyPlanCourse { get; set; } = null!;
     public decimal? MinimumRegularGrade { get; set; }
     public decimal? MinimumPromotionGrade { get; set; }
+    public decimal MinimumFinalExamGrade { get; set; } = 6m;
     public decimal? MinimumAttendancePercentage { get; set; }
     public bool RequiresFinalExam { get; set; } = true;
     public bool AllowsPromotion { get; set; }

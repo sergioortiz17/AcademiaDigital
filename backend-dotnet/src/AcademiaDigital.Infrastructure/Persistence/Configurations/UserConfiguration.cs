@@ -18,7 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Email).IsUnique();
         builder.Property(u => u.Password).HasColumnName("password").HasMaxLength(128).IsRequired();
         builder.Property(u => u.Dni).HasColumnName("dni").HasMaxLength(20).IsRequired(false);
-        builder.HasIndex(u => u.Dni).IsUnique().HasFilter("[dni] IS NOT NULL");
+        builder.HasIndex(u => u.Dni).IsUnique().HasFilter("dni IS NOT NULL");
         builder.Property(u => u.Gender).HasColumnName("gender").HasMaxLength(1).IsRequired(false);
         builder.Property(u => u.Cuil).HasColumnName("cuil").HasMaxLength(20).IsRequired(false);
         builder.Property(u => u.BirthDate).HasColumnName("birth_date").IsRequired(false);

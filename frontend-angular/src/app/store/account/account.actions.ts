@@ -10,6 +10,8 @@ export interface UserModel {
   _id?: string | number;
   email: string;
   username?: string;
+  lastName?: string;
+  dni?: string;
   role?: UserRole;
 }
 

@@ -36,14 +36,18 @@ services:
         condition: service_healthy
     networks:
       - app_network
+    volumes:
+      - backend_files:/app/data/files
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=db;Database=AcademiaDigital;User Id=sa;Password=${SA_PASSWORD:-Admin1234!};TrustServerCertificate=True;
       - Jwt__SecretKey=${JWT_SECRET_KEY}
       - Jwt__ExpirationDays=7
+      - AdmissionStorage__RootPath=/app/data/files
       - Cors__AllowedOrigins__0=http://localhost:3000
       - Cors__AllowedOrigins__1=http://localhost:4200
       - Cors__AllowedOrigins__2=https://itsc-app.dryvn.org
 
 volumes:
   sqlserver_data:
+  backend_files:

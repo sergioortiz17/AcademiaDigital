@@ -8,7 +8,7 @@ public class UpdateUserActiveStatusUseCase(IUserRepository userRepository, ISess
     public async Task<UserSummary> ExecuteAsync(long requestingUserId, long targetUserId, bool isActive, CancellationToken ct = default)
     {
         if (requestingUserId == targetUserId)
-            throw new ForbiddenException("You cannot change your own active status.");
+            throw new ForbiddenException("No puedes cambiar tu propio estado de actividad.");
 
         var updated = await userRepository.UpdateActiveStatusAsync(targetUserId, isActive, ct);
 

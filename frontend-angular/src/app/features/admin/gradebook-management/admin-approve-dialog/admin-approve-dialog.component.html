@@ -1,0 +1,41 @@
+<div class="dialog-header">
+  <mat-icon>verified</mat-icon>
+  <span>Marcar materia como aprobada</span>
+</div>
+
+<div class="dialog-body">
+  <p>
+    Vas a aprobar <strong>{{ data.courseName }}</strong> para <strong>{{ data.studentName }}</strong>
+    por vía administrativa, sin pasar por la mesa de examen. La materia quedará en estado
+    <strong>Aprobada</strong> y podrá habilitar las correlativas. Esta acción queda auditada.
+  </p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Nota final</mat-label>
+    <input
+      matInput
+      type="number"
+      min="1"
+      max="10"
+      step="0.01"
+      [(ngModel)]="finalGrade">
+    <mat-hint *ngIf="gradeValid">Precargada con el promedio calculado; podés ajustarla si hace falta.</mat-hint>
+    <mat-hint *ngIf="!gradeValid">La nota debe estar entre 1 y 10.</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Motivo (opcional)</mat-label>
+    <textarea
+      matInput
+      rows="3"
+      maxlength="500"
+      [(ngModel)]="reason"
+      placeholder="Explicá por qué se aprueba manualmente (ej: notas históricas cargadas, aprobación previa al sistema)">
+    </textarea>
+  </mat-form-field>
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Aprobar materia</button>
+</div>

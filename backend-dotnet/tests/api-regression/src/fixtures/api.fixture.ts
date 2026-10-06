@@ -8,6 +8,15 @@ import { EnrollmentsClient } from '../clients/enrollments.client';
 import { StudentsClient } from '../clients/students.client';
 import { StudentCatalogsClient } from '../clients/student-catalogs.client';
 import { ApiRequestExecutor } from '../utils/api-request';
+import { AdmissionsClient } from '../clients/admissions.client';
+import { TeachersClient } from '../clients/teachers.client';
+import { TeachingPositionsClient } from '../clients/teaching-positions.client';
+import { AttendanceClient } from '../clients/attendance.client';
+import { GradesClient } from '../clients/grades.client';
+import { CertificatesClient } from '../clients/certificates.client';
+import { FinanceClient } from '../clients/finance.client';
+import { PaymentsClient } from '../clients/payments.client';
+import { ReceiptsClient } from '../clients/receipts.client';
 
 export interface ApiClients {
   auth: AuthClient;
@@ -15,6 +24,15 @@ export interface ApiClients {
   students: StudentsClient;
   enrollments: EnrollmentsClient;
   studentCatalogs: StudentCatalogsClient;
+  admissions: AdmissionsClient;
+  teachers: TeachersClient;
+  teachingPositions: TeachingPositionsClient;
+  attendance: AttendanceClient;
+  grades: GradesClient;
+  certificates: CertificatesClient;
+  finance: FinanceClient;
+  payments: PaymentsClient;
+  receipts: ReceiptsClient;
 }
 
 function clients(context: APIRequestContext, token?: string): ApiClients {
@@ -25,7 +43,16 @@ function clients(context: APIRequestContext, token?: string): ApiClients {
     academic: new AcademicClient(executor),
     students: new StudentsClient(executor),
     enrollments: new EnrollmentsClient(executor),
-    studentCatalogs: new StudentCatalogsClient(executor)
+    studentCatalogs: new StudentCatalogsClient(executor),
+    admissions: new AdmissionsClient(executor, env.admissionChallengeToken),
+    teachers: new TeachersClient(executor),
+    teachingPositions: new TeachingPositionsClient(executor),
+    attendance: new AttendanceClient(executor),
+    grades: new GradesClient(executor),
+    certificates: new CertificatesClient(executor),
+    finance: new FinanceClient(executor),
+    payments: new PaymentsClient(executor),
+    receipts: new ReceiptsClient(executor)
   };
 }
 

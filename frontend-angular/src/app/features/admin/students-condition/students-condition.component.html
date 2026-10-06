@@ -1,0 +1,131 @@
+<div class="students-wrap">
+  <div class="title-bar">
+    <h1>Alumnos</h1>
+  </div>
+
+  <mat-card class="students-card">
+    <mat-card-content>
+
+      <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+      <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Materia</mat-label>
+          <mat-select [(ngModel)]="selectedGradebookId" (selectionChange)="onGradebookChange()">
+            <mat-option *ngFor="let g of gradebooks" [value]="g.id">{{ gradebookLabel(g) }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="search-field" *ngIf="loadedOnce">
+          <mat-label>Buscar por nombre o legajo</mat-label>
+          <input matInput [(ngModel)]="searchTerm">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Acciones en lote: solo Admin, habilitado cuando hay al menos un alumno tildado -->
+        <ng-container *ngIf="isAdmin && loadedOnce">
+          <button mat-raised-button color="primary"
+            [disabled]="selectedCount === 0 || isProcessing"
+            [matMenuTriggerFor]="accionesMenu">
+            <mat-icon>checklist</mat-icon>
+            Acciones<span *ngIf="selectedCount > 0"> ({{ selectedCount }})</span>
+          </button>
+          <mat-menu #accionesMenu="matMenu">
+            <button mat-menu-item (click)="approveSelected()">
+              <mat-icon>verified</mat-icon>
+              <span>Aprobar materias</span>
+            </button>
+          </mat-menu>
+        </ng-container>
+      </div>
+
+      <div class="loading-overlay" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && gradebooks.length === 0">
+        <mat-icon>menu_book</mat-icon>
+        <p>No hay materias con planilla disponibles para tu usuario.</p>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && gradebooks.length > 0 && selectedGradebookId == null">
+        <mat-icon>filter_list</mat-icon>
+        <p>Elegí una materia para ver la condición de sus alumnos.</p>
+      </div>
+
+      <ng-container *ngIf="!isLoading && loadedOnce && selectedGradebookId != null">
+        <div class="table-wrap">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th class="check-col" *ngIf="isAdmin">
+                  <mat-checkbox
+                    [checked]="allVisibleSelected"
+                    [indeterminate]="someVisibleSelected"
+                    [disabled]="selectablePromoted.length === 0 || isProcessing"
+                    (change)="toggleSelectAll($event.checked)"
+                    matTooltip="Seleccionar/deseleccionar todos los promocionados visibles">
+                  </mat-checkbox>
+                </th>
+                <th class="name-col">Alumno</th>
+                <th class="legajo-col">Legajo</th>
+                <th class="condition-col">Condición</th>
+                <th class="action-col">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredStudents">
+                <td class="check-col" *ngIf="isAdmin">
+                  <mat-checkbox
+                    [checked]="isSelected(row)"
+                    [disabled]="!canSelect(row) || isProcessing"
+                    (change)="toggleSelection(row, $event.checked)"
+                    [matTooltip]="canSelect(row) ? '' : 'Solo se pueden aprobar alumnos promocionados'">
+                  </mat-checkbox>
+                </td>
+                <td class="name-col">{{ row.studentName }}</td>
+                <td class="legajo-col">{{ row.legajoNumber || '—' }}</td>
+                <td class="condition-col">
+                  <span class="condition-chip"
+                    [ngClass]="row.resultStatus ? ('condition-chip--' + row.resultStatus.toLowerCase()) : 'condition-chip--none'">
+                    {{ resultLabel(row.resultStatus) }}
+                  </span>
+                </td>
+                <td class="action-col">
+                  <!-- Promocionado: aprobar (solo Admin; oculto para Profesor) -->
+                  <button
+                    *ngIf="isPromoted(row) && isAdmin"
+                    mat-raised-button color="accent"
+                    [disabled]="isProcessing"
+                    (click)="approve(row)">
+                    Aprobar materia
+                  </button>
+
+                  <!-- Promocionado pero el usuario es Profesor: sin botón -->
+                  <span *ngIf="isPromoted(row) && !isAdmin" class="hint hint--info">
+                    <mat-icon>lock</mat-icon> Solo Administración puede aprobar
+                  </span>
+
+                  <!-- Regular / Libre: necesita mesa final -->
+                  <span *ngIf="needsFinalExam(row)" class="hint hint--warn">
+                    <mat-icon>event</mat-icon> Necesita rendir mesa final
+                  </span>
+
+                  <!-- Sin condición calculada todavía (faltan notas) -->
+                  <span *ngIf="!row.resultStatus" class="hint">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="empty-state" *ngIf="filteredStudents.length === 0">
+            <mat-icon>group_off</mat-icon>
+            <p>No hay alumnos que coincidan.</p>
+          </div>
+        </div>
+      </ng-container>
+
+    </mat-card-content>
+  </mat-card>
+</div>

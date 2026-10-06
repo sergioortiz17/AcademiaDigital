@@ -1,0 +1,81 @@
+.assign-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.assign-page h1 {
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.msg--error {
+  background: #fdecea;
+  color: #b71c1c;
+}
+
+.msg--success {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.derived {
+  background: #f5f7fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0 20px;
+}
+
+.derived h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.derived ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.derived .warn {
+  color: #b71c1c;
+  margin: 8px 0 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

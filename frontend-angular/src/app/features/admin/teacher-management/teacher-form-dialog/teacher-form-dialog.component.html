@@ -1,0 +1,101 @@
+<div class="dialog-header">
+  <mat-icon>badge</mat-icon>
+  <span>{{ isEdit ? 'Editar docente' : 'Nuevo docente' }}</span>
+</div>
+
+<div class="dialog-body">
+
+  <div class="user-picker" *ngIf="!isEdit">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Buscar usuario (rol Profesor)</mat-label>
+      <input matInput [value]="userSearchTerm" (input)="onUserSearchChange($any($event.target).value)" placeholder="Email o DNI">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="user-results" *ngIf="userResults.length > 0">
+      <div class="user-result" *ngFor="let u of userResults" (click)="selectUser(u)">
+        <strong>{{ u.username }}</strong> — {{ u.email }} <span *ngIf="u.dni">({{ u.dni }})</span>
+      </div>
+    </div>
+
+    <div class="selected-user" *ngIf="selectedUser">
+      <mat-icon>check_circle</mat-icon>
+      Vinculado a <strong>{{ selectedUser.username }}</strong> ({{ selectedUser.email }})
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>N° de legajo</mat-label>
+      <input matInput [(ngModel)]="employeeNumber" maxlength="50">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha de ingreso</mat-label>
+      <input matInput [matDatepicker]="hireDatePicker" [(ngModel)]="hireDate">
+      <mat-datepicker-toggle matSuffix [for]="hireDatePicker"></mat-datepicker-toggle>
+      <mat-datepicker #hireDatePicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Área / Departamento</mat-label>
+      <input matInput [(ngModel)]="department" maxlength="200">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Especialidad</mat-label>
+      <input matInput [(ngModel)]="specializationArea" maxlength="200">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Teléfono</mat-label>
+      <input matInput [(ngModel)]="phoneNumber" maxlength="30">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Domicilio</mat-label>
+      <input matInput [(ngModel)]="addressLine" maxlength="255">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Ciudad</mat-label>
+      <input matInput [(ngModel)]="city" maxlength="120">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Provincia</mat-label>
+      <input matInput [(ngModel)]="province" maxlength="120">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Código postal</mat-label>
+      <input matInput [(ngModel)]="postalCode" maxlength="20">
+    </mat-form-field>
+  </div>
+
+  <h4 class="section-title">Contacto de emergencia</h4>
+  <div class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput [(ngModel)]="emergencyContactName" maxlength="200">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Vínculo</mat-label>
+      <input matInput [(ngModel)]="emergencyContactRelationship" maxlength="100">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Teléfono</mat-label>
+      <input matInput [(ngModel)]="emergencyContactPhone" maxlength="30">
+    </mat-form-field>
+  </div>
+
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">
+    {{ isEdit ? 'Guardar cambios' : 'Crear docente' }}
+  </button>
+</div>

@@ -17,31 +17,51 @@ const MENU_ALUMNO: MenuItem[] = [
   { id: 'enrollments',  title: 'Inscripciones',   url: '/app/enrollments',       icon: 'assignment' },
   { id: 'calendar',     title: 'Calendario',      url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
-  //{ id: 'grades',      title: 'Notas',    url: '/app/',            icon: 'grade' },
+  { id: 'grades',       title: 'Calificaciones',  url: '/app/grades',            icon: 'grade' },
+  { id: 'academic-history', title: 'Historial académico', url: '/app/academic-history', icon: 'history_edu' },
+  { id: 'my-attendance', title: 'Asistencias',    url: '/app/attendance/me',     icon: 'fact_check' },
 ];
 
 const MENU_PROFESOR: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',          url: '/app/dashboard/default', icon: 'home' },
-  //{ id: 'grades',      title: 'Cargar Notas',    url: '/app/grades',            icon: 'grade' },
+  { id: 'grades',      title: 'Cargar Calificaciones', url: '/app/grades',      icon: 'grade' },
+  { id: 'attendance',  title: 'Cargar Asistencia', url: '/app/attendance',      icon: 'fact_check' },
   { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'book' },
   { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
-  { id: 'enrollments', title: 'Inscripciones',    url: '/app/enrollments',       icon: 'assignment' },
+  { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
+  { id: 'my-assignments', title: 'Mis asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
+  { id: 'students',    title: 'Alumnos',          url: '/app/admin/students-condition', icon: 'groups' },
   //cambiar por Registro
 ];
 
 const MENU_ADMIN: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',            url: '/app/dashboard/default', icon: 'home' },
   { id: 'courses',     title: 'Carreras',           url: '/app/courses',           icon: 'book' },
-  { id: 'enrollments', title: 'Inscripciones',      url: '/app/enrollments',       icon: 'assignment' },
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
-  //{ id: 'teachers',    title: 'Profesores',         url: '/app/teachers',          icon: 'group' },
+  { id: 'teachers',    title: 'Docentes',           icon: 'group',
+    children: [
+      { id: 'teacher-list',       title: '• Legajos', url: '/app/admin/teachers',           icon: '' },
+      { id: 'teaching-positions', title: '• Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
+      { id: 'commissions',        title: '• Divisiones', url: '/app/admin/commissions',      icon: '' },
+      { id: 'student-commission', title: '• Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
+    ]
+  },
+  { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
+    children: [
+      { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
+      { id: 'gradebooks', title: '• Calificaciones', url: '/app/admin/gradebooks', icon: '' }
+    ]
+  },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
     children: [
       { id: 'certificate-requests', title: '• Peticiones',url: '/app/certificates',icon: '' }
     ]
   },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
+  { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
+  { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
+  { id: 'approval-rules', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' },
 ];
 
 @Component({

@@ -1,0 +1,41 @@
+<div class="dialog-header">
+  <mat-icon>fact_check</mat-icon>
+  <span>Justificar inasistencia</span>
+</div>
+
+<div class="dialog-body">
+  <p>
+    Alumno: <strong>{{ data.record.studentName }}</strong>
+    ({{ data.record.status === 'Absent' ? 'Ausente' : 'Tarde' }})
+  </p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Categoría</mat-label>
+    <mat-select [(ngModel)]="category">
+      <mat-option *ngFor="let c of categoryOptions" [value]="c">{{ c }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Motivo</mat-label>
+    <textarea
+      matInput
+      rows="3"
+      maxlength="1000"
+      [(ngModel)]="reason"
+      placeholder="Detalle de la justificación">
+    </textarea>
+    <mat-hint *ngIf="reason.trim().length < 3">Mínimo 3 caracteres.</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Evidencia (opcional)</mat-label>
+    <input matInput [(ngModel)]="evidenceUrl" placeholder="https://... o storage://...">
+    <mat-hint *ngIf="evidenceUrl && !isEvidenceValid">Debe empezar con https:// o storage://.</mat-hint>
+  </mat-form-field>
+</div>
+
+<div class="dialog-actions">
+  <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Justificar</button>
+</div>

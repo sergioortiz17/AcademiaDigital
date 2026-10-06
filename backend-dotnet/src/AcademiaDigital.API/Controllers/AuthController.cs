@@ -25,7 +25,7 @@ public class AuthController(
         {
             success = result.Success,
             token = result.Token,
-            user = new { _id = result.User.Id, result.User.Username, result.User.Email, role = (int)result.User.Role }
+            user = new { _id = result.User.Id, result.User.Username, result.User.LastName, result.User.Dni, result.User.Email, role = (int)result.User.Role }
         });
     }
 

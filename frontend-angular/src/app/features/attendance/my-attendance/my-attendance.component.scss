@@ -1,0 +1,368 @@
+.my-attendance-wrap {
+  max-width: 1100px;
+}
+
+.my-attendance-title-bar {
+  display: inline-block;
+  background: #125081;
+  color: #fff;
+  padding: 12px 32px;
+  border-radius: 16px 16px 0 0;
+  margin-bottom: -1px;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.my-attendance-card {
+  border-radius: 0 20px 20px 20px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--error { background: #fce4ec; color: #c62828; }
+}
+
+.filters-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: .5rem;
+}
+
+.filter-field {
+  flex: 1 1 260px;
+  min-width: 220px;
+
+  &--small {
+    flex: 0 1 200px;
+    min-width: 170px;
+  }
+
+  &--date {
+    flex: 0 1 150px;
+    min-width: 130px;
+  }
+}
+
+.search-btn {
+  height: 56px;
+  margin-top: 0;
+}
+
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem;
+  color: rgba(0, 0, 0, .4);
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background: #f5f8fc;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+}
+
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #125081;
+
+  &--risk { color: #c62828; }
+}
+
+.stat-label {
+  font-size: .75rem;
+  color: rgba(0, 0, 0, .55);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(0, 0, 0, .1);
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+  font-size: .8rem;
+  color: rgba(0, 0, 0, .6);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+
+  &--low { background: #2e7d32; }
+  &--medium { background: #f9a825; }
+  &--high { background: #c62828; }
+}
+
+.sort-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.sort-btn {
+  border: 1px solid #125081;
+  background: #fff;
+  color: #125081;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--active {
+    background: #125081;
+    color: #fff;
+  }
+}
+
+.materias-section {
+  margin-bottom: 1rem;
+}
+
+.section-header {
+  font-size: .8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  padding: 8px 14px;
+  border-radius: 8px;
+  margin-bottom: .5rem;
+
+  &--risk {
+    background: #fce4ec;
+    color: #c62828;
+  }
+
+  &--rest {
+    background: #e8eef5;
+    color: #125081;
+  }
+}
+
+.materia-row-wrap {
+  border-bottom: 1px solid rgba(0, 0, 0, .06);
+
+  &:last-child { border-bottom: none; }
+}
+
+.materia-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 10px 8px;
+  cursor: pointer;
+  border-radius: 8px;
+
+  &:hover { background: #f5f9ff; }
+
+  &--selected {
+    background: #eaf2fb;
+    box-shadow: inset 0 0 0 1px #125081;
+  }
+}
+
+.risk-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.dot--low { background: #2e7d32; }
+  &.dot--medium { background: #f9a825; }
+  &.dot--high { background: #c62828; }
+}
+
+.materia-name {
+  flex: 0 1 260px;
+  font-weight: 500;
+  font-size: .92rem;
+}
+
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #125081;
+  font-size: .78rem;
+  cursor: pointer;
+  padding: 0;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.progress-bar {
+  flex: 1 1 auto;
+  height: 8px;
+  background: rgba(0, 0, 0, .08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+
+  &--low { background: #4caf50; }
+  &--medium { background: #f9a825; }
+  &--high { background: #e53935; }
+}
+
+.materia-pct {
+  flex: 0 0 46px;
+  text-align: right;
+  font-weight: 600;
+  font-size: .88rem;
+}
+
+.year-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 6px 8px 6px 32px;
+
+  .progress-bar { cursor: pointer; }
+}
+
+.year-chip {
+  flex: 0 0 auto;
+  background: #125081;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 10px;
+}
+
+.detail-card {
+  margin-top: 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .75rem;
+
+  .detail-course {
+    font-weight: 700;
+    color: #125081;
+    font-size: 1rem;
+  }
+}
+
+.detail-condition {
+  margin-left: auto;
+  font-size: .78rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 3px 10px;
+
+  &--low { background: #e8f5e9; color: #2e7d32; }
+  &--medium { background: #fff8e1; color: #f9a825; }
+  &--high { background: #fce4ec; color: #c62828; }
+}
+
+.detail-breakdown {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.breakdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 70px;
+}
+
+.breakdown-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.breakdown-label {
+  font-size: .72rem;
+  color: rgba(0, 0, 0, .55);
+  text-transform: uppercase;
+}
+
+.breakdown-item--present .breakdown-value { color: #2e7d32; }
+.breakdown-item--late .breakdown-value { color: #f9a825; }
+.breakdown-item--absent .breakdown-value { color: #c62828; }
+.breakdown-item--justified .breakdown-value { color: #6a1b9a; }
+.breakdown-item--pct .breakdown-value { color: #125081; }
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: none;
+  border: none;
+  color: #125081;
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover { text-decoration: underline; }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}

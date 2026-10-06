@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>Nueva carrera</h2>
+
+<mat-dialog-content>
+  <div *ngIf="errorMsg" class="msg msg--error">
+    <mat-icon>error</mat-icon> {{ errorMsg }}
+  </div>
+
+  <form (ngSubmit)="onSubmit()" #createForm="ngForm">
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre de la carrera</mat-label>
+        <input matInput [(ngModel)]="name" name="name" required maxlength="200" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Código de la carrera</mat-label>
+        <input matInput [(ngModel)]="code" name="code" required maxlength="20" placeholder="Ej: ENF2025" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Descripción</mat-label>
+        <textarea matInput [(ngModel)]="description" name="description" maxlength="1000" rows="2"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Créditos totales</mat-label>
+        <input matInput type="number" min="0" [(ngModel)]="totalCredits" name="totalCredits" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Duración (años)</mat-label>
+        <input matInput type="number" min="1" max="20" [(ngModel)]="durationYears" name="durationYears" required />
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isLoading || !isFormValid">
+    <mat-spinner *ngIf="isLoading" diameter="18" class="btn-spinner"></mat-spinner>
+    <span *ngIf="!isLoading">Crear carrera</span>
+    <span *ngIf="isLoading">Creando...</span>
+  </button>
+</mat-dialog-actions>
