@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 
 import { Observable } from 'rxjs';
 
+import { SKIP_ERROR_ALERT } from '../interceptors/error.interceptor';
 import { environment } from '../../../environments/environment';
 
 export interface StudyPlan {
@@ -39,10 +40,22 @@ export interface Subject{
     isAnnual:boolean;
     sortOrder:number;
     isMandatory:boolean;
-    credits:number;
-    workloadHours:number;
-    courseType: null;
+    credits:number | null;
+    workloadHours:number | null;
+    courseType: string | null;
+    courseTypeId?: number | null;
     approvalRule: CourseApprovalRule | null;
+}
+
+export interface PlanCourseInput {
+  courseId: number;
+  yearNumber: number;
+  semester: number;
+  sortOrder: number;
+  courseTypeId: number | null;
+  isMandatory: boolean;
+  credits: number | null;
+  workloadHours: number | null;
 }
 
 @Injectable({
@@ -75,6 +88,19 @@ export class SubjectService{
             `${this.baseURL}v1/study-plans/${studyPlanId}/courses/${studyPlanCourseId}/approval-rule`,
             rule
         );
+    }
+
+    addPlanCourse(planId: number, input: PlanCourseInput): Observable<Subject> {
+      return this.http.post<Subject>(`${this.baseURL}v1/study-plans/${planId}/courses`, input,
+        { context: new HttpContext().set(SKIP_ERROR_ALERT, true) });
+    }
+    updatePlanCourse(planId: number, id: number, input: PlanCourseInput): Observable<void> {
+      return this.http.put<void>(`${this.baseURL}v1/study-plans/${planId}/courses/${id}`, input,
+        { context: new HttpContext().set(SKIP_ERROR_ALERT, true) });
+    }
+    removePlanCourse(planId: number, id: number): Observable<void> {
+      return this.http.delete<void>(`${this.baseURL}v1/study-plans/${planId}/courses/${id}`,
+        { context: new HttpContext().set(SKIP_ERROR_ALERT, true) });
     }
 
 }
