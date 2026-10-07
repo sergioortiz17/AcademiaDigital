@@ -56,8 +56,23 @@ public sealed class CertificatesController(
     {
         var guard = RequireAdmin();
         if (guard is not null) return guard;
-        return Ok(await reviewHandler.Handle(new ReviewCertificateRequestCommand(
-            id, true, null, CurrentUserId!.Value), ct));
+
+        // 1) Aprobar la solicitud.
+        var approved = await reviewHandler.Handle(new ReviewCertificateRequestCommand(
+            id, true, null, CurrentUserId!.Value), ct);
+
+        // 2) Emitir automáticamente el certificado (genera el PDF y lo deja listo para descargar).
+        //    Si la emisión falla, la aprobación se mantiene y el admin puede reintentar con /issue;
+        //    no propagamos el error para no revertir la aprobación ya confirmada.
+        try
+        {
+            var issuance = await issueHandler.Handle(new IssueCertificateCommand(id, CurrentUserId!.Value), ct);
+            return Ok(approved with { Issuance = issuance });
+        }
+        catch (Exception)
+        {
+            return Ok(approved);
+        }
     }
 
     [HttpPost("{id:long}/reject")]

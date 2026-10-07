@@ -1,7 +1,16 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, of } from 'rxjs';
+import { map, catchError, timeout } from 'rxjs/operators';
+import {
+  EnrollmentService,
+  EnrollmentPeriodDto,
+  OpenPeriodRequest,
+  PeriodCommissionCoverageDto,
+  CommissionCoverageGap
+} from '../../../core/services/enrollment. service';
 import { map, catchError } from 'rxjs/operators';
 import { EnrollmentService, EnrollmentPeriodDto, OpenPeriodRequest, PeriodCommissionCoverageDto, CommissionCoverageGap} from '../../../core/services/enrollment. service';
 import { CareerService, Career } from '../../../core/services/career.service';
@@ -46,7 +55,6 @@ export class EnrollmentManagementComponent implements OnInit {
 
   isSubmitting = false;
   loadingPeriods = false;
-  errorMsg = '';
   successMsg = '';
 
   constructor(
@@ -284,7 +292,7 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
           this.cdr.detectChanges();
         },
         error: (err) => {
-          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la división.';
+          this.showError(err.error?.msg || err.message || 'No se pudo crear la división.');
           this.cdr.detectChanges();
         }
       });
@@ -316,21 +324,20 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
   submitOpen(): void {
     if (!this.canOpen()) return;
     this.isSubmitting = true;
-    this.errorMsg = '';
     this.enrollmentService.openPeriod(this.openingForm).subscribe({
       next: (res) => {
         this.showOpenForm = false;
         this.resetForm();
         this.isSubmitting = false;
-        this.successMsg = 'Período de inscripción activado correctamente.';
-        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+        this.successMsg = '';
         this.loadPeriods();
         // Chequeo inmediato: avisar en el momento si el período recién abierto ya tiene faltantes.
         if (res?.data?.id) this.checkCoverageNow(res.data);
+        else this.showCoverageUnavailable();
         this.cdr.detectChanges();
       },
       error: err => {
-        this.errorMsg = err.error?.msg || err.error?.title || 'No se pudo abrir el período.';
+        this.showError(err.error?.msg || err.error?.title || 'No se pudo abrir el período.');
         this.isSubmitting = false;
         this.cdr.detectChanges();
       }
@@ -495,7 +502,7 @@ deletePeriod(period: EnrollmentPeriodDto): void {
         this.editingPeriod = null;
         this.cdr.detectChanges();
       },
-      error: err => alert(err.error?.msg || 'No se pudo actualizar los cupos.')
+      error: err => this.showError(err.error?.msg || 'No se pudo actualizar los cupos.')
     });
   }
 

@@ -39,7 +39,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     { label: 'Rechazados', value: 'Rejected' },
   ];
 
-  displayedColumnsAlumno = ['certificateType', 'status', 'createdAt'];
+  displayedColumnsAlumno = ['certificateType', 'status', 'createdAt', 'actions'];
   displayedColumnsAdmin  = ['username', 'certificateType', 'status', 'createdAt', 'actions'];
 
   get displayedColumns() {
@@ -61,6 +61,45 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   sortDirection: 'asc' | 'desc' = 'desc';
 
   processingIds = new Set<number>();
+  downloadingIds = new Set<number>();
+
+  /** Indica si la fila tiene un certificado emitido y listo para descargar. */
+  canDownload(request: CertificateRequest): boolean {
+    return request.status === 'Approved'
+      && !!request.issuance
+      && request.issuance.status === 'Ready'
+      && !!request.issuance.id;
+  }
+
+  downloadCertificate(request: CertificateRequest): void {
+    if (!this.canDownload(request) || !request.issuance) return;
+    if (this.downloadingIds.has(request.id)) return;
+
+    const issuance = request.issuance;
+    this.downloadingIds.add(request.id);
+    this.errorMsg = '';
+    this.cdr.detectChanges();
+
+    this.certificatesService.downloadCertificate(issuance.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = issuance.fileName || `${issuance.certificateNumber || 'certificado'}.pdf`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+        this.downloadingIds.delete(request.id);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.downloadingIds.delete(request.id);
+        this.errorMsg = 'No se pudo descargar el certificado. Intente nuevamente.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   constructor(
     private readonly certificatesService: CertificatesService,

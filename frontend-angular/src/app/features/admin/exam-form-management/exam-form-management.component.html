@@ -1,0 +1,66 @@
+<div class="exam-page" [attr.aria-busy]="loading">
+  <div class="scope-selectors">
+    <label>Carrera<select [(ngModel)]="careerId" (ngModelChange)="changeCareer()" [disabled]="loading || dirty">
+      <option [ngValue]="0">Seleccionar carrera</option><option *ngFor="let item of careers" [ngValue]="item.id">{{ item.name }}</option>
+    </select></label>
+    <label>Plan de estudio<select [(ngModel)]="planId" (ngModelChange)="changePlan()" [disabled]="loading || !careerId || dirty">
+      <option [ngValue]="0">Seleccionar plan</option><option *ngFor="let item of plans" [ngValue]="item.id">{{ item.name }}</option>
+    </select></label>
+  </div>
+  <p class="editor-notice">Edici&#243;n del formulario: los cambios se guardan como borrador en este navegador. La publicaci&#243;n para alumnos est&#225; pendiente de un servicio de guardado.</p>
+  <p *ngIf="loading" role="status">Cargando...</p>
+  <p *ngIf="error" role="alert" class="validation-message">{{ error }}</p>
+  <p *ngIf="message" role="status" class="saved-message">{{ message }}</p>
+  <p *ngIf="dirty" class="preview-note">Hay cambios sin guardar. Guardalos o cancelalos antes de cambiar de plan.</p>
+  <button *ngIf="!careers.length && !loading" type="button" class="text-link" (click)="loadCareers()">Cargar carreras</button>
+
+  <section class="exam-plan">
+    <h1 class="section-tab">Inscripciones Mesa de Examen</h1>
+    <div class="exam-panel plan-panel">
+      <p class="intro">Complete el formulario de inscripci&#243;n para los ex&#225;menes de<br>{{ career?.name || 'la carrera seleccionada' }}.</p>
+      <div class="edit-toolbar"><button type="button" class="edit-link" disabled aria-describedby="image-limitation">Editar &#9998;</button></div>
+      <img *ngIf="hasSoftwarePlan; else noPlanImage" class="document-image" src="assets/images/plan-estudios-software-2023.png" alt="Plan de estudios de Desarrollo de Software 2023">
+      <ng-template #noPlanImage><div class="asset-placeholder">{{ plan ? 'No hay una imagen disponible para este plan.' : 'Seleccion&#225; una carrera y un plan de estudio.' }}</div></ng-template>
+      <p id="image-limitation" class="asset-note">La edici&#243;n de im&#225;genes estar&#225; disponible cuando se habilite su publicaci&#243;n.</p>
+    </div>
+  </section>
+
+  <section class="exam-panel" aria-label="Cronograma">
+    <div class="edit-toolbar"><button type="button" class="edit-link" disabled aria-describedby="image-limitation">Editar &#9998;</button></div>
+    <div class="asset-placeholder"><img src="assets/images/logo-nav1.svg" alt="ITSC" width="56" height="56"><h2>Cronograma de mesas de examen</h2><p>Imagen del cronograma pendiente.</p></div>
+  </section>
+
+  <form class="exam-panel exam-form" (submit)="$event.preventDefault(); save()">
+    <section *ngFor="let year of years" class="year-section">
+      <div class="year-heading"><h2>{{ year }}&#176; A&#209;O</h2>
+        <button type="button" class="edit-link" (click)="editingYears.has(year) ? editingYears.delete(year) : editingYears.add(year)">{{ editingYears.has(year) ? 'Listo' : 'Editar' }} &#9998;</button></div>
+      <p class="year-instruction">Eleg&#237; el Espacio Curricular en el que se presentar&#225; a rendir y la condici&#243;n con la que lo har&#225;</p>
+      <div class="subjects-panel"><table>
+        <thead><tr><th scope="col"><span class="visually-hidden">Espacio curricular</span></th><th scope="col">REGULAR</th><th scope="col">LIBRE</th></tr></thead>
+        <tbody><tr *ngFor="let row of rowsFor(year)">
+          <th scope="row">
+            <ng-container *ngIf="!editingYears.has(year); else editRow">{{ row.name }}</ng-container>
+            <ng-template #editRow>
+              <input type="text" [(ngModel)]="row.name" [name]="'name-' + row.courseId" maxlength="200" aria-label="Nombre visible de la materia">
+              <div class="row-controls"><label>A&#241;o <select [(ngModel)]="row.year" [name]="'year-' + row.courseId"><option *ngFor="let n of [1,2,3,4,5,6]" [ngValue]="n">{{ n }}</option><option *ngIf="row.year > 6" [ngValue]="row.year">{{ row.year }}</option></select></label>
+                <button type="button" class="remove-link" (click)="remove(row)" [attr.aria-label]="'Quitar ' + row.name + ' del borrador'">Quitar</button></div>
+            </ng-template>
+          </th>
+          <td><input type="checkbox" [(ngModel)]="row.regular" [name]="'regular-' + row.courseId" [disabled]="!editingYears.has(year)" [attr.aria-label]="row.name + ': habilitar Regular'"></td>
+          <td><input type="checkbox" disabled [attr.aria-label]="row.name + ': Libre no disponible'"></td>
+        </tr></tbody>
+      </table></div>
+    </section>
+    <p *ngIf="planId && !rows.length && !loading">No hay materias en el formulario. Agreg&#225; una materia del plan.</p>
+    <p class="preview-note">Libre a&#250;n no est&#225; habilitado para inscripciones. Los nombres y opciones editados aqu&#237; pertenecen al borrador del formulario.</p>
+    <div class="add-toolbar"><button type="button" class="edit-link" [disabled]="!planId || loading || !availableSubjects.length" (click)="adding = !adding">Agregar materia +</button></div>
+    <div *ngIf="adding" class="add-editor">
+      <label>Materia<select [(ngModel)]="newCourseId" name="newCourse"><option [ngValue]="0">Seleccionar materia</option><option *ngFor="let item of availableSubjects" [ngValue]="item.courseId">{{ item.courseName }}</option></select></label>
+      <label>A&#241;o<input type="number" [(ngModel)]="newYear" name="newYear" min="1" max="20"></label>
+      <button type="button" class="text-link" [disabled]="!newCourseId" (click)="add()">Agregar</button>
+      <button type="button" class="text-link" (click)="adding = false">Cancelar</button>
+    </div>
+    <div class="submit-area"><button type="submit" class="send-button" [disabled]="!planId || loading || !dirty">GUARDAR</button>
+      <button *ngIf="dirty" type="button" class="text-link cancel-edit" (click)="cancel()">Cancelar cambios</button></div>
+  </form>
+</div>

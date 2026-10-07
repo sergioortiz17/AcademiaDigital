@@ -30,32 +30,58 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CourseSectionId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<long>("CreatedByUserId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateOnly>("EventDate")
                         .HasColumnType("date");
 
                     b.Property<string>("EventType")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Modality")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Scope")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<TimeOnly?>("StartTime")
                         .HasColumnType("time without time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("AcademicEvents");
+                    b.HasIndex("CourseSectionId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("AcademicEvents", (string)null);
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.ActiveSession", b =>
@@ -3579,6 +3605,24 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.AcademicEvent", b =>
+                {
+                    b.HasOne("AcademiaDigital.Domain.Entities.CourseSection", "CourseSection")
+                        .WithMany()
+                        .HasForeignKey("CourseSectionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AcademiaDigital.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CourseSection");
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.ActiveSession", b =>
