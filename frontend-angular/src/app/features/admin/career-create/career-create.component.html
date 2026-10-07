@@ -7,30 +7,40 @@
 
   <form (ngSubmit)="onSubmit()" #createForm="ngForm">
     <div class="form-grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Nombre de la carrera</mat-label>
-        <input matInput [(ngModel)]="name" name="name" required maxlength="200" />
-      </mat-form-field>
+      <div class="form-group">
+        <label class="custom-label">Nombre:</label>
+        <mat-form-field appearance="outline">
+          <input matInput [(ngModel)]="name" name="name" required maxlength="200" placeholder="Ingrese el nombre" />
+        </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Código de la carrera</mat-label>
-        <input matInput [(ngModel)]="code" name="code" required maxlength="20" placeholder="Ej: ENF2025" />
-      </mat-form-field>
+      <div class="form-group">
+        <label class="custom-label">Código:</label>
+        <mat-form-field appearance="outline">
+          <input matInput [(ngModel)]="code" name="code" required maxlength="20" placeholder="Ej: ENF2025" />
+        </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Descripción</mat-label>
-        <textarea matInput [(ngModel)]="description" name="description" maxlength="1000" rows="2"></textarea>
-      </mat-form-field>
+      <div class="form-group full-width">
+        <label class="custom-label">Descripción:</label>
+        <mat-form-field appearance="outline">
+          <textarea matInput [(ngModel)]="description" name="description" maxlength="1000" rows="1" placeholder="Ingrese la descripción"></textarea>
+        </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Créditos totales</mat-label>
-        <input matInput type="number" min="0" [(ngModel)]="totalCredits" name="totalCredits" required />
-      </mat-form-field>
+      <div class="form-group">
+        <label class="custom-label">Créditos totales:</label>
+        <mat-form-field appearance="outline">
+          <input matInput type="number" min="0" [(ngModel)]="totalCredits" name="totalCredits" required placeholder="0" />
+        </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Duración (años)</mat-label>
-        <input matInput type="number" min="1" max="20" [(ngModel)]="durationYears" name="durationYears" required />
-      </mat-form-field>
+      <div class="form-group">
+        <label class="custom-label">Duración (años):</label>
+        <mat-form-field appearance="outline">
+          <input matInput type="number" min="1" max="20" [(ngModel)]="durationYears" name="durationYears" required placeholder="Ej: 4" />
+        </mat-form-field>
+      </div>
     </div>
   </form>
 </mat-dialog-content>

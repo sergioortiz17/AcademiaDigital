@@ -8,10 +8,6 @@
   </div>
 
   <div *ngIf="successMsg" class="success-banner">{{ successMsg }}</div>
-  <div *ngIf="errorMsg && !showOpenForm" class="error-banner" style="margin-bottom: 12px;">
-    {{ errorMsg }}
-    <button mat-icon-button (click)="errorMsg = ''" matTooltip="Descartar"><mat-icon>close</mat-icon></button>
-  </div>
 
   <!-- Open period form -->
   <mat-card *ngIf="showOpenForm" class="open-form-card">
@@ -65,7 +61,6 @@
         </mat-form-field>
       </div>
 
-      <div *ngIf="errorMsg" class="error-banner">{{ errorMsg }}</div>
     </mat-card-content>
     <mat-card-actions align="end">
       <button mat-button (click)="showOpenForm = false; resetForm()">Cancelar</button>

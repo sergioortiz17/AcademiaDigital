@@ -19,7 +19,10 @@
     <mat-form-field appearance="outline">
       <mat-label>Alumno</mat-label>
       <mat-select [(ngModel)]="selectedStudentId" (selectionChange)="onStudentChange()" [disabled]="!selectedCareerId || isLoading">
-        <mat-option *ngFor="let s of students" [value]="s.id">
+        <mat-option>
+          <ngx-mat-select-search [formControl]="studentFilterCtrl" placeholderLabel="Buscar alumno por nombre, legajo o DNI..." noEntriesFoundLabel="No se encontraron alumnos"></ngx-mat-select-search>
+        </mat-option>
+        <mat-option *ngFor="let s of filteredStudents" [value]="s.id">
           {{ s.fullName }} · legajo {{ s.legajoNumber }}{{ s.dni ? (' · DNI ' + s.dni) : '' }}
         </mat-option>
       </mat-select>
