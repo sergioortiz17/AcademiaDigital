@@ -10,11 +10,12 @@ interface EditableEvaluation {
 }
 
 const DEFAULT_EVALUATIONS: EditableEvaluation[] = [
-  { name: '1era Instancia', weightPercentage: 34, maximumScore: 10, isRecovery: false },
-  { name: '2da Instancia', weightPercentage: 33, maximumScore: 10, isRecovery: false },
-  { name: '3era Instancia', weightPercentage: 33, maximumScore: 10, isRecovery: false },
+  { name: '1era Instancia', weightPercentage: 25, maximumScore: 10, isRecovery: false },
+  { name: '2da Instancia', weightPercentage: 25, maximumScore: 10, isRecovery: false },
+  { name: '3era Instancia', weightPercentage: 25, maximumScore: 10, isRecovery: false },
   { name: 'Recuperación 1', weightPercentage: 0, maximumScore: 10, isRecovery: true },
-  { name: 'Recuperación 2', weightPercentage: 0, maximumScore: 10, isRecovery: true }
+  { name: 'Recuperación 2', weightPercentage: 0, maximumScore: 10, isRecovery: true },
+  { name: 'IEFI', weightPercentage: 25, maximumScore: 10, isRecovery: false }
 ];
 
 @Component({
@@ -25,6 +26,8 @@ const DEFAULT_EVALUATIONS: EditableEvaluation[] = [
 })
 export class EvaluationSetupDialogComponent {
   evaluations: EditableEvaluation[] = DEFAULT_EVALUATIONS.map(e => ({ ...e }));
+
+  private readonly regularWeights = new WeakMap<EditableEvaluation, number>();
 
   constructor(
     public dialogRef: MatDialogRef<EvaluationSetupDialogComponent>,
@@ -53,7 +56,12 @@ export class EvaluationSetupDialogComponent {
 
   onRecoveryToggle(e: EditableEvaluation): void {
     // Al marcar recuperación forzamos peso 0 (no lleva peso propio).
-    if (e.isRecovery) e.weightPercentage = 0;
+    if (e.isRecovery) {
+      this.regularWeights.set(e, e.weightPercentage);
+      e.weightPercentage = 0;
+    } else {
+      e.weightPercentage = this.regularWeights.get(e) ?? 0;
+    }
     this.cdr.detectChanges();
   }
 

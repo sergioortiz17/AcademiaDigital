@@ -80,56 +80,6 @@ export interface EligibleCourse {
   missingPrerequisites: MissingPrerequisite[];
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class StudentService {
-
-  private baseURL = environment.apiServer;
-
-  constructor(private readonly http: HttpClient) {}
-
-  getStudentByUserId(studentId: number): Observable<Student> {
-    return this.http.get<Student>(
-      `${this.baseURL}v1/students/${studentId}`
-    );
-  }
-
-  /** Ficha completa del alumno (incluye currentStudyPlanId, necesario para asignar comisión). */
-  getStudent(studentId: number): Observable<Student> {
-    return this.http.get<Student>(`${this.baseURL}v1/students/${studentId}`);
-  }
-
-  /** Listado paginado de alumnos (admin). Sirve para el selector de "Asignar comisión". */
-  searchStudents(search?: string, careerId?: number, page = 1, pageSize = 50): Observable<PagedResult<StudentListItem>> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (search) params = params.set('search', search);
-    if (careerId != null) params = params.set('careerId', careerId);
-    return this.http.get<PagedResult<StudentListItem>>(`${this.baseURL}v1/students`, { params });
-  }
-
-  /** Crea el vínculo alumno-comisión (StudentAcademicAssignment). Backend valida carrera y deduplica. */
-  assignAcademic(studentId: number, request: CreateAcademicAssignmentRequest): Observable<AcademicAssignment> {
-    return this.http.post<AcademicAssignment>(`${this.baseURL}v1/students/${studentId}/academic-assignments`, request);
-  }
-
-  /** Materias del plan del alumno LOGUEADO con su estado de elegibilidad (calculado por el backend,
-   *  misma data que la validación real). El backend resuelve el studentId desde el JWT. */
-  getMyEligibleCourses(careerId?: number): Observable<EligibleCourse[]> {
-    let params = new HttpParams();
-    if (careerId != null) params = params.set('careerId', careerId);
-    return this.http.get<EligibleCourse[]>(`${this.baseURL}v1/students/me/eligible-courses`, { params });
-  }
-
-  /** Historial académico del alumno LOGUEADO: materias del plan con su estado real por materia
-   *  (EnrollmentStatus sin agrupar). El backend resuelve el studentId desde el JWT. Solo lectura. */
-  getMyAcademicProgress(careerId?: number): Observable<StudentAcademicProgress> {
-    let params = new HttpParams();
-    if (careerId != null) params = params.set('careerId', careerId);
-    return this.http.get<StudentAcademicProgress>(`${this.baseURL}v1/students/me/academic-progress`, { params });
-  }
-}
-
 export interface StudentCourseProgress {
   courseId: number;
   code: string;
@@ -155,4 +105,69 @@ export interface StudentAcademicProgress {
   pendingCourses: number;
   progressPercentage: number;
   courses: StudentCourseProgress[];
+}
+
+export interface StudentExamTable {
+  examTable: {
+    courseId: number;
+    academicYear: number;
+    examDateUtc: string;
+    status: string;
+  };
+  registrationId: number | null;
+  attemptNumber: number | null;
+  result: {
+    grade: number | null;
+    outcome: string;
+  } | null;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StudentService {
+
+  private baseURL = environment.apiServer;
+
+  constructor(private readonly http: HttpClient) {}
+
+  /** Ficha completa del alumno (incluye currentStudyPlanId) */
+  getStudent(studentId: number): Observable<Student> {
+    return this.http.get<Student>(`${this.baseURL}v1/students/${studentId}`);
+  }
+
+  getStudentByUserId(studentId: number): Observable<Student> {
+    return this.getStudent(studentId);
+  }
+
+  /** Listado paginado de alumnos*/
+  searchStudents(search?: string, careerId?: number, page = 1, pageSize = 50): Observable<PagedResult<StudentListItem>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (search) params = params.set('search', search);
+    if (careerId != null) params = params.set('careerId', careerId);
+    return this.http.get<PagedResult<StudentListItem>>(`${this.baseURL}v1/students`, { params });
+  }
+
+  /** Crea el vínculo alumno-comisión (StudentAcademicAssignment). Backend valida carrera y deduplica. */
+  assignAcademic(studentId: number, request: CreateAcademicAssignmentRequest): Observable<AcademicAssignment> {
+    return this.http.post<AcademicAssignment>(`${this.baseURL}v1/students/${studentId}/academic-assignments`, request);
+  }
+
+  /** Materias del plan del alumno con su estado de elegibilidad */
+  getMyEligibleCourses(careerId?: number): Observable<EligibleCourse[]> {
+    let params = new HttpParams();
+    if (careerId != null) params = params.set('careerId', careerId);
+    return this.http.get<EligibleCourse[]>(`${this.baseURL}v1/students/me/eligible-courses`, { params });
+  }
+
+  /** Historial académico del alumno: materias del plan con su estado real por materia */
+  getMyAcademicProgress(careerId?: number): Observable<StudentAcademicProgress> {
+    let params = new HttpParams();
+    if (careerId != null) params = params.set('careerId', careerId);
+    return this.http.get<StudentAcademicProgress>(`${this.baseURL}v1/students/me/academic-progress`, { params });
+  }
+
+  getMyExamTables(): Observable<StudentExamTable[]> {
+    return this.http.get<StudentExamTable[]>(`${this.baseURL}v1/exam-tables/me`);
+  }
 }

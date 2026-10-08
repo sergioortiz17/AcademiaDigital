@@ -1,4 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CareerService, Career } from '../../../core/services/career.service';
 import { CommissionService, Commission } from '../../../core/services/commission.service';
 import {
@@ -7,26 +10,19 @@ import {
   Student
 } from '../../../core/services/student.service';
 
-/**
- * Pantalla admin "Asignar comisión a alumno".
- *
- * El admin elige un alumno (de una carrera) y una comisión de esa misma carrera. El
- * StudyPlanId, AcademicYear y YearNumber NO se piden: se derivan de la comisión elegida
- * (que ya trae academicYear/yearNumber) + el plan de estudios actual del alumno. Así el
- * admin no tiene que conocer esos IDs internos. El backend
- * (POST /api/v1/students/{id}/academic-assignments) valida que la comisión sea de la misma
- * carrera y ciclo, y deduplica las asignaciones vigentes.
- */
 @Component({
   selector: 'app-student-commission-assignment',
   templateUrl: './student-commission-assignment.component.html',
   styleUrls: ['./student-commission-assignment.component.scss'],
   standalone: false
 })
-export class StudentCommissionAssignmentComponent implements OnInit {
+export class StudentCommissionAssignmentComponent implements OnInit, OnDestroy {
   careers: Career[] = [];
   students: StudentListItem[] = [];
+  filteredStudents: StudentListItem[] = [];
   commissions: Commission[] = [];
+
+  studentFilterCtrl: FormControl = new FormControl('');
 
   selectedCareerId: number | null = null;
   selectedStudentId: number | null = null;
@@ -38,6 +34,8 @@ export class StudentCommissionAssignmentComponent implements OnInit {
   isSubmitting = false;
   errorMsg = '';
   successMsg = '';
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly careerService: CareerService,
@@ -51,6 +49,17 @@ export class StudentCommissionAssignmentComponent implements OnInit {
       next: (careers) => { this.careers = careers; this.cdr.detectChanges(); },
       error: (err) => this.fail(err)
     });
+
+    this.studentFilterCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterStudents();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get selectedCommission(): Commission | undefined {
@@ -59,22 +68,45 @@ export class StudentCommissionAssignmentComponent implements OnInit {
 
   onCareerChange(): void {
     this.students = [];
+    this.filteredStudents = [];
     this.commissions = [];
     this.selectedStudentId = null;
     this.selectedCommissionId = null;
     this.selectedStudent = null;
+    this.studentFilterCtrl.setValue('', { emitEvent: false });
     this.clearMessages();
     if (!this.selectedCareerId) return;
 
     this.isLoading = true;
     this.studentService.searchStudents(undefined, this.selectedCareerId, 1, 100).subscribe({
-      next: (page) => { this.students = page.items; this.isLoading = false; this.cdr.detectChanges(); },
+      next: (page) => { this.students = page.items; this.filteredStudents = [...this.students]; this.isLoading = false; this.cdr.detectChanges(); },
       error: (err) => this.fail(err)
     });
     this.commissionService.getCommissions(this.selectedCareerId).subscribe({
       next: (commissions) => { this.commissions = commissions.filter(c => c.isActive); this.cdr.detectChanges(); },
       error: (err) => this.fail(err)
     });
+  }
+
+  private filterStudents(): void {
+    if (!this.students) return;
+
+    let search = this.studentFilterCtrl.value;
+    if (!search) {
+      this.filteredStudents = [...this.students];
+      this.cdr.detectChanges();
+      return;
+    } else {
+      search = search.toLowerCase();
+    }
+
+    // Filtra coincidencia por Nombre, Legajo o DNI
+    this.filteredStudents = this.students.filter(s =>
+      (s.fullName && s.fullName.toLowerCase().includes(search)) ||
+      (s.legajoNumber && s.legajoNumber.toString().toLowerCase().includes(search)) ||
+      (s.dni && s.dni.toString().toLowerCase().includes(search))
+    );
+    this.cdr.detectChanges();
   }
 
   onStudentChange(): void {

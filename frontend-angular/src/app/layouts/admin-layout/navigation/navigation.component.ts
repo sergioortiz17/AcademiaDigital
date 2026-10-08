@@ -14,7 +14,10 @@ export interface MenuItem {
 const MENU_ALUMNO: MenuItem[] = [
   { id: 'dashboard',    title: 'Inicio',         url: '/app/dashboard/default', icon: 'home' },
   { id: 'courses',      title: 'Carreras',        url: '/app/courses',           icon: 'book' },
-  { id: 'enrollments',  title: 'Inscripciones',   url: '/app/enrollments',       icon: 'assignment' },
+  { id: 'enrollments', title: 'Inscripciones', icon: 'assignment', children: [
+    { id: 'course-enrollments', title: 'Insc. Materias', url: '/app/enrollments' },
+    { id: 'exam-enrollments', title: 'Mesa de examen', url: '/app/enrollments/exam' }
+  ] },
   { id: 'calendar',     title: 'Calendario',      url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
   { id: 'grades',       title: 'Calificaciones',  url: '/app/grades',            icon: 'grade' },
@@ -40,23 +43,24 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'teachers',    title: 'Docentes',           icon: 'group',
     children: [
-      { id: 'teacher-list',       title: '• Legajos', url: '/app/admin/teachers',           icon: '' },
-      { id: 'teaching-positions', title: '• Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
-      { id: 'commissions',        title: '• Divisiones', url: '/app/admin/commissions',      icon: '' },
-      { id: 'student-commission', title: '• Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
+      { id: 'teacher-list',       title: 'Legajos', url: '/app/admin/teachers',           icon: '' },
+      { id: 'teaching-positions', title: 'Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
+      { id: 'commissions',        title: 'Divisiones', url: '/app/admin/commissions',      icon: '' },
+      { id: 'student-commission', title: 'Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
     ]
   },
   { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
     children: [
-      { id: 'attendance', title: '• Asistencias', url: '/app/admin/attendance', icon: '' },
-      { id: 'gradebooks', title: '• Calificaciones', url: '/app/admin/gradebooks', icon: '' }
+      { id: 'attendance', title: 'Asistencias', url: '/app/admin/attendance', icon: '' },
+      { id: 'gradebooks-shared', title: 'Calificaciones', url: '/app/grades', icon: '' }
     ]
   },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
     children: [
-      { id: 'certificate-requests', title: '• Peticiones',url: '/app/certificates',icon: '' }
+      { id: 'certificate-requests', title: 'Peticiones',url: '/app/certificates',icon: '' }
     ]
   },
+  { id: 'admin-exam-form', title: 'Mesa de examen', url: '/app/admin/exam-form', icon: 'event_note' },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },

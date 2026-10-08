@@ -87,11 +87,6 @@
       </div>
     </div>
 
-    <div *ngIf="loadingCourses" class="period-checking">
-      <mat-spinner diameter="20"></mat-spinner>
-      <span>Cargando materias disponibles...</span>
-    </div>
-
     <div *ngFor="let year of selectedYears" class="year-section">
       <div class="year-header">
         <h2>{{ year }}° AÑO</h2>
@@ -103,22 +98,24 @@
       <p>Elija el Espacio Curricular en el que AUTORIZA INSCRIBIRLO.</p>
       <div class="subjects-card">
         <div class="header">INSCRIBIRME EN</div>
-        <div *ngFor="let course of coursesForYear(year)" class="subject-row"
-             [class.blocked-row]="!isTildable(course)">
+        <div *ngFor="let course of subjectsForYear(year)"
+          class="subject-row" [class.blocked-row]="!isTildable(course)">
           <span class="subject-name">
-            {{ course.name }}
-            <span class="semester-badge" [ngClass]="course.semester === 0 ? 'badge-annual' : 'badge-quarter'">
+            {{ course.courseName }}
+            <span class="semester-badge" [ngClass]="course.isAnnual ? 'badge-annual' : 'badge-quarter'">
               {{ semesterLabel(course) }}
             </span>
-            <span *ngIf="!isTildable(course)" class="block-hint">🔒 {{ blockReason(course) }}</span>
+            <span *ngIf="!isTildable(course)" class="block-hint">
+              Correlativa no regularizada o aprobada
+            </span>
           </span>
           <mat-checkbox
-            [checked]="(selectedSubjectsByYear[year] || []).includes(course.studyPlanCourseId)"
+            [checked]="(selectedSubjectsByYear[year] || []).includes(course.id)"
             [disabled]="!isTildable(course)"
-            (change)="toggleSubject(year, course.studyPlanCourseId, $event)">
+            (change)="toggleSubject(year, course.id, $event)">
           </mat-checkbox>
         </div>
-        <div *ngIf="coursesForYear(year).length === 0" class="subject-row">
+        <div *ngIf="subjectsForYear(year).length === 0" class="subject-row">
           <span class="subject-name">No hay materias disponibles para este año.</span>
         </div>
       </div>
