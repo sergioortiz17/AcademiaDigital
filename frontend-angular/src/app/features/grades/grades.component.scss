@@ -306,27 +306,3 @@
   white-space: nowrap;
   clip-path: inset(50%);
 }
-
-@media (max-width: 900px) {
-  .toolbar { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px 8px; }
-  .search-control { grid-column: auto; }
-}
-
-@media (max-width: 600px) {
-  .grades-title-bar { width: 150px; }
-  .grades-card mat-card-content { padding: 10px 8px; }
-  .toolbar { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; padding: 0; }
-  .filter-label { font-size: 9px; }
-  .filter-field ::ng-deep .mat-mdc-select-value,
-  .filter-field ::ng-deep input { font-size: 9px; }
-  .search-control { grid-column: span 2; }
-  .grades-table th, .grades-table td { padding: 3px 4px; }
-}
-
-@media (max-width: 420px) {
-  .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .status-row { align-items: flex-start; flex-wrap: wrap; }
-  .status-note { flex-basis: calc(100% - 48px); }
-  .student-detail { align-items: stretch; flex-direction: column; }
-  .detail-actions { justify-content: flex-start; }
-}
