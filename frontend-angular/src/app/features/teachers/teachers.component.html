@@ -1,59 +1,162 @@
-<div class="page-header">
-  <h1>Mis asignaciones</h1>
-  <p>Materias y comisiones a tu cargo.</p>
+<div class="assignments-page">
+
+  <!-- Pestañas -->
+  <div class="tabs-header">
+    <button
+      type="button"
+      class="tab-button"
+      [class.active]="activeTab === 'assignments'"
+      (click)="changeTab('assignments')">
+      {{ userRole === UserRole.Admin ? 'Comisiones' : 'Comisiones asignadas' }}
+    </button>
+
+    <button
+      type="button"
+      class="tab-button"
+      [class.active]="activeTab === 'subjects'"
+      (click)="changeTab('subjects')">
+      Consulta de materias
+    </button>
+  </div>
+
+  <section class="content-panel">
+    <!-- Error -->
+    <div *ngIf="errorMsg" class="msg msg--error">
+      <mat-icon>error</mat-icon>
+      <span>{{ errorMsg }}</span>
+    </div>
+
+    <div class="filters-row career-filters">
+      <div class="search-box">
+        <label for="assignment-career">Buscar por materia:</label>
+        <input type="text" [(ngModel)]="searchTerm" aria-label="Buscar por materia">
+        <mat-icon>search</mat-icon>
+      </div>
+        
+      <div class="filter-field">
+        <label for="assignment-career">Carrera:</label>
+        <select id="assignment-career" [(ngModel)]="selectedCareerId" (ngModelChange)="onCareerChange($event)">
+          <option [ngValue]="null">
+            {{ isCareersLoading ? 'Cargando carreras...' : 'Seleccionar carrera' }}
+          </option>
+          <option *ngFor="let career of careers" [ngValue]="career.id">
+            {{ career.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="assignment-year">Año de cursada:</label>
+        <select
+          id="assignment-year"
+          [(ngModel)]="selectedCareerYear"
+          [disabled]="selectedCareerId == null || isStudyPlanLoading || availableYears.length === 0">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let year of availableYears" [ngValue]="year">
+            {{ careerYearLabel(year) }}
+          </option>
+        </select>
+        <small *ngIf="isStudyPlanLoading">Cargando años de cursada...</small>
+        <small *ngIf="selectedCareerId != null && !isStudyPlanLoading && availableYears.length === 0">
+          La carrera no tiene materias cargadas en un plan activo.
+        </small>
+      </div>
+
+      <mat-icon *ngIf="userRole === UserRole.Admin" class="edit-cell" aria-label="Editar comisión">edit</mat-icon>
+    </div>
+
+    <!-- PESTAÑA 1: COMISIONES ASIGNADAS     -->
+    <div *ngIf="activeTab === 'assignments'" class="tab-content">
+      <div class="table-container" *ngIf="selectedCareerId != null">
+
+        <div class="loading-overlay" *ngIf="isLoading || isStudyPlanLoading">
+          <mat-spinner diameter="36"></mat-spinner>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>CARRERA</th>
+              <th>MATERIA</th>
+              <th>TIPO</th>
+              <th>COMISIÓN</th>
+              <th>TURNO</th>
+              <th>AÑO DE CURSADA</th>
+              <th>DÍA</th>
+              <th>HORARIOS</th>
+              <th>ALUMNOS</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let a of filteredAssignments">
+
+              <td>{{ selectedCareer?.name }}</td>
+              <td class="subject-cell">{{ a.courseName }}</td>
+              <td>{{ a.positionType }}</td>
+              <td>{{ a.divisionName || a.divisionCode }}</td>
+              <td>{{ divisionShift(a.divisionId) }}</td>
+              <td>{{ careerYearLabelForCourse(a.courseId) }}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+
+            <tr *ngIf="!isLoading && !isStudyPlanLoading && filteredAssignments.length === 0">
+              <td [attr.colspan]="userRole === UserRole.Admin ? 10 : 9" class="empty-cell">
+                No se encontraron asignaciones para los filtros seleccionados.
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: CONSULTA DE MATERIAS    -->
+    <div *ngIf="activeTab === 'subjects'" class="tab-content">
+      <div class="table-container" *ngIf="selectedCareerId != null">
+
+        <div class="loading-overlay" *ngIf="isStudyPlanLoading">
+          <mat-spinner diameter="36"></mat-spinner>
+        </div>
+
+        <table class="data-table subjects-table">
+          <thead>
+            <tr>
+              <th>CARRERA</th>
+              <th>MATERIA</th>
+              <th>DURACIÓN</th>
+              <th>AÑO DE CURSADA</th>
+              <th>HS. DE CÁTEDRA</th>
+              <th>CARGA HORARIA</th>
+              <th>PROGRAMA / PLAN DE ESTUDIO</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let subject of assignedSubjects">
+
+              <td>{{ selectedCareer?.name }}</td>
+              <td class="subject-cell">
+                {{ subject.courseName }}
+              </td>
+              <td>{{ careerDuration != null ? careerDuration + ' años' : '' }}</td>
+              <td>{{ careerYearLabel(subject.yearNumber) }}</td>
+              <td></td>
+              <td>{{ subject.workloadHours }}</td>
+              <td>{{ selectedStudyPlan?.name }}</td>
+            </tr>
+
+            <tr *ngIf="!isStudyPlanLoading && assignedSubjects.length === 0">
+              <td colspan="7" class="empty-cell">
+                No se encontraron materias para los filtros seleccionados.
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </div>
-
-<div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
-
-<mat-card class="assignments-card">
-  <mat-card-content>
-
-    <div class="toolbar">
-      <button mat-stroked-button (click)="toggleIncludeEnded()">
-        {{ includeEnded ? 'Solo vigentes' : 'Ver historial completo' }}
-      </button>
-    </div>
-
-    <div class="table-wrap">
-      <div class="loading-overlay" *ngIf="isLoading">
-        <mat-spinner diameter="40"></mat-spinner>
-      </div>
-
-      <table class="assignments-table">
-        <thead>
-          <tr>
-            <th>Materia — Comisión</th>
-            <th>Tipo</th>
-            <th>Ciclo</th>
-            <th>Inicio</th>
-            <th>Fin</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let a of assignments">
-            <td>
-              <div class="course-name">{{ a.courseName }}</div>
-              <div class="commission-name">{{ a.divisionName }}</div>
-            </td>
-            <td>{{ a.positionType }}</td>
-            <td>{{ a.academicYear }} · {{ a.semester }}°</td>
-            <td>{{ a.startedOn }}</td>
-            <td>{{ a.endedOn || '—' }}</td>
-            <td>
-              <span class="status-chip" [ngClass]="a.isCurrent ? 'status-chip--active' : 'status-chip--inactive'">
-                {{ a.isCurrent ? 'Vigente' : 'Finalizada' }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="empty-state" *ngIf="!isLoading && assignments.length === 0">
-        <mat-icon>event_busy</mat-icon>
-        <p>No tenés asignaciones registradas.</p>
-      </div>
-    </div>
-
-  </mat-card-content>
-</mat-card>

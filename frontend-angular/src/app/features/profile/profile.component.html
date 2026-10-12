@@ -40,7 +40,7 @@
         <div class="field-group">
           <label class="field-label">Legajo</label>
           <mat-form-field appearance="fill" class="custom-field">
-            <input matInput readonly value="123456"> <!-- CAMBIAR POR VALOR EN FORMULARIO DE LEGAJO -->
+            <input matInput readonly [value]="student?.legajoNumber ?? ''">
           </mat-form-field> 
         </div>
         <div class="field-group">
@@ -100,13 +100,7 @@
         </div>
       <div *ngIf="profileSuccess" class="msg-success">{{ profileSuccess }}</div>
       <div *ngIf="profileError" class="msg-error">{{ profileError }}</div>
-      <!-- MENSAJE EN ROJO DE CAMPOS OBLIGATORIOS
 
-        <p class="required-note">(*) Nombre y Apellido son obligatorios</p>
-
-        <div *ngIf="profileSuccess" class="msg-success">{{ profileSuccess }}</div>
-        <div *ngIf="profileError" class="msg-error">{{ profileError }}</div>
-       -->
       </div>
       <div class="save-area">
         <button type="button" class="save-btn" (click)="saveProfile()" [disabled]="profileSaving">
@@ -116,13 +110,6 @@
       </div>
       </form>
     </mat-card-content>
-
-    <!-- <mat-card-actions align="end">
-      <button mat-raised-button color="primary" [disabled]="profileSaving" (click)="saveProfile()">
-        <mat-spinner *ngIf="profileSaving" diameter="18" class="btn-spinner"></mat-spinner>
-        <span>{{ profileSaving ? 'Guardando...' : 'Guardar cambios' }}</span>
-      </button>
-    </mat-card-actions> -->
   </mat-card> 
 
   <!-- =============================================
@@ -196,72 +183,5 @@
       </div>
       </form>
     </mat-card-content>
-
-  <!--  <mat-card-actions align="end">
-      <button mat-raised-button color="primary" [disabled]="passwordSaving" (click)="changePassword()">
-        <mat-spinner *ngIf="passwordSaving" diameter="18" class="btn-spinner"></mat-spinner>
-        <span>{{ passwordSaving ? 'Guardando...' : 'Cambiar contraseña' }}</span>
-      </button>
-    </mat-card-actions> -->
   </mat-card> 
-  <!-- <mat-card class="profile-card">
-    <div class="section-badge2">
-      <mat-icon>lock_outline</mat-icon>
-      <span>Cambiar contraseña</span>
-    </div>
-
-    <mat-card-content>
-      <form [formGroup]="passwordForm" >
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Contraseña actual</mat-label>
-          <input matInput [type]="hideCurrentPassword ? 'password' : 'text'" formControlName="currentPassword"/>
-          <button mat-icon-button matSuffix type="button" (click)="hideCurrentPassword = !hideCurrentPassword">
-            <mat-icon>{{ hideCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="passwordForm.get('currentPassword')?.hasError('required')">Ingresá tu contraseña actual</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Nueva contraseña</mat-label>
-          <input matInput [type]="hideNewPassword ? 'password' : 'text'" formControlName="newPassword"/>
-          <button mat-icon-button matSuffix type="button" (click)="hideNewPassword = !hideNewPassword">
-            <mat-icon>{{ hideNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="newPassword?.invalid && newPassword?.touched">No cumple los requisitos</mat-error>
-        </mat-form-field>
-
-        <div class="password-rules">
-          <span [class.valid]="hasMinLength()">• Mínimo 8 caracteres</span>
-          <span [class.valid]="hasUpperCase()">• Una mayúscula</span>
-          <span [class.valid]="hasLowerCase()">• Una minúscula</span>
-          <span [class.valid]="hasSpecialChar()">• Caracter especial</span>
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Confirmar nueva contraseña</mat-label>
-          <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword"/>
-          <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
-            <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched">
-            Las contraseñas no coinciden
-          </mat-error>
-        </mat-form-field>
-
-        <div *ngIf="passwordSuccess" class="msg-success">{{ passwordSuccess }}</div>
-        <div *ngIf="passwordError" class="msg-error">{{ passwordError }}</div>
-
-      </form>
-    </mat-card-content>
-
-    <mat-card-actions align="end">
-      <button mat-raised-button color="primary" [disabled]="passwordSaving" (click)="changePassword()">
-        <mat-spinner *ngIf="passwordSaving" diameter="18" class="btn-spinner"></mat-spinner>
-        <span>{{ passwordSaving ? 'Guardando...' : 'Cambiar contraseña' }}</span>
-      </button>
-    </mat-card-actions>
-  </mat-card>
-   -->
-
 </div>

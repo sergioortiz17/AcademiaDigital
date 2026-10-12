@@ -11,6 +11,15 @@ public sealed record GradebookRosterRow(
 
 public sealed record EnrollmentGradebookResult(long EnrollmentId, decimal Average, EnrollmentStatus Status);
 
+public sealed record GradebookExamResultRow(
+    long EnrollmentId,
+    DateTime ExamDateUtc,
+    DateTime RegisteredAt,
+    int AttemptNumber,
+    ExamTableStatus Status,
+    decimal? Grade,
+    ExamResultOutcome? Outcome);
+
 public interface IGradebookRepository
 {
     Task<bool> CanTeacherManagePositionAsync(long userId, int teachingPositionId, CancellationToken ct = default);
@@ -25,6 +34,8 @@ public interface IGradebookRepository
     Task<Gradebook?> FindForUpdateAsync(long gradebookId, CancellationToken ct = default);
     Task<(Gradebook Gradebook, bool Created)> CreateIdempotentAsync(Gradebook gradebook, CancellationToken ct = default);
     Task<IReadOnlyList<GradebookRosterRow>> GetRosterAsync(Gradebook gradebook, CancellationToken ct = default);
+    Task<IReadOnlyList<GradebookExamResultRow>> GetLatestExamResultsAsync(
+        int courseId, int academicYear, IReadOnlyCollection<long> enrollmentIds, CancellationToken ct = default);
     Task SaveGradeRevisionsAsync(IReadOnlyList<GradeEntryRevision> revisions, CancellationToken ct = default);
     Task SaveAsync(Gradebook gradebook, CancellationToken ct = default);
     Task ApplyFinalResultsAsync(Gradebook gradebook, IReadOnlyList<EnrollmentGradebookResult> results, CancellationToken ct = default);

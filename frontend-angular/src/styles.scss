@@ -225,3 +225,22 @@ html, body {
   box-shadow: none !important;
   padding: 0 !important;
 }
+
+// ── Alertas globales (NotificationService) ───────────────────────────────────
+.app-snackbar {
+  --mdc-snackbar-container-color: #323232;
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+
+  .mdc-snackbar__surface { border-left: 4px solid currentColor; }
+  .mdc-snackbar__label { white-space: pre-line; }
+
+  &--success { --mdc-snackbar-container-color: #2e7d32; }
+  &--error   { --mdc-snackbar-container-color: #c62828; }
+  &--warning {
+    --mdc-snackbar-container-color: #ed6c02;
+    --mdc-snackbar-supporting-text-color: #1a1a1a;
+    --mat-snack-bar-button-color: #1a1a1a;
+  }
+  &--info    { --mdc-snackbar-container-color: #0277bd; }
+}

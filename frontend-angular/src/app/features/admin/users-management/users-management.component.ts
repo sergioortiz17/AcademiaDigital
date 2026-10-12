@@ -30,6 +30,7 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   // Search, role filter & pagination
   searchTerm = '';
   selectedRole: number | null = null;
+  roleFiltersOpen = false;
   page = 1;
   pageSize = 20;
   total = 0;
@@ -46,10 +47,19 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$ = new Subject<string>();
+  private usersRequestId = 0;
 
   getRoleLabel(role: number): string {
     const labels: Record<number, string> = { 1: 'Alumno', 2: 'Profesor', 3: 'Admin' };
     return labels[role] ?? 'Desconocido';
+  }
+
+  get selectedRoleLabel(): string {
+    return this.roleFilters.find(filter => filter.value === this.selectedRole)?.label ?? 'Todos';
+  }
+
+  get visibleRoleFilters(): typeof this.roleFilters {
+    return this.selectedRole === null ? this.roleFilters.slice(1) : this.roleFilters;
   }
 
   get totalPages(): number {
@@ -93,8 +103,13 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
 
   onRoleFilter(role: number | null): void {
     this.selectedRole = role;
+    this.roleFiltersOpen = false;
     this.page = 1;
     this.loadUsers();
+  }
+
+  toggleRoleFilters(): void {
+    this.roleFiltersOpen = !this.roleFiltersOpen;
   }
 
   onPageSizeChange(size: number): void {
@@ -112,19 +127,21 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   }
 
   loadUsers(): void {
-    if (this.isLoading) return;
+    const requestId = ++this.usersRequestId;
     this.isLoading = true;
     this.errorMsg = '';
     this.adminService.getUsers(this.searchTerm, this.selectedRole, this.page, this.pageSize)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
+          if (requestId !== this.usersRequestId) return;
           this.users = res.users;
           this.total = res.total;
           this.isLoading = false;
           this.cdr.detectChanges();
         },
         error: () => {
+          if (requestId !== this.usersRequestId) return;
           this.errorMsg = 'Error al cargar usuarios.';
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -293,29 +310,6 @@ private openConfirmationDialog(
     }
   });
 }
-
-//AGREGAR CON GET POR ID ANTES DE HABILITAR
-//openUserDetails(user: UserSummary): void {
-//  this.userService.getProfile(user.id)
-//    .subscribe({
-
-//      next: (profile) => {
-
-//        this.dialog.open(UserDetailsDialogComponent, {
-//          width: '700px',
-//          disableClose: true,
-//          data: profile
-//        });
-
-//      },
-
-//      error: () => {
-//        this.errorMsg = 'No se pudieron cargar los datos.';
-//      }
-
-//    });
-
-//}
 
 openUserDetail(user: UserSummary): void {
 

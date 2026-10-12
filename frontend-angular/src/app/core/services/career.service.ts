@@ -39,6 +39,33 @@ export interface StudyPlan {
   isActive: boolean;
 }
 
+export interface CareerDivision {
+  id: number;
+  careerId: number;
+  code: string;
+  name: string;
+  academicYear: number;
+  yearNumber: number;
+  shift: string;
+  isActive: boolean;
+}
+
+export interface StudyPlanCourse {
+  id: number;
+  studyPlanId: number;
+  courseId: number;
+  courseCode: string;
+  courseName: string;
+  yearNumber: number;
+  semester: number;
+  isAnnual: boolean;
+  sortOrder: number;
+  isMandatory: boolean;
+  credits: number | null;
+  workloadHours: number | null;
+  courseType: string | null;
+}
+
 export interface CsvRowError {
   row: number;
   error: string;
@@ -112,6 +139,14 @@ export class CareerService {
 
   getStudyPlans(careerId: number): Observable<StudyPlan[]> {
     return this.http.get<StudyPlan[]>(`${this.baseURL}v1/careers/${careerId}/study-plans`);
+  }
+
+  getDivisions(careerId: number): Observable<CareerDivision[]> {
+    return this.http.get<CareerDivision[]>(`${this.baseURL}v1/careers/${careerId}/divisions`);
+  }
+
+  getStudyPlanCourses(studyPlanId: number): Observable<StudyPlanCourse[]> {
+    return this.http.get<StudyPlanCourse[]>(`${this.baseURL}v1/study-plans/${studyPlanId}/courses`);
   }
 
   importStudyPlanCsv(careerId: number, formData: FormData): Observable<StudyPlanImportResult> {
