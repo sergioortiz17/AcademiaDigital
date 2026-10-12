@@ -55,6 +55,7 @@ const MENU_ADMIN: MenuItem[] = [
       { id: 'gradebooks-shared', title: 'Calificaciones', url: '/app/grades', icon: '' }
     ]
   },
+  { id: 'my-assignments', title: 'Asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
   { id: 'certificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
     children: [
       { id: 'certificate-requests', title: 'Peticiones',url: '/app/certificates',icon: '' }
