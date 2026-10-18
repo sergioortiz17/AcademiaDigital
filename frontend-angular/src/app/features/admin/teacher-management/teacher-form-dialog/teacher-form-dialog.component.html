@@ -12,11 +12,14 @@
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
-    <div class="user-results" *ngIf="userResults.length > 0">
-      <div class="user-result" *ngFor="let u of userResults" (click)="selectUser(u)">
+    <div class="user-results" *ngIf="eligibleUserResults.length > 0">
+      <div class="user-result" *ngFor="let u of eligibleUserResults" (click)="selectUser(u)">
         <strong>{{ u.username }}</strong> — {{ u.email }} <span *ngIf="u.dni">({{ u.dni }})</span>
       </div>
     </div>
+    <p class="user-results-hint" *ngIf="userResults.length > 0 && eligibleUserResults.length === 0">
+      Los usuarios encontrados están inactivos o ya tienen un legajo docente.
+    </p>
 
     <div class="selected-user" *ngIf="selectedUser">
       <mat-icon>check_circle</mat-icon>
@@ -26,8 +29,10 @@
 
   <div class="form-grid">
     <mat-form-field appearance="outline">
-      <mat-label>N° de legajo</mat-label>
+      <mat-label>N° de legajo docente</mat-label>
       <input matInput [(ngModel)]="employeeNumber" maxlength="50">
+      <mat-hint>Es el legajo laboral del docente, distinto del legajo académico del alumno.</mat-hint>
+      <mat-error *ngIf="employeeNumberExists">Ese número de legajo ya está asignado a otro docente.</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline">

@@ -32,6 +32,46 @@ export interface StudentListItem {
   divisionName: string | null;
 }
 
+export interface StudentRecord {
+  student: {
+    id: number;
+    legajoNumber: string;
+    status: string;
+    enrollmentDate: string;
+  };
+  address: {
+    addressLine: string | null;
+    city: string | null;
+    province: string | null;
+    postalCode: string | null;
+  };
+  emergencyContact: {
+    name: string | null;
+    relationship: string | null;
+    phone: string | null;
+  };
+  personalData: {
+    dni: string | null;
+    firstName: string;
+    lastName: string | null;
+    email: string;
+    cuil: string | null;
+    birthDate: string | null;
+    phone: string;
+  };
+}
+
+export interface UpdateStudentRequest {
+  legajoNumber: string;
+  addressLine: string | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelationship: string | null;
+  emergencyContactPhone: string | null;
+}
+
 export interface PagedResult<T> {
   items: T[];
   page: number;
@@ -136,8 +176,12 @@ export class StudentService {
     return this.http.get<Student>(`${this.baseURL}v1/students/${studentId}`);
   }
 
-  getStudentByUserId(studentId: number): Observable<Student> {
-    return this.getStudent(studentId);
+  getStudentRecord(studentId: number): Observable<StudentRecord> {
+    return this.http.get<StudentRecord>(`${this.baseURL}v1/students/${studentId}/record`);
+  }
+
+  updateStudent(studentId: number, request: UpdateStudentRequest): Observable<StudentListItem> {
+    return this.http.put<StudentListItem>(`${this.baseURL}v1/students/${studentId}`, request);
   }
 
   /** Listado paginado de alumnos*/

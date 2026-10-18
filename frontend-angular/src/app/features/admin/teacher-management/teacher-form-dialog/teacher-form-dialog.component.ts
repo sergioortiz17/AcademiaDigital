@@ -8,6 +8,8 @@ import { SaveTeacherRequest, Teacher } from '../../../../core/services/teacher.s
 
 export interface TeacherFormDialogData {
   teacher: Teacher | null;
+  existingTeacherUserIds?: number[];
+  existingEmployeeNumbers?: string[];
 }
 
 @Component({
@@ -60,6 +62,18 @@ export class TeacherFormDialogComponent implements OnInit {
     }
   }
 
+  get eligibleUserResults(): UserSummary[] {
+    const existingTeacherUserIds = new Set(this.data.existingTeacherUserIds ?? []);
+    return this.userResults.filter(user => user.isActive && !existingTeacherUserIds.has(user.id));
+  }
+
+  get employeeNumberExists(): boolean {
+    const employeeNumber = this.employeeNumber.trim().toUpperCase();
+    return employeeNumber.length > 0 &&
+      (this.data.existingEmployeeNumbers ?? []).some(existing =>
+        existing.trim().toUpperCase() === employeeNumber);
+  }
+
   ngOnInit(): void {
     this.userSearch$.pipe(
       debounceTime(350),
@@ -74,6 +88,7 @@ export class TeacherFormDialogComponent implements OnInit {
   onUserSearchChange(value: string): void {
     this.userSearchTerm = value;
     this.selectedUser = null;
+    this.userResults = [];
     this.userSearch$.next(value);
   }
 
@@ -85,7 +100,7 @@ export class TeacherFormDialogComponent implements OnInit {
 
   get isValid(): boolean {
     if (!this.isEdit && !this.selectedUser) return false;
-    return this.employeeNumber.trim().length > 0 && !!this.hireDate;
+    return this.employeeNumber.trim().length > 0 && !this.employeeNumberExists && !!this.hireDate;
   }
 
   cancel(): void {
@@ -118,9 +133,6 @@ export class TeacherFormDialogComponent implements OnInit {
   }
 
   private toIsoDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).toISOString();
   }
 }

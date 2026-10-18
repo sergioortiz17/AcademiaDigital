@@ -3,14 +3,12 @@ import { AdminService, UserSummary } from '../../../core/services/admin.service'
 import { UserRole } from '../../../store/account/account.actions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
-import { Subject, forkJoin  } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
-import { UserService } from '../../../core/services/user.service';
-import { UserDetailsDialogComponent } from '../../../shared/user-details-dialog/user-details-dialog.component';
-import { StudentService } from '../../../core/services/student.service';
-
+import { UserDetailsDialogComponent, UserDetailsDialogData } from '../../../shared/user-details-dialog/user-details-dialog.component';
+import { Student, StudentListItem, StudentRecord, StudentService } from '../../../core/services/student.service';
 
 
 @Component({
@@ -312,56 +310,107 @@ private openConfirmationDialog(
 }
 
 openUserDetail(user: UserSummary): void {
-
-  this.studentService.getStudentByUserId(user.id)
-    .subscribe({
-
-     next: (student) => {
-
-        this.dialog.open(UserDetailsDialogComponent, {
-          width: '600px',
-          panelClass: 'user-dialog-panel',
-          data: {
-
-            username: user.username,
-            //lastName: user.lastName,
-            email: user.email,
-            dni: user.dni,
-
-            carrera: student.careerName,
-            legajo: student.legajoNumber,
-
-            fechaIngreso: student.enrollmentDate,
-            estado: student.status,
-            plan: student.currentStudyPlanName
-          }
-        });
-
-      },
-
-      error: () => {
-
-        this.dialog.open(UserDetailsDialogComponent, {
-          width: '600px',
-          panelClass: 'user-dialog-panel',
-          data: {
-
-            username: user.username,
-            email: user.email,
-            dni: user.dni,
-
-            carrera: '-',
-            legajo: '-',
-            fechaIngreso: '-',
-            estado: '-',
-            plan: '-'
-          }
-        });
-
+  const searchTerm = user.dni || user.username;
+  this.findStudentForUser(user.id, searchTerm).subscribe({
+    next: student => {
+      if (!student) {
+        this.openUserDetailsDialog(user, this.emptyUserDetails(user));
+        return;
       }
+      this.loadStudentDetails(user, student.id);
+    },
+    error: err => {
+      this.errorMsg = err.error?.msg || err.error?.detail || err.error?.message || err.message || 'No se pudo cargar la ficha del usuario.';
+      this.cdr.detectChanges();
+    }
+  });
+}
 
+private findStudentForUser(userId: number, searchTerm: string, page = 1): Observable<StudentListItem | null> {
+  return this.studentService.searchStudents(searchTerm, undefined, page, 100).pipe(
+    switchMap(response => {
+      const student = response.items.find(item => item.userId === userId);
+      if (student || response.page * response.pageSize >= response.total) return of(student ?? null);
+      return this.findStudentForUser(userId, searchTerm, page + 1);
+    })
+  );
+}
+
+private loadStudentDetails(user: UserSummary, studentId: number): void {
+  forkJoin({
+    student: this.studentService.getStudent(studentId),
+    record: this.studentService.getStudentRecord(studentId)
+  }).subscribe({
+    next: result => this.openUserDetailsDialog(user, this.studentDetails(user, result.student, result.record)),
+    error: err => {
+      this.errorMsg = err.error?.msg || err.error?.detail || err.error?.message || err.message || 'No se pudo cargar la ficha del alumno.';
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+private openUserDetailsDialog(user: UserSummary, data: UserDetailsDialogData): void {
+    const dialogRef = this.dialog.open(UserDetailsDialogComponent, {
+      width: '600px',
+      panelClass: 'user-dialog-panel',
+      data
     });
+    dialogRef.afterClosed().subscribe(saved => {
+      if (!saved) return;
+      this.successMsg = `Legajo de ${user.username} actualizado.`;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.successMsg = '';
+        this.cdr.detectChanges();
+      }, 3000);
+    });
+}
 
+private studentDetails(user: UserSummary, student: Student, record: StudentRecord): UserDetailsDialogData {
+    return {
+      studentId: student.id,
+      username: record.personalData.firstName || user.username,
+      lastName: record.personalData.lastName,
+      email: record.personalData.email || user.email,
+      dni: record.personalData.dni ?? user.dni,
+      carrera: student.careerName,
+      legajo: record.student.legajoNumber,
+      birthDate: record.personalData.birthDate,
+      phone: record.personalData.phone,
+      fechaIngreso: record.student.enrollmentDate,
+      estado: record.student.status,
+      plan: student.currentStudyPlanName || '-',
+      addressLine: record.address.addressLine,
+      city: record.address.city,
+      province: record.address.province,
+      postalCode: record.address.postalCode,
+      emergencyContactName: record.emergencyContact.name,
+      emergencyContactRelationship: record.emergencyContact.relationship,
+      emergencyContactPhone: record.emergencyContact.phone
+    };
+}
+
+private emptyUserDetails(user: UserSummary): UserDetailsDialogData {
+    return {
+      studentId: null,
+      username: user.username,
+      email: user.email,
+      dni: user.dni,
+      carrera: '-',
+      legajo: '-',
+      birthDate: null,
+      phone: null,
+      fechaIngreso: '-',
+      estado: '-',
+      plan: '-',
+      addressLine: null,
+      city: null,
+      province: null,
+      postalCode: null,
+      emergencyContactName: null,
+      emergencyContactRelationship: null,
+      emergencyContactPhone: null
+    };
 }
 
 }
