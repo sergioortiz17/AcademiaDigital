@@ -9,6 +9,7 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/admin")]
 public class AdminController(
     GetUsersUseCase getUsersUseCase,
+    GetUserByDniUseCase getUserByDniUseCase,
     UpdateUserRoleUseCase updateUserRoleUseCase,
     UpdateUserActiveStatusUseCase updateUserActiveStatusUseCase,
     DeleteUserUseCase deleteUserUseCase) : ApiControllerBase
@@ -17,6 +18,14 @@ public class AdminController(
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
         if (CurrentUserRole != UserRole.Admin) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
+        return null!;
+    }
+
+    private IActionResult RequireAdminProfessorOrCoordinator()
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
+        if (CurrentUserRole is not UserRole.Admin and not UserRole.Profesor and not UserRole.Coordinador)
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin, Profesor or Coordinador only."));
         return null!;
     }
 
@@ -32,6 +41,15 @@ public class AdminController(
         var guard = RequireAdmin(); if (guard != null) return guard;
         var result = await getUsersUseCase.ExecuteAsync(search, role, page, pageSize, ct);
         return Ok(new { success = true, result.Users, result.Total, result.Page, result.PageSize });
+    }
+
+    // GET /api/v1/admin/users/search-by-dni?dni=12345678
+    [HttpGet("users/search-by-dni")]
+    public async Task<IActionResult> GetUserByDni([FromQuery] string dni, CancellationToken ct = default)
+    {
+        var guard = RequireAdminProfessorOrCoordinator(); if (guard != null) return guard;
+        var result = await getUserByDniUseCase.ExecuteAsync(dni, ct);
+        return Ok(new { success = true, user = result });
     }
 
     // PATCH /api/v1/admin/users/{id}/role
