@@ -1,0 +1,632 @@
+================================================================================
+  AUDITORÍA COMPLETA - BACKEND ACADEMIA DIGITAL
+  Fecha: 2026-09-09
+  Alcance: Rendimiento, seguridad, infraestructura cloud, observabilidad
+================================================================================
+
+
+
+################################################################################
+#                                                                              #
+#   PARTE 1: RENDIMIENTO (EF Core, queries, memoria)                          #
+#                                                                              #
+################################################################################
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1.1  MIDDLEWARE DE ERRORES GLOBAL
+════════════════════════════════════════════════════════════════════════════════
+
+[FALTANTE] Finance API - Sin ExceptionMiddleware
+  Archivo: services\AcademiaDigital.Finance\src\AcademiaDigital.Finance.API\Program.cs
+  Problema: No hay app.UseMiddleware<ExceptionMiddleware>() ni UseExceptionHandler().
+            Las excepciones no atrapadas devuelven 500 con stack trace en desarrollo
+            y páginas de error genéricas de ASP.NET en producción.
+            El frontend recibe errores crudos sin el formato { success, msg }.
+  Nota: El monolito SÍ tiene ExceptionMiddleware en:
+        backend-dotnet\src\AcademiaDigital.API\Middleware\ExceptionMiddleware.cs
+        Registrado en Program.cs línea 357.
+  Fix: Crear un middleware equivalente en Finance que mapee:
+       - ForbiddenException → 403
+       - KeyNotFoundException → 404
+       - ArgumentException → 400
+       - InvalidOperationException → 409
+       - DbUpdateException → 409
+       - Todo lo demás → 500 (sin exponer detalles internos)
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1.2  QUERIES N+1 (CRÍTICO)
+════════════════════════════════════════════════════════════════════════════════
+
+[N+1] CareerService.GetAllAsync() - 1 COUNT por carrera
+  Archivo: backend-dotnet\src\AcademiaDigital.Application\UseCases\Careers\CareerService.cs
+  Líneas: 25-35
+  Problema: foreach sobre todas las carreras, cada iteración ejecuta
+            courseRepository.CountByCareerIdAsync(career.Id).
+            Con 20 carreras = 21 queries (1 GetAll + 20 COUNT).
+  Fix: Hacer un solo query agrupado que devuelva Dictionary<int, int> con
+       careerId → courseCount. Algo como:
+       SELECT career_id, COUNT(*) FROM courses GROUP BY career_id
+
+[N+1] GradebookRepository.SaveGradeRevisionsAsync() - 1 query por revisión
+  Archivo: backend-dotnet\src\AcademiaDigital.Infrastructure\Persistence\Repositories\GradebookRepository.cs
+  Líneas: 105-118
+  Problema: foreach sobre cada revisión, cada iteración hace un query para buscar
+            la versión anterior (WHERE evaluationId = X AND enrollmentId = Y ORDER BY version DESC).
+            Con 30 alumnos × 5 evaluaciones = 150 queries individuales.
+  Fix: Pre-cargar todas las revisiones actuales de una vez con un solo query
+       filtrado por los pares (evaluationId, enrollmentId) que vienen en el batch,
+       y luego hacer el lookup en memoria.
+
+[N+1] GradebookRepository.ApplyFinalResultsAsync() - 1 SELECT FOR UPDATE por enrollment
+  Archivo: backend-dotnet\src\AcademiaDigital.Infrastructure\Persistence\Repositories\GradebookRepository.cs
+  Líneas: 123-137
+  Problema: foreach sobre resultados, cada iteración ejecuta
+            SELECT * FROM "Enrollments" WHERE id = {result.EnrollmentId} FOR UPDATE
+            Con 30 alumnos = 30 queries con lock individual.
+  Fix: Hacer un solo SELECT ... WHERE id IN (...) FOR UPDATE para lockear
+       todos los enrollments de una vez, y luego iterar en memoria.
+
+[N+1] ExamTableRepository.SaveGradeRevisionsAsync() - 1 query por revisión de examen
+  Archivo: backend-dotnet\src\AcademiaDigital.Infrastructure\Persistence\Repositories\ExamTableRepository.cs
+  Líneas: 116-129
+  Problema: Mismo patrón que GradebookRepository.SaveGradeRevisionsAsync().
+            foreach con query individual para buscar versión anterior por ExamRegistrationId.
+  Fix: Mismo approach: pre-cargar revisiones actuales en un solo query.
+
+[N+1] EnrollmentPeriodHandlers - GetPeriodDivisionCoverageQueryHandler
+  Archivo: backend-dotnet\src\AcademiaDigital.Application\UseCases\Enrollments\EnrollmentPeriodHandlers.cs
+  Líneas: 344-354
+  Problema: Loop anidado foreach(year) × foreach(shift), cada iteración ejecuta
+            commissionRepository.FindMatchingActiveAsync().
+            Con 5 años × 3 turnos = 15 queries individuales.
+  Fix: Crear un solo query que traiga todas las comisiones activas de una vez
+       filtrado por careerId + academicYear, y agrupar en memoria por (year, shift).
+
+[N+1] CourseSectionHandlers.ReattachUnmatchedEnrollmentsAsync()
+  Archivo: backend-dotnet\src\AcademiaDigital.Application\UseCases\Teachers\CourseSectionHandlers.cs
+  Líneas: 141-145
+  Problema: foreach sobre enrollments sin matchear, cada uno llama
+            enrollmentRepository.UpdateAsync(enrollment) que hace SaveChangesAsync individual.
+  Fix: Asignar el CourseSectionId a todos en memoria y hacer un solo SaveChangesAsync al final.
+
+[N+1] PaymentRepository.LockDebtsForPaymentAsync() - ReloadAsync por cada deuda
+  Archivo: services\AcademiaDigital.Finance\src\...\Repositories\PaymentRepository.cs
+  Línea: 37
+  Problema: foreach (var debt in debts) await db.Entry(debt).ReloadAsync(ct)
+            Cada deuda se recarga individualmente después del SELECT FOR UPDATE.
+  Fix: Ya están lockeadas por el FROM SQL, el ReloadAsync es redundante si se usa
+       .AsNoTracking() seguido de Attach, o bien recargar con un solo query IN().
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1.3  PATRÓN "CARGAR TODO, FILTRAR EN MEMORIA"
+════════════════════════════════════════════════════════════════════════════════
+
+[INEFICIENTE] StudentCatalogsController - GET document-requirements/{id}
+  Archivo: backend-dotnet\src\...\Controllers\StudentCatalogsController.cs, línea 16
+  Problema: Carga TODOS los document requirements y filtra con .SingleOrDefault() en memoria.
+  Fix: Agregar GetRequirementByIdAsync(int id) en el servicio.
+
+[INEFICIENTE] StudentCatalogsController - GET scholarships/{id}
+  Archivo: backend-dotnet\src\...\Controllers\StudentCatalogsController.cs, línea 32
+  Problema: Carga TODAS las becas y filtra en memoria.
+  Fix: Agregar GetScholarshipByIdAsync(int id).
+
+[INEFICIENTE] StudentCatalogsController - GET student-custom-fields/{id}
+  Archivo: backend-dotnet\src\...\Controllers\StudentCatalogsController.cs, línea 48
+  Problema: Carga TODOS los custom fields y filtra en memoria.
+  Fix: Agregar GetCustomFieldByIdAsync(int id).
+
+[INEFICIENTE] DivisionsController - GET divisions/{id}
+  Archivo: backend-dotnet\src\...\Controllers\DivisionsController.cs, línea 17
+  Problema: Carga TODAS las divisiones de la carrera (sin filtro de año) y filtra en memoria.
+  Fix: Agregar GetDivisionByIdAsync(int careerId, int id).
+
+[INEFICIENTE] StudentManagementController - GET documents/{documentId}
+  Archivo: backend-dotnet\src\...\Controllers\StudentManagementController.cs, línea 41
+  Problema: Carga TODOS los documentos de un alumno y filtra por documentId en memoria.
+  Fix: Agregar GetDocumentByIdAsync(long studentId, long documentId).
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1.4  SIN PAGINACIÓN (RESULTADOS SIN LÍMITE)
+════════════════════════════════════════════════════════════════════════════════
+
+Las siguientes queries devuelven colecciones completas sin .Take() ni .Skip().
+Todas podrían crecer indefinidamente.
+
+[ALTO RIESGO]
+  StudentRepository.GetAllAsync()
+    Archivo: backend-dotnet\...\Repositories\StudentRepository.cs, línea 9
+    Carga TODOS los alumnos con .Include(User) + .Include(Career).
+    Endpoint: GET /api/v1/students
+
+[RIESGO MEDIO]
+  CourseRepository.GetAllAsync() — línea 10
+  CourseRepository.GetByCareerAsync() — línea 14
+  TeacherRepository.GetAllAsync() — línea 12
+  EnrollmentRepository.GetByStudentAsync() — líneas 12-15
+  EnrollmentRepository.GetStudentRowsByPeriodAsync() — líneas 54-57
+  CommunicationRepository.GetAllAsync() — líneas 11-13
+  ContestApplicationRepository.GetAllAsync() — líneas 11-14
+  CertificateRequestRepository.GetAllAsync() — líneas 19 y 36
+  GradebookRepository.GetPublishedForStudentAsync() — línea 148
+  ExamTableRepository.GetExamTablesAsync() — línea 24
+
+[RIESGO BAJO - catálogos chicos]
+  CareerRepository, CooperativeEntityRepository, EnrollmentPeriodRepository,
+  StudyPlanRepository, StudentCareerRepository, TeacherDocumentRepository,
+  TeacherAssignmentRepository.
+
+[FINANCE]
+  FinanceRepository: GetConceptsAsync, GetRatesAsync, GetBenefitsAsync,
+    GetPlansAsync, GetDebtsByStudentAsync.
+  PaymentRepository.GetByStudentAsync() — líneas 42-43
+  ReceiptRepository.GetByStudentAsync() — líneas 22-23
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1.5  AsNoTracking FALTANTE
+════════════════════════════════════════════════════════════════════════════════
+
+El monolito está bien cubierto. Solo falta en Finance:
+
+[FALTA] PaymentRepository.FindActiveMethodAsync()
+  Archivo: services\...\Repositories\PaymentRepository.cs, línea 13-14
+  Es una lectura de validación, no muta.
+
+[FALTA] PaymentRepository.GetDebtsByPublicIdsAsync()
+  Archivo: services\...\Repositories\PaymentRepository.cs, líneas 16-17
+  NOTA: Verificar si downstream las muta. Si no, agregar AsNoTracking.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1.6  FALTA DE PROYECCIÓN .Select()
+════════════════════════════════════════════════════════════════════════════════
+
+Cargan entidades completas con Include cuando solo se necesitan pocos campos:
+
+  CourseRepository.GetAllAsync() / GetByCareerAsync() — líneas 10 y 14
+  CareerRepository.GetAllAsync() — línea 10
+  StudentRepository.GetAllAsync() / GetByCareerAsync() — líneas 9 y 15
+  TeacherRepository.GetAllAsync() — línea 12
+  EnrollmentPeriodRepository.GetAllAsync() — línea 10
+
+
+
+################################################################################
+#                                                                              #
+#   PARTE 2: SEGURIDAD                                                        #
+#                                                                              #
+################################################################################
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.1  VULNERABILIDAD: Reset token expuesto en respuesta HTTP
+════════════════════════════════════════════════════════════════════════════════
+
+[CRÍTICO] AuthController.ForgotPassword devuelve el resetToken al caller
+  Archivo: backend-dotnet\src\...\Controllers\AuthController.cs, línea 82
+  Código:  return Ok(new { success, resetToken = result.ResetToken, msg = "..." });
+  Problema: Cualquier persona puede llamar POST /api/v1/users/forgot-password
+            con cualquier email y recibir el token de reset en la respuesta.
+            Con ese token puede resetear la contraseña de cualquier cuenta.
+  Fix: El resetToken debería enviarse por email, NUNCA devolverse en la respuesta.
+       La respuesta debería ser siempre el mismo mensaje genérico sin el token.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.2  JWT: Configuración débil
+════════════════════════════════════════════════════════════════════════════════
+
+[ALTO] Token de acceso con expiración de 7 días
+  Archivo: backend-dotnet\src\...\Services\JwtTokenService.cs, línea 16
+  Problema: Un access token válido por 7 días es excesivo. Si se filtra,
+            el atacante tiene una semana entera de acceso.
+  Fix: Reducir a 15-60 minutos e implementar refresh tokens.
+
+[ALTO] Sin validación de Issuer ni Audience
+  Archivo: backend-dotnet\src\...\Services\JwtTokenService.cs, líneas 49-50
+  Código:  ValidateIssuer = false, ValidateAudience = false
+  Problema: Cualquier JWT firmado con la misma clave desde cualquier servicio
+            es aceptado. Si la clave se comparte con Finance, un token generado
+            para otro propósito podría usarse acá.
+  Fix: Configurar Issuer y Audience en la generación y validación.
+
+[MEDIO] Sin refresh tokens
+  Problema: No existe mecanismo de refresh. Los usuarios se re-autentican
+            cada 7 días. No hay forma de revocar acceso sin invalidar la sesión
+            en la base de datos.
+
+[BAJO] Dev secret commiteado en código fuente
+  Archivo: backend-dotnet\src\...\appsettings.Development.json, línea 13
+  Valor:   "SecretKey": "dev_secret_key_123_academia_digital"
+  Problema: Aunque es solo para desarrollo, si alguien usa este valor
+            en producción accidentalmente, es trivial de adivinar.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.3  Finance: Headers de identidad sin protección
+════════════════════════════════════════════════════════════════════════════════
+
+[ALTO] Finance confía ciegamente en X-User-Id y X-User-Role
+  Archivo: services\...\Controllers\ApiControllerBase.cs, líneas 10-14
+  Problema: Si Finance queda expuesto fuera de la red interna (error de
+            configuración, API gateway mal configurado), cualquier caller
+            puede enviar X-User-Id: 1, X-User-Role: Admin y ser admin.
+  Fix: Agregar un shared secret / API key entre monolito y Finance para
+       verificar que el caller es legítimo. O validar el JWT directamente.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.4  CORS: AllowAny demasiado permisivo
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] AllowAnyHeader() + AllowAnyMethod() en producción
+  Archivo: backend-dotnet\src\...\Program.cs, líneas 215-216
+  Problema: Permite cualquier header y cualquier método HTTP desde los
+            orígenes permitidos. Debería restringirse a los headers y
+            métodos que el frontend realmente usa.
+  Fix: Reemplazar con .WithHeaders("Content-Type", "Authorization")
+       y .WithMethods("GET", "POST", "PUT", "DELETE").
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.5  Rate limiting insuficiente
+════════════════════════════════════════════════════════════════════════════════
+
+[ALTO] Sin rate limiting global — login y reset password expuestos
+  Archivo: backend-dotnet\src\...\Program.cs, líneas 220-255
+  Problema: Solo existe rate limiting para "PublicAdmissionSubmission".
+            Los endpoints de login, forgot-password y reset-password no
+            tienen ningún límite. Un atacante puede hacer brute-force
+            de contraseñas o flood de emails de reset sin restricción.
+  Fix: Agregar rate limiting al menos en:
+       - POST /api/v1/users/login (ej: 5 intentos por IP por minuto)
+       - POST /api/v1/users/forgot-password (ej: 3 por IP por hora)
+       - POST /api/v1/users/reset-password (ej: 5 por IP por minuto)
+
+[ALTO] Finance sin rate limiting
+  Problema: Finance no tiene ningún rate limiter configurado.
+  Fix: Aunque sea interno, agregar un límite global razonable.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.6  Swagger/Scalar expuestos en producción
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] Documentación API visible incondicionalmente
+  Archivo: backend-dotnet\src\...\Program.cs, líneas 342-354
+  Código:  // Swagger disponible siempre (no solo en Development)
+           app.UseSwagger(); app.UseSwaggerUI(...);
+           app.MapScalarApiReference(...);
+  Mismo problema en Finance: Program.cs líneas 98-107.
+  Problema: Cualquier persona puede ver la documentación completa de la API
+            en producción, incluyendo todos los endpoints, schemas y parámetros.
+  Fix: Envolver en if (app.Environment.IsDevelopment()) o proteger con auth.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2.7  Secretos y contraseñas por defecto
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] Password de Postgres por defecto en docker-compose.yml
+  Archivo: docker-compose.yml, línea 13
+  Valor:   POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Admin1234!}"
+  Problema: Si no se setea la variable de entorno, usa Admin1234!
+
+[MEDIO] ALLOW_TIME_TRAVEL=true en docker-compose.yml principal
+  Archivo: docker-compose.yml, línea 50
+  Problema: Si se usa este compose file en producción, el endpoint de
+            time-travel queda habilitado, permitiendo manipular fechas
+            del sistema (afecta deudas, periodos, etc.).
+  Fix: Mover a un docker-compose.override.yml solo para desarrollo.
+
+
+
+################################################################################
+#                                                                              #
+#   PARTE 3: INFRAESTRUCTURA CLOUD                                            #
+#                                                                              #
+################################################################################
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.1  Sin health checks
+════════════════════════════════════════════════════════════════════════════════
+
+[CRÍTICO para cloud] Ni el monolito ni Finance tienen health check endpoints
+  Problema: Kubernetes, ECS, App Service, etc. necesitan endpoints de
+            liveness (/health/live) y readiness (/health/ready) para:
+            - Saber cuándo reiniciar un pod que está colgado
+            - Saber cuándo empezar a enrutar tráfico después de un deploy
+            - Escalar automáticamente
+  Fix: Agregar app.MapHealthChecks() con checks de:
+       - Liveness: el proceso responde (básico)
+       - Readiness: la DB está accesible
+       Paquete: Microsoft.Extensions.Diagnostics.HealthChecks
+                AspNetCore.HealthChecks.NpgSql
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.2  Sin response compression
+════════════════════════════════════════════════════════════════════════════════
+
+[ALTO] Ningún servicio comprime respuestas
+  Problema: Las respuestas JSON (listas de alumnos, planillas, deudas) se
+            envían sin comprimir. En cloud cada byte de egress cuesta.
+            Un JSON de 500KB se reduce a ~50KB con gzip.
+  Fix: Agregar en ambos servicios:
+       builder.Services.AddResponseCompression(options => {
+           options.EnableForHttps = true;
+           options.MimeTypes = ResponseCompressionDefaults.MimeTypes;
+       });
+       app.UseResponseCompression(); // antes de UseStaticFiles/MapControllers
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.3  Sin HTTPS redirection
+════════════════════════════════════════════════════════════════════════════════
+
+[ALTO] Ni UseHttpsRedirection() ni UseHsts() en ningún servicio
+  Archivos: Ambos Program.cs
+  Los Dockerfiles configuran solo HTTP (http://+:8000, http://+:8091).
+  Problema: Si TLS termina en el load balancer pero alguien hace una
+            request HTTP directa al backend, viaja sin cifrar.
+  Fix: En producción, agregar UseHttpsRedirection() o al menos
+       configurar el reverse proxy / load balancer para que rechace HTTP.
+       Agregar header Strict-Transport-Security (HSTS).
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.4  Índice faltante en ActiveSessions.Token
+════════════════════════════════════════════════════════════════════════════════
+
+[CRÍTICO] La columna Token no tiene índice — full table scan en CADA request
+  Archivo: backend-dotnet\src\...\Configurations\ActiveSessionConfiguration.cs
+  Problema: ActiveSessionMiddleware ejecuta FindByTokenAsync(token) en CADA
+            request autenticada. Sin índice en Token, Postgres hace un
+            sequential scan de toda la tabla ActiveSessions.
+            Con 1000 sesiones activas y 100 req/s = 100.000 scans/s.
+  Fix: Agregar en la configuración:
+       builder.HasIndex(s => s.Token).IsUnique();
+       Y crear una migración.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.5  Índices faltantes en Enrollments
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] Falta índice en CourseSectionId
+  Archivo: backend-dotnet\src\...\Configurations\EnrollmentConfiguration.cs, línea 24
+  Se usa en joins para cargar rosters de course sections.
+
+[MEDIO] Falta índice en EnrollmentPeriodId
+  Archivo: backend-dotnet\src\...\Configurations\EnrollmentConfiguration.cs, línea 25
+  Se usa al consultar inscripciones por periodo.
+
+  Fix: Agregar builder.HasIndex(e => e.CourseSectionId) y
+       builder.HasIndex(e => e.EnrollmentPeriodId).
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.6  Docker: containers corren como root
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] Ambos Dockerfiles (.NET) no tienen directiva USER
+  Archivos: backend-dotnet\Dockerfile, services\...\Dockerfile
+  Problema: Los containers corren como root, lo cual es una violación de
+            seguridad básica en cloud. Si un atacante compromete el proceso,
+            tiene acceso root al container.
+  Fix: Agregar antes del ENTRYPOINT:
+       RUN adduser --disabled-password --no-create-home appuser
+       USER appuser
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.7  Sin connection pool tuning ni EnableRetryOnFailure
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] Connection strings sin configuración de pool
+  Archivos: Ambos appsettings.json
+  Problema: Sin MaxPoolSize, MinPoolSize, Connection Lifetime configurados.
+            El default de Npgsql es MaxPoolSize=100, lo cual puede ser
+            demasiado para un cloud con múltiples réplicas (100 × N réplicas
+            = muchas conexiones abiertas al PostgreSQL).
+  Fix: Agregar a la connection string:
+       ;Pooling=true;MinPoolSize=5;MaxPoolSize=20;Connection Idle Lifetime=300
+
+[MEDIO] Sin EnableRetryOnFailure para errores transitorios en runtime
+  Archivos: DependencyInjection.cs (ambos servicios)
+  Problema: Solo hay retry en startup. En runtime, un error de red transitorio
+            falla inmediatamente sin reintentar.
+  Fix: En AddDbContext, agregar:
+       options.UseNpgsql(conn, npgsqlOptions =>
+           npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(1), null));
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.8  Frontend nginx: sin gzip, sin cache, sin security headers
+════════════════════════════════════════════════════════════════════════════════
+
+[ALTO] La config de nginx es mínima — solo routing
+  Archivo: frontend-angular\Dockerfile, líneas 16-28
+  Falta:
+    - gzip on; gzip_types text/css application/javascript application/json;
+    - Cache-Control para assets estáticos (JS/CSS tienen hash, cachear 1 año)
+    - Security headers:
+        X-Frame-Options: DENY
+        X-Content-Type-Options: nosniff
+        Content-Security-Policy: default-src 'self'; ...
+        Referrer-Policy: strict-origin-when-cross-origin
+  Fix: Crear un archivo nginx.conf separado con toda la config y COPY en el Dockerfile.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.9  Sin logging estructurado
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] Solo usa Microsoft.Extensions.Logging básico
+  Problema: En cloud necesitás logs estructurados (JSON) para poder:
+            - Buscar en CloudWatch / Stackdriver / Application Insights
+            - Correlacionar requests con un ID
+            - Filtrar por campos (userId, statusCode, etc.)
+  Fix: Agregar Serilog con sink a Console en JSON:
+       builder.Host.UseSerilog((ctx, config) =>
+           config.ReadFrom.Configuration(ctx.Configuration)
+                 .WriteTo.Console(new JsonFormatter()));
+       Agregar request logging: app.UseSerilogRequestLogging();
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.10  Sin background tasks para procesos automáticos
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] No hay IHostedService ni BackgroundService en ningún lado
+  Problema: Varios procesos dependen de triggers manuales:
+            - Expiración de admisiones (ProcessAdmissionExpirationsCommandHandler)
+            - Procesamiento de outbox (ProcessAdmissionOutboxCommandHandler)
+            - Limpieza de sesiones expiradas
+            - Notificaciones de deuda vencida
+  Fix: Crear un BackgroundService con timer para los procesos críticos,
+       o usar un scheduler externo (Hangfire, Quartz.NET, cron job en cloud).
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.11  Sin retry/resilience para llamadas HTTP inter-servicio
+════════════════════════════════════════════════════════════════════════════════
+
+[MEDIO] HttpFinanceClient y HttpDirectoryClient sin Polly
+  Archivos: backend-dotnet\src\...\Services\HttpFinanceClient.cs
+            services\...\Services\HttpDirectoryClient.cs
+  Problema: Tienen timeout (5s y 3s) y degradan gracefully, pero no reintentan
+            errores transitorios de red. En cloud, los errores 503 y timeouts
+            transitorios son comunes (deploys, scaling, network blips).
+  Fix: Agregar Microsoft.Extensions.Http.Resilience:
+       builder.Services.AddHttpClient("Finance")
+           .AddStandardResilienceHandler();
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.12  CancellationToken no propagado en middleware
+════════════════════════════════════════════════════════════════════════════════
+
+[BAJO] ActiveSessionMiddleware no pasa CancellationToken al DB
+  Archivo: backend-dotnet\src\...\Middleware\ActiveSessionMiddleware.cs, línea 30
+  Código:  var session = await sessionRepository.FindByTokenAsync(token);
+  Problema: Si el cliente desconecta, la query sigue corriendo innecesariamente.
+            Con muchas requests concurrentes, acumula queries huérfanas.
+  Fix: Pasar context.RequestAborted como CancellationToken.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.13  Archivos en memoria completa (sin streaming)
+════════════════════════════════════════════════════════════════════════════════
+
+[BAJO] LocalFileStorage materializa archivos completos en memoria
+  Archivo: backend-dotnet\src\...\Services\LocalFileStorage.cs
+  Línea 31: content.ToArray() — materializa todo el contenido
+  Línea 49: File.ReadAllBytesAsync — carga archivo entero en RAM
+  Problema: Si alguien sube un archivo grande, consume toda la RAM del pod.
+            En cloud con pods de 256-512MB RAM, esto puede crashear el proceso.
+  Fix: Usar streaming con FileStream en vez de byte[] completo.
+       Para PDFs (certificados, recibos) el tamaño actual es chico y aceptable.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.14  Sin HTTP caching headers para endpoints de lectura
+════════════════════════════════════════════════════════════════════════════════
+
+[BAJO] Ningún endpoint usa Cache-Control ni ETags
+  Problema: Endpoints de catálogos (carreras, materias, métodos de pago) que
+            cambian muy poco se consultan siempre contra la DB.
+  Fix: Agregar [ResponseCache(Duration = 300)] en endpoints de catálogos,
+       o implementar ETag con un middleware para evitar transferir datos
+       cuando no cambiaron.
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3.15  EF Core: Log de SQL con parámetros sensibles
+════════════════════════════════════════════════════════════════════════════════
+
+[BAJO] SQL logging incluye parámetros en Development
+  Archivo: backend-dotnet\src\...\appsettings.Development.json, línea 6
+  Config:  "Microsoft.EntityFrameworkCore.Database.Command": "Information"
+  Problema: Esto logea TODAS las queries SQL incluyendo parámetros,
+            que pueden contener datos sensibles (DNI, passwords hasheados).
+            Si este nivel se activa accidentalmente en producción, filtra PII.
+  Fix: Asegurar que en producción sea "Warning" o superior.
+       Idealmente usar EnableSensitiveDataLogging(false) explícitamente
+       en producción (es false por default, pero hacerlo explícito).
+
+
+
+################################################################################
+#                                                                              #
+#   RESUMEN GENERAL POR PRIORIDAD                                             #
+#                                                                              #
+################################################################################
+
+  ═══ CRÍTICO (arreglar ANTES de ir a cloud) ═══
+
+    1.  Reset token expuesto en respuesta HTTP (AuthController:82)
+        → Vulnerabilidad de seguridad — cualquiera puede resetear cualquier cuenta
+
+    2.  Índice faltante en ActiveSessions.Token
+        → Full table scan en CADA request autenticada
+
+    3.  Finance sin ExceptionMiddleware
+        → Errores crudos con stack trace al frontend
+
+    4.  Sin health check endpoints
+        → Imposible deployar correctamente en K8s/ECS/App Service
+
+    5.  N+1 en GradebookRepository.SaveGradeRevisionsAsync (100+ queries)
+
+    6.  N+1 en GradebookRepository.ApplyFinalResultsAsync (30+ queries con lock)
+
+    7.  N+1 en ExamTableRepository.SaveGradeRevisionsAsync (mismo patrón)
+
+
+  ═══ ALTO ═══
+
+    8.  JWT 7 días sin refresh tokens ni validación issuer/audience
+    9.  Sin rate limiting en login/forgot-password/reset-password
+   10.  Sin response compression (costo de egress en cloud)
+   11.  Nginx sin gzip, cache headers ni security headers
+   12.  Sin HTTPS redirection / HSTS
+   13.  ALLOW_TIME_TRAVEL=true en docker-compose.yml principal
+   14.  Swagger/Scalar expuestos en producción
+   15.  Finance: headers X-User-Id/X-User-Role sin validación
+   16.  StudentRepository.GetAllAsync sin paginación
+   17.  N+1 en CareerService.GetAllAsync (21 queries)
+   18.  "Load all, filter in memory" en 5 endpoints
+
+
+  ═══ MEDIO ═══
+
+   19.  Containers Docker corren como root
+   20.  Sin connection pool tuning ni EnableRetryOnFailure
+   21.  Sin logging estructurado (Serilog/JSON)
+   22.  Sin background tasks para procesos automáticos
+   23.  Sin retry/resilience (Polly) para HTTP inter-servicio
+   24.  CORS: AllowAnyHeader + AllowAnyMethod demasiado abierto
+   25.  Secretos por defecto en docker-compose (Admin1234!)
+   26.  Índices faltantes en Enrollments (CourseSectionId, EnrollmentPeriodId)
+   27.  AsNoTracking faltante en PaymentRepository (2 queries)
+   28.  Paginación en endpoints de riesgo medio
+
+
+  ═══ BAJO ═══
+
+   29.  CancellationToken no propagado en ActiveSessionMiddleware
+   30.  Archivos en memoria completa (LocalFileStorage)
+   31.  Sin HTTP caching headers (Cache-Control/ETags)
+   32.  SQL logging con parámetros sensibles en Development
+   33.  Falta de .Select() proyecciones
+   34.  Paginación en catálogos chicos
+   35.  Dev JWT secret commiteado en código fuente
+
+================================================================================
