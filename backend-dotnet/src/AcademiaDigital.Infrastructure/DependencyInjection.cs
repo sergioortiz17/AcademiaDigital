@@ -5,9 +5,12 @@ using AcademiaDigital.Application.Services;
 using AcademiaDigital.Infrastructure.Persistence;
 using AcademiaDigital.Infrastructure.Persistence.Repositories;
 using AcademiaDigital.Infrastructure.Services;
+using AcademiaDigital.Infrastructure.Services.Arca;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace AcademiaDigital.Infrastructure;
 
@@ -52,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<ITeacherContestRepository, TeacherContestRepository>();
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
         services.AddScoped<ICourseSectionRepository, CourseSectionRepository>();
+        services.AddScoped<IComprobanteRepository, ComprobanteRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Servicios
@@ -74,6 +78,28 @@ public static class DependencyInjection
         services.AddSingleton<IAdmissionChallengeVerifier, ConfigurableAdmissionChallengeVerifier>();
         services.AddSingleton<IAttendanceReportGenerator, SimpleAttendanceReportGenerator>();
         services.AddSingleton<ICertificatePdfGenerator, SimpleCertificatePdfGenerator>();
+
+        // ── ARCA (facturación electrónica ex AFIP) ──────────────────────────────
+        // Settings desde la sección "Arca". El cliente SOAP es singleton (cachea token/sign y
+        // reutiliza un HttpClient estático). Solo se monitorea el certificado si el módulo está
+        // habilitado, para no ensuciar los logs en entornos sin certificado (ej. desarrollo).
+        services.Configure<ArcaSettings>(configuration.GetSection("Arca"));
+        services.AddSingleton<IArcaClient>(sp =>
+        {
+            var settings = sp.GetRequiredService<IOptions<ArcaSettings>>().Value;
+            var logger = sp.GetRequiredService<ILogger<ArcaClient>>();
+
+            if (!string.IsNullOrWhiteSpace(settings.CertificadoPath) && !Path.IsPathRooted(settings.CertificadoPath))
+                settings.CertificadoPath = Path.Combine(AppContext.BaseDirectory, settings.CertificadoPath);
+            if (!string.IsNullOrWhiteSpace(settings.ClavePath) && !Path.IsPathRooted(settings.ClavePath))
+                settings.ClavePath = Path.Combine(AppContext.BaseDirectory, settings.ClavePath);
+
+            return new ArcaClient(settings, logger);
+        });
+
+        var arcaEnabled = configuration.GetSection("Arca").GetValue("Enabled", false);
+        if (arcaEnabled)
+            services.AddHostedService<CertificadoMonitorService>();
 
         return services;
     }

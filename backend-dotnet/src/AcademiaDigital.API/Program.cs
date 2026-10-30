@@ -4,6 +4,7 @@ using AcademiaDigital.Application.UseCases.Admin;
 using AcademiaDigital.Application.UseCases.Attendance;
 using AcademiaDigital.Application.UseCases.Admissions;
 using AcademiaDigital.Application.UseCases.Enrollments;
+using AcademiaDigital.Application.UseCases.Facturacion;
 using AcademiaDigital.Application.UseCases.Grades;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.Certificates;
@@ -203,6 +204,13 @@ builder.Services.AddScoped<EnrollmentPeriodFacade>();
 builder.Services.AddScoped<EnrollmentPeriodAdminFacade>();
 builder.Services.AddScoped<CreateEnrollmentCommandHandler>();
 builder.Services.AddScoped<AdminApproveEnrollmentCommandHandler>();
+
+// Facturación electrónica (ARCA / ex AFIP)
+builder.Services.AddScoped<EmitirComprobanteCommandHandler>();
+builder.Services.AddScoped<GetComprobantesQueryHandler>();
+builder.Services.AddScoped<GetComprobanteByIdQueryHandler>();
+builder.Services.AddScoped<ConsultarPadronQueryHandler>();
+builder.Services.AddScoped<GetUltimoComprobanteQueryHandler>();
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 var allowedOrigins = builder.Configuration

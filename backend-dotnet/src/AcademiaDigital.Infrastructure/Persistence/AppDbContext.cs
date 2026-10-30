@@ -64,6 +64,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AdmissionApplicationDocument> AdmissionApplicationDocuments => Set<AdmissionApplicationDocument>();
     public DbSet<AdmissionAgreement> AdmissionAgreements => Set<AdmissionAgreement>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<Comprobante> Comprobantes => Set<Comprobante>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserConfiguration());
@@ -124,6 +125,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new AdmissionAgreementConfiguration());
         modelBuilder.ApplyConfiguration(new AcademicEventConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
+        modelBuilder.ApplyConfiguration(new ComprobanteConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }

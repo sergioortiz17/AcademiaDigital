@@ -1105,6 +1105,113 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.ToTable("Communications", (string)null);
                 });
 
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Comprobante", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("AutorizadoAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("autorizado_at");
+
+                    b.Property<string>("Cae")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("cae");
+
+                    b.Property<DateOnly?>("CaeFechaVencimiento")
+                        .HasColumnType("date")
+                        .HasColumnName("cae_fecha_vencimiento");
+
+                    b.Property<int>("Concepto")
+                        .HasColumnType("integer")
+                        .HasColumnName("concepto");
+
+                    b.Property<int>("CondicionIvaReceptorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("condicion_iva_receptor_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DocumentoReceptor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("documento_receptor");
+
+                    b.Property<int>("Estado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("estado");
+
+                    b.Property<DateTime>("FechaEmision")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_emision");
+
+                    b.Property<DateTime?>("FechaServicioDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_servicio_desde");
+
+                    b.Property<DateTime?>("FechaServicioHasta")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_servicio_hasta");
+
+                    b.Property<DateTime?>("FechaVencimientoPago")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_vencimiento_pago");
+
+                    b.Property<string>("MensajeError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("mensaje_error");
+
+                    b.Property<long?>("NumeroComprobante")
+                        .HasColumnType("bigint")
+                        .HasColumnName("numero_comprobante");
+
+                    b.Property<decimal>("Percepcion")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("percepcion");
+
+                    b.Property<int>("PuntoVenta")
+                        .HasColumnType("integer")
+                        .HasColumnName("punto_venta");
+
+                    b.Property<long>("SolicitadoPorUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("solicitado_por_user_id");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("subtotal");
+
+                    b.Property<int>("TipoComprobante")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo_comprobante");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SolicitadoPorUserId");
+
+                    b.HasIndex("PuntoVenta", "TipoComprobante", "Estado");
+
+                    b.HasIndex("PuntoVenta", "TipoComprobante", "NumeroComprobante")
+                        .IsUnique()
+                        .HasFilter("numero_comprobante IS NOT NULL");
+
+                    b.ToTable("Comprobantes", (string)null);
+                });
+
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.ContestApplication", b =>
                 {
                     b.Property<long>("Id")
@@ -3901,6 +4008,17 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Comprobante", b =>
+                {
+                    b.HasOne("AcademiaDigital.Domain.Entities.User", "SolicitadoPorUser")
+                        .WithMany()
+                        .HasForeignKey("SolicitadoPorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SolicitadoPorUser");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.ContestApplication", b =>
