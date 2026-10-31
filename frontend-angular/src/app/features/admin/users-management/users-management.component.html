@@ -70,8 +70,7 @@
             <div class="user-info">
               <mat-icon class="avatar-icon">account_circle</mat-icon>
               <div>
-                <!-- Para que muestre el apellido debe estar el atributo lastName  en la peticion GET del backend -->
-                <div class="user-name clickable-user" (dblclick)="openUserDetail(u)">{{ u.username }} {{ u.lastName }}</div>
+                <div class="user-name clickable-user" (dblclick)="openUserDetail(u)">{{ u.displayName || u.username }}</div>
                 <div class="user-email">{{ u.email }}</div>
               </div>
             </div>

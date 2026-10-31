@@ -7,6 +7,7 @@ import { UserRole } from '../../store/account/account.actions';
 export interface UserSummary {
   id: number;
   username: string;
+  displayName?: string;
   email: string;
   dni?: string;
   role: UserRole;

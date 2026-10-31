@@ -12,12 +12,6 @@
 }
 
 .profile-card {
-  /*.card-icon {
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-    color: var(--primary-color, #1976d2);
-  }*/
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 3px 12px rgba(0,0,0,.12);
@@ -55,13 +49,6 @@
   margin: 12px 0 4px;
 }
 
-/*.profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 16px;
-}*/
-
 .form-row {
   display: flex;
   gap: 16px;
@@ -82,21 +69,6 @@
   }
 }
 
-/*.phone-group {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  align-items: flex-start;
-
-  .phone-code {
-    flex: 0 0 130px;
-  }
-
-  .phone-number {
-    flex: 1;
-  }
-}*/
-
 .full-width {
   width: 100%;
 }
@@ -106,23 +78,6 @@
   color: #999;
   margin: -4px 0 8px;
 }
-
-/*.password-rules {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin: -4px 0 12px;
-  font-size: 0.78rem;
-  color: #aaa;
-
-  span {
-    transition: color 0.2s;
-
-    &.valid {
-      color: #2e7d32;
-    }
-  }
-}*/
 
 .msg-success {
   color: #2e7d32;
@@ -198,24 +153,23 @@ mat-card-actions {
 
 .profile-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(250px,1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
 
-  gap: 0.8rem;
+.field-group-3 {
+  grid-column: span 4;
+}
+
+.field-group-4 {
+  grid-column: span 3;
 }
 
 .phone-group {
   display: flex;
   gap: 0.5rem;
 }
-
-/*.phone-code {
-  width: 90px;
-}
-
-.phone-number {
-  flex: 1;
-} */
 
 .mat-mdc-form-field {
   width: 100%;

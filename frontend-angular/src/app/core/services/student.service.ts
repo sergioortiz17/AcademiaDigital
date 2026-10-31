@@ -184,6 +184,12 @@ export class StudentService {
     return this.http.put<StudentListItem>(`${this.baseURL}v1/students/${studentId}`, request);
   }
 
+  updateEmergencyContactPhone(studentId: number, emergencyContactPhone: string | null): Observable<void> {
+    return this.http.patch<void>(`${this.baseURL}v1/students/${studentId}/emergency-contact`, {
+      emergencyContactPhone
+    });
+  }
+
   /** Listado paginado de alumnos*/
   searchStudents(search?: string, careerId?: number, page = 1, pageSize = 50): Observable<PagedResult<StudentListItem>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);

@@ -21,6 +21,13 @@ test('acceso propio y cruzado a documentos, becas y campos @p1 @critical @author
     userIds.push(owner.userId, other.userId);
     const session = await authenticatedClients(owner.registration.email, owner.registration.password);
 
+    const emergencyPhone = '+54 11 5555-0101';
+    expect((await session.api.students.updateEmergencyContactPhone(owner.studentId, emergencyPhone)).response.status()).toBe(204);
+    const ownerRecord = await session.api.students.record(owner.studentId);
+    expect((ownerRecord.body as { emergencyContact: { phone: string | null } }).emergencyContact.phone).toBe(emergencyPhone);
+    expect((await session.api.students.updateEmergencyContactPhone(other.studentId, emergencyPhone)).response.status()).toBe(403);
+    expect((await anonymous.students.updateEmergencyContactPhone(owner.studentId, emergencyPhone)).response.status()).toBe(401);
+
     expect((await session.api.students.listDocuments(owner.studentId)).response.status()).toBe(200);
     expect((await session.api.students.pendingDocuments(owner.studentId)).response.status()).toBe(200);
     expect((await session.api.students.listScholarships(owner.studentId)).response.status()).toBe(200);

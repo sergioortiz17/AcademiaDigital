@@ -4,11 +4,12 @@ import { UserRole } from '../../../store/account/account.actions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
 import { forkJoin, Observable, of, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { UserDetailsDialogComponent, UserDetailsDialogData } from '../../../shared/user-details-dialog/user-details-dialog.component';
 import { Student, StudentListItem, StudentRecord, StudentService } from '../../../core/services/student.service';
+import { PersonNameLookupService } from '../../../core/services/person-name-lookup.service';
 
 
 @Component({
@@ -69,7 +70,8 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     private readonly store: Store,
     private readonly cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private readonly studentService: StudentService
+    private readonly studentService: StudentService,
+    private readonly personNames: PersonNameLookupService
   ) {}
 
   ngOnInit(): void {
@@ -128,13 +130,22 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     const requestId = ++this.usersRequestId;
     this.isLoading = true;
     this.errorMsg = '';
-    this.adminService.getUsers(this.searchTerm, this.selectedRole, this.page, this.pageSize)
+    forkJoin({
+      response: this.adminService.getUsers(this.searchTerm, this.selectedRole, this.page, this.pageSize),
+      names: this.personNames.getNamesByUserId().pipe(catchError(() => of(null)))
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res) => {
+        next: ({ response, names }) => {
           if (requestId !== this.usersRequestId) return;
-          this.users = res.users;
-          this.total = res.total;
+          this.users = response.users.map(user => ({
+            ...user,
+            displayName: names?.get(user.id) || user.username
+          }));
+          this.total = response.total;
+          if (!names) {
+            this.errorMsg = 'No se pudieron consultar todos los nombres completos; se muestran los nombres de usuario disponibles.';
+          }
           this.isLoading = false;
           this.cdr.detectChanges();
         },

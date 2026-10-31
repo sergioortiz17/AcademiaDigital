@@ -1,9 +1,15 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { UserService, ProfileData } from '../../core/services/user.service';
-import { Student, StudentService } from '../../core/services/student.service';
-import { of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { Student, StudentRecord, StudentService } from '../../core/services/student.service';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+
+interface StudentProfileDetails {
+  student: Student;
+  record: StudentRecord | null;
+}
 
 @Component({
   selector: 'app-profile',
@@ -19,13 +25,10 @@ export class ProfileComponent implements OnInit {
 
   profileForm: FormGroup;
   profileSaving = false;
-  profileSuccess = '';
   profileError = '';
 
   passwordForm: FormGroup;
   passwordSaving = false;
-  passwordSuccess = '';
-  passwordError = '';
 
   hideCurrentPassword = true;
   hideNewPassword = true;
@@ -46,7 +49,8 @@ export class ProfileComponent implements OnInit {
       cuil:      [''],
       birthDate: [null],
       phoneCode: [''],
-      phone:     ['']
+      phone:     [''],
+      emergencyContactPhone: ['', Validators.maxLength(30)]
     });
 
     this.passwordForm = this.fb.group({
@@ -75,13 +79,20 @@ export class ProfileComponent implements OnInit {
         });
 
         return this.studentService.getMyAcademicProgress().pipe(
-          switchMap((progress) => this.studentService.getStudent(progress.studentId)),
-          catchError(() => this.studentService.getStudent(data.id).pipe(catchError(() => of(null))))
+          switchMap((progress) => this.loadStudentDetails(progress.studentId)),
+          catchError(() => this.studentService.getStudent(data.id).pipe(
+            switchMap((student) => this.loadStudentDetails(student.id)),
+            catchError(() => of(null))
+          ))
         );
       })
     ).subscribe({
-      next: (student) => {
-        this.student = student;
+      next: (details) => {
+        this.student = details?.student ?? null;
+        this.profileForm.patchValue({
+          emergencyContactPhone: details?.record?.emergencyContact.phone ?? ''
+        });
+        this.profileForm.get('emergencyContactPhone')?.markAsPristine();
         this.isLoadingProfile = false;
         this.cdr.detectChanges();
       },
@@ -90,6 +101,13 @@ export class ProfileComponent implements OnInit {
         this.profileError = 'Error al cargar el perfil';
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  private loadStudentDetails(studentId: number): Observable<StudentProfileDetails> {
+    return forkJoin({
+      student: this.studentService.getStudent(studentId),
+      record: this.studentService.getStudentRecord(studentId).pipe(catchError(() => of(null)))
     });
   }
 
@@ -113,10 +131,13 @@ export class ProfileComponent implements OnInit {
     }
 
     this.profileSaving = true;
-    this.profileSuccess = '';
     this.profileError = '';
 
     const val = this.profileForm.value;
+    const emergencyContactControl = this.profileForm.get('emergencyContactPhone');
+    const emergencyContactUpdate = this.student && emergencyContactControl?.dirty
+      ? { studentId: this.student.id, phone: (val.emergencyContactPhone as string).trim() || null }
+      : null;
     const payload = {
       username:  val.username,
       lastName:  val.lastName,
@@ -127,10 +148,10 @@ export class ProfileComponent implements OnInit {
       phone:     val.phone || null
     };
 
-    this.userService.updateProfile(payload).subscribe({
-      next: (res) => {
-        this.profileSaving = false;
-        this.profileSuccess = 'Datos actualizados correctamente';
+    let profileSaved = false;
+    this.userService.updateProfile(payload).pipe(
+      tap((res) => {
+        profileSaved = true;
         this.profile = res;
         this.profileForm.patchValue({
           username: res.username,
@@ -141,11 +162,35 @@ export class ProfileComponent implements OnInit {
           phoneCode: res.phoneCode ?? '',
           phone: res.phone ?? ''
         });
+      }),
+      switchMap(() => emergencyContactUpdate
+        ? this.studentService.updateEmergencyContactPhone(
+          emergencyContactUpdate.studentId,
+          emergencyContactUpdate.phone
+        ).pipe(tap(() => emergencyContactControl?.markAsPristine()))
+        : of(null))
+    ).subscribe({
+      next: () => {
+        this.profileSaving = false;
+        this.profileForm.markAsPristine();
+        void Swal.fire({
+          icon: 'success',
+          titleText: 'Perfil actualizado',
+          text: 'Los datos se guardaron correctamente.',
+          confirmButtonText: 'Aceptar'
+        });
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.profileSaving = false;
-        this.profileError = err.message || 'Error al guardar los datos';
+        void Swal.fire({
+          icon: 'error',
+          titleText: profileSaved ? 'Perfil parcialmente actualizado' : 'No se pudo guardar el perfil',
+          text: this.errorMessage(err, profileSaved
+            ? 'Los datos personales se guardaron, pero no se pudo guardar el teléfono de emergencia.'
+            : 'Ocurrió un error al guardar los datos.'),
+          confirmButtonText: 'Aceptar'
+        });
         this.cdr.detectChanges();
       }
     });
@@ -158,23 +203,41 @@ export class ProfileComponent implements OnInit {
     }
 
     this.passwordSaving = true;
-    this.passwordSuccess = '';
-    this.passwordError = '';
 
     const { currentPassword, newPassword } = this.passwordForm.value;
 
     this.userService.changePassword(currentPassword, newPassword).subscribe({
       next: () => {
         this.passwordSaving = false;
-        this.passwordSuccess = 'Contraseña cambiada correctamente';
         this.passwordForm.reset();
+        void Swal.fire({
+          icon: 'success',
+          titleText: 'Contraseña actualizada',
+          text: 'La contraseña se cambió correctamente.',
+          confirmButtonText: 'Aceptar'
+        });
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.passwordSaving = false;
-        this.passwordError = err.message || 'Error al cambiar la contraseña';
+        void Swal.fire({
+          icon: 'error',
+          titleText: 'No se pudo cambiar la contraseña',
+          text: this.errorMessage(err, 'Ocurrió un error al cambiar la contraseña.'),
+          confirmButtonText: 'Aceptar'
+        });
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    if (!error || typeof error !== 'object') return fallback;
+    const response = error as {
+      error?: { detail?: string; msg?: string; message?: string };
+      message?: string;
+    };
+    return response.error?.detail || response.error?.msg || response.error?.message
+      || response.message || fallback;
   }
 }
