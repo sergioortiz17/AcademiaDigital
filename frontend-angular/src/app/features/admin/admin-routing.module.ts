@@ -19,6 +19,12 @@ import { UserRole } from '../../store/account/account.actions';
 
 const routes: Routes = [
   {
+    path: 'exam-form',
+    loadComponent: () => import('./exam-form-management/exam-form-management.component').then(m => m.ExamFormManagementComponent),
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
     path: 'users',
     component: UsersManagementComponent,
     canActivate: [RoleGuard],

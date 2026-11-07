@@ -32,6 +32,15 @@ export interface GradebookStudent {
   grades: GradeEntry[];
   average: number | null;
   resultStatus: string | null;
+  latestExam: GradebookExam | null;
+}
+
+export interface GradebookExam {
+  examDateUtc: string;
+  attemptNumber: number;
+  status: 'Open' | 'Grading' | 'Published';
+  grade: number | null;
+  outcome: 'Passed' | 'Failed' | 'Absent' | null;
 }
 
 export interface Gradebook {
@@ -108,7 +117,9 @@ export class GradebookService {
     let params = new HttpParams();
     if (filters.academicYear != null) params = params.set('academicYear', filters.academicYear);
     if (filters.courseId != null) params = params.set('courseId', filters.courseId);
-    if (filters.divisionId != null) params = params.set('divisionId', filters.divisionId);
+    // El controlador conserva `commissionId` como nombre público por compatibilidad;
+    // internamente lo traduce a DivisionId.
+    if (filters.divisionId != null) params = params.set('commissionId', filters.divisionId);
     return this.http.get<Gradebook[]>(`${this.base}v1/gradebooks`, { params });
   }
 
@@ -126,6 +137,10 @@ export class GradebookService {
 
   saveGrades(gradebookId: number, grades: SaveGradeEntryInput[]): Observable<GradebookDetail> {
     return this.http.put<GradebookDetail>(`${this.base}v1/gradebooks/${gradebookId}/grades`, { grades });
+  }
+
+  addEvaluation(gradebookId: number, evaluation: CreateGradebookEvaluationInput): Observable<GradebookEvaluation> {
+    return this.http.post<GradebookEvaluation>(`${this.base}v1/gradebooks/${gradebookId}/evaluations`, evaluation);
   }
 
   submitGradebook(id: number): Observable<Gradebook> {

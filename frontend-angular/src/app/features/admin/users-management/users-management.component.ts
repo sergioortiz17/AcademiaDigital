@@ -3,14 +3,13 @@ import { AdminService, UserSummary } from '../../../core/services/admin.service'
 import { UserRole } from '../../../store/account/account.actions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
-import { Subject, forkJoin  } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
-import { UserService } from '../../../core/services/user.service';
-import { UserDetailsDialogComponent } from '../../../shared/user-details-dialog/user-details-dialog.component';
-import { StudentService } from '../../../core/services/student.service';
-
+import { UserDetailsDialogComponent, UserDetailsDialogData } from '../../../shared/user-details-dialog/user-details-dialog.component';
+import { Student, StudentListItem, StudentRecord, StudentService } from '../../../core/services/student.service';
+import { PersonNameLookupService } from '../../../core/services/person-name-lookup.service';
 
 
 @Component({
@@ -30,6 +29,7 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   // Search, role filter & pagination
   searchTerm = '';
   selectedRole: number | null = null;
+  roleFiltersOpen = false;
   page = 1;
   pageSize = 20;
   total = 0;
@@ -46,10 +46,19 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
   private readonly search$ = new Subject<string>();
+  private usersRequestId = 0;
 
   getRoleLabel(role: number): string {
     const labels: Record<number, string> = { 1: 'Alumno', 2: 'Profesor', 3: 'Admin' };
     return labels[role] ?? 'Desconocido';
+  }
+
+  get selectedRoleLabel(): string {
+    return this.roleFilters.find(filter => filter.value === this.selectedRole)?.label ?? 'Todos';
+  }
+
+  get visibleRoleFilters(): typeof this.roleFilters {
+    return this.selectedRole === null ? this.roleFilters.slice(1) : this.roleFilters;
   }
 
   get totalPages(): number {
@@ -61,7 +70,8 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     private readonly store: Store,
     private readonly cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private readonly studentService: StudentService
+    private readonly studentService: StudentService,
+    private readonly personNames: PersonNameLookupService
   ) {}
 
   ngOnInit(): void {
@@ -93,8 +103,13 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
 
   onRoleFilter(role: number | null): void {
     this.selectedRole = role;
+    this.roleFiltersOpen = false;
     this.page = 1;
     this.loadUsers();
+  }
+
+  toggleRoleFilters(): void {
+    this.roleFiltersOpen = !this.roleFiltersOpen;
   }
 
   onPageSizeChange(size: number): void {
@@ -112,19 +127,30 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   }
 
   loadUsers(): void {
-    if (this.isLoading) return;
+    const requestId = ++this.usersRequestId;
     this.isLoading = true;
     this.errorMsg = '';
-    this.adminService.getUsers(this.searchTerm, this.selectedRole, this.page, this.pageSize)
+    forkJoin({
+      response: this.adminService.getUsers(this.searchTerm, this.selectedRole, this.page, this.pageSize),
+      names: this.personNames.getNamesByUserId().pipe(catchError(() => of(null)))
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res) => {
-          this.users = res.users;
-          this.total = res.total;
+        next: ({ response, names }) => {
+          if (requestId !== this.usersRequestId) return;
+          this.users = response.users.map(user => ({
+            ...user,
+            displayName: names?.get(user.id) || user.username
+          }));
+          this.total = response.total;
+          if (!names) {
+            this.errorMsg = 'No se pudieron consultar todos los nombres completos; se muestran los nombres de usuario disponibles.';
+          }
           this.isLoading = false;
           this.cdr.detectChanges();
         },
         error: () => {
+          if (requestId !== this.usersRequestId) return;
           this.errorMsg = 'Error al cargar usuarios.';
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -294,80 +320,108 @@ private openConfirmationDialog(
   });
 }
 
-//AGREGAR CON GET POR ID ANTES DE HABILITAR
-//openUserDetails(user: UserSummary): void {
-//  this.userService.getProfile(user.id)
-//    .subscribe({
-
-//      next: (profile) => {
-
-//        this.dialog.open(UserDetailsDialogComponent, {
-//          width: '700px',
-//          disableClose: true,
-//          data: profile
-//        });
-
-//      },
-
-//      error: () => {
-//        this.errorMsg = 'No se pudieron cargar los datos.';
-//      }
-
-//    });
-
-//}
-
 openUserDetail(user: UserSummary): void {
-
-  this.studentService.getStudentByUserId(user.id)
-    .subscribe({
-
-     next: (student) => {
-
-        this.dialog.open(UserDetailsDialogComponent, {
-          width: '600px',
-          panelClass: 'user-dialog-panel',
-          data: {
-
-            username: user.username,
-            //lastName: user.lastName,
-            email: user.email,
-            dni: user.dni,
-
-            carrera: student.careerName,
-            legajo: student.legajoNumber,
-
-            fechaIngreso: student.enrollmentDate,
-            estado: student.status,
-            plan: student.currentStudyPlanName
-          }
-        });
-
-      },
-
-      error: () => {
-
-        this.dialog.open(UserDetailsDialogComponent, {
-          width: '600px',
-          panelClass: 'user-dialog-panel',
-          data: {
-
-            username: user.username,
-            email: user.email,
-            dni: user.dni,
-
-            carrera: '-',
-            legajo: '-',
-            fechaIngreso: '-',
-            estado: '-',
-            plan: '-'
-          }
-        });
-
+  const searchTerm = user.dni || user.username;
+  this.findStudentForUser(user.id, searchTerm).subscribe({
+    next: student => {
+      if (!student) {
+        this.openUserDetailsDialog(user, this.emptyUserDetails(user));
+        return;
       }
+      this.loadStudentDetails(user, student.id);
+    },
+    error: err => {
+      this.errorMsg = err.error?.msg || err.error?.detail || err.error?.message || err.message || 'No se pudo cargar la ficha del usuario.';
+      this.cdr.detectChanges();
+    }
+  });
+}
 
+private findStudentForUser(userId: number, searchTerm: string, page = 1): Observable<StudentListItem | null> {
+  return this.studentService.searchStudents(searchTerm, undefined, page, 100).pipe(
+    switchMap(response => {
+      const student = response.items.find(item => item.userId === userId);
+      if (student || response.page * response.pageSize >= response.total) return of(student ?? null);
+      return this.findStudentForUser(userId, searchTerm, page + 1);
+    })
+  );
+}
+
+private loadStudentDetails(user: UserSummary, studentId: number): void {
+  forkJoin({
+    student: this.studentService.getStudent(studentId),
+    record: this.studentService.getStudentRecord(studentId)
+  }).subscribe({
+    next: result => this.openUserDetailsDialog(user, this.studentDetails(user, result.student, result.record)),
+    error: err => {
+      this.errorMsg = err.error?.msg || err.error?.detail || err.error?.message || err.message || 'No se pudo cargar la ficha del alumno.';
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+private openUserDetailsDialog(user: UserSummary, data: UserDetailsDialogData): void {
+    const dialogRef = this.dialog.open(UserDetailsDialogComponent, {
+      width: '600px',
+      panelClass: 'user-dialog-panel',
+      data
     });
+    dialogRef.afterClosed().subscribe(saved => {
+      if (!saved) return;
+      this.successMsg = `Legajo de ${user.username} actualizado.`;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.successMsg = '';
+        this.cdr.detectChanges();
+      }, 3000);
+    });
+}
 
+private studentDetails(user: UserSummary, student: Student, record: StudentRecord): UserDetailsDialogData {
+    return {
+      studentId: student.id,
+      username: record.personalData.firstName || user.username,
+      lastName: record.personalData.lastName,
+      email: record.personalData.email || user.email,
+      dni: record.personalData.dni ?? user.dni,
+      carrera: student.careerName,
+      legajo: record.student.legajoNumber,
+      birthDate: record.personalData.birthDate,
+      phone: record.personalData.phone,
+      fechaIngreso: record.student.enrollmentDate,
+      estado: record.student.status,
+      plan: student.currentStudyPlanName || '-',
+      addressLine: record.address.addressLine,
+      city: record.address.city,
+      province: record.address.province,
+      postalCode: record.address.postalCode,
+      emergencyContactName: record.emergencyContact.name,
+      emergencyContactRelationship: record.emergencyContact.relationship,
+      emergencyContactPhone: record.emergencyContact.phone
+    };
+}
+
+private emptyUserDetails(user: UserSummary): UserDetailsDialogData {
+    return {
+      studentId: null,
+      username: user.username,
+      email: user.email,
+      dni: user.dni,
+      carrera: '-',
+      legajo: '-',
+      birthDate: null,
+      phone: null,
+      fechaIngreso: '-',
+      estado: '-',
+      plan: '-',
+      addressLine: null,
+      city: null,
+      province: null,
+      postalCode: null,
+      emergencyContactName: null,
+      emergencyContactRelationship: null,
+      emergencyContactPhone: null
+    };
 }
 
 }

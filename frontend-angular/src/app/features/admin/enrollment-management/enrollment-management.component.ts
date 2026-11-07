@@ -2,21 +2,13 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import {
-  EnrollmentService,
-  EnrollmentPeriodDto,
-  OpenPeriodRequest,
-  PeriodCommissionCoverageDto,
-  CommissionCoverageGap
-} from '../../../core/services/enrollment. service';
+import { map, catchError, timeout } from 'rxjs/operators';
+import { EnrollmentService, EnrollmentPeriodDto, OpenPeriodRequest, PeriodCommissionCoverageDto, CommissionCoverageGap} from '../../../core/services/enrollment. service';
 import { CareerService, Career } from '../../../core/services/career.service';
 import { SubjectService, StudyPlan } from '../../../core/services/subject.service';
 import { CommissionService, UpsertCommissionRequest } from '../../../core/services/commission.service';
-import {
-  CommissionFormDialogComponent,
-  CommissionFormDialogData
-} from '../commission-management/commission-form-dialog/commission-form-dialog.component';
+import { CommissionFormDialogComponent, CommissionFormDialogData} from '../commission-management/commission-form-dialog/commission-form-dialog.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-enrollment-management',
@@ -164,58 +156,87 @@ export class EnrollmentManagementComponent implements OnInit {
    * por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón manual por fila ni la
    * pantalla "Gestionar divisiones". Muestra vista previa con confirm() y refresca la cobertura.
    */
-  createAllMissingDivisions(period: EnrollmentPeriodDto): void {
-    const selected = this.bulkYearsByPeriod[period.id];
-    const gaps = this.gapsFor(period.id).filter(g => selected?.has(g.yearNumber));
-    if (gaps.length === 0) return;
 
-    const careerCode = this.careers.find(c => c.id === period.careerId)?.code ?? `C${period.careerId}`;
-    const specs = gaps.map(g => ({
-      gap: g,
-      request: {
-        code: this.autoDivisionCode(careerCode, g.yearNumber, g.shift, period.academicYear),
-        name: `${careerCode} · ${g.yearNumber}° año · ${this.shiftLabel(g.shift)} · ${period.academicYear}`,
-        academicYear: period.academicYear,
-        yearNumber: g.yearNumber,
-        shift: g.shift
-      } as UpsertCommissionRequest
-    }));
+createAllMissingDivisions(period: EnrollmentPeriodDto): void {
+  const selected = this.bulkYearsByPeriod[period.id];
+  const gaps = this.gapsFor(period.id).filter(g => selected?.has(g.yearNumber));
+  if (gaps.length === 0) return;
 
-    const preview = specs.map(s => `• ${s.request.code}  (${s.gap.yearNumber}° año / ${this.shiftLabel(s.gap.shift)})`).join('\n');
-    if (!confirm(`Se van a crear ${specs.length} división(es) para ${period.careerName}:\n\n${preview}\n\n¿Confirmás?`)) return;
+  const careerCode = this.careers.find(c => c.id === period.careerId)?.code ?? `C${period.careerId}`;
+  const specs = gaps.map(g => ({
+    gap: g,
+    request: {
+      code: this.autoDivisionCode(careerCode, g.yearNumber, g.shift, period.academicYear),
+      name: `${careerCode} · ${g.yearNumber}° año · ${this.shiftLabel(g.shift)} · ${period.academicYear}`,
+      academicYear: period.academicYear,
+      yearNumber: g.yearNumber,
+      shift: g.shift
+    } as UpsertCommissionRequest
+  }));
 
-    this.isSubmitting = true;
-    this.errorMsg = '';
-    this.cdr.detectChanges();
+  // Generamos el HTML con la lista de divisiones a crear
+  const previewHtml = specs
+    .map(s => `<li><b>${s.request.code}</b> (${s.gap.yearNumber}° año / ${this.shiftLabel(s.gap.shift)})</li>`)
+    .join('');
 
-    // Una request por división. forkJoin espera a todas y no aborta el bloque si una falla.
-    forkJoin(
-      specs.map(s => this.commissionService.createCommission(period.careerId, s.request).pipe(
-        map(() => ({ code: s.request.code, ok: true })),
-        catchError(err => of({ code: s.request.code, ok: false, msg: err?.error?.msg || err?.message }))
-      ))
-    ).subscribe({
-      next: results => {
-        this.isSubmitting = false;
-        const created = results.filter(r => r.ok).length;
-        const failed = results.filter(r => !r.ok);
-        this.successMsg = `${created}/${specs.length} división(es) creada(s) para ${period.careerName}.`;
-        if (failed.length > 0) {
-          this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
-        }
-        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
-        // Limpiar la selección y refrescar cobertura: los gaps creados desaparecen del aviso.
-        this.bulkYearsByPeriod[period.id] = new Set<number>();
-        this.loadCoverage(period.id);
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.isSubmitting = false;
-        this.errorMsg = 'No se pudieron crear las divisiones.';
-        this.cdr.detectChanges();
+  Swal.fire({
+    title: '¿Confirmar creación de divisiones?',
+    html: `
+      <p>Se van a crear <b>${specs.length}</b> división(es) para <b>${period.careerName}</b>:</p>
+      <ul style="text-align: left; max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 12px 28px; border-radius: 6px; font-size: 14px;">
+        ${previewHtml}
+      </ul>
+      <p style="margin-top: 10px;">¿Deseas continuar?</p>
+    `,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, crear',
+    cancelButtonText: 'Cancelar',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.executeCreateCommissions(period, specs);
+    }
+  });
+}
+
+private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): void {
+  this.isSubmitting = true;
+  this.errorMsg = '';
+  this.cdr.detectChanges();
+
+  // Una request por división. forkJoin espera a todas y no aborta el bloque si una falla.
+  forkJoin(
+    specs.map(s => this.commissionService.createCommission(period.careerId, s.request).pipe(
+      map(() => ({ code: s.request.code, ok: true })),
+      catchError(err => of({ code: s.request.code, ok: false, msg: err?.error?.msg || err?.message }))
+    ))
+  ).subscribe({
+    next: results => {
+      this.isSubmitting = false;
+      const created = results.filter(r => r.ok).length;
+      const failed = results.filter(r => !r.ok);
+      
+      this.successMsg = `${created}/${specs.length} división(es) creada(s) para ${period.careerName}.`;
+      if (failed.length > 0) {
+        this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
       }
-    });
-  }
+      setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 5000);
+
+      // Limpiar la selección y refrescar cobertura: los gaps creados desaparecen del aviso.
+      this.bulkYearsByPeriod[period.id] = new Set<number>();
+      this.loadCoverage(period.id);
+      this.cdr.detectChanges();
+    },
+    error: () => {
+      this.isSubmitting = false;
+      this.errorMsg = 'No se pudieron crear las divisiones.';
+      this.cdr.detectChanges();
+    }
+  });
+}
 
   /** Años del plan que tienen huecos en este período (para el selector del atajo bulk). */
   gapYearsFor(periodId: number): number[] {
@@ -295,14 +316,12 @@ export class EnrollmentManagementComponent implements OnInit {
   submitOpen(): void {
     if (!this.canOpen()) return;
     this.isSubmitting = true;
-    this.errorMsg = '';
     this.enrollmentService.openPeriod(this.openingForm).subscribe({
       next: (res) => {
         this.showOpenForm = false;
         this.resetForm();
         this.isSubmitting = false;
-        this.successMsg = 'Período de inscripción activado correctamente.';
-        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+        this.successMsg = '';
         this.loadPeriods();
         // Chequeo inmediato: avisar en el momento si el período recién abierto ya tiene faltantes.
         if (res?.data?.id) this.checkCoverageNow(res.data);
@@ -316,17 +335,33 @@ export class EnrollmentManagementComponent implements OnInit {
     });
   }
 
-  closePeriod(period: EnrollmentPeriodDto): void {
-    if (!confirm(`¿Cerrar el período de inscripción de ${period.careerName}?`)) return;
-    this.enrollmentService.closePeriod(period.id).subscribe({
-      next: () => {
-        const idx = this.periods.findIndex(p => p.id === period.id);
-        if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: false };
-        this.cdr.detectChanges();
-      },
-      error: err => alert(err.error?.msg || 'No se pudo cerrar el período.')
-    });
-  }
+closePeriod(period: EnrollmentPeriodDto): void {
+  Swal.fire({
+    title: 'Cerrar período',
+    text: `¿Cerrar el período de inscripción de ${period.careerName}?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sí, cerrar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.enrollmentService.closePeriod(period.id).subscribe({
+        next: () => {
+          const idx = this.periods.findIndex(p => p.id === period.id);
+          if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: false };
+          this.cdr.detectChanges();
+          
+          Swal.fire('¡Cerrado!', 'El período ha sido cerrado correctamente.', 'success');
+        },
+        error: err => {
+          Swal.fire('Error', err.error?.msg || 'No se pudo cerrar el período.', 'error');
+        }
+      });
+    }
+  });
+}
 
   viewStudents(period: EnrollmentPeriodDto): void {
     this.router.navigate(['/app/admin/enrollments', period.id, 'students']);
@@ -336,49 +371,100 @@ export class EnrollmentManagementComponent implements OnInit {
     this.router.navigate(['/app/admin/enrollments', period.id, 'reports']);
   }
 
-  activatePeriod(period: EnrollmentPeriodDto): void {
-    if (!confirm(`¿Reactivar el período de inscripción de ${period.careerName}?`)) return;
-    this.enrollmentService.activatePeriod(period.id).subscribe({
-      next: () => {
-        const idx = this.periods.findIndex(p => p.id === period.id);
-        if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: true, endDate: null };
-        this.loadCoverage(period.id);
-        this.checkCoverageNow(period);
-        this.cdr.detectChanges();
-      },
-      error: err => alert(err.message || 'No se pudo activar el período.')
-    });
-  }
+activatePeriod(period: EnrollmentPeriodDto): void {
+  Swal.fire({
+    title: 'Reactivar período',
+    text: `¿Reactivar el período de inscripción de ${period.careerName}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#aaa',
+    confirmButtonText: 'Sí, activar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.enrollmentService.activatePeriod(period.id).subscribe({
+        next: () => {
+          const idx = this.periods.findIndex(p => p.id === period.id);
+          if (idx > -1) this.periods[idx] = { ...this.periods[idx], isActive: true, endDate: null };
+          this.loadCoverage(period.id);
+          this.checkCoverageNow(period);
+          this.cdr.detectChanges();
+
+          Swal.fire('¡Activado!', 'El período ha sido reactivado correctamente.', 'success');
+        },
+        error: err => {
+          Swal.fire('Error', err.message || 'No se pudo activar el período.', 'error');
+        }
+      });
+    }
+  });
+}
 
   /**
    * Chequeo inmediato al abrir/activar: consulta la cobertura y, si faltan comisiones, muestra un
    * aviso puntual en el momento (además del banner persistente por período).
    */
-  private checkCoverageNow(period: EnrollmentPeriodDto): void {
-    this.enrollmentService.getCommissionCoverage(period.id).subscribe({
-      next: res => {
-        this.coverageByPeriod[period.id] = res.data.gaps;
-        if (res.data.gaps.length > 0) {
-          const detalle = res.data.gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
-          this.errorMsg = `⚠️ Faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos ` +
-            `van a quedar sin división hasta que las crees o los asignes a mano.`;
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => { /* best-effort */ }
+private checkCoverageNow(period: EnrollmentPeriodDto): void {
+  this.enrollmentService.getCommissionCoverage(period.id).subscribe({
+    next: res => {
+      this.coverageByPeriod[period.id] = res.data.gaps;
+      if (res.data.gaps.length > 0) {
+        const detalle = res.data.gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
+        const mensajeAdvertencia = `Faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos van a quedar sin división hasta que las crees o los asignes a mano.`;
+        
+        Swal.fire({
+          title: 'Atención: Cobertura incompleta',
+          text: mensajeAdvertencia,
+          icon: 'warning',
+          confirmButtonText: 'Entendido'
+        });
+      }
+      this.cdr.detectChanges();
+    },
+    error: () => { /* best-effort */ }
+  });
+}
+
+  // Método para disparar SweetAlert2
+  private showErrorDialog(message: string): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Advertencia',
+      text: message,
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#3085d6',
+    }).then(() => {
+      this.errorMsg = '';
     });
   }
 
-  deletePeriod(period: EnrollmentPeriodDto): void {
-    if (!confirm(`¿Eliminar el período de inscripción de ${period.careerName} ${period.academicYear} - ${this.semesterLabel(period.semester)}?\n\nEsta acción no se puede deshacer.`)) return;
-    this.enrollmentService.deletePeriod(period.id).subscribe({
-      next: () => {
-        this.periods = this.periods.filter(p => p.id !== period.id);
-        this.cdr.detectChanges();
-      },
-      error: err => alert(err.message || 'No se pudo eliminar el período.')
-    });
-  }
+deletePeriod(period: EnrollmentPeriodDto): void {
+  Swal.fire({
+    title: 'Eliminar período',
+    text: `¿Eliminar el período de inscripción de ${period.careerName} ${period.academicYear} ${this.semesterLabel(period.semester)}? Esta acción no se puede deshacer.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.enrollmentService.deletePeriod(period.id).subscribe({
+        next: () => {
+          this.periods = this.periods.filter(p => p.id !== period.id);
+          this.cdr.detectChanges();
+
+          Swal.fire('¡Eliminado!', 'El período ha sido eliminado.', 'success');
+        },
+        error: err => {
+          Swal.fire('Error', err.message || 'No se pudo eliminar el período.', 'error');
+        }
+      });
+    }
+  });
+}
 
   startEdit(period: EnrollmentPeriodDto): void {
     this.editingPeriod = period;

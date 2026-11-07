@@ -3,7 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { EnrollmentsComponent } from './enrollments.component';
 
 const routes: Routes = [
-  { path: '', component: EnrollmentsComponent }
+  { path: 'exam', loadComponent: () => import('./exam-enrollment/exam-enrollment.component').then(m => m.ExamEnrollmentComponent) },
+  { path: '', component: EnrollmentsComponent, pathMatch: 'full' }
 ];
 
 @NgModule({

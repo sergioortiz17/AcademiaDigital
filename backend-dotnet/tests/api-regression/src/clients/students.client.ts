@@ -7,6 +7,7 @@ export class StudentsClient {
   createMalformed(rawData: string) { return this.api.send({ operation: 'Enviar JSON de estudiante malformado', method: 'POST', path: '/api/v1/students', headers: { 'Content-Type': 'application/json' }, rawData }); }
   list(query: Record<string, string | number | boolean | undefined> = {}) { return this.api.send({ operation: 'Listar estudiantes', method: 'GET', path: '/api/v1/students', query }); }
   get(id: number | string) { return this.api.send({ operation: 'Consultar estudiante', method: 'GET', path: `/api/v1/students/${id}` }); }
+  updateEmergencyContactPhone(id: number, emergencyContactPhone: string | null) { return this.api.send({ operation: 'Actualizar teléfono de emergencia', method: 'PATCH', path: `/api/v1/students/${id}/emergency-contact`, body: { emergencyContactPhone } }); }
   remove(id: number, reason = 'Cleanup Playwright E2E') { return this.api.send({ operation: 'Dar de baja estudiante', method: 'DELETE', path: `/api/v1/students/${id}`, body: { reason } }); }
   listCareers(id: number) { return this.api.send({ operation: 'Listar carreras del estudiante', method: 'GET', path: `/api/v1/students/${id}/careers` }); }
   addCareer(id: number, careerId: number, enrollmentDate?: string) { return this.api.send({ operation: 'Agregar carrera al estudiante', method: 'POST', path: `/api/v1/students/${id}/careers`, body: { careerId, enrollmentDate } }); }

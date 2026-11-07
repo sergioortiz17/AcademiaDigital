@@ -102,6 +102,41 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
                 enrollment.Student.User.Dni ?? string.Empty))
             .ToArrayAsync(ct);
 
+    public async Task<IReadOnlyList<GradebookExamResultRow>> GetLatestExamResultsAsync(
+        int courseId, int academicYear, IReadOnlyCollection<long> enrollmentIds, CancellationToken ct = default)
+    {
+        if (enrollmentIds.Count == 0) return [];
+
+        var registrations = await db.ExamRegistrations.AsNoTracking()
+            .Where(registration => enrollmentIds.Contains(registration.EnrollmentId)
+                && registration.ExamTable.CourseId == courseId
+                && registration.ExamTable.AcademicYear == academicYear)
+            .Select(registration => new GradebookExamResultRow(
+                registration.EnrollmentId,
+                registration.ExamTable.ExamDateUtc,
+                registration.RegisteredAt,
+                registration.AttemptNumber,
+                registration.ExamTable.Status,
+                registration.GradeRevisions
+                    .Where(revision => revision.IsCurrent)
+                    .Select(revision => (decimal?)revision.Grade)
+                    .FirstOrDefault(),
+                registration.GradeRevisions
+                    .Where(revision => revision.IsCurrent)
+                    .Select(revision => (ExamResultOutcome?)revision.Outcome)
+                    .FirstOrDefault()))
+            .ToArrayAsync(ct);
+
+        return registrations
+            .GroupBy(registration => registration.EnrollmentId)
+            .Select(group => group
+                .OrderByDescending(registration => registration.RegisteredAt)
+                .ThenByDescending(registration => registration.ExamDateUtc)
+                .ThenByDescending(registration => registration.AttemptNumber)
+                .First())
+            .ToArray();
+    }
+
     public async Task SaveGradeRevisionsAsync(IReadOnlyList<GradeEntryRevision> revisions, CancellationToken ct = default)
     {
         foreach (var revision in revisions)

@@ -69,25 +69,47 @@ export class TeacherManagementComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    const dialogRef = this.dialog.open(TeacherFormDialogComponent, {
-      width: '600px',
-      disableClose: true,
-      data: { teacher: null }
-    });
+    this.teacherService.getTeachers(true).subscribe({
+      next: existingTeachers => {
+        const dialogRef = this.dialog.open(TeacherFormDialogComponent, {
+          width: '600px',
+          disableClose: true,
+          data: {
+            teacher: null,
+            existingTeacherUserIds: existingTeachers.map(teacher => teacher.userId),
+            existingEmployeeNumbers: existingTeachers.map(teacher => teacher.employeeNumber)
+          }
+        });
 
-    dialogRef.afterClosed().subscribe((request: SaveTeacherRequest | null) => {
-      if (!request) return;
-      this.teacherService.createTeacher(request).subscribe({
-        next: () => {
-          this.successMsg = 'Docente creado correctamente.';
-          this.loadTeachers();
-          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
-        },
-        error: (err) => {
-          this.errorMsg = err.message || 'Error al crear el docente.';
-          this.cdr.detectChanges();
-        }
-      });
+        dialogRef.afterClosed().subscribe((request: SaveTeacherRequest | null) => {
+          if (!request) return;
+          this.teacherService.createTeacher(request).subscribe({
+            next: () => {
+              this.loadTeachers();
+              this.showSuccess('Docente creado correctamente.');
+            },
+            error: (err) => {
+              this.errorMsg = err.error?.msg || err.error?.detail || err.error?.message || err.message || 'Error al crear el docente.';
+              this.cdr.detectChanges();
+            }
+          });
+        });
+      },
+      error: err => {
+        this.errorMsg = err.error?.msg || err.error?.detail || err.error?.message || err.message || 'No se pudieron verificar los legajos docentes existentes.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private showSuccess(message: string): void {
+    setTimeout(() => {
+      this.successMsg = message;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.successMsg = '';
+        this.cdr.detectChanges();
+      }, 4000);
     });
   }
 

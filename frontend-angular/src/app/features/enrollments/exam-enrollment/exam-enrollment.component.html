@@ -1,0 +1,90 @@
+<div class="exam-page" [attr.aria-busy]="loading || submitting">
+  <div class="exam-toolbar">
+    <button type="button" class="text-link" [disabled]="submitting" (click)="showMyEnrollments = !showMyEnrollments">
+      {{ showMyEnrollments ? 'Volver al formulario' : 'Ver mis inscripciones' }}
+    </button>
+  </div>
+  <p *ngIf="loading" role="status">Cargando mesas e inscripciones...</p>
+  <div *ngIf="loadError" class="validation-message" role="alert">
+    <p>{{ loadError }}</p><button type="button" class="text-link" [disabled]="loading || submitting" (click)="load()">Reintentar</button>
+  </div>
+
+  <ng-container *ngIf="!showMyEnrollments; else myEnrollments">
+    <section class="exam-plan" aria-labelledby="exam-title">
+      <h1 id="exam-title" class="section-tab">Inscripciones Mesa de Examen</h1>
+      <div class="exam-panel plan-panel">
+        <p class="intro">Complete el formulario de inscripci&#243;n para los ex&#225;menes de<br>
+          {{ progress?.careerName || 'tu carrera' }}.</p>
+        <a *ngIf="hasSoftwarePlan" href="assets/images/plan-estudios-software-2023.png" target="_blank" rel="noopener" aria-label="Ampliar plan de estudios (abre otra pesta&#241;a)">
+          <img class="document-image" src="assets/images/plan-estudios-software-2023.png"
+            alt="Desarrollo de Software 2023: plan de estudios y correlatividades">
+        </a>
+        <p *ngIf="progress && !hasSoftwarePlan" class="intro">Plan de estudios: {{ progress.studyPlanName }}</p>
+      </div>
+    </section>
+
+    <section class="exam-panel schedule-panel" aria-label="Cronograma de mesas de examen">
+      <img *ngIf="scheduleImage; else liveSchedule" class="document-image" [src]="scheduleImage" alt="Cronograma de mesas de examen">
+      <ng-template #liveSchedule>
+        <h2>Cronograma de mesas de examen</h2>
+        <p *ngIf="!loading && !loadError && !tables.length">No hay mesas disponibles para tu situaci&#243;n acad&#233;mica.</p>
+        <div *ngFor="let item of tables" class="schedule-row">
+          <strong>{{ item.examTable.courseName }}</strong>
+          <span>Llamado {{ item.examTable.callNumber }} ? {{ item.examTable.examDateUtc | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>{{ item.examTable.location }}</span>
+          <small>Inscripci&#243;n hasta {{ item.examTable.registrationDeadlineUtc | date:'dd/MM/yyyy HH:mm' }}</small>
+        </div>
+      </ng-template>
+    </section>
+
+    <form class="exam-panel exam-form" (submit)="$event.preventDefault(); submit()">
+      <p id="regular-only" class="preview-note">La inscripci&#243;n est&#225; habilitada para materias regularizadas. La condici&#243;n Libre a&#250;n no est&#225; disponible.</p>
+      <fieldset *ngFor="let group of years" class="year-section" [disabled]="loading || submitting || !!loadError">
+        <legend>{{ group.year ? group.year + '&#176; A&#209;O' : 'OTRAS MESAS' }}</legend>
+        <p class="year-instruction">Eleg&#237; la materia y el llamado en el que te presentar&#225;s a rendir.</p>
+        <div class="subjects-panel">
+          <table>
+            <thead><tr><th scope="col"><span class="visually-hidden">Espacio curricular y llamado</span></th><th scope="col">REGULAR</th><th scope="col">LIBRE</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let item of group.subjects">
+                <th scope="row">{{ item.examTable.courseName }}
+                  <small class="exam-detail">Llamado {{ item.examTable.callNumber }} ? {{ item.examTable.examDateUtc | date:'dd/MM/yyyy HH:mm' }}</small>
+                  <small class="exam-detail" *ngIf="statusLabel(item)">{{ statusLabel(item) }}</small>
+                </th>
+                <td><input type="checkbox" [checked]="selections.has(item.examTable.id) || item.registrationId != null"
+                  [disabled]="!canSelect(item)" (change)="select(item)"
+                  [attr.aria-label]="item.examTable.courseName + ', llamado ' + item.examTable.callNumber + ': Regular'"></td>
+                <td><input type="checkbox" disabled aria-describedby="regular-only"
+                  [attr.aria-label]="item.examTable.courseName + ': Libre no disponible'"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+      <p *ngIf="!loading && !loadError && !years.length">No ten&#233;s mesas habilitadas para inscribirte en este momento.</p>
+      <div class="submit-area">
+        <p class="email-note">Pod&#233;s consultar el resultado en &ldquo;Ver mis inscripciones&rdquo;.</p>
+        <p *ngIf="validationMessage" class="validation-message" role="alert">{{ validationMessage }}</p>
+        <button type="submit" class="send-button" [disabled]="loading || submitting || !!loadError || !tables.length">
+          {{ submitting ? 'ENVIANDO...' : 'ENVIAR' }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+
+  <ng-template #myEnrollments>
+    <section class="exam-panel drafts-panel">
+      <h1>Mis inscripciones a mesa de examen</h1>
+      <p *ngIf="!loading && !loadError && !registrations.length">Todav&#237;a no ten&#233;s inscripciones registradas.</p>
+      <ul><li *ngFor="let item of registrations">
+        <div><strong>{{ item.examTable.courseName }}</strong>
+          <span class="exam-detail">Llamado {{ item.examTable.callNumber }} ? {{ item.examTable.examDateUtc | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span class="exam-detail">{{ item.examTable.location }}</span>
+          <span class="exam-detail" *ngIf="item.result">Resultado: {{ item.result.outcome === 'Passed' ? 'Aprobado' : item.result.outcome === 'Failed' ? 'Desaprobado' : 'Ausente' }}<ng-container *ngIf="item.result.grade != null"> ? Nota: {{ item.result.grade }}</ng-container></span>
+        </div>
+        <span>Regular <small class="exam-detail">N.&#176; {{ item.registrationId }}</small></span>
+      </li></ul>
+      <button type="button" class="text-link" [disabled]="loading || submitting" (click)="load()">Actualizar inscripciones</button>
+    </section>
+  </ng-template>
+</div>

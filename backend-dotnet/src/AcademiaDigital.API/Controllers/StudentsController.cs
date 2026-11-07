@@ -4,6 +4,7 @@ using AcademiaDigital.Application.Services;
 using AcademiaDigital.Domain.Entities;
 using AcademiaDigital.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace AcademiaDigital.API.Controllers;
 
@@ -41,6 +42,20 @@ public class StudentsController(
     {
         var guard = RequireAdmin(); if (guard is not null) return guard;
         return Ok(await management.UpdateStudentAsync(studentId, request, ct));
+    }
+
+    [HttpPatch("{studentId:long}/emergency-contact")]
+    public async Task<IActionResult> UpdateEmergencyContactPhone(
+        long studentId,
+        [FromBody] UpdateEmergencyContactPhoneRequest request,
+        CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        if (CurrentUserRole != UserRole.Admin
+            && !await management.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
+            return StatusCode(StatusCodes.Status403Forbidden);
+        await management.UpdateEmergencyContactPhoneAsync(studentId, request.EmergencyContactPhone, ct);
+        return NoContent();
     }
 
     [HttpGet("{studentId:long}/careers")]
@@ -100,3 +115,6 @@ public class StudentsController(
         return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 }
+
+public sealed record UpdateEmergencyContactPhoneRequest(
+    [StringLength(30)] string? EmergencyContactPhone);
