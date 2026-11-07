@@ -76,3 +76,28 @@
 
   mat-icon { font-size: 48px; width: 48px; height: 48px; }
 }
+
+@media (max-width: 600px) {
+  .teachers-card mat-card-content {
+    padding: 12px;
+  }
+
+  .teachers-card .toolbar {
+    gap: 8px;
+  }
+
+  .teachers-card .search-field {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .teachers-card .search-field ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 42px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .teachers-card .search-field ::ng-deep .mat-mdc-text-field-wrapper {
+    min-height: 44px;
+  }
+}

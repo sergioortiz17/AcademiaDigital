@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import * as ExcelJS from 'exceljs';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { CareerService, Career } from '../../core/services/career.service';
@@ -310,21 +311,176 @@ export class AttendanceComponent implements OnInit {
     });
   }
 
-  downloadSummary(): void {
-    const header = ['Alumno', 'Legajo', ...this.visibleSessions.map(s => this.formatDay(s.sessionDate)), 'Promedio Asistencia'];
-    const lines = [header.join(',')];
+  async downloadSummary(): Promise<void> {
+    const assignment = this.selectedAssignment;
+    if (!assignment) return;
 
-    for (const row of this.filteredRows) {
-      const cells = this.visibleSessions.map(s => row.cells[s.id]?.status ?? '');
-      lines.push([row.studentName, row.legajoNumber, ...cells, `${this.attendancePercentage(row) ?? ''}%`].join(','));
+    try {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Academia Digital';
+      const worksheet = workbook.addWorksheet('Asistencia');
+      const firstDayColumn = 8;
+      const headerRowNumber = 12;
+      const attendanceSessions = [...this.allSessions].sort((first, second) =>
+        first.sessionDate.localeCompare(second.sessionDate)
+        || (first.startTime ?? '').localeCompare(second.startTime ?? '')
+      );
+      const lastColumn = Math.max(12, firstDayColumn + attendanceSessions.length - 1);
+
+      worksheet.mergeCells(1, 1, 1, lastColumn);
+      const title = worksheet.getCell(1, 1);
+      title.value = 'Planilla de asistencia';
+      title.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+      title.alignment = { horizontal: 'center', vertical: 'middle' };
+      for (let column = 1; column <= lastColumn; column++) {
+        worksheet.getCell(1, column).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF287DB2' }
+        };
+      }
+      worksheet.getRow(1).height = 32;
+
+      worksheet.mergeCells(2, 1, 2, lastColumn);
+      worksheet.getCell(2, 1).value = 'P: Presente | T: Tardanza | A: Ausente | J: Justificada';
+      worksheet.getCell(2, 1).font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF536575' } };
+
+      const selectedCareer = this.careers.find(career => career.id === this.selectedCareerId);
+      const courseName = [assignment.divisionName, assignment.divisionCode]
+        .filter(value => !!value?.trim())
+        .join(' ');
+      const metadataRows: Array<[string, string | number]> = [
+        ['Planilla de', 'Asistencia'],
+        ['Año', assignment.academicYear],
+        ['Curso', courseName],
+        ['Materia', assignment.courseName],
+        ['Carrera', selectedCareer?.name ?? ''],
+        ['Turno', ''],
+        ['Sede', ''],
+        ['Instituto', 'Instituto Técnico Superior Córdoba']
+      ];
+
+      metadataRows.forEach(([label, value], rowIndex) => {
+        const rowNumber = rowIndex + 3;
+        const labelCell = worksheet.getCell(rowNumber, 1);
+        labelCell.value = label;
+        worksheet.mergeCells(rowNumber, 2, rowNumber, lastColumn);
+        const valueCell = worksheet.getCell(rowNumber, 2);
+        valueCell.value = value;
+
+        for (let column = 1; column <= lastColumn; column++) {
+          const cell = worksheet.getCell(rowNumber, column);
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FF9AA7B1' } },
+            left: { style: 'thin', color: { argb: 'FF9AA7B1' } },
+            bottom: { style: 'thin', color: { argb: 'FF9AA7B1' } },
+            right: { style: 'thin', color: { argb: 'FF9AA7B1' } }
+          };
+          cell.alignment = { vertical: 'middle', wrapText: true };
+        }
+        labelCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF20384E' } };
+        valueCell.font = { name: 'Arial', size: 10, color: { argb: 'FF20384E' } };
+      });
+
+      const headers = [
+        'N°', 'Cohorte', 'Legajo', 'Apellido/s', 'Nombre/s', 'DNI', 'E-mail',
+        ...attendanceSessions.map(session => {
+          const dateParts = session.sessionDate.split('-');
+          const date = `${dateParts[2]}/${dateParts[1]}`;
+          const time = session.startTime?.slice(0, 5);
+          return time ? `${date}\n${time}` : date;
+        })
+      ];
+      const header = worksheet.getRow(headerRowNumber);
+      headers.forEach((value, index) => {
+        header.getCell(index + 1).value = value;
+      });
+      header.height = 32;
+      header.eachCell({ includeEmpty: true }, cell => {
+        cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF20384E' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFDCEAF4' }
+        };
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF647789' } },
+          left: { style: 'thin', color: { argb: 'FF647789' } },
+          bottom: { style: 'thin', color: { argb: 'FF647789' } },
+          right: { style: 'thin', color: { argb: 'FF647789' } }
+        };
+      });
+
+      [7, 12, 16, 22, 22, 14, 28].forEach((width, index) => {
+        worksheet.getColumn(index + 1).width = width;
+      });
+      for (let column = firstDayColumn; column < firstDayColumn + attendanceSessions.length; column++) {
+        worksheet.getColumn(column).width = 14;
+      }
+
+      const students = [...this.filteredRows]
+        .sort((first, second) => first.studentName.localeCompare(second.studentName, 'es'));
+      const statusCodes: Record<AttendanceRecordStatus, string> = {
+        Present: 'P',
+        Late: 'T',
+        Absent: 'A',
+        Justified: 'J'
+      };
+      students.forEach((student, index) => {
+        const nameParts = student.studentName.trim().split(/\s+/).filter(Boolean);
+        const surname = nameParts.length > 1 ? nameParts.pop() ?? '' : '';
+        const givenNames = nameParts.join(' ') || student.studentName;
+
+        const values: (string | number)[] = [
+          index + 1,
+          '',
+          student.legajoNumber,
+          surname,
+          givenNames,
+          student.dni,
+          '',
+          ...attendanceSessions.map(session => {
+            const status = student.cells[session.id]?.status;
+            return status ? statusCodes[status] : '';
+          })
+        ];
+        const excelRow = worksheet.addRow(values);
+        excelRow.height = 24;
+        excelRow.eachCell({ includeEmpty: true }, cell => {
+          cell.font = { name: 'Arial', size: 10, color: { argb: 'FF20384E' } };
+          cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FF9AA7B1' } },
+            left: { style: 'thin', color: { argb: 'FF9AA7B1' } },
+            bottom: { style: 'thin', color: { argb: 'FF9AA7B1' } },
+            right: { style: 'thin', color: { argb: 'FF9AA7B1' } }
+          };
+        });
+      });
+
+      worksheet.autoFilter = {
+        from: `A${headerRowNumber}`,
+        to: `${worksheet.getColumn(lastColumn).letter}${Math.max(headerRowNumber, headerRowNumber + students.length)}`
+      };
+      worksheet.views = [{ state: 'frozen', xSplit: 7, ySplit: headerRowNumber }];
+      worksheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer as BlobPart], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const month = String(this.currentMonth.getMonth() + 1).padStart(2, '0');
+      const fileName = `asistencia_${assignment.courseName}_${assignment.divisionName}_${this.currentMonth.getFullYear()}-${month}`
+        .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_');
+      link.download = `${fileName}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      this.showError(error instanceof Error ? error.message : 'No se pudo generar el resumen de asistencia.');
     }
-
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `asistencia_${this.currentMonth.getFullYear()}-${this.currentMonth.getMonth() + 1}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 }
