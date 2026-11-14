@@ -1,0 +1,113 @@
+# Elastic Beanstalk: aplicación, entorno con ALB y HTTPS, y registro A del dominio.
+include "root" {
+  path   = find_in_parent_folders("root.hcl")
+  expose = true
+}
+
+locals {
+  scope = include.root.locals.scope
+}
+
+terraform {
+  source = "${get_parent_terragrunt_dir("root")}/../modules/app"
+}
+
+dependency "network" {
+  config_path = "../network"
+
+  mock_outputs = {
+    vpc_id            = "vpc-00000000000000000"
+    public_subnet_ids = ["subnet-00000000000000000", "subnet-11111111111111111"]
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+dependency "app_security" {
+  config_path = "../app-security"
+
+  mock_outputs = {
+    instance_security_group_id = "sg-00000000000000000"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+dependency "dns_zone" {
+  config_path = "../dns-zone"
+
+  mock_outputs = {
+    zone_id     = "Z0000000000000000000"
+    domain_name = "itsc.example.org"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+dependency "certificate" {
+  config_path = "../certificate"
+
+  mock_outputs = {
+    certificate_arn = "arn:aws:acm:us-east-2:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+dependency "email" {
+  config_path = "../email"
+
+  mock_outputs = {
+    identity_arn = "arn:aws:ses:us-east-2:000000000000:identity/itsc.example.org"
+    domain_name  = "itsc.example.org"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+dependency "storage" {
+  config_path = "../storage"
+
+  mock_outputs = {
+    bucket_name = "mock-files"
+    bucket_arn  = "arn:aws:s3:::mock-files"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+dependency "secrets" {
+  config_path = "../secrets"
+
+  mock_outputs = {
+    parameter_arns = {
+      BACKEND_DB_CONNECTION = "arn:aws:ssm:us-east-2:000000000000:parameter/mock/backend"
+      FINANCE_DB_CONNECTION = "arn:aws:ssm:us-east-2:000000000000:parameter/mock/finance"
+      JWT_SECRET_KEY        = "arn:aws:ssm:us-east-2:000000000000:parameter/mock/jwt"
+    }
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+inputs = {
+  name                       = include.root.locals.name
+  vpc_id                     = dependency.network.outputs.vpc_id
+  instance_subnet_ids        = dependency.network.outputs.public_subnet_ids
+  load_balancer_subnet_ids   = dependency.network.outputs.public_subnet_ids
+  instance_security_group_id = dependency.app_security.outputs.instance_security_group_id
+  instance_type              = local.scope.instance_type
+  instance_architecture      = local.scope.instance_architecture
+  instance_count             = local.scope.instance_count
+  certificate_arn            = dependency.certificate.outputs.certificate_arn
+  dns_zone_id                = dependency.dns_zone.outputs.zone_id
+  domain_name                = dependency.dns_zone.outputs.domain_name
+  files_bucket_arn           = dependency.storage.outputs.bucket_arn
+  ses_identity_arn           = dependency.email.outputs.identity_arn
+  secret_parameter_arns      = dependency.secrets.outputs.parameter_arns
+
+  # UTC: sábado 10:30 en Córdoba, dentro del horario de encendido.
+  managed_updates_start_time = "Sat:13:30"
+
+  environment_variables = {
+    ASPNETCORE_ENVIRONMENT = "Production"
+    ALLOW_TIME_TRAVEL      = "false"
+    APP_PUBLIC_URL         = "https://${local.scope.domain_name}"
+    APP_AWS_REGION         = include.root.locals.aws_region
+    FILES_BUCKET           = dependency.storage.outputs.bucket_name
+    MAIL_FROM              = "no-reply@${local.scope.domain_name}"
+  }
+}

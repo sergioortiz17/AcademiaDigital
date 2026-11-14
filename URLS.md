@@ -11,7 +11,6 @@
 
 Con las credenciales que ya tenés: `vn@vn.com` (Admin), `jaz@jaz.com` (Profesor), `vn2@vn.com` (Alumno), todas con password `Qwerty123.`.
 
-
 docker compose -f docker-compose.finance.yml up --build
 
 docker compose -f docker-compose.dev-tools.yml up --build
