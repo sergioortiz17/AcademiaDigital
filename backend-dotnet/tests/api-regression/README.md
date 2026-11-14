@@ -22,7 +22,7 @@ npm.cmd run allure:generate
 npm.cmd run allure:open
 ```
 
-La API E2E queda en `http://localhost:8010` y SQL Server en `localhost:1434`. Este modo usa `AcademiaDigitalE2E` y limpia los datos de cada escenario.
+La API E2E queda en `http://localhost:8010` y PostgreSQL en `localhost:5434`. El compose levanta además Finance dentro de su red, usa bases separadas y limpia los datos de cada escenario.
 
 El compose E2E habilita el desafío `StaticToken` y el cliente agrega `E2E_ADMISSION_CHALLENGE_TOKEN` solamente a las postulaciones válidas. Esto permite comprobar rechazos `403` y el límite `429` sin depender de un proveedor externo. `StaticToken` es exclusivo de automatización o entornos controlados; producción debe configurar `AdmissionAntiAbuse__Challenge__Mode=Turnstile` e inyectar el secreto fuera del repositorio.
 
@@ -30,7 +30,7 @@ No reutilizar `.env.development.example` para este flujo: `e2e:reset` toma las v
 
 ## Base de desarrollo Docker y datos persistentes
 
-Para ejecutar contra el backend local `http://localhost:5073` y la base Docker `AcademiaDigital` de `localhost:1433`:
+Para ejecutar contra el backend local `http://localhost:5073` y la base Docker `AcademiaDigital` de `localhost:5432`:
 
 ```powershell
 Copy-Item .env.development.example .env -Force
@@ -40,7 +40,7 @@ npm.cmd run allure:generate
 
 `test:api:populate` ejecuta los flujos integrales y las consultas, pero conserva las carreras, planes, materias, comisiones, usuarios, estudiantes, asignaciones, períodos e inscripciones creadas. Los códigos, emails, DNI y legajos incluyen un identificador único para permitir ejecuciones repetidas.
 
-Antes de ejecutarlo, la API de `5073` y `E2E_SQL_CONNECTION_STRING` deben apuntar a la misma base. El setup siembra un administrador y valida su autenticación por la API; si las conexiones no coinciden, aborta antes de los tests.
+Antes de ejecutarlo, la API de `5073` y `E2E_DATABASE_URL` deben apuntar a la misma base PostgreSQL. El setup siembra un administrador y valida su autenticación por la API; si las conexiones no coinciden, aborta antes de los tests.
 
 El uso de `AcademiaDigital` requiere dos confirmaciones explícitas:
 
@@ -58,7 +58,7 @@ docker compose down -v
 docker compose up -d db
 ```
 
-`down -v` elimina el volumen `sqlserver_data` del proyecto Docker y, por lo tanto, todos los datos de `AcademiaDigital`. Después se debe volver a iniciar el backend de `5073`; sus migraciones recrean el esquema.
+`down -v` elimina los volúmenes PostgreSQL y de archivos del proyecto Docker y, por lo tanto, sus datos. Después se debe volver a iniciar el stack; cada servicio aplica sus propias migraciones.
 
 ## Comandos
 
@@ -99,6 +99,6 @@ El administrador y los usuarios Alumno sin Student son fixtures SQL porque la AP
 
 Con `E2E_PRESERVE_DATA=true` no se ejecuta cleanup de escenarios. El teardown solamente revoca las sesiones del administrador de automatización.
 
-La regresión de migración crea y elimina exclusivamente `AcademiaDigitalMigrationE2E` en el SQL Server local configurado. Comprueba los backfills de membresías, planes y asignaciones, los esquemas completos M6 de asistencias, M7 de calificaciones/mesas, M8 de certificados, M9 financiero y M10 de pagos —tablas, FKs, constraints, seeds, índices filtrados/unicidad y precisión monetaria—, y que la migración aborte si existe más de un Student para un mismo User.
+La regresión de migración crea y elimina exclusivamente `academia_migration_e2e` en el PostgreSQL local configurado. Migra desde la primera versión hasta la última y comprueba que los datos sembrados en el snapshot previo se preserven.
 
 El bloque `@p1` comprueba que los catálogos activos no incluyan bajas lógicas; una definición de custom field desactivada deja de aparecer en el listado y responde `404` por ID.

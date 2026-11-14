@@ -14,7 +14,7 @@ public sealed class OutboxMessage
     public DateTime? ProcessedAt { get; set; }
     public int Attempts { get; set; }
     public string? LastError { get; set; }
-    public byte[] RowVersion { get; set; } = [];
+    public uint RowVersion { get; set; }
 
     public void MarkProcessing(DateTime now)
     {

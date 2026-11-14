@@ -22,8 +22,8 @@ export class AcademicClient {
   deleteStudyPlanCourse(studyPlanId: number, id: number) { return this.api.send({ operation: 'Eliminar curso del plan', method: 'DELETE', path: `/api/v1/study-plans/${studyPlanId}/courses/${id}` }); }
   addCoursePrerequisite(studyPlanId: number, courseId: number, body: unknown) { return this.api.send({ operation: 'Agregar correlativa al curso', method: 'POST', path: `/api/v1/study-plans/${studyPlanId}/courses/${courseId}/prerequisites`, body }); }
 
-  createCommission(careerId: number, body: unknown) { return this.api.send({ operation: 'Crear comisión', method: 'POST', path: `/api/v1/careers/${careerId}/commissions`, body }); }
-  listCommissions(careerId: number, academicYear?: number) { return this.api.send({ operation: 'Listar comisiones', method: 'GET', path: `/api/v1/careers/${careerId}/commissions`, query: { academicYear } }); }
-  getCommission(careerId: number, id: number) { return this.api.send({ operation: 'Consultar comisión', method: 'GET', path: `/api/v1/careers/${careerId}/commissions/${id}` }); }
-  deleteCommission(careerId: number, id: number) { return this.api.send({ operation: 'Desactivar comisión', method: 'DELETE', path: `/api/v1/careers/${careerId}/commissions/${id}` }); }
+  createCommission(careerId: number, body: unknown) { return this.api.send({ operation: 'Crear división', method: 'POST', path: `/api/v1/careers/${careerId}/divisions`, body }); }
+  listCommissions(careerId: number, academicYear?: number) { return this.api.send({ operation: 'Listar divisiones', method: 'GET', path: `/api/v1/careers/${careerId}/divisions`, query: { academicYear } }); }
+  getCommission(careerId: number, id: number) { return this.api.send({ operation: 'Consultar división', method: 'GET', path: `/api/v1/careers/${careerId}/divisions/${id}` }); }
+  deleteCommission(careerId: number, id: number) { return this.api.send({ operation: 'Desactivar división', method: 'DELETE', path: `/api/v1/careers/${careerId}/divisions/${id}` }); }
 }

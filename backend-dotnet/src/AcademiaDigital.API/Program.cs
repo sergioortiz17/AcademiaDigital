@@ -256,6 +256,11 @@ builder.Services.AddRateLimiter(options =>
 
 // ── Controllers ───────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+builder.Services.AddHttpClient("FinanceGateway", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -358,7 +363,9 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors();
 app.UseRateLimiter();
 app.UseMiddleware<ActiveSessionMiddleware>();
+app.UseMiddleware<FinanceGatewayMiddleware>();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 await app.RunAsync();

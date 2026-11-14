@@ -17,7 +17,7 @@ public class EnrollmentPeriod
     public DateTime? EndDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public byte[] RowVersion { get; set; } = [];
+    public uint RowVersion { get; set; }
 
     public ICollection<Enrollment> Enrollments { get; set; } = [];
 }

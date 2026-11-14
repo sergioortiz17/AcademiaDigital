@@ -2,42 +2,55 @@ name: academia-digital-api-e2e
 
 services:
   db-e2e:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${E2E_SA_PASSWORD:?E2E_SA_PASSWORD is required}"
-      MSSQL_PID: Developer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "${E2E_DB_PASSWORD:?E2E_DB_PASSWORD is required}"
+      POSTGRES_DB: AcademiaDigitalE2E
     ports:
-      - "1434:1433"
+      - "5434:5432"
     volumes:
-      - sqlserver_e2e_data:/var/opt/mssql
+      - postgres_e2e_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        - CMD
-        - /opt/mssql-tools18/bin/sqlcmd
-        - -S
-        - localhost
-        - -U
-        - sa
-        - -P
-        - "${E2E_SA_PASSWORD:?E2E_SA_PASSWORD is required}"
-        - -Q
-        - SELECT 1
-        - -No
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d AcademiaDigitalE2E"]
+      interval: 5s
       timeout: 5s
-      retries: 12
-      start_period: 30s
+      retries: 20
+      start_period: 10s
+
+  finance-e2e:
+    build:
+      context: ../../../services
+      dockerfile: AcademiaDigital.Finance/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8091
+      ConnectionStrings__DefaultConnection: "Host=db-e2e;Port=5432;Database=AcademiaDigitalFinanceE2E;Username=postgres;Password=${E2E_DB_PASSWORD:?E2E_DB_PASSWORD is required}"
+      Monolith__BaseUrl: http://api-e2e:8000
+      ReceiptStorage__RootPath: /app/data/receipts
+    depends_on:
+      db-e2e:
+        condition: service_healthy
+    volumes:
+      - finance_e2e_files:/app/data/receipts
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8091/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
   api-e2e:
     build:
-      context: ../..
-      dockerfile: Dockerfile
+      context: ../../..
+      dockerfile: backend-dotnet/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Server=db-e2e;Database=${E2E_DATABASE_NAME:-AcademiaDigitalE2E};User Id=sa;Password=${E2E_SA_PASSWORD:?E2E_SA_PASSWORD is required};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Host=db-e2e;Port=5432;Database=AcademiaDigitalE2E;Username=postgres;Password=${E2E_DB_PASSWORD:?E2E_DB_PASSWORD is required}"
       Jwt__SecretKey: "${E2E_JWT_SECRET:?E2E_JWT_SECRET is required}"
       Jwt__ExpirationDays: 7
+      Finance__BaseUrl: http://finance-e2e:8091
+      AdmissionStorage__RootPath: /app/data/admissions
       AdmissionAntiAbuse__RateLimit__Enabled: "true"
       AdmissionAntiAbuse__RateLimit__PermitLimit: 10
       AdmissionAntiAbuse__RateLimit__WindowSeconds: 1
@@ -50,6 +63,18 @@ services:
     depends_on:
       db-e2e:
         condition: service_healthy
+      finance-e2e:
+        condition: service_healthy
+    volumes:
+      - backend_e2e_files:/app/data/admissions
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
 volumes:
-  sqlserver_e2e_data:
+  postgres_e2e_data:
+  backend_e2e_files:
+  finance_e2e_files:

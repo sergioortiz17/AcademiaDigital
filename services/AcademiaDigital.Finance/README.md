@@ -6,8 +6,8 @@ conceptos financieros, aranceles, beneficios, planes de pago, deudas de alumnos,
 reconciliación, reversos y recibos (compliance AFIP). **Es un sistema de registro y
 consulta: NUNCA bloquea el flujo académico del monolito.**
 
-> Estado de este documento: **especificación de diseño** (previo a mover el código desde
-> el monolito). Se actualizará con instrucciones exactas de build/run al implementarlo.
+> Estado de este documento: **servicio implementado e integrado**. El acceso público se
+> realiza por el gateway del monolito; el puerto directo de Finance es sólo interno.
 
 ## Alcance (entidades)
 
@@ -114,16 +114,15 @@ datos, solo presentación.
 ## Cómo se levanta
 
 ```bash
-# el monolito + su Postgres ya corriendo (docker-compose.yml principal)
-docker compose up -d db backend
-# el servicio Finance (reusa la misma instancia Postgres, schema 'finance')
-docker compose -f docker-compose.finance.yml up --build
+# Desde la raíz del repositorio: PostgreSQL, Finance, monolito y Angular
+docker compose up --build
 ```
 
-- Puerto **8091** (monolito 8000, frontend 4200, dev-tools 8090).
+- Finance escucha en el puerto **8080 dentro de la red Docker** y no publica un puerto
+  al host en el compose principal. Monolito: 8000; frontend: 4200.
 - Al arrancar: crea el schema `finance` (idempotente), aplica su migración `InitialCreate`
   y siembra los 4 `PaymentMethods` de catálogo. Verificado end-to-end.
-- **Swagger** http://localhost:8091/swagger · **Scalar** http://localhost:8091/scalar/
+- Swagger/Scalar de Finance no se exponen públicamente en el compose integrado.
 
 ### Autenticación entre servicios
 

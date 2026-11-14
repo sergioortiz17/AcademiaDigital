@@ -78,6 +78,15 @@ public sealed class PaymentsController(
         return Ok(await queryHandler.Handle(studentId, ct));
     }
 
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMine(CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
+        if (CurrentUserRole != UserRole.Alumno || CurrentStudentId is null)
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Only a linked student can query their payments."));
+        return Ok(await queryHandler.Handle(CurrentStudentId.Value, ct));
+    }
+
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));

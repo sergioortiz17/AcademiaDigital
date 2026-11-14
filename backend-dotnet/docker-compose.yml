@@ -1,34 +1,34 @@
 networks:
   app_network:
+    name: academiadigital_backend_network
     driver: bridge
 
 services:
-
   db:
-    container_name: sqlserver
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: postgres_backend
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${SA_PASSWORD:-Admin1234!}"
-      MSSQL_PID: Developer
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Admin1234!}"
+      POSTGRES_DB: "${POSTGRES_DB:-AcademiaDigital}"
     volumes:
-      - sqlserver_data:/var/opt/mssql
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "1433:1433"
+      - "5432:5432"
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd",
-             "-S", "localhost", "-U", "sa", "-P", "${SA_PASSWORD:-Admin1234!}",
-             "-Q", "SELECT 1", "-No"]
-      interval: 15s
-      retries: 6
-      start_period: 30s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-AcademiaDigital}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     networks:
       - app_network
 
   backend:
     container_name: dotnet_backend
     build:
-      context: .
+      context: ..
+      dockerfile: backend-dotnet/Dockerfile
     ports:
       - "8000:8000"
     depends_on:
@@ -37,17 +37,22 @@ services:
     networks:
       - app_network
     volumes:
-      - backend_files:/app/data/files
+      - backend_files:/app/data/admissions
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=AcademiaDigital;User Id=sa;Password=${SA_PASSWORD:-Admin1234!};TrustServerCertificate=True;
-      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-AcademiaDigital};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!}
+      - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__ExpirationDays=7
-      - AdmissionStorage__RootPath=/app/data/files
+      - AdmissionStorage__RootPath=/app/data/admissions
       - Cors__AllowedOrigins__0=http://localhost:3000
       - Cors__AllowedOrigins__1=http://localhost:4200
-      - Cors__AllowedOrigins__2=https://itsc-app.dryvn.org
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
-  sqlserver_data:
+  postgres_data:
   backend_files:

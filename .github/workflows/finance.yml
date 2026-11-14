@@ -1,0 +1,74 @@
+name: Finance CI
+
+on:
+  pull_request:
+    branches: [main, integracion-14-11]
+    paths:
+      - 'services/AcademiaDigital.Finance/**'
+      - 'services/AcademiaDigital.Finance.Contracts/**'
+      - '.github/workflows/finance.yml'
+  push:
+    branches: [main, integracion-14-11]
+    paths:
+      - 'services/AcademiaDigital.Finance/**'
+      - 'services/AcademiaDigital.Finance.Contracts/**'
+      - '.github/workflows/finance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: finance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  API_PROJECT: services/AcademiaDigital.Finance/src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj
+  INFRA_PROJECT: services/AcademiaDigital.Finance/src/AcademiaDigital.Finance.Infrastructure/AcademiaDigital.Finance.Infrastructure.csproj
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore ${{ env.API_PROJECT }}
+      - name: Build Release
+        run: dotnet build ${{ env.API_PROJECT }} --configuration Release --no-restore
+
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_ci
+          POSTGRES_DB: finance_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d finance_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=finance_ci;Username=postgres;Password=postgres_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install EF tool
+        run: dotnet tool install --global dotnet-ef --version 8.0.11
+      - name: Apply all migrations to an empty database
+        run: >-
+          dotnet ef database update
+          --project ${{ env.INFRA_PROJECT }}
+          --startup-project ${{ env.API_PROJECT }}
+          --configuration Release

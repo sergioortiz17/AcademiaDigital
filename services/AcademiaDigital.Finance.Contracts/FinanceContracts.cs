@@ -21,7 +21,11 @@ public sealed record GenerateDebtRequest(
     long BillingPlanId,
     int AcademicYear,
     string? Condition = null,
-    IReadOnlyCollection<int>? GrantedScholarshipIds = null);
+    IReadOnlyCollection<int>? GrantedScholarshipIds = null,
+    string? StudentName = null,
+    string? Dni = null,
+    string? LegajoNumber = null,
+    string? CareerName = null);
 
 /// <summary>Response de la generación de deuda.</summary>
 public sealed record GenerateDebtResponse(

@@ -4,16 +4,16 @@ Este archivo es la memoria operativa del backend. Aplica a todo lo que está den
 
 ## Estado actual
 
-Actualizado: **2026-08-24**.
+Actualizado: **2026-11-14**.
 
-- Solución ASP.NET Core **.NET 8 / C# 12**, con Entity Framework Core 8 y SQL Server.
+- Solución ASP.NET Core **.NET 8 / C# 12**, con Entity Framework Core 8, Npgsql y PostgreSQL 16.
 - Arquitectura en cuatro proyectos: `Domain`, `Application`, `Infrastructure` y `API`.
-- Rama observada al actualizar este documento: `modulo_5_backend`.
+- Rama observada al actualizar este documento: `obj/00-baseline-ci`, derivada de `integracion-14-11`.
 - Último commit que afectó `backend-dotnet/`: `87f13cb` (`test(api): add Playwright regression suite and Allure CI`, 2026-08-01).
-- Última migración: `20260824165321_AddDigitalReceipts`.
-- Verificación local hecha el 2026-08-24: build Release pasa con **0 warnings y 0 errores**; Unit Tests pasan **291/291** —194 Domain y 97 Application—, ArchUnitNET **8/8**, modelo EF sin cambios pendientes y `npm.cmd run typecheck` pasa.
+- Última migración: `20260922222335_AddModalityToAcademicEvent`.
+- Verificación local hecha el 2026-11-14: monolito y Finance compilan en Release con **0 warnings y 0 errores**; Domain pasa **172/172**, Application **93/93**, ArchUnitNET **11/11**, Angular **28/28**, modelo EF sin cambios pendientes, migraciones limpia/upgrade y typecheck pasan.
 - La solución incluye unit tests de Domain y Application, además de `tests/AcademiaDigital.ArchitectureTests/`. Las pruebas funcionales automatizadas siguen en `tests/api-regression/` (Playwright + TypeScript + Zod + Allure).
-- Regresión E2E vigente: typecheck, migración/backfill M1–M11, M4 **7/7**, M5 **3/3**, M6–M11 **1/1** cada uno y **34/34 tests pasaron** sobre SQL Server Docker el 2026-08-24; Swagger confirmó 196 operaciones y Allure fue generado. Evidencia en `tests/api-regression/analysis/m11-receipts-2026-08-24.md`.
+- Regresión E2E vigente: **34/34** casos pasan sobre PostgreSQL y Finance separados —incluidos **27/27** `@regression`, autenticación, autorización negativa y aislamiento— accediendo a M9–M11 exclusivamente mediante el gateway del monolito. La matriz de 259 requisitos vive en `docs/MVP_REQUIREMENTS_TRACEABILITY.csv`.
 
 ## Arquitectura objetivo y dependencias
 
@@ -25,7 +25,7 @@ HTTP
   -> Application Command/Query Handler
   -> Domain rules + repository/service ports
   -> Infrastructure implementation
-  -> SQL Server or external adapter
+  -> PostgreSQL or external adapter
 ```
 
 Dirección de dependencias permitida:
@@ -80,7 +80,7 @@ Convenciones del patrón:
 - Para una única escritura simple puede conservarse el patrón actual del repositorio. Para dos o más escrituras relacionadas, usar `IUnitOfWork.ExecuteInTransactionAsync`; no abrir transacciones en controllers.
 - No crear transacciones anidadas ni mezclar una transacción manual con llamadas que usen otro `DbContext`.
 - Toda operación reintentable o expuesta a doble envío debe tener idempotencia respaldada por un índice único, no sólo por una consulta previa.
-- Toda unicidad o invariante que pueda romperse por concurrencia debe validarse en Application y reforzarse en SQL Server con índices, constraints o `rowversion`.
+- Toda unicidad o invariante que pueda romperse por concurrencia debe validarse en Application y reforzarse en PostgreSQL con índices, constraints, locks explícitos o `xmin`.
 - En M4, una `Commission` representa un único pool de admisión: puede tener como máximo un `AdmissionForm`, el formulario dirigido exige capacidad explícita y el lock serializable por formulario protege ese pool. `CommissionId = null` se reserva para formularios generales/legacy. No permitir varios formularios para una comisión sin introducir primero un agregado de capacidad compartida y migrar esta invariante.
 - En M4, la rematriculación es append-only y única por `StudentCareer + AcademicYear`; sólo avanza al año calendario inmediato siguiente y reemplaza la asignación académica vigente dentro de la misma transacción serializable. No implementar rematriculaciones como sobrescritura de `StudentCareer` ni agregarlas a `StudentManagementService`.
 - En M4, `Confirmed` exige una versión `Approved` de cada `DocumentRequirement` obligatorio, activo, vigente y aplicable globalmente o a la carrera. Los documentos de postulación son versiones del requisito: al presentar una nueva se expira la versión `Submitted`/`Approved` anterior; no reutilizar `StudentDocument` antes de que exista un `Student` ni mover este flujo a `StudentManagementService`.
@@ -125,7 +125,7 @@ Convenciones del patrón:
 - `Receipt` es evidencia histórica inmutable. El número global usa `REC-00000001`; una reversión del pago no elimina ni reescribe el recibo. Una transferencia `PendingReconciliation` o rechazada no tiene comprobante. Los pagos M10 históricos no se backfillean implícitamente; un reintento idempotente de confirmación/conciliación puede completar la reserva faltante.
 - PDF y almacenamiento M11 ocurren después del commit mediante `IReceiptPdfGenerator` e `IFileStorage`. Un fallo deja `Failed` y debe reintentarse sobre el mismo correlativo; `Ready` exige SHA-256. Nunca ejecutar filesystem dentro de la transacción, exponer rutas físicas ni generar documentos desde el controller.
 - `/receipts` y la regeneración son Admin. Detalle/descarga permiten Admin o alumno propietario; `/students/me/receipts` siempre deriva identidad desde `CurrentUser`. La descarga recalcula el hash. `FiscalCae` y `FiscalQrData` permanecen opcionales hasta una integración fiscal explícita.
-- SQL Server y el volumen que contiene `AdmissionStorage__RootPath` forman una única unidad de backup/restore. En Docker productivo conservar `backend_files:/app/data/files` y seguir [BACKUP_RECEIPTS.md](docs/BACKUP_RECEIPTS.md); no respaldar sólo la base ni eliminar el volumen como cleanup rutinario.
+- PostgreSQL y los volúmenes durables de monolito/Finance forman una única unidad de backup/restore. En Docker productivo conservar `backend_files` y `finance_files`; no respaldar sólo las bases ni eliminar volúmenes como cleanup rutinario.
 - Consultas de sólo lectura usan `AsNoTracking` y proyección cuando no se necesita el grafo completo. Evitar N+1 y `Include` indiscriminado.
 - No usar `EnsureCreated` ni editar migraciones aplicadas. Todo cambio de esquema se realiza con una migración EF y prueba de upgrade/backfill.
 - Entidades históricas, pagos, recibos, notas aprobadas y auditorías son append-only o se corrigen mediante una operación compensatoria; no mediante delete físico o sobrescritura silenciosa.
@@ -201,7 +201,7 @@ Ubicaciones importantes:
 - [Evidencia M9 cobros y conceptos](tests/api-regression/analysis/m9-finance-2026-08-24.md): alcance financiero, concurrencia, migración y regresión integrada ejecutada.
 - [Evidencia M10 pagos](tests/api-regression/analysis/m10-payments-2026-08-24.md): medios, imputación, conciliación, reversión, locks, migración y regresión integrada ejecutada.
 - [Evidencia M11 recibos](tests/api-regression/analysis/m11-receipts-2026-08-24.md): correlativo, atomicidad, PDF/hash, autorización, migración y regresión integrada ejecutada.
-- [Backup y restauración de recibos](docs/BACKUP_RECEIPTS.md): procedimiento coordinado para SQL Server y archivos persistentes.
+- [Backup y restauración de recibos](docs/BACKUP_RECEIPTS.md): procedimiento coordinado para PostgreSQL y archivos persistentes.
 - Unit tests de reglas: `tests/AcademiaDigital.Domain.UnitTests/` y `tests/AcademiaDigital.Application.UnitTests/`.
 - Pruebas ejecutables de arquitectura: `tests/AcademiaDigital.ArchitectureTests/ArchitectureDependencyTests.cs`.
 - Workflow de arquitectura: `../.github/workflows/architecture.yml`.
@@ -295,7 +295,7 @@ ReceiptSequence(1) --> correlativo global REC y lock transaccional
 
 ## Base de datos y migraciones
 
-La API ejecuta `Database.MigrateAsync()` al arrancar y reintenta mientras SQL Server de Docker inicia. Existe un fallback heredado que, ante el mensaje `already an object named`, ejecuta `EnsureDeletedAsync()` y recrea la base. Tratarlo como un riesgo: no provocar ni ampliar ese comportamiento sin una decisión explícita, especialmente contra datos no descartables.
+La API ejecuta `Database.MigrateAsync()` al arrancar y reintenta mientras PostgreSQL inicia. Existe un fallback heredado ante `DuplicateTable`/`DuplicateObject` que ejecuta `EnsureDeletedAsync()` para bases creadas sin historial: es un riesgo y no debe ampliarse ni activarse contra datos no descartables. Finance usa una base propia y el schema `finance`; nunca deben hacerse joins entre ambas bases.
 
 Comandos desde `backend-dotnet/`:
 
@@ -305,7 +305,7 @@ dotnet ef database update --project src/AcademiaDigital.Infrastructure --startup
 dotnet ef migrations list --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
 ```
 
-Usar `dotnet-ef` **8.x** (el README fija 8.0.13). Revisar siempre el SQL/model snapshot generado antes de dar una migración por válida.
+Usar el tool manifest del repositorio, actualmente `dotnet-ef` **8.0.11**. Revisar siempre el SQL/model snapshot generado antes de dar una migración por válida.
 
 ## Verificación mínima
 
@@ -314,7 +314,7 @@ Desde `backend-dotnet/`:
 ```powershell
 dotnet test tests/AcademiaDigital.Domain.UnitTests/AcademiaDigital.Domain.UnitTests.csproj -c Release
 dotnet test tests/AcademiaDigital.Application.UnitTests/AcademiaDigital.Application.UnitTests.csproj -c Release
-dotnet test tests/AcademiaDigital.ArchitectureTests/AcademiaDigital.ArchitectureTests.csproj -c Debug
+dotnet test tests/AcademiaDigital.ArchitectureTests/AcademiaDigital.ArchitectureTests.csproj -c Release
 dotnet build AcademiaDigital.sln
 dotnet build AcademiaDigital.sln -c Release
 ```
@@ -339,7 +339,7 @@ La suite completa requiere su `.env`, Docker y una base descartable. `npm.cmd ru
 - Swagger no describe con precisión todos los guards ni todos los contratos de respuesta/error.
 - El adaptador actual de notificaciones de admisión escribe un artefacto local idempotente; todavía debe reemplazarse/configurarse un proveedor real para email. El procesamiento outbox se dispara explícitamente por un endpoint Admin y requiere un worker programado para operación autónoma.
 - El almacenamiento local de acuerdos, certificados y recibos es efímero si no se configura `AdmissionStorage__RootPath` sobre un volumen persistente; comparten el adaptador `IFileStorage`. El compose productivo ya monta `backend_files`, pero despliegues alternativos deben proveer persistencia equivalente y backup coordinado.
-- La cobertura funcional .NET tiene 291 unit tests sobre M4–M11; todavía no hay integration tests .NET dedicados de persistencia fuera de la regresión API/SQL Server, que pasa 34/34 con M11 incluido.
+- No hay integration tests .NET dedicados de persistencia fuera de la regresión API/PostgreSQL. Mantener la migración limpia, el upgrade desde la primera migración y los flujos Playwright como gate obligatorio.
 - Swagger está habilitado también en Production.
 - `StudentManagementService.cs` concentra muchas responsabilidades y merece separación gradual, acompañada por pruebas.
 - Varios repositorios llaman `SaveChangesAsync` internamente; al crear flujos multi-entidad, comprobar límites transaccionales y evitar persistencia parcial.
@@ -348,6 +348,7 @@ No corregir estas deudas incidentalmente dentro de una tarea no relacionada. Si 
 
 ## Últimos cambios relevantes
 
+- **2026-11-14 — baseline de integración PostgreSQL/Finance:** se unificó PostgreSQL para monolito, Finance, Docker y CI; se incorporaron health checks, volúmenes durables, workflows de backend/arquitectura/frontend/Finance/API, matriz trazable de 259 requisitos y gateway financiero con identidad derivada de sesión. Se corrigió concurrencia `xmin`, reintento de serialización, contratos M9–M11 y aislamiento de propietario. Verificado: builds Release monolito/Finance 0 warnings, typecheck, Angular 28/28, migraciones limpia/upgrade y suite API completa 34/34 (27/27 `@regression`).
 - **2026-08-24 — guía funcional M4–M11:** se consolidaron funcionalidades, actores, casos de uso, estados, API disponible, pantallas sugeridas, circuitos integrados y criterios de aceptación para frontend. El relevamiento Angular deja explícita la integración parcial de M8, el placeholder M5 y la brecha de los demás módulos. Se verificaron formato, enlaces y `git diff --check`; no se modificó código ni se reejecutaron suites para este cambio documental.
 - **2026-08-24 — cierre MVP M11 recibos:** se agregó emisión automática vinculada al pago, correlativo global serializado, snapshot inmutable, PDF/SHA-256 reintentable, historial/descarga Admin o propietario, campos fiscales opcionales, volumen durable y backup coordinado. La migración es `AddDigitalReceipts`; pasaron 291/291 unit tests, build Release, ArchUnitNET 8/8, modelo EF, typecheck, migración/backfill M1–M11, M11 1/1 y regresión 34/34. Swagger confirmó 196 operaciones y Allure fue generado. M4–M11 quedan cerrados y el roadmap continúa en estabilización/release.
 - **2026-08-24 — cierre MVP M10 pagos:** se agregaron cuatro medios, borradores por DNI, imputación parcial/multiconcepto, confirmación idempotente, conciliación manual de transferencias, locks serializables, reversión compensatoria e historial aislado. La migración es `AddPaymentsAndReconciliation`; pasaron 278/278 unit tests, build Release, ArchUnitNET 8/8, modelo EF, typecheck, migración/backfill M1–M10, M10 1/1 y regresión 33/33. Swagger confirmó 191 operaciones y Allure fue generado. M10 queda cerrado y el roadmap continúa en M11.

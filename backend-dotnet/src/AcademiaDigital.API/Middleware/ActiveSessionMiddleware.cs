@@ -14,7 +14,8 @@ public class ActiveSessionMiddleware(RequestDelegate next)
     public async Task InvokeAsync(
         HttpContext context,
         ITokenService tokenService,
-        ISessionRepository sessionRepository)
+        ISessionRepository sessionRepository,
+        IStudentRepository studentRepository)
     {
         var authHeader = context.Request.Headers.Authorization.ToString();
 
@@ -39,12 +40,19 @@ public class ActiveSessionMiddleware(RequestDelegate next)
                     context.Items["UserId"] = session.UserId;
                     context.Items["UserRole"] = (int)tokenRole.Value;
                     context.Items["IsSuperuser"] = tokenRole.Value == UserRole.Admin;
+                    if (tokenRole.Value == UserRole.Alumno)
+                    {
+                        var student = await studentRepository.FindByUserIdAsync(session.UserId, context.RequestAborted);
+                        if (student is not null)
+                            context.Items["StudentId"] = student.Id;
+                    }
                 }
                 else
                 {
                     context.Items.Remove("UserId");
                     context.Items.Remove("UserRole");
                     context.Items.Remove("IsSuperuser");
+                    context.Items.Remove("StudentId");
                 }
             }
         }

@@ -22,14 +22,23 @@ public sealed class ReceiptsController(
         return Ok(await historyHandler.Handle(new(true, studentId), ct));
     }
 
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMine(CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
+        if (CurrentUserRole != UserRole.Alumno || CurrentStudentId is null)
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Only a linked student can query their receipts."));
+        return Ok(await historyHandler.Handle(new(false, CurrentStudentId.Value), ct));
+    }
+
     [HttpGet("{publicId:guid}")]
-    public async Task<IActionResult> Get(Guid publicId, [FromQuery] long? studentId, CancellationToken ct)
+    public async Task<IActionResult> Get(Guid publicId, CancellationToken ct)
     {
         var guard = RequireAdminOrStudent();
         if (guard is not null) return guard;
         // Admin y Profesor pueden ver cualquier comprobante; el Alumno solo los propios.
         var canReadAny = CurrentUserRole is UserRole.Admin or UserRole.Profesor;
-        return Ok(await receiptHandler.Handle(new(publicId, canReadAny, canReadAny ? null : studentId), ct));
+        return Ok(await receiptHandler.Handle(new(publicId, canReadAny, canReadAny ? null : CurrentStudentId), ct));
     }
 
     [HttpPost("{publicId:guid}/generate")]
@@ -41,13 +50,13 @@ public sealed class ReceiptsController(
     }
 
     [HttpGet("{publicId:guid}/download")]
-    public async Task<IActionResult> Download(Guid publicId, [FromQuery] long? studentId, CancellationToken ct)
+    public async Task<IActionResult> Download(Guid publicId, CancellationToken ct)
     {
         var guard = RequireAdminOrStudent();
         if (guard is not null) return guard;
         // Admin y Profesor pueden descargar cualquier comprobante; el Alumno solo los propios.
         var canReadAny = CurrentUserRole is UserRole.Admin or UserRole.Profesor;
-        var file = await downloadHandler.Handle(new(publicId, canReadAny, canReadAny ? null : studentId), ct);
+        var file = await downloadHandler.Handle(new(publicId, canReadAny, canReadAny ? null : CurrentStudentId), ct);
         return File(file.Content, file.ContentType, file.FileName);
     }
 

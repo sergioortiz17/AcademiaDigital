@@ -2,14 +2,16 @@ name: Backend Architecture
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, integracion-14-11]
     paths:
       - 'backend-dotnet/**'
+      - 'services/AcademiaDigital.Finance.Contracts/**'
       - '.github/workflows/architecture.yml'
   push:
-    branches: [main]
+    branches: [main, integracion-14-11]
     paths:
       - 'backend-dotnet/**'
+      - 'services/AcademiaDigital.Finance.Contracts/**'
       - '.github/workflows/architecture.yml'
   workflow_dispatch:
 
@@ -25,22 +27,15 @@ jobs:
     name: ArchUnitNET
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     defaults:
       run:
         working-directory: backend-dotnet
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-
       - name: Restore architecture tests
         run: dotnet restore tests/AcademiaDigital.ArchitectureTests/AcademiaDigital.ArchitectureTests.csproj
-
       - name: Validate architecture
-        run: dotnet test tests/AcademiaDigital.ArchitectureTests/AcademiaDigital.ArchitectureTests.csproj --configuration Debug --no-restore
+        run: dotnet test tests/AcademiaDigital.ArchitectureTests/AcademiaDigital.ArchitectureTests.csproj --configuration Release --no-restore

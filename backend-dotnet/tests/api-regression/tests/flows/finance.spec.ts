@@ -55,6 +55,8 @@ test('M9 finanzas: tarifas, beneficios, generación idempotente y deuda aislada 
       validTo: '2026-12-31',
       notes: 'Beneficio financiero M9'
     })).response.status()).toBe(201);
+    const scholarshipTarget = await db.getFinanceStudentTarget(scholarshipStudent.studentId, 2026);
+    const regularTarget = await db.getFinanceStudentTarget(regularStudent.studentId, 2026);
 
     const conceptCall = await admin.finance.createConcept({
       code: ` ${conceptCode.toLowerCase()} `, name: 'Cuota mensual M9', description: 'Concepto de regresión'
@@ -105,21 +107,25 @@ test('M9 finanzas: tarifas, beneficios, generación idempotente y deuda aislada 
     const plan = billingPlanSchema.parse(planCall.body);
     expect(plan.currency).toBe('ARS');
     expect((await admin.finance.generate(plan.id)).response.status()).toBe(400);
-    expect((await scholarshipStudentSession.api.finance.generate(plan.id, 'finance-m9-forbidden')).response.status()).toBe(403);
+    expect((await scholarshipStudentSession.api.finance.generate(plan.id, scholarshipTarget, 'finance-m9-forbidden')).response.status()).toBe(403);
 
     const idempotencyKey = `finance-m9-${Date.now()}`;
     const concurrent = await Promise.all([
-      admin.finance.generate(plan.id, idempotencyKey),
-      admin.finance.generate(plan.id, idempotencyKey)
+      admin.finance.generate(plan.id, scholarshipTarget, idempotencyKey),
+      admin.finance.generate(plan.id, scholarshipTarget, idempotencyKey)
     ]);
     expect(concurrent.map(call => call.response.status())).toEqual([200, 200]);
     const first = debtGenerationResultSchema.parse(concurrent[0].body);
     const retry = debtGenerationResultSchema.parse(concurrent[1].body);
     expect(retry.batchPublicId).toBe(first.batchPublicId);
-    expect(first.generatedDebtCount).toBe(2);
-    expect(first.debts.map(debt => debt.totalAmount).sort((a, b) => a - b)).toEqual([770, 990]);
-    expect(first.generatedTotal).toBe(1760);
-    expect((await admin.finance.generate(plan.id, `${idempotencyKey}-different`)).response.status()).toBe(409);
+    expect(first.generatedDebtCount).toBe(1);
+    expect(first.debts.map(debt => debt.totalAmount)).toEqual([770]);
+    expect(first.generatedTotal).toBe(770);
+    const regularGeneration = debtGenerationResultSchema.parse((await admin.finance.generate(
+      plan.id, regularTarget, `${idempotencyKey}-regular`
+    )).body);
+    expect(regularGeneration).toMatchObject({ generatedDebtCount: 1, generatedTotal: 990 });
+    expect((await admin.finance.generate(plan.id, scholarshipTarget, `${idempotencyKey}-different`)).response.status()).toBe(409);
 
     const scholarshipOwn = studentDebtSchema.array().parse((await scholarshipStudentSession.api.finance.myDebts()).body);
     const regularOwn = studentDebtSchema.array().parse((await regularStudentSession.api.finance.myDebts()).body);

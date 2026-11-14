@@ -26,7 +26,7 @@ public class StudyPlan
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
-    public byte[] RowVersion { get; private set; } = [];
+    public uint RowVersion { get; private set; }
 
     public ICollection<StudyPlanCourse> Courses { get; private set; } = [];
     public ICollection<CoursePrerequisite> Prerequisites { get; private set; } = [];
