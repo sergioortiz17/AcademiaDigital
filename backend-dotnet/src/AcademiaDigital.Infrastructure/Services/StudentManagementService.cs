@@ -71,6 +71,15 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         return MapStudent(student, assignment);
     }
 
+    public async Task UpdateEmergencyContactPhoneAsync(long id, string? phone, CancellationToken ct)
+    {
+        var student = await db.Students.SingleOrDefaultAsync(x => x.Id == id, ct)
+            ?? throw new KeyNotFoundException("Alumno no encontrado.");
+        student.EmergencyContactPhone = Clean(phone);
+        student.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<StatusHistoryDto> ChangeStatusAsync(long id, StudentStatus status, string reason, long actorId, CancellationToken ct)
     {
         var student = await db.Students.SingleOrDefaultAsync(x => x.Id == id, ct)

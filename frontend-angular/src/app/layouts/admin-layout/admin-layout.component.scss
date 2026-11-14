@@ -1,4 +1,4 @@
-// All styles in global styles.scss
+@use '../../../assets/scss/navigation-tokens' as nav;
 .layout-container {
   height: 100vh;
   background: #f4f7fb;
@@ -6,11 +6,11 @@
 }
 
 .sidenav {
-  width: 280px;
+  width: nav.$width;
   background: white;
   /*color: white;*/
   border-right: none;
-  padding: 1rem 0.5rem;
+  padding: 0;
   /*overflow: hidden; */
 }
 
@@ -103,4 +103,47 @@
 :host-context(.dark-theme) .mat-mdc-sidenav {
   background-color: var(--sidenav-bg) !important;
   color: var(--text-primary) !important;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-container {
+    padding: 1.25rem;
+  }
+
+  .sidenav {
+    width: min(nav.$width, 82vw);
+  }
+}
+
+@media (max-width: 600px) {
+  .layout-container {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .main-toolbar {
+    height: 64px;
+    padding: 0 0.75rem;
+  }
+
+  .menu-button {
+    margin-right: 0.5rem;
+  }
+
+  .sidenav-container {
+    height: calc(100dvh - 64px);
+    margin-top: 64px;
+  }
+
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+
+  .toolbar-brand {
+    gap: 0.5rem;
+  }
+
+  .toolbar-text {
+    display: none;
+  }
 }

@@ -76,6 +76,7 @@ Leyenda de cobertura:
 | `PATCH /api/v1/students/{studentId}/status` | Admin | ❌ | Sin cliente ni escenario. |
 | `GET /api/v1/students/{studentId}/status-history` | Admin/propietario | ❌ | Sin cliente ni escenario. |
 | `GET /api/v1/students/{studentId}/record` | Admin/propietario | ✅ | Flujos de legajo y becas. |
+| `PATCH /api/v1/students/{studentId}/emergency-contact` | Admin/propietario | ✅ | Actualiza solo el teléfono de emergencia; acceso propio/cruzado y anónimo — `student-management-p1.spec.ts`, `@p1`. |
 | `POST /api/v1/students/{studentId}/academic-assignments` | Admin | ✅ | Asignación y multi-career. |
 | `GET /api/v1/students/{studentId}/academic-assignments` | Admin/propietario | ✅ | Asignación y multi-career. |
 | `GET /api/v1/students/{studentId}/documents` | Admin/propietario | ✅ | `documents.spec.ts` y autorización P1. |

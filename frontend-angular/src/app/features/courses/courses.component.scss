@@ -1,1 +1,80 @@
-// All styles in global styles.scss
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.plan-wrapper {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plan-container {
+  min-width: 0;
+  padding: 42px 20px 20px;
+  border: 2px solid #3b84d9;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.plan-title {
+  position: absolute;
+  top: -35px;
+  left: 0;
+  z-index: 1;
+  padding: 16px 32px;
+  border-radius: 14px 14px 0 0;
+  background: #4b94d9;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.plan-title span {
+  position: relative;
+  top: -11px;
+}
+
+.notice {
+  margin-bottom: 25px;
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.plan-image {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plan-image img {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  border: 1px solid #d6d6d6;
+}
+
+@media (max-width: 600px) {
+  .plan-container {
+    padding: 2rem 0.75rem 1rem;
+    border-radius: 16px;
+  }
+
+  .plan-title {
+    top: -28px;
+    padding: 12px 16px;
+    font-size: 1rem;
+  }
+
+  .plan-title span {
+    top: -7px;
+  }
+
+  .notice {
+    font-size: 0.85rem;
+  }
+}

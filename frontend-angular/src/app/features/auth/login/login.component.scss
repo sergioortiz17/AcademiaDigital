@@ -143,6 +143,145 @@ form {
   font-weight: 500;
   margin-bottom: 0.8rem;
   text-align: center;
-  width: 400px;
-  height: 30px;
+  width: 100%;
+  min-height: 30px;
+}
+
+.welcome-logo {
+  width: 100%;
+  max-width: 132px;
+  height: 158px;
+  object-fit: contain;
+}
+
+.welcome-wordmark {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+}
+
+.welcome-title {
+  margin: 2rem 0 0;
+  color: white;
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .auth-container {
+    flex-direction: row;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .welcome-section {
+    width: min(42%, 300px);
+    height: auto;
+    gap: 1rem;
+    margin-top: 0;
+  }
+
+  .welcome-title {
+    margin-top: 0.5rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  .auth-card {
+    min-width: 0;
+    width: min(100%, 400px);
+    padding: 1.5rem;
+  }
+
+  .back-button {
+    top: 1rem;
+    left: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .auth-container {
+    min-height: 100dvh;
+    height: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 3.5rem 1rem 1.5rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .back-button {
+    top: 0.5rem;
+    left: 0.5rem;
+
+    mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      line-height: 2rem;
+    }
+  }
+
+  .welcome-section {
+    width: 100%;
+    height: auto;
+    gap: 0.4rem;
+    margin: 0;
+  }
+
+  .welcome-logo {
+    max-width: 64px;
+    height: 76px;
+  }
+
+  .welcome-wordmark {
+    max-width: 150px;
+  }
+
+  .welcome-title {
+    margin: 0.25rem 0 0;
+    font-size: 1.5rem;
+  }
+
+  .form-section {
+    width: 100%;
+  }
+
+  .auth-card {
+    min-width: 0;
+    width: 100%;
+    max-width: 420px;
+    padding: 1.25rem;
+    border-radius: 24px !important;
+
+    .auth-logo {
+      margin: 0.25rem 0 1rem;
+    }
+
+    .logo-circle {
+      width: 76px;
+      height: 76px;
+    }
+
+    .logo-circle mat-icon {
+      width: 56px;
+      height: 56px;
+      font-size: 56px;
+    }
+
+    form {
+      gap: 0.5rem;
+    }
+
+    .login-button,
+    .register-button {
+      height: 48px;
+      font-size: 1.1rem;
+    }
+
+    .forgot-password {
+      font-size: 0.95rem;
+    }
+  }
 }

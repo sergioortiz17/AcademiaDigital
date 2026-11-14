@@ -104,3 +104,39 @@
   color: #475569;
 }
 
+@media (max-width: 600px) {
+  .action-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .action-btn mat-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 28px;
+  }
+
+  .session-user {
+    max-width: 120px;
+    margin-right: 0.25rem;
+  }
+
+  .session-user-name {
+    max-width: 120px;
+    overflow: hidden;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .session-user-dni {
+    display: none;
+  }
+
+  .time-travel-badge {
+    gap: 2px;
+    margin-right: 0.25rem;
+    padding: 3px 6px;
+    font-size: 0.68rem;
+  }
+}

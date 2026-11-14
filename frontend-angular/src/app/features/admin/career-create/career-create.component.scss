@@ -8,6 +8,22 @@
   grid-column: 1 / -1;
 }
 
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.mat-mdc-form-field-subscript-wrapper {
+  margin-top: 0;
+}
+
 .btn-spinner {
   display: inline-block;
   margin-right: .5rem;

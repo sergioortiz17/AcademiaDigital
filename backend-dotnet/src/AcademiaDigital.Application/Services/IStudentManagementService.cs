@@ -8,6 +8,7 @@ public interface IStudentManagementService
     Task<PagedResult<StudentListItemDto>> SearchStudentsAsync(string? search, int? careerId, StudentStatus? status,
         int? academicYear, int? commissionId, int page, int pageSize, CancellationToken ct);
     Task<StudentListItemDto> UpdateStudentAsync(long id, UpdateStudentRequest request, CancellationToken ct);
+    Task UpdateEmergencyContactPhoneAsync(long id, string? phone, CancellationToken ct);
     Task<StatusHistoryDto> ChangeStatusAsync(long id, StudentStatus status, string reason, long actorId, CancellationToken ct);
     Task<IReadOnlyList<StatusHistoryDto>> GetStatusHistoryAsync(long id, CancellationToken ct);
     Task SoftDeleteStudentAsync(long id, string reason, long actorId, CancellationToken ct);

@@ -1,4 +1,3 @@
-// All styles in global styles.scss
 
 * {
   box-sizing: border-box;
@@ -156,27 +155,6 @@ form {
   font-size: 1.5rem;
   font-weight: 500;
 }
-/* Para letras y * rojos
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 0.95rem;
-
-  color: #00579c;
-
-  margin-bottom: 0.4rem;
-
-  font-weight: 500;
-}
-
-.form-group label span {
-  color: #d32f2f;
-
-  margin-left: 0.2rem;
-} */
 
 /* Fondo gris de inputs */
 ::ng-deep .mat-mdc-text-field-wrapper {
@@ -242,6 +220,7 @@ form {
   color: #dc2626;
   font-size: 0.92rem;
   font-weight: 500;
+  padding: 0px 5px 0px 5px;
 }
 
 .success-message {
@@ -249,22 +228,6 @@ form {
   font-size: 0.92rem;
   font-weight: 500;
 }
-
-/*Boton de confirmar registro
-.confirm-btn {
-  width: 100%;
-
-  height: 46px;
-
-  border-radius: 0 !important;
-
-  background: #00579c !important;
-
-  color: white !important;
-
-  font-size: 1rem;
-  font-weight: 500;
-}*/
 
 .double-row {
   display: flex;
@@ -360,4 +323,149 @@ form {
   width: 100%;
   max-width: 220px;
   text-align: center;
+}
+
+.auth-brand-logo {
+  width: 100%;
+  max-width: 132px;
+  height: 158px;
+  object-fit: contain;
+}
+
+.auth-brand-wordmark {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .auth-container {
+    gap: 2rem;
+    padding: 1.5rem;
+  }
+
+  .welcome-section {
+    width: 30%;
+    height: auto;
+    gap: 1rem;
+    margin-left: 0;
+  }
+
+  .form-section {
+    width: 66%;
+    min-width: 0;
+  }
+
+  .auth-card {
+    min-width: 0;
+    max-width: 100%;
+    padding: 1.5rem;
+    border-radius: 28px !important;
+  }
+
+  .back-button {
+    top: 1rem;
+    left: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .auth-container {
+    min-height: 100dvh;
+    height: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 3.5rem 1rem 1.25rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .back-button {
+    top: 0.5rem;
+    left: 0.5rem;
+
+    mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      line-height: 2rem;
+    }
+  }
+
+  .welcome-section {
+    width: 100%;
+    height: auto;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .auth-brand-logo {
+    max-width: 60px;
+    height: 72px;
+  }
+
+  .auth-brand-wordmark {
+    max-width: 150px;
+  }
+
+  .form-section,
+  .auth-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .auth-card {
+    padding: 1rem;
+    border-radius: 22px !important;
+  }
+
+  .register-title {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  .double-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .name-title,
+  .success-text {
+    width: 100%;
+    height: auto;
+  }
+
+  .summary-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .summary-row span {
+    min-width: 0;
+    font-size: 1rem;
+  }
+
+  .success-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .success-text {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .password-rules p,
+  .input-group label {
+    font-size: 0.95rem;
+  }
+
+  .register-button,
+  .back-login,
+  .continue-button {
+    height: 48px;
+    font-size: 1rem;
+  }
 }

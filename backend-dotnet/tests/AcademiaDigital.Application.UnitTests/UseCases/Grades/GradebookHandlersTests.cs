@@ -73,6 +73,45 @@ public sealed class GradebookHandlersTests
     }
 
     [Fact]
+    public async Task Gradebook_detail_includes_published_latest_exam_result_for_student()
+    {
+        var detail = await LoadGradebookDetailWithExam([
+            new GradebookExamResultRow(30, Now.UtcDateTime, Now.UtcDateTime, 2,
+                ExamTableStatus.Published, 8.5m, ExamResultOutcome.Passed)
+        ]);
+
+        var latestExam = Assert.Single(detail.Students).LatestExam;
+        Assert.NotNull(latestExam);
+        Assert.Equal(Now.UtcDateTime, latestExam.ExamDateUtc);
+        Assert.Equal(2, latestExam.AttemptNumber);
+        Assert.Equal(8.5m, latestExam.Grade);
+        Assert.Equal(ExamResultOutcome.Passed, latestExam.Outcome);
+    }
+
+    [Fact]
+    public async Task Gradebook_detail_hides_exam_result_until_table_is_published()
+    {
+        var detail = await LoadGradebookDetailWithExam([
+            new GradebookExamResultRow(30, Now.UtcDateTime, Now.UtcDateTime, 1,
+                ExamTableStatus.Grading, 4m, ExamResultOutcome.Failed)
+        ]);
+
+        var latestExam = Assert.Single(detail.Students).LatestExam;
+        Assert.NotNull(latestExam);
+        Assert.Equal(ExamTableStatus.Grading, latestExam.Status);
+        Assert.Null(latestExam.Grade);
+        Assert.Null(latestExam.Outcome);
+    }
+
+    [Fact]
+    public async Task Gradebook_detail_returns_no_exam_when_student_has_no_registration()
+    {
+        var detail = await LoadGradebookDetailWithExam([]);
+
+        Assert.Null(Assert.Single(detail.Students).LatestExam);
+    }
+
+    [Fact]
     public async Task Close_gradebook_calculates_and_applies_enrollment_result()
     {
         var repository = Substitute.For<IGradebookRepository>();
@@ -143,6 +182,21 @@ public sealed class GradebookHandlersTests
         ]
     };
     private static GradebookRosterRow Roster() => new(30, 40, "Ada Lovelace", "LEG-40", "12345678");
+
+    private static async Task<GradebookDetailDto> LoadGradebookDetailWithExam(
+        IReadOnlyList<GradebookExamResultRow> latestExamResults)
+    {
+        var repository = Substitute.For<IGradebookRepository>();
+        var gradebook = Gradebook();
+        repository.FindAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        repository.GetRosterAsync(gradebook, Arg.Any<CancellationToken>()).Returns([Roster()]);
+        repository.GetLatestExamResultsAsync(
+            2, 2027, Arg.Any<IReadOnlyCollection<long>>(), Arg.Any<CancellationToken>())
+            .Returns(latestExamResults);
+        var handler = new GetGradebookQueryHandler(repository, new GradebookPolicy());
+
+        return await handler.Handle(new GetGradebookQuery(10, 99, true), TestContext.Current.CancellationToken);
+    }
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {

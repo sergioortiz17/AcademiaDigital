@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 import { CertificatesService, CertificateRequest, CERTIFICATE_TYPES } from '../../core/services/certificates.service';
-import { RejectCertificateDialogComponent } from './reject-certificate-dialog/reject-certificate-dialog.component';
+import { PersonNameLookupService } from '../../core/services/person-name-lookup.service';
 import { selectUserRole } from '../../store/account/account.selectors';
 import { UserRole } from '../../store/account/account.actions';
 
@@ -105,7 +105,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     private readonly certificatesService: CertificatesService,
     private readonly store: Store,
     private readonly cdr: ChangeDetectorRef,
-    private readonly dialog: MatDialog
+    private readonly personNames: PersonNameLookupService
   ) {}
 
   ngOnInit(): void {
@@ -152,10 +152,20 @@ export class CertificatesComponent implements OnInit, OnDestroy {
       ? this.certificatesService.getAllCertificates(this.searchTerm, this.selectedStatus)
       : this.certificatesService.getMyCertificates();
 
-    obs.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (res) => {
-         this.allRequests = res.requests;
+    const names$ = this.userRole === UserRole.Admin
+      ? this.personNames.getNamesByUserId().pipe(catchError(() => of(null)))
+      : of(null);
+
+    forkJoin({ response: obs, names: names$ }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: ({ response, names }) => {
+         this.allRequests = response.requests.map(request => ({
+           ...request,
+           displayName: names?.get(request.userId) || request.username || ''
+         }));
          this.applyFilters();
+         if (this.userRole === UserRole.Admin && !names) {
+           this.errorMsg = 'No se pudieron consultar todos los nombres completos; se muestran los nombres de usuario disponibles.';
+         }
          this.isLoading = false;
          this.cdr.detectChanges();
       },
@@ -200,10 +210,8 @@ export class CertificatesComponent implements OnInit, OnDestroy {
       : 'asc';
 
   } else {
-
     this.sortColumn = column;
     this.sortDirection = 'asc';
-
   }
 
   this.requests.sort((a, b) => {
@@ -214,8 +222,8 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     switch (column) {
 
       case 'username':
-        valueA = a.username?.toLowerCase();
-        valueB = b.username?.toLowerCase();
+        valueA = (a.displayName || a.username)?.toLowerCase();
+        valueB = (b.displayName || b.username)?.toLowerCase();
         break;
 
       case 'certificateType':
@@ -251,27 +259,33 @@ this.cdr.detectChanges();
 }
 
 openMyRequests(): void {
-
     this.showMyRequests = true;
     this.selectedStatus = null;
     this.searchTerm = '';
     this.loadRequests();
-
 }
 
 closeMyRequests(): void {
-
     this.showMyRequests = false;
     this.selectedStatus = null;
     this.requests = [];
     this.allRequests = [];
-
 }
 
-approveRequest(request: CertificateRequest): void {
-
+async approveRequest(request: CertificateRequest): Promise<void> {
     if (this.processingIds.has(request.id)) return;
-    if (!confirm(`¿Aprobar la solicitud de ${request.certificateType} de ${request.username}?`)) return;
+    const confirmation = await Swal.fire({
+      icon: 'warning',
+      titleText: 'Aprobar solicitud',
+      text: `¿Aprobar la solicitud de ${request.certificateType} de ${this.applicantName(request)}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Aprobar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#198754',
+      reverseButtons: true,
+      focusCancel: true
+    });
+    if (!confirmation.isConfirmed) return;
 
     this.processingIds.add(request.id);
     this.certificatesService.approveCertificate(request.id).subscribe({
@@ -288,44 +302,65 @@ approveRequest(request: CertificateRequest): void {
         this.cdr.detectChanges();
       }
     });
-
 }
 
-rejectRequest(request: CertificateRequest): void {
-
+async rejectRequest(request: CertificateRequest): Promise<void> {
     if (this.processingIds.has(request.id)) return;
 
-    const dialogRef = this.dialog.open(RejectCertificateDialogComponent, {
-      width: '450px',
-      disableClose: true,
-      data: { username: request.username, certificateType: request.certificateType }
-    });
-
-    dialogRef.afterClosed().subscribe((reason: string | null) => {
-      if (!reason) return;
-
-      this.processingIds.add(request.id);
-      this.certificatesService.rejectCertificate(request.id, reason).subscribe({
-        next: (updated) => {
-          this.replaceRequest(updated);
-          this.processingIds.delete(request.id);
-          this.successMsg = 'Solicitud rechazada correctamente.';
-          this.cdr.detectChanges();
-          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
-        },
-        error: (err) => {
-          this.processingIds.delete(request.id);
-          this.errorMsg = err.message || 'Error al rechazar la solicitud.';
-          this.cdr.detectChanges();
+    const result = await Swal.fire<string>({
+      icon: 'warning',
+      titleText: 'Rechazar solicitud',
+      text: `Ingresá el motivo para rechazar la solicitud de ${request.certificateType} de ${this.applicantName(request)}.`,
+      input: 'textarea',
+      inputPlaceholder: 'Explicá brevemente por qué se rechaza la solicitud',
+      inputAttributes: {
+        'aria-label': 'Motivo del rechazo',
+        maxlength: '1000',
+        rows: '3'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Rechazar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      reverseButtons: true,
+      focusCancel: true,
+      preConfirm: (value) => {
+        const reason = value.trim();
+        if (reason.length < 3) {
+          Swal.showValidationMessage('El motivo debe tener al menos 3 caracteres.');
+          return false;
         }
-      });
+        return reason;
+      }
     });
+    if (!result.isConfirmed || !result.value) return;
 
+    this.processingIds.add(request.id);
+    this.certificatesService.rejectCertificate(request.id, result.value).subscribe({
+      next: (updated) => {
+        this.replaceRequest(updated);
+        this.processingIds.delete(request.id);
+        this.successMsg = 'Solicitud rechazada correctamente.';
+        this.cdr.detectChanges();
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+      },
+      error: (err) => {
+        this.processingIds.delete(request.id);
+        this.errorMsg = err.message || 'Error al rechazar la solicitud.';
+        this.cdr.detectChanges();
+      }
+    });
 }
 
 private replaceRequest(updated: CertificateRequest): void {
-    this.allRequests = this.allRequests.map(r => r.id === updated.id ? updated : r);
+    this.allRequests = this.allRequests.map(r => r.id === updated.id
+      ? { ...updated, displayName: updated.displayName || r.displayName || updated.username || '' }
+      : r);
     this.applyFilters();
+}
+
+applicantName(request: CertificateRequest): string {
+    return request.displayName || request.username || 'Solicitante sin nombre';
 }
 
 private applyFilters(): void {

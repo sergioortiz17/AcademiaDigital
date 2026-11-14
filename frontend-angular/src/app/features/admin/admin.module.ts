@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '../../shared/material.module';
 import { AdminRoutingModule } from './admin-routing.module';
 import { UsersManagementComponent } from './users-management/users-management.component';
@@ -32,6 +32,7 @@ import { StudentCommissionAssignmentComponent } from './student-commission-assig
 import { CommissionManagementComponent } from './commission-management/commission-management.component';
 import { CommissionFormDialogComponent } from './commission-management/commission-form-dialog/commission-form-dialog.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 
 @NgModule({
   declarations: [
@@ -66,6 +67,6 @@ import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
     CommissionManagementComponent,
     CommissionFormDialogComponent
   ],
-  imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule]
+  imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule, ReactiveFormsModule, NgxMatSelectSearchModule],
 })
 export class AdminModule {}

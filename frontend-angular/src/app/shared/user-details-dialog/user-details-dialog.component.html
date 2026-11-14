@@ -17,7 +17,7 @@
     <div class="modal-fields">
     <div class="field">
       <label>Legajo *</label>
-      <input type="text" [(ngModel)]="data.legajo">
+      <input type="text" [(ngModel)]="data.legajo" maxlength="50" [readonly]="data.studentId == null">
     </div>
     <div class="field">
       <label>Carrera</label>
@@ -34,8 +34,9 @@
   </div>
 
   <div class="modal-actions">
-    <button class="save-btn" (click)="save()">
-      Guardar
+    <div *ngIf="errorMsg" class="save-error" role="alert">{{ errorMsg }}</div>
+    <button class="save-btn" [disabled]="data.studentId == null || !data.legajo.trim() || data.legajo.length > 50 || isSaving" (click)="save()">
+      {{ isSaving ? 'Guardando...' : 'Guardar' }}
     </button>
   </div>
   </div>

@@ -34,7 +34,14 @@ public sealed record GradebookStudentDto(
     string Dni,
     IReadOnlyList<GradeEntryDto> Grades,
     decimal? Average,
-    string? ResultStatus);
+    string? ResultStatus,
+    GradebookExamDto? LatestExam);
+public sealed record GradebookExamDto(
+    DateTime ExamDateUtc,
+    int AttemptNumber,
+    ExamTableStatus Status,
+    decimal? Grade,
+    ExamResultOutcome? Outcome);
 public sealed record GradebookDto(
     long Id,
     string IdempotencyKey,
@@ -386,10 +393,20 @@ internal static class GradebookMapper
         var gradebook = await repository.FindAsync(gradebookId, ct)
             ?? throw new KeyNotFoundException("Planilla no encontrada.");
         var roster = await repository.GetRosterAsync(gradebook, ct);
+        var latestExamResults = await repository.GetLatestExamResultsAsync(
+            gradebook.CourseSection.CourseId,
+            gradebook.CourseSection.AcademicYear,
+            roster.Select(row => row.EnrollmentId).ToArray(),
+            ct);
+        var latestExamsByEnrollment = latestExamResults.ToDictionary(item => item.EnrollmentId);
         return new GradebookDetailDto(
             MapSummary(gradebook),
             gradebook.Evaluations.OrderBy(item => item.DisplayOrder).Select(MapEvaluation).ToArray(),
-            roster.Select(row => MapStudentRow(gradebook, row, policy)).ToArray());
+            roster.Select(row => MapStudentRow(
+                gradebook,
+                row,
+                policy,
+                latestExamsByEnrollment.GetValueOrDefault(row.EnrollmentId))).ToArray());
     }
 
     public static StudentPublishedGradebookDto MapStudent(Gradebook gradebook, long studentId, GradebookPolicy policy)
@@ -411,7 +428,11 @@ internal static class GradebookMapper
             result.Average ?? 0m, (result.Status ?? EnrollmentStatus.Failed).ToString(), gradebook.PublishedAt!.Value);
     }
 
-    private static GradebookStudentDto MapStudentRow(Gradebook gradebook, GradebookRosterRow row, GradebookPolicy policy)
+    private static GradebookStudentDto MapStudentRow(
+        Gradebook gradebook,
+        GradebookRosterRow row,
+        GradebookPolicy policy,
+        GradebookExamResultRow? latestExam)
     {
         var revisions = gradebook.GradeRevisions.Where(item => item.EnrollmentId == row.EnrollmentId && item.IsCurrent)
             .ToDictionary(item => item.EvaluationId);
@@ -429,7 +450,17 @@ internal static class GradebookMapper
 
         return new GradebookStudentDto(
             row.EnrollmentId, row.StudentId, row.StudentName, row.LegajoNumber, row.Dni,
-            grades, result.Average, result.Status?.ToString());
+            grades,
+            result.Average,
+            result.Status?.ToString(),
+            latestExam is null
+                ? null
+                : new GradebookExamDto(
+                    latestExam.ExamDateUtc,
+                    latestExam.AttemptNumber,
+                    latestExam.Status,
+                    latestExam.Status == ExamTableStatus.Published ? latestExam.Grade : null,
+                    latestExam.Status == ExamTableStatus.Published ? latestExam.Outcome : null));
     }
 
     // Arma una EvaluationScore por CADA evaluación de la planilla (no solo las que tienen nota),

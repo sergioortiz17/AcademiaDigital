@@ -20,6 +20,7 @@ export interface CertificateRequest {
   id: number;
   userId: number;
   username?: string;
+  displayName?: string;
   email?: string;
   certificateType: string;
   status: 'Pending' | 'Approved' | 'Rejected';

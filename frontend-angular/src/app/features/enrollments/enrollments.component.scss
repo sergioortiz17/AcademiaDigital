@@ -300,5 +300,54 @@
   border-radius: 12px;
 }
 
+@media (max-width: 600px) {
+  .page-header {
+    justify-content: flex-start;
+    margin-bottom: 2rem;
+  }
 
+  .my-enrollments-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 4px;
+  }
 
+  .plan-container {
+    padding: 2rem 0.75rem 1rem;
+    border-radius: 16px;
+  }
+
+  .plan-title {
+    top: -28px;
+    padding: 12px 16px;
+    font-size: 1rem;
+  }
+
+  .plan-title span {
+    top: -7px;
+  }
+
+  .notice {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .enrollment-item {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .enrollment-info {
+    min-width: 0;
+  }
+
+  .enrollment-card {
+    padding: 12px;
+  }
+
+  .enrollment-meta {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
