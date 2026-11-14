@@ -28,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IFinanceRepository, FinanceRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IReceiptRepository, ReceiptRepository>();
+        services.AddScoped<IDelinquencyRepository, DelinquencyRepository>();
+        services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Domain policies
@@ -37,6 +39,7 @@ public static class DependencyInjection
         // Services
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IReceiptPdfGenerator, SimpleReceiptPdfGenerator>();
+        services.AddSingleton<IReportDocumentGenerator, SimpleReportDocumentGenerator>();
 
         // Directory client (display names from the monolito, degrades to id).
         services.AddMemoryCache();

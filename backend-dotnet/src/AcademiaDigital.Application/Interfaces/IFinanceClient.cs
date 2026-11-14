@@ -15,6 +15,11 @@ public interface IFinanceClient
     /// o del servicio: devuelve <c>false</c> y loguea. Devuelve <c>true</c> si Finance la registró.
     /// </summary>
     Task<bool> TryGenerateMatriculationDebtsAsync(GenerateMatriculationDebtsRequest request, CancellationToken ct = default);
+    Task<bool> TrySyncAcademicDirectoryAsync(
+        IReadOnlyList<AcademicDirectoryStudent> students,
+        long actorUserId,
+        AcademiaDigital.Domain.Enums.UserRole actorRole,
+        CancellationToken ct = default);
 }
 
 /// <summary>

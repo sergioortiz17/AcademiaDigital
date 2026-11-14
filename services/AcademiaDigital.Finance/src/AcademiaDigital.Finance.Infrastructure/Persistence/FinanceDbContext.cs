@@ -20,6 +20,10 @@ public sealed class FinanceDbContext(DbContextOptions<FinanceDbContext> options)
     public DbSet<PaymentReversal> PaymentReversals => Set<PaymentReversal>();
     public DbSet<Receipt> Receipts => Set<Receipt>();
     public DbSet<ReceiptSequence> ReceiptSequences => Set<ReceiptSequence>();
+    public DbSet<AcademicStudentSnapshot> AcademicStudentSnapshots => Set<AcademicStudentSnapshot>();
+    public DbSet<DelinquencyAlertRule> DelinquencyAlertRules => Set<DelinquencyAlertRule>();
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
+    public DbSet<ExpenseEntry> ExpenseEntries => Set<ExpenseEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,5 +45,9 @@ public sealed class FinanceDbContext(DbContextOptions<FinanceDbContext> options)
 
         modelBuilder.ApplyConfiguration(new ReceiptConfiguration());
         modelBuilder.ApplyConfiguration(new ReceiptSequenceConfiguration());
+        modelBuilder.ApplyConfiguration(new AcademicStudentSnapshotConfiguration());
+        modelBuilder.ApplyConfiguration(new DelinquencyAlertRuleConfiguration());
+        modelBuilder.ApplyConfiguration(new ExpenseCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new ExpenseEntryConfiguration());
     }
 }

@@ -3,7 +3,11 @@ import { createAction, props } from '@ngrx/store';
 export enum UserRole {
   Alumno = 1,
   Profesor = 2,
-  Admin = 3
+  Admin = 3,
+  Secretaria = 4,
+  Tesoreria = 5,
+  Coordinador = 6,
+  Preceptor = 7
 }
 
 export interface UserModel {

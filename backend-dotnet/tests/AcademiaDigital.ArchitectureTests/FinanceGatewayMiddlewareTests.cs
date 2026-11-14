@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text;
 using AcademiaDigital.API.Middleware;
+using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Application.UseCases.Finance;
 using AcademiaDigital.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +62,24 @@ public sealed class FinanceGatewayMiddlewareTests
         Assert.Contains("puede continuar", body);
     }
 
+    [Fact]
+    public async Task Delinquency_dashboard_refreshes_the_minimal_academic_directory_before_forwarding()
+    {
+        var handler = new CapturingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var context = FinanceContext();
+        context.Request.Path = "/api/v1/finance/delinquency";
+        context.Items["UserId"] = 21L;
+        context.Items["UserRole"] = (int)UserRole.Tesoreria;
+        var financeClient = new CountingFinanceClient();
+
+        await InvokeAsync(context, handler, new StaticDirectoryReader(), financeClient);
+
+        Assert.Equal(1, financeClient.SyncCount);
+        Assert.Equal(21, financeClient.ActorUserId);
+        Assert.Equal(UserRole.Tesoreria, financeClient.ActorRole);
+        Assert.Equal(1, handler.RequestCount);
+    }
+
     private static DefaultHttpContext FinanceContext()
     {
         var context = new DefaultHttpContext();
@@ -70,7 +90,11 @@ public sealed class FinanceGatewayMiddlewareTests
         return context;
     }
 
-    private static Task InvokeAsync(HttpContext context, HttpMessageHandler handler)
+    private static Task InvokeAsync(
+        HttpContext context,
+        HttpMessageHandler handler,
+        IAcademicDirectoryReader? directoryReader = null,
+        IFinanceClient? financeClient = null)
     {
         var middleware = new FinanceGatewayMiddleware(_ => Task.CompletedTask);
         var configuration = new ConfigurationBuilder()
@@ -83,7 +107,61 @@ public sealed class FinanceGatewayMiddlewareTests
             context,
             new TestHttpClientFactory(handler),
             configuration,
+            new SyncFinanceAcademicDirectoryHandler(
+                directoryReader ?? new EmptyDirectoryReader(),
+                financeClient ?? new SuccessfulFinanceClient()),
             NullLogger<FinanceGatewayMiddleware>.Instance);
+    }
+
+    private sealed class EmptyDirectoryReader : IAcademicDirectoryReader
+    {
+        public Task<IReadOnlyList<AcademicDirectoryStudent>> ReadAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<AcademicDirectoryStudent>>([]);
+    }
+
+    private sealed class StaticDirectoryReader : IAcademicDirectoryReader
+    {
+        public Task<IReadOnlyList<AcademicDirectoryStudent>> ReadAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<AcademicDirectoryStudent>>([
+                new(4, 8, "Ada", "123", "A-1", 2, "Sistemas", 5, "1A", 2026, true)
+            ]);
+    }
+
+    private sealed class CountingFinanceClient : IFinanceClient
+    {
+        public int SyncCount { get; private set; }
+        public long ActorUserId { get; private set; }
+        public UserRole ActorRole { get; private set; }
+
+        public Task<bool> TryGenerateMatriculationDebtsAsync(
+            GenerateMatriculationDebtsRequest request, CancellationToken ct = default)
+            => Task.FromResult(true);
+
+        public Task<bool> TrySyncAcademicDirectoryAsync(
+            IReadOnlyList<AcademicDirectoryStudent> students,
+            long actorUserId,
+            UserRole actorRole,
+            CancellationToken ct = default)
+        {
+            SyncCount++;
+            ActorUserId = actorUserId;
+            ActorRole = actorRole;
+            return Task.FromResult(true);
+        }
+    }
+
+    private sealed class SuccessfulFinanceClient : IFinanceClient
+    {
+        public Task<bool> TryGenerateMatriculationDebtsAsync(
+            GenerateMatriculationDebtsRequest request, CancellationToken ct = default)
+            => Task.FromResult(true);
+
+        public Task<bool> TrySyncAcademicDirectoryAsync(
+            IReadOnlyList<AcademicDirectoryStudent> students,
+            long actorUserId,
+            UserRole actorRole,
+            CancellationToken ct = default)
+            => Task.FromResult(true);
     }
 
     private sealed class TestHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory

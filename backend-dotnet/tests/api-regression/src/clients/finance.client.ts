@@ -26,4 +26,20 @@ export class FinanceClient {
   }
   studentDebts(studentId: number) { return this.api.send({ operation: 'Consultar deuda del alumno', method: 'GET', path: '/api/v1/finance/debts', query: { studentId } }); }
   myDebts() { return this.api.send({ operation: 'Consultar mi deuda', method: 'GET', path: '/api/v1/finance/debts/me' }); }
+  syncDirectory(students: unknown[]) { return this.api.send({ operation: 'Sincronizar padrón financiero', method: 'POST', path: '/api/v1/finance/delinquency/directory/sync', body: { students } }); }
+  delinquency(query: { careerId?: number; commissionId?: number; academicYear?: number; studentId?: number; asOf?: string } = {}) {
+    return this.api.send({ operation: 'Consultar morosidad', method: 'GET', path: '/api/v1/finance/delinquency', query });
+  }
+  delinquencyStudent(studentId: number) { return this.api.send({ operation: 'Consultar detalle de mora', method: 'GET', path: `/api/v1/finance/delinquency/students/${studentId}` }); }
+  delinquencyRules() { return this.api.send({ operation: 'Listar reglas de mora', method: 'GET', path: '/api/v1/finance/delinquency/rules' }); }
+  createDelinquencyRule(body: unknown) { return this.api.send({ operation: 'Crear regla de mora', method: 'POST', path: '/api/v1/finance/delinquency/rules', body }); }
+  exportDelinquency(format: 'excel' | 'pdf') { return this.api.send({ operation: `Exportar morosidad ${format}`, method: 'GET', path: '/api/v1/finance/delinquency/export', query: { format } }); }
+  expenseCategories(activeOnly = false) { return this.api.send({ operation: 'Listar categorías de egreso', method: 'GET', path: '/api/v1/finance/expenses/categories', query: { activeOnly } }); }
+  createExpenseCategory(body: unknown) { return this.api.send({ operation: 'Crear categoría de egreso', method: 'POST', path: '/api/v1/finance/expenses/categories', body }); }
+  registerExpense(fields: Record<string, string | number | boolean | { name: string; mimeType: string; buffer: Buffer }>) {
+    return this.api.send({ operation: 'Registrar egreso', method: 'POST', path: '/api/v1/finance/expenses', multipart: fields });
+  }
+  expenses(query: { from?: string; to?: string; categoryId?: number; supplier?: string } = {}) { return this.api.send({ operation: 'Consultar egresos', method: 'GET', path: '/api/v1/finance/expenses', query }); }
+  reverseExpense(publicId: string, reason: string) { return this.api.send({ operation: 'Revertir egreso', method: 'POST', path: `/api/v1/finance/expenses/${publicId}/reverse`, body: { reason } }); }
+  downloadExpenseAttachment(publicId: string) { return this.api.send({ operation: 'Descargar comprobante de egreso', method: 'GET', path: `/api/v1/finance/expenses/${publicId}/attachment` }); }
 }

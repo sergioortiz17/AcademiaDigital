@@ -1,6 +1,8 @@
 using AcademiaDigital.Finance.Application.UseCases.Finance;
 using AcademiaDigital.Finance.Application.UseCases.Payments;
 using AcademiaDigital.Finance.Application.UseCases.Receipts;
+using AcademiaDigital.Finance.Application.UseCases.Delinquency;
+using AcademiaDigital.Finance.Application.UseCases.Expenses;
 using AcademiaDigital.Finance.Domain.Entities;
 using AcademiaDigital.Finance.Infrastructure;
 using AcademiaDigital.Finance.Infrastructure.Persistence;
@@ -30,6 +32,18 @@ builder.Services.AddScoped<CreateBillingPlanCommandHandler>();
 builder.Services.AddScoped<GenerateStudentDebtsCommandHandler>();
 builder.Services.AddScoped<GetStudentDebtsQueryHandler>();
 builder.Services.AddScoped<GetStudentDebtSummaryQueryHandler>();
+builder.Services.AddScoped<SyncAcademicDirectoryCommandHandler>();
+builder.Services.AddScoped<UpsertDelinquencyRuleCommandHandler>();
+builder.Services.AddScoped<GetDelinquencyRulesQueryHandler>();
+builder.Services.AddScoped<GetDelinquencyDashboardQueryHandler>();
+builder.Services.AddScoped<GetDelinquencyStudentDetailQueryHandler>();
+builder.Services.AddScoped<GetExpenseCategoriesQueryHandler>();
+builder.Services.AddScoped<CreateExpenseCategoryCommandHandler>();
+builder.Services.AddScoped<SetExpenseCategoryStatusCommandHandler>();
+builder.Services.AddScoped<RegisterExpenseCommandHandler>();
+builder.Services.AddScoped<ReverseExpenseCommandHandler>();
+builder.Services.AddScoped<GetExpensesQueryHandler>();
+builder.Services.AddScoped<DownloadExpenseAttachmentQueryHandler>();
 // Payments
 builder.Services.AddScoped<GetPaymentMethodsQueryHandler>();
 builder.Services.AddScoped<CreatePaymentCommandHandler>();

@@ -44,6 +44,8 @@ jobs:
         run: dotnet test backend-dotnet/tests/AcademiaDigital.Domain.UnitTests/AcademiaDigital.Domain.UnitTests.csproj --no-build --configuration Release
       - name: Application tests
         run: dotnet test backend-dotnet/tests/AcademiaDigital.Application.UnitTests/AcademiaDigital.Application.UnitTests.csproj --no-build --configuration Release
+      - name: Finance tests
+        run: dotnet test backend-dotnet/tests/AcademiaDigital.Finance.UnitTests/AcademiaDigital.Finance.UnitTests.csproj --no-build --configuration Release
 
   migrations:
     name: PostgreSQL clean migration
