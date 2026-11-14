@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using AcademiaDigital.Domain.Enums;
+using AcademiaDigital.Application.UseCases.Finance;
 
 namespace AcademiaDigital.API.Middleware;
 
@@ -35,6 +36,7 @@ public sealed class FinanceGatewayMiddleware(RequestDelegate next)
         HttpContext context,
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
+        SyncFinanceAcademicDirectoryHandler directorySyncHandler,
         ILogger<FinanceGatewayMiddleware> logger)
     {
         if (!IsFinanceRequest(context.Request.Path))
@@ -56,6 +58,13 @@ public sealed class FinanceGatewayMiddleware(RequestDelegate next)
             logger.LogError("Finance gateway is enabled but Finance:BaseUrl is not configured.");
             await WriteUnavailableAsync(context);
             return;
+        }
+
+        if (RequiresDirectoryRefresh(context.Request))
+        {
+            var synchronized = await directorySyncHandler.Handle(userId, role, context.RequestAborted);
+            if (!synchronized)
+                logger.LogWarning("Finance delinquency request continues with the last academic directory snapshot.");
         }
 
         var destination = $"{baseUrl.TrimEnd('/')}{context.Request.Path}{context.Request.QueryString}";
@@ -104,6 +113,11 @@ public sealed class FinanceGatewayMiddleware(RequestDelegate next)
 
     private static bool IsFinanceRequest(PathString path)
         => FinancePrefixes.Any(prefix => path.StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase));
+
+    private static bool RequiresDirectoryRefresh(HttpRequest request)
+        => HttpMethods.IsGet(request.Method)
+            && (request.Path.Equals("/api/v1/finance/delinquency")
+                || request.Path.StartsWithSegments("/api/v1/finance/delinquency/export", StringComparison.OrdinalIgnoreCase));
 
     private static bool TryGetTrustedIdentity(HttpContext context, out long userId, out UserRole role)
     {

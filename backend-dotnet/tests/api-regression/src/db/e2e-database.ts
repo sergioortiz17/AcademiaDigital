@@ -82,6 +82,10 @@ export class E2eDatabase {
     return this.createUnlinkedUser(2, 'teacher');
   }
 
+  async createTreasuryUser(): Promise<SeededUser> {
+    return this.createUnlinkedUser(5, 'treasury');
+  }
+
   private async createUnlinkedUser(role: number, kind: string): Promise<SeededUser> {
     const suffix = runToken();
     const email = `${env.dataPrefix.toLowerCase()}.${kind}.${suffix.toLowerCase()}@e2e.local`;

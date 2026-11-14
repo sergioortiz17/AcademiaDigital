@@ -11,6 +11,7 @@ using AcademiaDigital.Application.UseCases.Careers;
 using AcademiaDigital.Application.UseCases.Courses;
 using AcademiaDigital.Application.UseCases.Prerequisites;
 using AcademiaDigital.Application.UseCases.Students;
+using AcademiaDigital.Application.UseCases.Finance;
 using AcademiaDigital.Application.UseCases.StudyPlanCourses;
 using AcademiaDigital.Application.UseCases.StudyPlanDiff;
 using AcademiaDigital.Application.UseCases.StudyPlanImport;
@@ -40,6 +41,7 @@ builder.Services.AddScoped<UpdateUserUseCase>();
 builder.Services.AddScoped<ChangePasswordUseCase>();
 builder.Services.AddScoped<ForgotPasswordUseCase>();
 builder.Services.AddScoped<ResetPasswordUseCase>();
+builder.Services.AddScoped<SyncFinanceAcademicDirectoryHandler>();
 
 // Admin
 builder.Services.AddScoped<GetUsersUseCase>();

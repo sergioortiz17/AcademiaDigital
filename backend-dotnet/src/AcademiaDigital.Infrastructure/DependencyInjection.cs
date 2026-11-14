@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IContestApplicationRepository, ContestApplicationRepository>();
         services.AddScoped<ICourseSectionRepository, CourseSectionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IAcademicDirectoryReader, AcademicDirectoryReader>();
 
         // Servicios
         services.AddScoped<ITokenService, JwtTokenService>();

@@ -12,6 +12,7 @@ export interface ApiRequestOptions {
   headers?: Record<string, string>;
   body?: unknown;
   rawData?: string;
+  multipart?: Record<string, string | number | boolean | { name: string; mimeType: string; buffer: Buffer }>;
 }
 
 export interface ApiCallResult<T = unknown> {
@@ -78,7 +79,7 @@ export class ApiRequestExecutor {
 
       await attachJson('request-headers.json', redactHeaders(headers));
       await attachJson('request-query-parameters.json', redactSensitiveData(query));
-      const requestBody = options.rawData ?? addCurrentAcademicNames(options.body);
+      const requestBody = options.multipart ?? options.rawData ?? addCurrentAcademicNames(options.body);
       await attachJson('request-body.json', redactSensitiveData(requestBody ?? null));
 
       const timestamp = new Date().toISOString();
@@ -88,7 +89,7 @@ export class ApiRequestExecutor {
           method: options.method,
           params: query,
           headers,
-          data: requestBody,
+          ...(options.multipart ? { multipart: options.multipart } : { data: requestBody }),
           failOnStatusCode: false
         });
         const durationMs = Date.now() - startedAt;

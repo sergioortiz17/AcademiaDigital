@@ -3,6 +3,7 @@ using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Finance.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using AcademiaDigital.Domain.Enums;
 
 namespace AcademiaDigital.Infrastructure.Services;
 
@@ -74,6 +75,37 @@ public sealed class HttpFinanceClient(HttpClient http, IConfiguration configurat
             // Tolerante a error: NUNCA propaga. La matriculación ya se completó.
             logger.LogWarning(ex, "Finance: falló la llamada a /debts/generate para student {StudentId}; se ignora (fire-and-forget).",
                 request.StudentId);
+            return false;
+        }
+    }
+
+    public async Task<bool> TrySyncAcademicDirectoryAsync(
+        IReadOnlyList<AcademicDirectoryStudent> students,
+        long actorUserId,
+        UserRole actorRole,
+        CancellationToken ct = default)
+    {
+        var baseUrl = configuration["Finance:BaseUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl)) return false;
+
+        try
+        {
+            using var message = new HttpRequestMessage(
+                HttpMethod.Post,
+                $"{baseUrl.TrimEnd('/')}/api/v1/finance/delinquency/directory/sync")
+            {
+                Content = JsonContent.Create(new { students })
+            };
+            message.Headers.Add("X-User-Id", actorUserId.ToString());
+            message.Headers.Add("X-User-Role", actorRole.ToString());
+            using var response = await http.SendAsync(message, ct);
+            if (response.IsSuccessStatusCode) return true;
+            logger.LogWarning("Finance directory synchronization returned {Status}.", (int)response.StatusCode);
+            return false;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Finance directory synchronization failed; the previous snapshot remains available.");
             return false;
         }
     }

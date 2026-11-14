@@ -19,6 +19,18 @@ import { UserRole } from '../../store/account/account.actions';
 
 const routes: Routes = [
   {
+    path: 'delinquency',
+    loadComponent: () => import('./delinquency-management/delinquency-management.component').then(m => m.DelinquencyManagementComponent),
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin, UserRole.Tesoreria] }
+  },
+  {
+    path: 'expenses',
+    loadComponent: () => import('./expense-management/expense-management.component').then(m => m.ExpenseManagementComponent),
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin, UserRole.Tesoreria] }
+  },
+  {
     path: 'exam-form',
     loadComponent: () => import('./exam-form-management/exam-form-management.component').then(m => m.ExamFormManagementComponent),
     canActivate: [RoleGuard],

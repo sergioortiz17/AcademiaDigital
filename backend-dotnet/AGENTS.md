@@ -8,12 +8,12 @@ Actualizado: **2026-11-14**.
 
 - Solución ASP.NET Core **.NET 8 / C# 12**, con Entity Framework Core 8, Npgsql y PostgreSQL 16.
 - Arquitectura en cuatro proyectos: `Domain`, `Application`, `Infrastructure` y `API`.
-- Rama observada al actualizar este documento: `obj/00-baseline-ci`, derivada de `integracion-14-11`.
+- Rama observada al actualizar este documento: `obj/06-delinquency-expenses`, derivada de `integracion-14-11`.
 - Último commit que afectó `backend-dotnet/`: `87f13cb` (`test(api): add Playwright regression suite and Allure CI`, 2026-08-01).
-- Última migración: `20260922222335_AddModalityToAcademicEvent`.
-- Verificación local hecha el 2026-11-14: monolito y Finance compilan en Release con **0 warnings y 0 errores**; Domain pasa **172/172**, Application **93/93**, ArchUnitNET **11/11**, Angular **28/28**, modelo EF sin cambios pendientes, migraciones limpia/upgrade y typecheck pasan.
-- La solución incluye unit tests de Domain y Application, además de `tests/AcademiaDigital.ArchitectureTests/`. Las pruebas funcionales automatizadas siguen en `tests/api-regression/` (Playwright + TypeScript + Zod + Allure).
-- Regresión E2E vigente: **34/34** casos pasan sobre PostgreSQL y Finance separados —incluidos **27/27** `@regression`, autenticación, autorización negativa y aislamiento— accediendo a M9–M11 exclusivamente mediante el gateway del monolito. La matriz de 259 requisitos vive en `docs/MVP_REQUIREMENTS_TRACEABILITY.csv`.
+- Última migración del monolito: `20260922222335_AddModalityToAcademicEvent`; última migración de Finance: `20261114192612_AddDelinquencyAndExpenses`.
+- Verificación local hecha el 2026-11-14: monolito y Finance compilan en Release; Domain pasa **172/172**, Application **93/93**, Finance **4/4**, ArchUnitNET **12/12**, Angular **31/31**, modelo Finance sin cambios pendientes, migraciones limpia/upgrade y typecheck pasan.
+- La solución incluye unit tests de Domain, Application y Finance, además de `tests/AcademiaDigital.ArchitectureTests/`. Las pruebas funcionales automatizadas siguen en `tests/api-regression/` (Playwright + TypeScript + Zod + Allure).
+- Regresión E2E vigente: **35/35** casos pasan sobre PostgreSQL y Finance separados, con autenticación, autorización negativa y aislamiento, accediendo a M9–M13 exclusivamente mediante el gateway del monolito. La matriz de 259 requisitos vive en `docs/MVP_REQUIREMENTS_TRACEABILITY.csv`.
 
 ## Arquitectura objetivo y dependencias
 
@@ -125,6 +125,10 @@ Convenciones del patrón:
 - `Receipt` es evidencia histórica inmutable. El número global usa `REC-00000001`; una reversión del pago no elimina ni reescribe el recibo. Una transferencia `PendingReconciliation` o rechazada no tiene comprobante. Los pagos M10 históricos no se backfillean implícitamente; un reintento idempotente de confirmación/conciliación puede completar la reserva faltante.
 - PDF y almacenamiento M11 ocurren después del commit mediante `IReceiptPdfGenerator` e `IFileStorage`. Un fallo deja `Failed` y debe reintentarse sobre el mismo correlativo; `Ready` exige SHA-256. Nunca ejecutar filesystem dentro de la transacción, exponer rutas físicas ni generar documentos desde el controller.
 - `/receipts` y la regeneración son Admin. Detalle/descarga permiten Admin o alumno propietario; `/students/me/receipts` siempre deriva identidad desde `CurrentUser`. La descarga recalcula el hash. `FiscalCae` y `FiscalQrData` permanecen opcionales hasta una integración fiscal explícita.
+- En M12, Finance calcula morosidad exclusivamente desde su ledger y recibe del monolito un snapshot mínimo del padrón académico; nunca consulta ni comparte la base académica. El gateway refresca ese snapshot antes del dashboard/exportación y, si Finance falla, conserva la última copia sin bloquear ninguna operación académica.
+- La morosidad M12 siempre se deriva de saldos vigentes, vencimientos y pagos confirmados; no persistir un estado paralelo que pueda quedar obsoleto. Los filtros por carrera/ciclo usan el plan financiero y el filtro por comisión usa el snapshot académico. Sólo Admin/Tesorería pueden consultar, configurar alertas o exportar.
+- En M13, `ExpenseEntry` es append-only: un egreso confirmado no se edita ni elimina. Toda corrección crea exactamente una reversión compensatoria vinculada al original y la unicidad de esa relación se refuerza en PostgreSQL. Categorías son configuración mutable; los asientos conservan operador y timestamp UTC.
+- Los adjuntos M13 aceptan únicamente PDF/PNG/JPEG hasta 10 MB, validan MIME contra firma, guardan SHA-256 y clave lógica durable. Nunca exponer rutas físicas. Alta, consulta, descarga y reversión son exclusivas de Admin/Tesorería.
 - PostgreSQL y los volúmenes durables de monolito/Finance forman una única unidad de backup/restore. En Docker productivo conservar `backend_files` y `finance_files`; no respaldar sólo las bases ni eliminar volúmenes como cleanup rutinario.
 - Consultas de sólo lectura usan `AsNoTracking` y proyección cuando no se necesita el grafo completo. Evitar N+1 y `Include` indiscriminado.
 - No usar `EnsureCreated` ni editar migraciones aplicadas. Todo cambio de esquema se realiza con una migración EF y prueba de upgrade/backfill.
@@ -231,6 +235,8 @@ Ubicaciones importantes:
 - M9 MVP completado: conceptos, tarifas, beneficios, planes/cuotas, deuda con snapshot, generación idempotente y consultas Admin/propietario están cubiertos por unitarios, migración y regresión API integrada.
 - M10 MVP completado: cuatro medios, borradores por DNI, pagos parciales/multiconcepto, confirmación idempotente, conciliación manual, reversión append-only e historial Admin/propietario están cubiertos por unitarios, migración y regresión API integrada.
 - M11 MVP completado: recibo automático por pago confirmado, correlativo global, snapshot, PDF/SHA-256 reintentable, historial inmutable, descarga autorizada y backup coordinado están cubiertos por unitarios, migración y regresión API integrada.
+- M12 MVP completado: padrón académico mínimo sincronizado sin compartir bases, mora en tiempo real, parciales, filtros, reglas de alerta, detalle e historial, dashboard y exportación PDF/Excel para Admin/Tesorería.
+- M13 MVP completado: categorías, egresos inmutables, proveedor/nota/operador, adjuntos durables validados, historial filtrable, balance neto y reversión compensatoria para Admin/Tesorería.
 
 Modelo académico relevante:
 
@@ -348,6 +354,7 @@ No corregir estas deudas incidentalmente dentro de una tarea no relacionada. Si 
 
 ## Últimos cambios relevantes
 
+- **2026-11-14 — cierre MVP M12–M13:** se agregaron morosidad calculada y filtrable, reglas de alerta, sincronización automática del padrón mínimo, detalle/historial y exportación; además categorías y ledger de egresos append-only con adjuntos SHA-256 y reversión compensatoria. La migración Finance es `AddDelinquencyAndExpenses`. Verificado: Domain 172/172, Application 93/93, Finance 4/4, ArchUnitNET 12/12, Angular 31/31, build Angular/Release, modelo EF sin cambios, migración limpia/upgrade, typecheck y regresión API 35/35.
 - **2026-11-14 — baseline de integración PostgreSQL/Finance:** se unificó PostgreSQL para monolito, Finance, Docker y CI; se incorporaron health checks, volúmenes durables, workflows de backend/arquitectura/frontend/Finance/API, matriz trazable de 259 requisitos y gateway financiero con identidad derivada de sesión. Se corrigió concurrencia `xmin`, reintento de serialización, contratos M9–M11 y aislamiento de propietario. Verificado: builds Release monolito/Finance 0 warnings, typecheck, Angular 28/28, migraciones limpia/upgrade y suite API completa 34/34 (27/27 `@regression`).
 - **2026-08-24 — guía funcional M4–M11:** se consolidaron funcionalidades, actores, casos de uso, estados, API disponible, pantallas sugeridas, circuitos integrados y criterios de aceptación para frontend. El relevamiento Angular deja explícita la integración parcial de M8, el placeholder M5 y la brecha de los demás módulos. Se verificaron formato, enlaces y `git diff --check`; no se modificó código ni se reejecutaron suites para este cambio documental.
 - **2026-08-24 — cierre MVP M11 recibos:** se agregó emisión automática vinculada al pago, correlativo global serializado, snapshot inmutable, PDF/SHA-256 reintentable, historial/descarga Admin o propietario, campos fiscales opcionales, volumen durable y backup coordinado. La migración es `AddDigitalReceipts`; pasaron 291/291 unit tests, build Release, ArchUnitNET 8/8, modelo EF, typecheck, migración/backfill M1–M11, M11 1/1 y regresión 34/34. Swagger confirmó 196 operaciones y Allure fue generado. M4–M11 quedan cerrados y el roadmap continúa en estabilización/release.

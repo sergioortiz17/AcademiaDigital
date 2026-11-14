@@ -18,10 +18,79 @@ namespace AcademiaDigital.Finance.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("finance")
-                .HasAnnotation("ProductVersion", "8.0.13")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.AcademicStudentSnapshot", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AcademicYear")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CareerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("career_name");
+
+                    b.Property<int?>("CommissionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CommissionName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("commission_name");
+
+                    b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("dni");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LegajoNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("legajo_number");
+
+                    b.Property<long>("StudentCareerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StudentName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("student_name");
+
+                    b.Property<DateTime>("SyncedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("synced_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentCareerId")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "CareerId", "CommissionId", "AcademicYear");
+
+                    b.ToTable("AcademicStudentSnapshots", "finance");
+                });
 
             modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.BillingPlan", b =>
                 {
@@ -165,6 +234,184 @@ namespace AcademiaDigital.Finance.Infrastructure.Migrations
                             t.HasCheckConstraint("CK_DebtGenerationBatches_Count", "generated_debt_count >= 0");
 
                             t.HasCheckConstraint("CK_DebtGenerationBatches_Total", "generated_total >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.DelinquencyAlertRule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MinimumDaysOverdue")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MinimumOutstandingAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("UpdatedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "MinimumDaysOverdue");
+
+                    b.ToTable("DelinquencyAlertRules", "finance", t =>
+                        {
+                            t.HasCheckConstraint("CK_DelinquencyAlertRules_Amount", "\"MinimumOutstandingAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_DelinquencyAlertRules_Days", "\"MinimumDaysOverdue\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.ExpenseCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("ExpenseCategories", "finance");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.ExpenseEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("AttachmentContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("AttachmentFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("AttachmentSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("AttachmentStorageKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .IsFixedLength();
+
+                    b.Property<DateOnly>("ExpenseDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observation")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PurchaseNote")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<long?>("ReversalOfExpenseId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique();
+
+                    b.HasIndex("ReversalOfExpenseId")
+                        .IsUnique()
+                        .HasFilter("\"ReversalOfExpenseId\" IS NOT NULL");
+
+                    b.HasIndex("SupplierName");
+
+                    b.HasIndex("ExpenseDate", "CategoryId");
+
+                    b.ToTable("ExpenseEntries", "finance", t =>
+                        {
+                            t.HasCheckConstraint("CK_ExpenseEntries_Amount", "\"Amount\" > 0");
+
+                            t.HasCheckConstraint("CK_ExpenseEntries_Currency", "\"Currency\" = 'ARS'");
+
+                            t.HasCheckConstraint("CK_ExpenseEntries_Reversal", "(\"Kind\" = 0 AND \"ReversalOfExpenseId\" IS NULL) OR (\"Kind\" = 1 AND \"ReversalOfExpenseId\" IS NOT NULL)");
                         });
                 });
 
@@ -953,6 +1200,24 @@ namespace AcademiaDigital.Finance.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("BillingPlan");
+                });
+
+            modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.ExpenseEntry", b =>
+                {
+                    b.HasOne("AcademiaDigital.Finance.Domain.Entities.ExpenseCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademiaDigital.Finance.Domain.Entities.ExpenseEntry", "ReversalOfExpense")
+                        .WithMany()
+                        .HasForeignKey("ReversalOfExpenseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+
+                    b.Navigation("ReversalOfExpense");
                 });
 
             modelBuilder.Entity("AcademiaDigital.Finance.Domain.Entities.FinancialRate", b =>

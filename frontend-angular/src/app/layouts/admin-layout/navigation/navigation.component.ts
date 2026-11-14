@@ -67,6 +67,16 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
   { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
   { id: 'approval-rules', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' },
+  { id: 'finance', title: 'Tesorería', icon: 'account_balance', children: [
+    { id: 'delinquency', title: 'Morosidad', url: '/app/admin/delinquency' },
+    { id: 'expenses', title: 'Egresos', url: '/app/admin/expenses' }
+  ] },
+];
+
+const MENU_TESORERIA: MenuItem[] = [
+  { id: 'dashboard', title: 'Inicio', url: '/app/dashboard/default', icon: 'home' },
+  { id: 'delinquency', title: 'Morosidad', url: '/app/admin/delinquency', icon: 'request_quote' },
+  { id: 'expenses', title: 'Egresos', url: '/app/admin/expenses', icon: 'payments' }
 ];
 
 @Component({
@@ -85,6 +95,7 @@ export class NavigationComponent implements OnInit {
   ngOnInit(): void {
     this.store.select(selectUserRole).subscribe(role => {
       if (role === UserRole.Admin) this.menuItems = MENU_ADMIN;
+      else if (role === UserRole.Tesoreria) this.menuItems = MENU_TESORERIA;
       else if (role === UserRole.Profesor) this.menuItems = MENU_PROFESOR;
       else this.menuItems = MENU_ALUMNO;
     });
