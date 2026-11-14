@@ -21,12 +21,7 @@ public class CareerConfiguration : IEntityTypeConfiguration<Career>
         builder.Property(c => c.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(c => c.CreatedAt).HasColumnName("created_at");
         builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");
-        // Postgres no tiene un tipo "rowversion" auto-incremental como SQL Server.
-        // Se usa la columna de sistema `xmin` (siempre presente en Postgres) como
-        // concurrency token nativo en vez de mapear la propiedad RowVersion a una
-        // columna real: la propiedad queda sin mapear (Ignore) y el shadow property
-        // "xmin" cubre el optimistic concurrency check automáticamente.
-        builder.Ignore(c => c.RowVersion);
-        builder.UseXminAsConcurrencyToken();
+        // La propiedad CLR uint se mapea a la columna de sistema xmin de PostgreSQL.
+        builder.Property(c => c.RowVersion).HasColumnName("xmin").IsRowVersion();
     }
 }

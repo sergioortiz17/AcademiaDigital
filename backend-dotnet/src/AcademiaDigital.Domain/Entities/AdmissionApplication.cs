@@ -13,7 +13,7 @@ public class AdmissionApplication
     public DateTime? ReservationExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public byte[] RowVersion { get; set; } = [];
+    public uint RowVersion { get; set; }
 
     public AdmissionForm AdmissionForm { get; set; } = null!;
     public ICollection<AdmissionApplicationStatusHistory> StatusHistory { get; set; } = [];

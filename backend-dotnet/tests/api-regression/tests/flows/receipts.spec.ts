@@ -30,6 +30,12 @@ test('M11 recibos: correlativo concurrente, emisión atómica, PDF e historial a
     const owner = await createRegisteredStudent(anonymous, db, careerId);
     userIds.push(owner.userId);
     ownerSession = await authenticatedClients(owner.registration.email, owner.registration.password);
+    const financeTarget = await db.getFinanceStudentTarget(owner.studentId, 2026);
+    const paymentOwner = {
+      studentId: financeTarget.studentId,
+      studentName: financeTarget.studentName,
+      studentDni: financeTarget.dni
+    };
 
     expect((await anonymous.receipts.mine()).response.status()).toBe(401);
     expect((await ownerSession.api.receipts.byStudent(owner.studentId)).response.status()).toBe(403);
@@ -63,14 +69,14 @@ test('M11 recibos: correlativo concurrente, emisión atómica, PDF e historial a
     expect(planCall.response.status()).toBe(201);
     const plan = billingPlanSchema.parse(planCall.body);
     const generation = debtGenerationResultSchema.parse((await admin.finance.generate(
-      plan.id, `receipts-m11-${Date.now()}`
+      plan.id, financeTarget, `receipts-m11-${Date.now()}`
     )).body);
     const debts = [...generation.debts].sort((a, b) => a.installmentNumber - b.installmentNumber);
     expect(debts).toHaveLength(3);
 
     const createDraft = async (debtPublicId: string, paymentMethodId: number, externalReference: string | null = null) => {
       const call = await admin.payments.create({
-        studentDni: owner.registration.DNI,
+        ...paymentOwner,
         paymentMethodId,
         amount: 100,
         externalReference,

@@ -29,11 +29,17 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     const student = await createRegisteredStudent(anonymous, db, careerId);
     userIds.push(student.userId);
     studentSession = await authenticatedClients(student.registration.email, student.registration.password);
+    const financeTarget = await db.getFinanceStudentTarget(student.studentId, 2026);
+    const paymentOwner = {
+      studentId: financeTarget.studentId,
+      studentName: financeTarget.studentName,
+      studentDni: financeTarget.dni
+    };
 
     expect((await anonymous.payments.methods()).response.status()).toBe(401);
     expect((await anonymous.payments.mine()).response.status()).toBe(401);
     expect((await studentSession.api.payments.create({
-      studentDni: '99999999', paymentMethodId: 1, amount: 1,
+      ...paymentOwner, paymentMethodId: 1, amount: 1,
       externalReference: null, notes: null,
       allocations: [{ debtPublicId: '00000000-0000-0000-0000-000000000001', amount: 1 }]
     })).response.status()).toBe(403);
@@ -67,12 +73,14 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     });
     expect(planCall.response.status()).toBe(201);
     const plan = billingPlanSchema.parse(planCall.body);
-    const generation = debtGenerationResultSchema.parse((await admin.finance.generate(plan.id, `payments-m10-${Date.now()}`)).body);
+    const generation = debtGenerationResultSchema.parse((await admin.finance.generate(
+      plan.id, financeTarget, `payments-m10-${Date.now()}`
+    )).body);
     expect(generation.debts).toHaveLength(2);
     const debts = [...generation.debts].sort((a, b) => a.installmentNumber - b.installmentNumber);
 
     const cashDraftCall = await admin.payments.create({
-      studentDni: student.registration.DNI,
+      ...paymentOwner,
       paymentMethodId: methodId('CASH'),
       amount: 60,
       externalReference: null,
@@ -99,7 +107,7 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     expect(cash.allocations.map(item => item.debtPaid)).toEqual([40, 20]);
 
     expect((await admin.payments.create({
-      studentDni: student.registration.DNI,
+      ...paymentOwner,
       paymentMethodId: methodId('CASH'),
       amount: 61,
       externalReference: null,
@@ -118,7 +126,7 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     expect(reversedRetry.reversals).toHaveLength(1);
 
     const transferDraft = paymentSchema.parse((await admin.payments.create({
-      studentDni: student.registration.DNI,
+      ...paymentOwner,
       paymentMethodId: methodId('BANK_TRANSFER'),
       amount: 100,
       externalReference: `TR-${Date.now()}`,
@@ -137,7 +145,7 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     expect(transfer.allocations[0]).toMatchObject({ debtPaid: 100, debtOutstanding: 0, debtStatus: 'Paid' });
 
     const rejectedDraft = paymentSchema.parse((await admin.payments.create({
-      studentDni: student.registration.DNI,
+      ...paymentOwner,
       paymentMethodId: methodId('BANK_TRANSFER'),
       amount: 10,
       externalReference: `TR-REJECT-${Date.now()}`,
@@ -153,7 +161,7 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     expect(rejected.allocations[0].debtPaid).toBe(0);
 
     const debitDraft = paymentSchema.parse((await admin.payments.create({
-      studentDni: student.registration.DNI,
+      ...paymentOwner,
       paymentMethodId: methodId('DEBIT_CARD'), amount: 30, externalReference: null, notes: null,
       allocations: [{ debtPublicId: debts[1].publicId, amount: 30 }]
     })).body);
@@ -162,7 +170,7 @@ test('M10 pagos: parciales, multiconcepto, conciliación, idempotencia y reversa
     expect(debit).toMatchObject({ status: 'Confirmed', method: { code: 'DEBIT_CARD' } });
 
     const creditDraft = paymentSchema.parse((await admin.payments.create({
-      studentDni: student.registration.DNI,
+      ...paymentOwner,
       paymentMethodId: methodId('CREDIT_CARD'), amount: 70, externalReference: null, notes: null,
       allocations: [{ debtPublicId: debts[1].publicId, amount: 70 }]
     })).body);

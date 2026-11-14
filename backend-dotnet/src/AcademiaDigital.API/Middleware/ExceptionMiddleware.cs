@@ -36,6 +36,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             AdmissionApplicationConcurrencyException e => (StatusCodes.Status409Conflict, e.Message),
             AdmissionChallengeRejectedException e => (StatusCodes.Status403Forbidden, e.Message),
             StudentRematriculationAlreadyExistsException e => (StatusCodes.Status409Conflict, e.Message),
+            ConcurrencyConflictException e          => (StatusCodes.Status409Conflict,       e.Message),
             TeacherAlreadyExistsException e       => (StatusCodes.Status409Conflict,       e.Message),
             UserNotFoundException e            => (StatusCodes.Status404NotFound,       e.Message),
             SessionNotFoundException e         => (StatusCodes.Status404NotFound,       e.Message),

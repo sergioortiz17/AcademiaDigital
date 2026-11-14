@@ -30,5 +30,8 @@ backend-dotnet/docs/*
 !backend-dotnet/docs/ROADMAP_M4_M11.md
 !backend-dotnet/docs/COBERTURA_CALIDAD_ARQUITECTURA.md
 !backend-dotnet/docs/API_COVERAGE_MATRIX.md
+!backend-dotnet/docs/BACKUP_RECEIPTS.md
+!backend-dotnet/docs/MVP_REQUIREMENTS_TRACEABILITY.csv
+!backend-dotnet/docs/INTEGRATION_OBJECTIVES.md
 !backend-dotnet/docs/adr/
 !backend-dotnet/docs/architecture/

@@ -22,8 +22,7 @@ public sealed class AdmissionApplicationConfiguration : IEntityTypeConfiguration
         builder.Property(application => application.CreatedAt).HasColumnName("created_at");
         builder.Property(application => application.UpdatedAt).HasColumnName("updated_at");
         // Postgres: xmin como concurrency token en vez de RowVersion (rowversion de SQL Server).
-        builder.Ignore(application => application.RowVersion);
-        builder.UseXminAsConcurrencyToken();
+        builder.Property(application => application.RowVersion).HasColumnName("xmin").IsRowVersion();
 
         builder.HasIndex(application => application.PublicId).IsUnique();
         builder.HasIndex(application => new { application.AdmissionFormId, application.ApplicantEmail }).IsUnique();

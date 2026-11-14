@@ -8,7 +8,7 @@ export class ReceiptsClient {
   }
 
   mine() {
-    return this.api.send({ operation: 'Consultar mis recibos', method: 'GET', path: '/api/v1/students/me/receipts' });
+    return this.api.send({ operation: 'Consultar mis recibos', method: 'GET', path: '/api/v1/receipts/me' });
   }
 
   get(publicId: string) {

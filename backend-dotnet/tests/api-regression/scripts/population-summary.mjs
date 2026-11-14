@@ -1,23 +1,19 @@
 import 'dotenv/config';
-import sql from 'mssql';
+import pg from 'pg';
 
-const pool = await sql.connect(process.env.E2E_SQL_CONNECTION_STRING);
+const databaseUrl = process.env.E2E_DATABASE_URL;
+if (!databaseUrl) throw new Error('E2E_DATABASE_URL is required.');
+
+const client = new pg.Client({ connectionString: databaseUrl });
+await client.connect();
 try {
-  const result = await pool.request()
-    .input('code', sql.NVarChar, `C${(process.env.E2E_DATA_PREFIX ?? 'PWAPI').slice(0, 5)}%`)
-    .input('email', sql.NVarChar, `${(process.env.E2E_DATA_PREFIX ?? 'PWAPI').toLowerCase()}.%@e2e.local`)
-    .query(`
-      SELECT
-        (SELECT COUNT(*) FROM Careers WHERE code LIKE @code) AS careers,
-        (SELECT COUNT(*) FROM Courses c JOIN Careers ca ON ca.id = c.career_id WHERE ca.code LIKE @code) AS courses,
-        (SELECT COUNT(*) FROM StudyPlans sp JOIN Careers ca ON ca.id = sp.career_id WHERE ca.code LIKE @code) AS studyPlans,
-        (SELECT COUNT(*) FROM Commissions co JOIN Careers ca ON ca.id = co.CareerId WHERE ca.code LIKE @code) AS commissions,
-        (SELECT COUNT(*) FROM Users WHERE email LIKE @email) AS users,
-        (SELECT COUNT(*) FROM Students s JOIN Users u ON u.id = s.user_id WHERE u.email LIKE @email) AS students,
-        (SELECT COUNT(*) FROM StudentCareers sc JOIN Students s ON s.id = sc.StudentId JOIN Users u ON u.id = s.user_id WHERE u.email LIKE @email) AS studentCareers,
-        (SELECT COUNT(*) FROM Enrollments e JOIN Students s ON s.id = e.student_id JOIN Users u ON u.id = s.user_id WHERE u.email LIKE @email) AS enrollments;
-    `);
-  process.stdout.write(`${JSON.stringify(result.recordset[0], null, 2)}\n`);
+  const tables = ['Users', 'Students', 'Careers', 'Courses', 'Enrollments', 'AdmissionApplications'];
+  for (const table of tables) {
+    const exists = await client.query('SELECT to_regclass($1) IS NOT NULL AS exists;', [`public."${table}"`]);
+    if (!exists.rows[0].exists) continue;
+    const result = await client.query(`SELECT COUNT(*)::int AS total FROM "${table}";`);
+    console.log(`${table}: ${result.rows[0].total}`);
+  }
 } finally {
-  await pool.close();
+  await client.end();
 }

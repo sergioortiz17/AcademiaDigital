@@ -13,9 +13,14 @@ export class FinanceClient {
   createBenefit(body: unknown) { return this.api.send({ operation: 'Crear beneficio financiero', method: 'POST', path: '/api/v1/finance/benefits', body }); }
   plans(query: { careerId?: number; academicYear?: number } = {}) { return this.api.send({ operation: 'Listar planes de cobro', method: 'GET', path: '/api/v1/finance/plans', query }); }
   createPlan(body: unknown) { return this.api.send({ operation: 'Crear plan de cobro', method: 'POST', path: '/api/v1/finance/plans', body }); }
-  generate(planId: number, idempotencyKey?: string) {
+  generate(planId: number, target?: {
+    studentId: number; careerId: number; studentCareerId: number; academicYear: number;
+    condition: string; grantedScholarshipIds: number[]; studentName: string; dni: string;
+    legajoNumber: string; careerName: string;
+  }, idempotencyKey?: string) {
     return this.api.send({
-      operation: 'Generar deudas del plan', method: 'POST', path: `/api/v1/finance/plans/${planId}/generate`,
+      operation: 'Generar deudas del plan', method: 'POST', path: '/api/v1/finance/debts/generate',
+      body: target ? { ...target, billingPlanId: planId } : { billingPlanId: planId },
       headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined
     });
   }

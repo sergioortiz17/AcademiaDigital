@@ -325,11 +325,18 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
         this.loadPeriods();
         // Chequeo inmediato: avisar en el momento si el período recién abierto ya tiene faltantes.
         if (res?.data?.id) this.checkCoverageNow(res.data);
+        else this.showOpenSuccess();
         this.cdr.detectChanges();
       },
       error: err => {
         this.errorMsg = err.error?.msg || err.error?.title || 'No se pudo abrir el período.';
         this.isSubmitting = false;
+        void Swal.fire({
+          icon: 'error',
+          titleText: 'No se pudo abrir el periodo',
+          text: this.errorMsg,
+          confirmButtonText: 'Entendido'
+        });
         this.cdr.detectChanges();
       }
     });
@@ -406,7 +413,7 @@ activatePeriod(period: EnrollmentPeriodDto): void {
    * aviso puntual en el momento (además del banner persistente por período).
    */
 private checkCoverageNow(period: EnrollmentPeriodDto): void {
-  this.enrollmentService.getCommissionCoverage(period.id).subscribe({
+  this.enrollmentService.getCommissionCoverage(period.id).pipe(timeout(10000)).subscribe({
     next: res => {
       this.coverageByPeriod[period.id] = res.data.gaps;
       if (res.data.gaps.length > 0) {
@@ -419,12 +426,29 @@ private checkCoverageNow(period: EnrollmentPeriodDto): void {
           icon: 'warning',
           confirmButtonText: 'Entendido'
         });
-      }
+      } else this.showOpenSuccess();
       this.cdr.detectChanges();
     },
-    error: () => { /* best-effort */ }
+    error: () => {
+      void Swal.fire({
+        titleText: 'Periodo abierto',
+        text: 'El periodo fue abierto, pero no se pudo verificar la cobertura de divisiones.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      this.cdr.detectChanges();
+    }
   });
 }
+
+  private showOpenSuccess(): void {
+    void Swal.fire({
+      titleText: 'Periodo abierto',
+      text: 'El periodo de inscripcion fue abierto correctamente.',
+      icon: 'success',
+      confirmButtonText: 'Entendido'
+    });
+  }
 
   // Método para disparar SweetAlert2
   private showErrorDialog(message: string): void {

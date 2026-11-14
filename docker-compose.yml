@@ -1,10 +1,9 @@
 networks:
   app_network:
+    name: academiadigital_app_network
     driver: bridge
 
 services:
-
-  # ── Base de datos ─────────────────────────────────────────────────────────
   db:
     container_name: postgres
     image: postgres:16-alpine
@@ -19,12 +18,39 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-AcademiaDigital}"]
       interval: 10s
-      retries: 6
+      timeout: 5s
+      retries: 10
       start_period: 15s
     networks:
       - app_network
 
-  # ── Backend .NET ──────────────────────────────────────────────────────────
+  finance_api:
+    container_name: finance_api
+    build:
+      context: ./services
+      dockerfile: AcademiaDigital.Finance/Dockerfile
+    expose:
+      - "8091"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8091
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${FINANCE_POSTGRES_DB:-academiadigital_finance};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!}
+      - Monolith__BaseUrl=http://backend:8000
+      - ReceiptStorage__RootPath=/app/data/receipts
+    volumes:
+      - finance_files:/app/data/receipts
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8091/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   backend:
     container_name: dotnet_backend
     build:
@@ -43,16 +69,18 @@ services:
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__ExpirationDays=7
       - Cors__AllowedOrigins__0=http://localhost:4200
-      # dev-tools (:8090) llama al backend para el time-travel; se permite su origen en dev.
       - Cors__AllowedOrigins__1=http://localhost:8090
-      # Time-travel de DevTools (SOLO desarrollo): habilita /api/v1/devtools/time. Sin esta var el
-      # controller devuelve 403. No setear en un ambiente real.
-      - ALLOW_TIME_TRAVEL=true
-      # Microservicio Finance (ADR 0001). Fire-and-forget: si no está disponible, la matriculación
-      # no se bloquea. finance_api se levanta con docker-compose.finance.yml en la misma red.
+      - AdmissionStorage__RootPath=/app/data/admissions
       - Finance__BaseUrl=http://finance_api:8091
+    volumes:
+      - backend_files:/app/data/admissions
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
-  # ── Frontend Angular ──────────────────────────────────────────────────────
   frontend:
     container_name: angular_frontend
     build:
@@ -60,9 +88,12 @@ services:
     ports:
       - "4200:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app_network
 
 volumes:
   postgres_data:
+  backend_files:
+  finance_files:

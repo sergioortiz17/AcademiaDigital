@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AcademiaDigital.Application.UseCases.Students;
 using AcademiaDigital.Domain.Enums;
+using AcademiaDigital.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AcademiaDigital.API.Controllers;
@@ -20,18 +21,25 @@ public sealed class StudentRematriculationsController(
         if (CurrentUserRole != UserRole.Admin)
             return StatusCode(StatusCodes.Status403Forbidden);
 
-        var result = await createHandler.Handle(
-            new CreateStudentRematriculationCommand(
-                studentId,
-                request.CareerId,
-                request.StudyPlanId,
-                request.DivisionId,
-                request.AcademicYear,
-                request.YearNumber,
-                request.Notes,
-                CurrentUserId.Value),
-            ct);
-        return StatusCode(StatusCodes.Status201Created, result);
+        try
+        {
+            var result = await createHandler.Handle(
+                new CreateStudentRematriculationCommand(
+                    studentId,
+                    request.CareerId,
+                    request.StudyPlanId,
+                    request.DivisionId,
+                    request.AcademicYear,
+                    request.YearNumber,
+                    request.Notes,
+                    CurrentUserId.Value),
+                ct);
+            return StatusCode(StatusCodes.Status201Created, result);
+        }
+        catch (ConcurrencyConflictException)
+        {
+            throw new StudentRematriculationAlreadyExistsException(studentId, request.AcademicYear);
+        }
     }
 }
 

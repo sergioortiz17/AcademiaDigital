@@ -4,6 +4,7 @@ using AcademiaDigital.Finance.Application.UseCases.Receipts;
 using AcademiaDigital.Finance.Domain.Entities;
 using AcademiaDigital.Finance.Infrastructure;
 using AcademiaDigital.Finance.Infrastructure.Persistence;
+using AcademiaDigital.Finance.API.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -44,6 +45,7 @@ builder.Services.AddScoped<DownloadReceiptQueryHandler>();
 
 // ── Controllers ──────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 // ── Swagger + Scalar ─────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -58,6 +60,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // ── Bootstrap: asegurar que la BASE de datos propia de Finance existe ────────
 // Finance vive en su PROPIA base (academiadigital_finance) dentro de la misma instancia
@@ -107,6 +111,7 @@ app.MapScalarApiReference("/scalar", options =>
 });
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 await app.RunAsync();
 

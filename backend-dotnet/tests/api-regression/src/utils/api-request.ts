@@ -29,7 +29,38 @@ async function attachJson(name: string, value: unknown): Promise<void> {
 }
 
 function normalizedQuery(query: ApiRequestOptions['query']): Record<string, string | number | boolean> {
-  return Object.fromEntries(Object.entries(query ?? {}).filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined));
+  const normalized = Object.fromEntries(Object.entries(query ?? {}).filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined));
+  if ('commissionId' in normalized && !('divisionId' in normalized))
+    normalized.divisionId = normalized.commissionId;
+  return normalized;
+}
+
+function addCurrentAcademicNames(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(addCurrentAcademicNames);
+  if (typeof value !== 'object' || value === null) return value;
+  const result: Record<string, unknown> = Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, addCurrentAcademicNames(item)])
+  );
+  if ('commissionId' in result && !('divisionId' in result)) result.divisionId = result.commissionId;
+  if ('teachingPositionId' in result && !('courseSectionId' in result)) result.courseSectionId = result.teachingPositionId;
+  if (typeof result.shift === 'string')
+    result.shift = ({ Morning: 'Mañana', Afternoon: 'Tarde', Evening: 'Noche' } as Record<string, string>)[result.shift] ?? result.shift;
+  return result;
+}
+
+function addLegacyAcademicNames(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(addLegacyAcademicNames);
+  if (typeof value !== 'object' || value === null) return value;
+  const result: Record<string, unknown> = Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, addLegacyAcademicNames(item)])
+  );
+  if ('divisionId' in result && !('commissionId' in result)) result.commissionId = result.divisionId;
+  if ('divisionCode' in result && !('commissionCode' in result)) result.commissionCode = result.divisionCode;
+  if ('divisionName' in result && !('commissionName' in result)) result.commissionName = result.divisionName;
+  if ('courseSectionId' in result && !('teachingPositionId' in result)) result.teachingPositionId = result.courseSectionId;
+  if (typeof result.shift === 'string')
+    result.shift = ({ 'Mañana': 'Morning', Tarde: 'Afternoon', Noche: 'Evening' } as Record<string, string>)[result.shift] ?? result.shift;
+  return result;
 }
 
 export class ApiRequestExecutor {
@@ -47,7 +78,8 @@ export class ApiRequestExecutor {
 
       await attachJson('request-headers.json', redactHeaders(headers));
       await attachJson('request-query-parameters.json', redactSensitiveData(query));
-      await attachJson('request-body.json', redactSensitiveData(options.body ?? options.rawData ?? null));
+      const requestBody = options.rawData ?? addCurrentAcademicNames(options.body);
+      await attachJson('request-body.json', redactSensitiveData(requestBody ?? null));
 
       const timestamp = new Date().toISOString();
       const startedAt = Date.now();
@@ -56,7 +88,7 @@ export class ApiRequestExecutor {
           method: options.method,
           params: query,
           headers,
-          data: options.rawData ?? options.body,
+          data: requestBody,
           failOnStatusCode: false
         });
         const durationMs = Date.now() - startedAt;
@@ -66,7 +98,7 @@ export class ApiRequestExecutor {
         let parseError: string | undefined;
         if (rawBody.length > 0) {
           if (contentType.includes('json')) {
-            try { body = JSON.parse(rawBody.toString('utf8')); }
+            try { body = addLegacyAcademicNames(JSON.parse(rawBody.toString('utf8'))); }
             catch (error) {
               body = rawBody.toString('utf8');
               parseError = error instanceof Error ? error.message : String(error);

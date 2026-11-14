@@ -12,4 +12,7 @@ public abstract class ApiControllerBase : ControllerBase
 
     protected UserRole? CurrentUserRole
         => Enum.TryParse<UserRole>(Request.Headers["X-User-Role"].FirstOrDefault(), true, out var role) ? role : null;
+
+    protected long? CurrentStudentId
+        => long.TryParse(Request.Headers["X-Student-Id"].FirstOrDefault(), out var id) ? id : null;
 }

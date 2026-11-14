@@ -98,9 +98,11 @@ test('M6 asistencia completa: carga, cierre, justificaciÃ³n, riesgo, reapertur
 
     professorSession = await authenticatedClients(professor.email, professor.password);
     otherProfessorSession = await authenticatedClients(otherProfessor.email, otherProfessor.password);
+    const recentSessionDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const expiredSessionDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const sessionBody = {
       teachingPositionId: position.id,
-      sessionDate: '2026-08-22',
+      sessionDate: recentSessionDate,
       startTime: '20:00:00',
       endTime: '23:00:00',
       scope: 'ClassHour',
@@ -194,7 +196,7 @@ test('M6 asistencia completa: carga, cierre, justificaciÃ³n, riesgo, reapertur
 
     const expiredSessionCall = await professorSession.api.attendance.createSession(randomUUID(), {
       ...sessionBody,
-      sessionDate: '2026-08-01',
+      sessionDate: expiredSessionDate,
       startTime: null,
       endTime: null,
       scope: 'FullDay',

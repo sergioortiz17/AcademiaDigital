@@ -14,7 +14,7 @@ public class AdmissionForm
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public byte[] RowVersion { get; set; } = [];
+    public uint RowVersion { get; set; }
 
     public Career Career { get; set; } = null!;
     public Division? Division { get; set; }

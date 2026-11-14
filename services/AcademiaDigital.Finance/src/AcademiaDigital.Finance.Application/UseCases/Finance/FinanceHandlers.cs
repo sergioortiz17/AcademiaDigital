@@ -31,6 +31,10 @@ public sealed record GenerateStudentDebtsCommand(
     int AcademicYear,
     StudentStatus Condition,
     IReadOnlyCollection<int> GrantedScholarshipIds,
+    string? StudentName,
+    string? Dni,
+    string? LegajoNumber,
+    string? CareerName,
     string IdempotencyKey,
     long ActorUserId);
 
@@ -215,8 +219,10 @@ public sealed class GenerateStudentDebtsCommandHandler(IFinanceRepository reposi
         if (key.Length is < 8 or > 100) throw new ArgumentException("Idempotency-Key must contain 8 to 100 characters.");
         var target = new FinanceStudentTarget(
             command.StudentId, command.StudentCareerId, command.Condition,
-            string.IsNullOrWhiteSpace(command.StudentCareerId.ToString()) ? string.Empty : $"Alumno {command.StudentId}",
-            string.Empty, string.Empty, $"Carrera {command.CareerId}",
+            string.IsNullOrWhiteSpace(command.StudentName) ? $"Alumno {command.StudentId}" : command.StudentName.Trim(),
+            command.Dni?.Trim() ?? string.Empty,
+            command.LegajoNumber?.Trim() ?? string.Empty,
+            string.IsNullOrWhiteSpace(command.CareerName) ? $"Carrera {command.CareerId}" : command.CareerName.Trim(),
             command.GrantedScholarshipIds);
         return unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
         {

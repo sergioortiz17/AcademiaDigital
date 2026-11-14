@@ -2,12 +2,12 @@
 
 ![.NET](https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![C#](https://img.shields.io/badge/C%23-12-239120?style=for-the-badge&logo=csharp&logoColor=white)
-![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![EF Core](https://img.shields.io/badge/EF_Core-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 
-API REST construida con **ASP.NET Core 8** siguiendo **Clean Architecture**. Usa **Entity Framework Core 8** con SQL Server y autenticación via **JWT**.
+API REST construida con **ASP.NET Core 8** siguiendo **Clean Architecture**. Usa **Entity Framework Core 8** con PostgreSQL y autenticación vía **JWT**.
 
-> Antes de levantar el backend necesitás tener SQL Server corriendo localmente. Ver [../DATABASE_SETUP.md](../DATABASE_SETUP.md) para instrucciones completas (con o sin Docker).
+> La forma recomendada de levantar PostgreSQL, Finance, backend y Angular es `docker compose up --build` desde la raíz del repositorio.
 
 ---
 
@@ -16,12 +16,12 @@ API REST construida con **ASP.NET Core 8** siguiendo **Clean Architecture**. Usa
 | Herramienta | Versión | Verificar |
 |-------------|---------|-----------|
 | .NET SDK | 8.0 | `dotnet --version` |
-| SQL Server | 2019+ (o 2022) | instancia local o remota |
+| PostgreSQL | 16 | instancia local o Docker |
 | dotnet-ef (CLI) | 8.x | `dotnet ef --version` |
 
 > Instalar la herramienta EF Core en la versión correcta para este proyecto:
 > ```bash
-> dotnet tool install --global dotnet-ef --version "8.0.13"
+> dotnet tool restore
 > export PATH="$PATH:$HOME/.dotnet/tools"
 > ```
 > **Importante:** no uses `8.*` en zsh — el shell lo interpreta como un glob y falla. Siempre especificá la versión exacta entre comillas.
@@ -40,7 +40,7 @@ Los módulos M1–M11 están completos para el alcance MVP. M11 incorpora recibo
 - snapshot histórico, PDF local-first y hash SHA-256;
 - historial y descarga para Admin/Tesorería o alumno propietario;
 - regeneración idempotente sobre el mismo número;
-- almacenamiento Docker durable y backup coordinado con SQL Server.
+- almacenamiento Docker durable y backup coordinado con PostgreSQL.
 
 Documentación operativa y de alcance:
 
@@ -68,7 +68,7 @@ El archivo [src/AcademiaDigital.API/appsettings.Development.json](src/AcademiaDi
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=AcademiaDigital;User Id=sa;Password=Admin1234!;TrustServerCertificate=True;"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=AcademiaDigital;Username=postgres;Password=Admin1234!;"
   },
   "Jwt": {
     "SecretKey": "dev_secret_key_123_academia_digital",
@@ -77,7 +77,7 @@ El archivo [src/AcademiaDigital.API/appsettings.Development.json](src/AcademiaDi
 }
 ```
 
-Si tu instancia de SQL Server usa autenticación de Windows o un puerto distinto, editá la cadena de conexión en ese archivo.
+Si tu instancia de PostgreSQL usa otro usuario, contraseña o puerto, editá la cadena de conexión en ese archivo.
 
 ### 2. Configuración de CORS
 
@@ -215,14 +215,14 @@ dotnet tool install --global dotnet-ef --version "8.0.13"
 EF necesita el paquete `Design` también en el proyecto API (no solo en Infrastructure). Agregalo:
 
 ```bash
-dotnet add src/AcademiaDigital.API package Microsoft.EntityFrameworkCore.Design --version "8.0.13"
+dotnet add src/AcademiaDigital.API package Microsoft.EntityFrameworkCore.Design --version "8.0.11"
 ```
 
 ---
 
 ## Flujo esperado para desarrollo local
 
-1. Asegurarse de tener SQL Server corriendo y accesible en `localhost,1433`
+1. Asegurarse de tener PostgreSQL corriendo y accesible en `localhost:5432`
 2. Ejecutar las migraciones para crear las tablas (solo la primera vez)
 3. Correr `dotnet run --project src/AcademiaDigital.API`
 4. Levantar el frontend Angular (ver [../frontend-angular/README.md](../frontend-angular/README.md))

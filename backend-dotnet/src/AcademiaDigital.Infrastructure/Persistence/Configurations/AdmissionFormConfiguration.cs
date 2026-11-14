@@ -24,10 +24,8 @@ public sealed class AdmissionFormConfiguration : IEntityTypeConfiguration<Admiss
         builder.Property(form => form.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         builder.Property(form => form.CreatedAt).HasColumnName("created_at");
         builder.Property(form => form.UpdatedAt).HasColumnName("updated_at");
-        // Postgres: se usa la columna de sistema xmin como concurrency token en vez de
-        // mapear RowVersion (byte[], tipo rowversion de SQL Server que Npgsql no soporta).
-        builder.Ignore(form => form.RowVersion);
-        builder.UseXminAsConcurrencyToken();
+        // La propiedad CLR uint se mapea a la columna de sistema xmin de PostgreSQL.
+        builder.Property(form => form.RowVersion).HasColumnName("xmin").IsRowVersion();
 
         builder.HasIndex(form => form.Slug).IsUnique();
         builder.HasIndex(form => form.DivisionId)

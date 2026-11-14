@@ -23,15 +23,15 @@ describe('Evaluation recovery weight', () => {
   it('restores the original weight and valid total after unchecking recovery', () => {
     toggle(0, true);
     expect(component.evaluations[0].weightPercentage).toBe(0);
-    expect(component.totalWeight).toBe(66);
+    expect(component.totalWeight).toBe(75);
     expect(component.isValid).toBe(false);
     toggle(0, false);
-    expect(component.evaluations[0].weightPercentage).toBe(34);
+    expect(component.evaluations[0].weightPercentage).toBe(25);
     expect(component.totalWeight).toBe(100);
     expect(component.isValid).toBe(true);
     component.confirm();
     expect(close).toHaveBeenCalledWith(expect.arrayContaining([
-      expect.objectContaining({ weightPercentage: 34, isRecovery: false })
+      expect.objectContaining({ weightPercentage: 25, isRecovery: false })
     ]));
   });
 
@@ -50,7 +50,7 @@ describe('Evaluation recovery weight', () => {
     toggle(1, true);
     component.removeEvaluation(0);
     toggle(0, false);
-    expect(component.evaluations[0].weightPercentage).toBe(33);
+    expect(component.evaluations[0].weightPercentage).toBe(25);
   });
 
   it('does not invent a previous weight for default recovery rows', () => {

@@ -16,7 +16,7 @@ export const env = {
   adminEmail: required('E2E_ADMIN_EMAIL', 'admin.playwright@e2e.local'),
   adminPassword: required('E2E_ADMIN_PASSWORD'),
   admissionChallengeToken: required('E2E_ADMISSION_CHALLENGE_TOKEN', 'e2e-admission-challenge-token'),
-  sqlConnectionString: required('E2E_SQL_CONNECTION_STRING'),
+  databaseUrl: required('E2E_DATABASE_URL'),
   allowDbCleanup: parseBoolean(process.env.E2E_ALLOW_DB_CLEANUP ?? 'true'),
   allowDevelopmentDatabase: parseBoolean(process.env.E2E_ALLOW_DEVELOPMENT_DATABASE),
   dockerManagedDatabase: parseBoolean(process.env.E2E_DOCKER_MANAGED_DATABASE),
@@ -24,8 +24,12 @@ export const env = {
   dataPrefix: required('E2E_DATA_PREFIX', 'PWAPI')
 } as const;
 
-function databaseName(connectionString: string): string | undefined {
-  return /(?:^|;)\s*(?:Database|Initial Catalog)\s*=\s*([^;]+)/i.exec(connectionString)?.[1]?.trim();
+function databaseName(databaseUrl: string): string | undefined {
+  try {
+    return new URL(databaseUrl).pathname.replace(/^\//, '');
+  } catch {
+    return undefined;
+  }
 }
 
 export function assertSafeE2eEnvironment(): void {
@@ -34,7 +38,7 @@ export function assertSafeE2eEnvironment(): void {
   if (!localHosts.has(api.hostname)) {
     throw new Error(`Refusing E2E execution against non-local API host: ${api.hostname}`);
   }
-  const database = databaseName(env.sqlConnectionString);
+  const database = databaseName(env.databaseUrl);
   const isolatedE2eDatabase = database?.toLowerCase() === 'academiadigitale2e';
   const authorizedDevelopmentDatabase = database?.toLowerCase() === 'academiadigital'
     && env.allowDevelopmentDatabase

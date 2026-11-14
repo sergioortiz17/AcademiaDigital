@@ -23,8 +23,7 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
         builder.Property(message => message.Attempts).HasColumnName("attempts");
         builder.Property(message => message.LastError).HasColumnName("last_error").HasMaxLength(2000);
         // Postgres: xmin como concurrency token en vez de RowVersion (rowversion de SQL Server).
-        builder.Ignore(message => message.RowVersion);
-        builder.UseXminAsConcurrencyToken();
+        builder.Property(message => message.RowVersion).HasColumnName("xmin").IsRowVersion();
 
         builder.HasIndex(message => message.DeduplicationKey).IsUnique();
         builder.HasIndex(message => new { message.Status, message.AvailableAt });

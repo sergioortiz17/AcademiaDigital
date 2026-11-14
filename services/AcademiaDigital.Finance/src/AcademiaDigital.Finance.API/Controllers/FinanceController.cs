@@ -133,15 +133,24 @@ public sealed class FinanceController(
             request.AcademicYear,
             condition,
             request.GrantedScholarshipIds ?? Array.Empty<int>(),
+            request.StudentName,
+            request.Dni,
+            request.LegajoNumber,
+            request.CareerName,
             idempotencyKey,
             CurrentUserId ?? 0), ct);
-        return Ok(new GenerateDebtResponse(
-            result.BatchPublicId,
-            result.GeneratedDebtCount,
-            result.GeneratedTotal));
+        return Ok(result);
     }
 
     // GET /api/v1/finance/students/{studentId}/debts
+    [HttpGet("debts")]
+    public async Task<IActionResult> GetDebts([FromQuery, Range(1, long.MaxValue)] long studentId, CancellationToken ct)
+    {
+        var guard = RequireAdmin();
+        if (guard is not null) return guard;
+        return Ok(await debtsQuery.Handle(studentId, ct));
+    }
+
     [HttpGet("students/{studentId:long}/debts")]
     public async Task<IActionResult> GetStudentDebts(long studentId, CancellationToken ct)
     {
@@ -162,12 +171,14 @@ public sealed class FinanceController(
     }
 
     [HttpGet("debts/me")]
-    public async Task<IActionResult> GetMyDebts([FromQuery, Range(1, long.MaxValue)] long studentId, CancellationToken ct)
+    public async Task<IActionResult> GetMyDebts(CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
         if (CurrentUserRole != UserRole.Alumno)
             return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Only students can query their own debts."));
-        return Ok(await debtsQuery.Handle(studentId, ct));
+        if (CurrentStudentId is null)
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("The session is not linked to a student."));
+        return Ok(await debtsQuery.Handle(CurrentStudentId.Value, ct));
     }
 
     private IActionResult? RequireAdmin()
