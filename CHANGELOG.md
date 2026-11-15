@@ -23,6 +23,7 @@ Recuperación de contraseña por correo (Amazon SES).
 ### Corregido
 
 - Un token de recuperación inválido o vencido respondía 500; ahora responde 400.
+- Al abrir el perfil, Admin y Profesor veían "El usuario actual no es un alumno.": la pantalla pedía la ficha de estudiante a cualquier rol. Ahora solo la pide para Alumno.
 - El encabezado del panel consultaba `/api/v1/devtools/time` cada 30 segundos y en producción mostraba "No tenés permisos para realizar esta acción". Ahora, si la función está deshabilitada, consulta una sola vez y sin alerta.
 
 ## [1.3.0] - 2026-11-15

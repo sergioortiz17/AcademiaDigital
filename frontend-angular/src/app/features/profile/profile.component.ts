@@ -5,6 +5,7 @@ import { Student, StudentRecord, StudentService } from '../../core/services/stud
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { UserRole } from '../../store/account/account.actions';
 
 interface StudentProfileDetails {
   student: Student;
@@ -77,6 +78,11 @@ export class ProfileComponent implements OnInit {
           phoneCode: data.phoneCode ?? '',
           phone:     data.phone ?? ''
         });
+
+        // Solo un Alumno tiene ficha de estudiante. Para Admin y Profesor estas consultas
+        // responden 404 ("El usuario actual no es un alumno.") y el interceptor global lo
+        // mostraba como error al abrir el perfil.
+        if (data.role !== UserRole.Alumno) return of(null);
 
         return this.studentService.getMyAcademicProgress().pipe(
           switchMap((progress) => this.loadStudentDetails(progress.studentId)),
