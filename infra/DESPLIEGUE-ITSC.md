@@ -49,7 +49,7 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 15 | Confirmar la conexión en la consola | ✅ Hecho | 14/11/2026 | App "AWS Connector for GitHub" instalada solo en `AcademiaDigital` (instalación `182079371`). Estado `AVAILABLE` |
 | 16 | `deploy/` en `main` (PR) | ✅ Hecho | 14/11/2026 | PR de `feat/almacenamiento-s3` (v1.0.0 a v1.2.0) mergeado |
 | 17 | `itsc/pipeline` | ✅ Hecho | 14/11/2026 | 13 recursos: pipeline `academiadigital-itsc-prod-deploy`, CodeBuild arm64 y bucket de artefactos. Primer build OK en ~3 min: imágenes `05a7a780…98f522` en ECR (backend 96 MB, frontend 29 MB) |
-| 18 | Activar el despliegue (`deploy_enabled = true`) | ⏸️ Después de la fase 5 | | |
+| 18 | Activar el despliegue (`deploy_enabled = true`) | ✅ Hecho | 15/11/2026 | Etapa Deploy activa. Primera ejecución completa (Source, Build, Deploy) en 5 min 19 s: v1.3.0 (`47fb220`) en Beanstalk |
 
 Pendientes fuera de Terraform:
 
