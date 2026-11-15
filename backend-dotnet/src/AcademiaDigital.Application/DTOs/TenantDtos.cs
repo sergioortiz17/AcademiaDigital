@@ -7,9 +7,11 @@ public sealed record TenantSummaryDto(
     bool IsActive,
     bool IsDefault,
     DateTime CreatedAt,
-    IReadOnlyList<string> Domains);
+    IReadOnlyList<string> Domains,
+    string? TeacherEmailDomain = null);
 
-public sealed record CurrentTenantDto(string Slug, string Name);
+/// <param name="TeacherEmailDomain">Dominio de correo docente: el registro oculta la carrera para esos emails.</param>
+public sealed record CurrentTenantDto(string Slug, string Name, string? TeacherEmailDomain = null);
 
 public sealed record CreateTenantRequest(
     string Slug,
@@ -19,4 +21,5 @@ public sealed record CreateTenantRequest(
     string AdminName,
     string AdminLastName,
     string AdminDni,
-    string AdminPassword);
+    string AdminPassword,
+    string? TeacherEmailDomain = null);

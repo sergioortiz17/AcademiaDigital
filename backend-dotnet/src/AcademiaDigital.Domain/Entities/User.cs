@@ -18,6 +18,10 @@ public class User
     public bool IsActive { get; set; } = true;
     public DateTime DateJoined { get; set; } = DateTime.UtcNow;
     public UserRole Role { get; set; } = UserRole.Alumno;
+    /// <summary>Alta pendiente o aprobada. Un usuario pendiente no puede iniciar sesión.</summary>
+    public RegistrationStatus RegistrationStatus { get; set; } = RegistrationStatus.Approved;
+    public DateTime? ApprovedAt { get; set; }
+    public long? ApprovedByUserId { get; set; }
     public int FailedLoginAttempts { get; set; }
     public DateTime? LockedUntil { get; set; }
 }

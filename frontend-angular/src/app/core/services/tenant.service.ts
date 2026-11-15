@@ -7,6 +7,15 @@ import { SKIP_ERROR_ALERT } from '../interceptors/error.interceptor';
 export interface CurrentTenant {
   slug: string;
   name: string;
+  /** Dominio de correo docente (ej. itscordoba.edu.ar): esos emails se registran como Profesor. */
+  teacherEmailDomain?: string | null;
+}
+
+/** true si el email es del dominio docente exacto (sin subdominios), igual que el backend. */
+export function isTeacherEmail(email: string | null | undefined, domain: string | null | undefined): boolean {
+  if (!email || !domain) return false;
+  const at = email.trim().lastIndexOf('@');
+  return at > 0 && email.trim().slice(at + 1).toLowerCase() === domain.toLowerCase();
 }
 
 /** Slug de la institución original: es la única que usa el logo y los textos históricos de ITSC. */

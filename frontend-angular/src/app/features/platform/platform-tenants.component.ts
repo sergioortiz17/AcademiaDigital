@@ -30,6 +30,7 @@ export class PlatformTenantsComponent implements OnInit {
   slug = '';
   name = '';
   domainsText = '';
+  teacherEmailDomain = '';
   adminEmail = '';
   adminName = '';
   adminLastName = '';
@@ -130,7 +131,8 @@ export class PlatformTenantsComponent implements OnInit {
       adminName: this.adminName.trim(),
       adminLastName: this.adminLastName.trim(),
       adminDni: this.adminDni.trim(),
-      adminPassword: this.adminPassword
+      adminPassword: this.adminPassword,
+      teacherEmailDomain: this.teacherEmailDomain.trim() || null
     }).subscribe({
       next: tenant => {
         this.isCreating = false;
@@ -153,7 +155,7 @@ export class PlatformTenantsComponent implements OnInit {
   }
 
   private resetForm(): void {
-    this.slug = this.name = this.domainsText = '';
+    this.slug = this.name = this.domainsText = this.teacherEmailDomain = '';
     this.adminEmail = this.adminName = this.adminLastName = this.adminDni = this.adminPassword = '';
   }
 }

@@ -29,6 +29,7 @@
     "settings": "Settings",
     "profile": "Profile",
     "myMessages": "My Messages",
+    "classroom": "Classroom",
     "lockScreen": "Lock Screen"
   },
   "auth": {

@@ -14,6 +14,15 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   DNI: string;
+  /** Opcional solo para emails del dominio docente de la institución. */
+  careerId?: number | null;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  msg: string;
+  role: number;
+  pendingApproval: boolean;
 }
 
 export interface AuthResponse {
@@ -36,8 +45,8 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseURL}v1/users/login`, credentials);
   }
 
-  register(credentials: RegisterCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseURL}v1/users/register`, credentials);
+  register(credentials: RegisterCredentials): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${this.baseURL}v1/users/register`, credentials);
   }
 
   /** Pide el correo de recuperación. La respuesta es siempre la misma: el token solo viaja por email. */

@@ -30,7 +30,8 @@ public sealed record ProvisionTenantRequest(
     string AdminName,
     string AdminLastName,
     string AdminDni,
-    string AdminPassword);
+    string AdminPassword,
+    string? TeacherEmailDomain = null);
 
 /// <summary>Crea la base de la institución, aplica migraciones, siembra el admin y registra el tenant.</summary>
 public interface ITenantProvisioner

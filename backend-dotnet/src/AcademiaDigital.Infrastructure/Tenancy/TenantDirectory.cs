@@ -69,7 +69,8 @@ public sealed class TenantDirectory(IServiceScopeFactory scopeFactory, IOptions<
             foreach (var tenant in tenants)
             {
                 var info = new TenantInfo(tenant.Id, tenant.Slug, tenant.Name, tenant.DatabaseName,
-                    string.Equals(tenant.Slug, options.Value.DefaultSlug, StringComparison.Ordinal));
+                    string.Equals(tenant.Slug, options.Value.DefaultSlug, StringComparison.Ordinal),
+                    tenant.TeacherEmailDomain);
                 if (info.IsDefault) defaultTenant = info;
                 foreach (var domain in tenant.Domains) byHost[domain.Host] = info;
             }

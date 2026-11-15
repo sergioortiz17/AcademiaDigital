@@ -469,3 +469,13 @@ form {
     font-size: 1rem;
   }
 }
+// Aviso cuando el email es del dominio docente (reemplaza el selector de carrera).
+.teacher-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #eef4fb;
+  color: #1f4e79;
+  font-size: 14px;
+  line-height: 1.4;
+}

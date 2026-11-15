@@ -116,7 +116,8 @@ public sealed class RegisterThenEnrollTests
             .Returns(call => call.Arg<Func<CancellationToken, Task<RegisterResult>>>()(call.ArgAt<CancellationToken>(1)));
 
         return new RegisterUseCase(userRepository, studentRepository, studentCareerRepository,
-            careerRepository, studyPlanRepository, studentAcademicRepository, unitOfWork);
+            careerRepository, studyPlanRepository, studentAcademicRepository,
+            Substitute.For<ITeacherRepository>(), unitOfWork);
     }
 
     private static CreateEnrollmentCommandHandler BuildEnrollHandler(FakeStore store)

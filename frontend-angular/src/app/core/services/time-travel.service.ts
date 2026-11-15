@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -35,7 +35,10 @@ export class TimeTravelService {
       context: new HttpContext().set(SKIP_ERROR_ALERT, true)
     }).pipe(
       catchError((error: unknown) => {
-        if (error instanceof HttpErrorResponse && (error.status === 403 || error.status === 404)) {
+        // El ErrorInterceptor reemplaza el HttpErrorResponse por un ApiError: los dos tienen
+        // `status`, así que se lee el campo en lugar de comprobar el tipo.
+        const status = (error as { status?: number } | null)?.status;
+        if (status === 403 || status === 404) {
           this.disabled = true;
         }
         return of(null);

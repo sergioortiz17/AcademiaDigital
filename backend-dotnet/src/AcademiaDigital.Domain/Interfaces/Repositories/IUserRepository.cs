@@ -20,4 +20,15 @@ public interface IUserRepository
     Task<User> UpdateRoleAsync(long userId, UserRole newRole, CancellationToken ct = default);
     Task<User> UpdateActiveStatusAsync(long userId, bool isActive, CancellationToken ct = default);
     Task DeleteAsync(long userId, CancellationToken ct = default);
+
+    // Aspirantes: altas del registro público
+    Task<(List<ApplicantRow> Rows, int Total)> GetApplicantsAsync(ApplicantQuery query, CancellationToken ct = default);
+    /// <summary>Aprueba los usuarios indicados que estén pendientes; ignora el resto. Devuelve los aprobados.</summary>
+    Task<List<User>> ApproveRegistrationsAsync(IReadOnlyCollection<long> userIds, long approvedByUserId, DateTime approvedAt, CancellationToken ct = default);
 }
+
+/// <param name="Status">Pending: pendientes de alta. Approved: dados de alta desde <paramref name="ApprovedSince"/>.</param>
+public sealed record ApplicantQuery(
+    string? Search, UserRole? Role, RegistrationStatus Status, DateTime? ApprovedSince, int Skip, int Take);
+
+public sealed record ApplicantRow(User User, string? CareerName);

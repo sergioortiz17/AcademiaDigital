@@ -43,7 +43,7 @@
                 <mat-error *ngIf="personalForm.get('dni')?.hasError('pattern')">El DNI debe tener 7 u 8 dígitos</mat-error>
               </mat-form-field>
             </div>
-            <div class="input-group">
+            <div class="input-group" *ngIf="!isTeacherEmail; else teacherNotice">
               <mat-form-field appearance="fill">
                 <mat-label>Carrera<span class="required">(*)</span></mat-label>
                 <mat-select formControlName="careerId">
@@ -52,6 +52,11 @@
                 <mat-error *ngIf="personalForm.get('careerId')?.hasError('required')">La carrera es obligatoria</mat-error>
               </mat-form-field>
             </div>
+            <ng-template #teacherNotice>
+              <p class="teacher-notice">
+                Con un correo institucional te registras como <strong>docente</strong>. La institución te asigna materias y divisiones al darte de alta.
+              </p>
+            </ng-template>
           </form>
 
           <form [formGroup]="registerForm">
@@ -106,10 +111,13 @@
         <!-- PASO 3 - ÉXITO -->
         <div *ngIf="currentStep === 3" class="success-container">
           <mat-icon class="success-icon">check_circle</mat-icon>
-          <h2 class="success-title">¡Registro exitoso!</h2>
-          <p class="success-text">Tu cuenta fue creada correctamente. Ya podés iniciar sesión.</p>
+          <h2 class="success-title">¡Recibimos tu registro!</h2>
+          <p class="success-text">
+            La institución tiene que darte de alta<span *ngIf="registeredAsTeacher"> como docente</span> antes de que puedas iniciar sesión.
+            Cuando esté habilitada vas a poder ingresar con tu correo y contraseña.
+          </p>
           <button mat-raised-button class="register-button" type="button" [routerLink]="['/auth/signin']">
-            Iniciar sesión
+            Volver al inicio
           </button>
         </div>
 

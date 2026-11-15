@@ -29,5 +29,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Role).HasColumnName("role");
         builder.Property(u => u.FailedLoginAttempts).HasColumnName("failed_login_attempts").HasDefaultValue(0);
         builder.Property(u => u.LockedUntil).HasColumnName("locked_until");
+        // Sin HasDefaultValue: Approved (0) es el valor por defecto del CLR. La migración pone
+        // DEFAULT 0 en la columna para que los usuarios existentes y los seeds queden aprobados.
+        builder.Property(u => u.RegistrationStatus).HasColumnName("registration_status");
+        builder.Property(u => u.ApprovedAt).HasColumnName("approved_at");
+        builder.Property(u => u.ApprovedByUserId).HasColumnName("approved_by_user_id");
+        builder.HasIndex(u => new { u.RegistrationStatus, u.DateJoined });
     }
 }

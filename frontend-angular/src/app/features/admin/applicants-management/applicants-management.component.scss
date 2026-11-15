@@ -1,0 +1,49 @@
+// Complementa los estilos de Gestión de Usuarios (users-management.component.scss).
+
+.status-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.status-tab {
+  border: 1px solid #c9d6e6;
+  background: #fff;
+  color: #1f4e79;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+
+  &--active {
+    background: #1f4e79;
+    border-color: #1f4e79;
+    color: #fff;
+  }
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f4f7fb;
+
+  .bulk-count {
+    font-size: 14px;
+    color: #454545;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+}
+
+.career-cell {
+  font-size: 13px;
+  color: #454545;
+}

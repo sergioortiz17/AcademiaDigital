@@ -25,5 +25,6 @@ public sealed class TenantRegistry(ControlDbContext control, IOptions<TenancyOpt
     internal static TenantSummaryDto ToDto(Tenant tenant, string defaultSlug) => new(
         tenant.Id, tenant.Slug, tenant.Name, tenant.IsActive,
         string.Equals(tenant.Slug, defaultSlug, StringComparison.Ordinal), tenant.CreatedAt,
-        tenant.Domains.Select(d => d.Host).OrderBy(h => h, StringComparer.Ordinal).ToArray());
+        tenant.Domains.Select(d => d.Host).OrderBy(h => h, StringComparer.Ordinal).ToArray(),
+        tenant.TeacherEmailDomain);
 }

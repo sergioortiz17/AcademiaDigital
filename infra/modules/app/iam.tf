@@ -75,10 +75,13 @@ resource "aws_iam_role_policy" "instance_app" {
         Resource = var.files_bucket_arn
       },
       {
+        # SES autoriza contra la identidad del remitente y, con la cuenta en sandbox, también
+        # contra la del destinatario (cada email verificado es una identidad). Por eso se
+        # permite identity/* de esta cuenta y región, no solo el dominio remitente.
         Sid      = "SendEmail"
         Effect   = "Allow"
         Action   = ["ses:SendEmail", "ses:SendRawEmail"]
-        Resource = var.ses_identity_arn
+        Resource = "${join(":", slice(split(":", var.ses_identity_arn), 0, 5))}:identity/*"
       },
       {
         # Beanstalk lee los secretos con el rol de la instancia al arrancarla.

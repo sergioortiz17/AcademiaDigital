@@ -8,6 +8,9 @@ public class InvalidCredentialsException(string message = "Email o contraseña i
 public class InactiveUserException(string message = "La cuenta de usuario no está activa")
     : AuthenticationException(message);
 
+public class PendingApprovalException(string message = "Tu cuenta está pendiente de aprobación. Podrás iniciar sesión cuando la institución te dé de alta.")
+    : AuthenticationException(message);
+
 public class AccountLockedException(DateTime lockedUntil)
     : AuthenticationException($"Cuenta bloqueada. Volvé a intentar después de {lockedUntil:O}")
 {

@@ -12,6 +12,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION_FILE="$ROOT/VERSION"
 PACKAGE_JSON="$ROOT/frontend-angular/package.json"
+VERSION_TS="$ROOT/frontend-angular/src/environments/version.ts"
 PROPS_FILES=(
   "$ROOT/backend-dotnet/src/Directory.Build.props"
   "$ROOT/services/AcademiaDigital.Finance/src/Directory.Build.props"
@@ -22,6 +23,10 @@ current() { tr -d '[:space:]' < "$VERSION_FILE"; }
 
 package_version() {
   sed -n 's/^  "version": "\(.*\)",$/\1/p' "$PACKAGE_JSON" | head -1
+}
+
+version_ts() {
+  sed -n "s/^export const APP_VERSION = '\\(.*\\)';$/\\1/p" "$VERSION_TS" | head -1
 }
 
 props_version() {
@@ -37,6 +42,11 @@ check() {
   pkg="$(package_version)"
   if [[ "$pkg" != "$expected" ]]; then
     echo "ERROR: frontend-angular/package.json tiene $pkg y /VERSION $expected" >&2; ok=1
+  fi
+  local ts
+  ts="$(version_ts)"
+  if [[ "$ts" != "$expected" ]]; then
+    echo "ERROR: frontend-angular/src/environments/version.ts tiene $ts y /VERSION $expected" >&2; ok=1
   fi
   for f in "${PROPS_FILES[@]}"; do
     local v
@@ -56,6 +66,7 @@ set_version() {
   echo "$new" > "$VERSION_FILE"
   # npm actualiza package.json y package-lock.json sin crear commit ni tag.
   (cd "$ROOT/frontend-angular" && npm version "$new" --no-git-tag-version --allow-same-version >/dev/null)
+  sed -i "s/^export const APP_VERSION = '.*';$/export const APP_VERSION = '$new';/" "$VERSION_TS"
   for f in "${PROPS_FILES[@]}"; do
     sed -i "s:<Version>.*</Version>:<Version>$new</Version>:" "$f"
   done

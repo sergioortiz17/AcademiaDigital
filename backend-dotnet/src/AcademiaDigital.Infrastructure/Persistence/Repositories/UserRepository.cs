@@ -111,7 +111,8 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
 
     public async Task<(List<User> Users, int Total)> GetAllAsync(string? search, UserRole? role, int skip, int take, CancellationToken ct = default)
     {
-        var query = db.Users.AsNoTracking();
+        // Gestión de Usuarios muestra solo cuentas dadas de alta; las pendientes están en "Aspirantes".
+        var query = db.Users.AsNoTracking().Where(u => u.RegistrationStatus == RegistrationStatus.Approved);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -154,6 +155,64 @@ public class UserRepository(AppDbContext db, IPasswordHasher passwordHasher) : I
 
         await db.SaveChangesAsync(ct);
         return user;
+    }
+
+    public async Task<(List<ApplicantRow> Rows, int Total)> GetApplicantsAsync(ApplicantQuery q, CancellationToken ct = default)
+    {
+        var query = db.Users.AsNoTracking().Where(u => u.RegistrationStatus == q.Status);
+
+        if (q.Status == RegistrationStatus.Approved)
+        {
+            // Dados de alta desde la sección Aspirantes: los aprobados por el registro público.
+            query = query.Where(u => u.ApprovedAt != null);
+            if (q.ApprovedSince is DateTime since)
+                query = query.Where(u => u.ApprovedAt >= since);
+        }
+
+        if (q.Role.HasValue)
+            query = query.Where(u => u.Role == q.Role.Value);
+
+        if (!string.IsNullOrWhiteSpace(q.Search))
+        {
+            var term = q.Search.Trim().ToLower();
+            query = query.Where(u =>
+                u.Email.ToLower().Contains(term) ||
+                u.Username.ToLower().Contains(term) ||
+                (u.LastName != null && u.LastName.ToLower().Contains(term)) ||
+                (u.Dni != null && u.Dni.Contains(term)));
+        }
+
+        var total = await query.CountAsync(ct);
+        var rows = await query
+            .OrderByDescending(u => u.DateJoined)
+            .Skip(q.Skip)
+            .Take(q.Take)
+            .Select(u => new
+            {
+                User = u,
+                CareerName = db.Students.Where(s => s.UserId == u.Id).Select(s => s.Career.Name).FirstOrDefault()
+            })
+            .ToListAsync(ct);
+
+        return (rows.Select(r => new ApplicantRow(r.User, r.CareerName)).ToList(), total);
+    }
+
+    public async Task<List<User>> ApproveRegistrationsAsync(
+        IReadOnlyCollection<long> userIds, long approvedByUserId, DateTime approvedAt, CancellationToken ct = default)
+    {
+        var users = await db.Users
+            .Where(u => userIds.Contains(u.Id) && u.RegistrationStatus == RegistrationStatus.Pending)
+            .ToListAsync(ct);
+
+        foreach (var user in users)
+        {
+            user.RegistrationStatus = RegistrationStatus.Approved;
+            user.ApprovedAt = approvedAt;
+            user.ApprovedByUserId = approvedByUserId;
+        }
+
+        await db.SaveChangesAsync(ct);
+        return users;
     }
 
     public async Task DeleteAsync(long userId, CancellationToken ct = default)

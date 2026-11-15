@@ -20,6 +20,7 @@ public sealed class CreateTenantCommandHandler(
         var slug = policy.NormalizeSlug(request.Slug);
         var name = policy.NormalizeName(request.Name);
         var hosts = policy.NormalizeHosts(request.Domains);
+        var teacherDomain = TeacherEmailDomains.Normalize(request.TeacherEmailDomain);
         policy.ValidateAdmin(request.AdminEmail, request.AdminName, request.AdminLastName,
             request.AdminDni, request.AdminPassword);
 
@@ -32,6 +33,6 @@ public sealed class CreateTenantCommandHandler(
         return await provisioner.ProvisionAsync(new ProvisionTenantRequest(
             slug, name, policy.DatabaseNameFor(slug), hosts,
             request.AdminEmail.Trim(), request.AdminName.Trim(), request.AdminLastName.Trim(),
-            request.AdminDni.Trim(), request.AdminPassword), ct);
+            request.AdminDni.Trim(), request.AdminPassword, teacherDomain), ct);
     }
 }

@@ -3,6 +3,14 @@
 # valor queda en el repositorio. Los valores sí quedan en el estado de Terraform, que
 # vive en un bucket privado, cifrado y solo accesible por TLS (ver infra/bootstrap).
 
+# Clave de operador de la plataforma (alta de instituciones en /platform). Sin ella la API
+# de plataforma responde 404. Leerla con:
+#   aws ssm get-parameter --with-decryption --name /<prefix>/backend/platform-admin-key
+resource "random_password" "platform_admin_key" {
+  length  = 48
+  special = false
+}
+
 resource "random_password" "jwt" {
   length  = 64
   special = false
@@ -30,6 +38,13 @@ resource "aws_ssm_parameter" "finance_db" {
   description = "Connection string del microservicio Finance"
   type        = "SecureString"
   value       = local.connection_strings.finance
+}
+
+resource "aws_ssm_parameter" "platform_admin_key" {
+  name        = "/${var.prefix}/backend/platform-admin-key"
+  description = "Clave de operador de la plataforma (header X-Platform-Key)"
+  type        = "SecureString"
+  value       = random_password.platform_admin_key.result
 }
 
 resource "aws_ssm_parameter" "jwt" {

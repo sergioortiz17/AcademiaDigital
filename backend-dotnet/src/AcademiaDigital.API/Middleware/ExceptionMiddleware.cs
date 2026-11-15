@@ -34,6 +34,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             InvalidCredentialsException e      => (StatusCodes.Status401Unauthorized,  e.Message),
             InvalidResetTokenException e       => (StatusCodes.Status400BadRequest,    e.Message),
             InactiveUserException e            => (StatusCodes.Status403Forbidden,      e.Message),
+            PendingApprovalException e         => (StatusCodes.Status403Forbidden,      e.Message),
             AccountLockedException e           => (StatusCodes.Status423Locked,         e.Message),
             ForbiddenException e               => (StatusCodes.Status403Forbidden,      e.Message),
             EmailAlreadyExistsException e      => (StatusCodes.Status409Conflict,       e.Message),
