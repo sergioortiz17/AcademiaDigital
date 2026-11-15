@@ -22,6 +22,16 @@ dependency "network" {
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
 
+dependency "monitoring" {
+  config_path = "../monitoring"
+
+  mock_outputs = {
+    loki_push_url               = "http://10.20.0.10:3100/loki/api/v1/push"
+    prometheus_remote_write_url = "http://10.20.0.10:9090/api/v1/write"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
 dependency "app_security" {
   config_path = "../app-security"
 
@@ -109,5 +119,11 @@ inputs = {
     APP_AWS_REGION         = include.root.locals.aws_region
     FILES_BUCKET           = dependency.storage.outputs.bucket_name
     MAIL_FROM              = "no-reply@${local.scope.domain_name}"
+
+    # Observabilidad (agente Alloy del compose y backend).
+    LOKI_PUSH_URL                       = dependency.monitoring.outputs.loki_push_url
+    PROMETHEUS_REMOTE_WRITE_URL         = dependency.monitoring.outputs.prometheus_remote_write_url
+    OBS_ENV                             = "${local.scope.client}-${local.scope.environment}"
+    ReverseProxy__TrustForwardedHeaders = "true" # ALB → nginx → backend; el backend no publica puertos
   }
 }

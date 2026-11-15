@@ -24,9 +24,13 @@ using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
+using AcademiaDigital.API.Observability;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Observabilidad: logs JSON, IP real del cliente (ver ObservabilityExtensions) ──
+builder.AddObservability();
 
 // ── Infrastructure (EF Core, repositories, JWT service) ─────────────────────
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -252,6 +256,8 @@ builder.Services.AddRateLimiter(options =>
                 AutoReplenishment = true
             });
     });
+
+    options.AddClientErrorsPolicy();
 });
 
 // ── Controllers ───────────────────────────────────────────────────────────────
@@ -338,6 +344,9 @@ await using (var scope = app.Services.CreateAsyncScope())
         }
     }
 }
+
+// Primero: IP real del cliente y una línea de log por request.
+app.UseObservability();
 
 // Swagger disponible siempre (no solo en Development)
 app.UseSwagger();

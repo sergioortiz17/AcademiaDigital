@@ -47,3 +47,26 @@ services:
         Monolith__BaseUrl=http://backend:8000;
         exec dotnet AcademiaDigital.Finance.API.dll
     restart: always
+
+  # Agente de observabilidad: logs de los contenedores → Loki, métricas del host →
+  # Prometheus (instancia de monitoreo). Configuración en alloy/config.alloy.
+  # Si la instancia de monitoreo no responde, la app sigue funcionando: Alloy reintenta.
+  alloy:
+    image: grafana/alloy:v1.5.1
+    env_file: .env # LOKI_PUSH_URL, PROMETHEUS_REMOTE_WRITE_URL, OBS_ENV
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+      - alloy-data:/var/lib/alloy/data
+    mem_limit: 256m
+    restart: always
+
+volumes:
+  alloy-data:

@@ -1,0 +1,59 @@
+#!/bin/bash
+# Primer arranque de la instancia de monitoreo (Amazon Linux 2023, arm64).
+# Instala Docker y Compose y registra el servicio "monitoring", que en CADA arranque
+# sincroniza la configuración desde S3 y levanta Grafana, Loki y Prometheus.
+set -euxo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL "https://github.com/docker/compose/releases/download/${docker_compose_version}/docker-compose-linux-aarch64" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# Swap de 1 GB: margen ante picos de memoria en una instancia de 2 GB.
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=1024
+  chmod 600 /swapfile
+  mkswap /swapfile
+  echo '/swapfile none swap defaults 0 0' >> /etc/fstab
+  swapon /swapfile
+fi
+
+mkdir -p /opt/monitoring/config
+
+cat > /usr/local/bin/monitoring-sync <<'EOF'
+#!/bin/bash
+# Trae la configuración de S3 y la contraseña de Grafana de SSM (nunca queda en user_data).
+set -euo pipefail
+aws s3 sync "s3://${bucket}/config/" /opt/monitoring/config/ --delete --region "${region}"
+password="$(aws ssm get-parameter --with-decryption --name "${grafana_password_param}" \
+  --query Parameter.Value --output text --region "${region}")"
+umask 077
+printf 'GF_SECURITY_ADMIN_PASSWORD=%s\n' "$password" > /opt/monitoring/.env
+EOF
+chmod 700 /usr/local/bin/monitoring-sync
+
+cat > /etc/systemd/system/monitoring.service <<'EOF'
+[Unit]
+Description=Grafana, Loki y Prometheus (AcademiaDigital)
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/monitoring/config
+ExecStartPre=/usr/local/bin/monitoring-sync
+ExecStart=/usr/bin/docker compose --env-file /opt/monitoring/.env -p monitoring up -d --remove-orphans
+ExecStop=/usr/bin/docker compose --env-file /opt/monitoring/.env -p monitoring down
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now monitoring.service

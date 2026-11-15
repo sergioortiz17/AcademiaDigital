@@ -57,6 +57,10 @@ sed -e "s|__ECR_REGISTRY__|$ECR_REGISTRY|g" \
     -e "s|__IMAGE_TAG__|$IMAGE_TAG|g" \
     deploy/eb/docker-compose.yml > bundle/docker-compose.yml
 
+# Configuración del agente de observabilidad (servicio "alloy" del compose).
+mkdir -p bundle/alloy
+cp deploy/eb/alloy/config.alloy bundle/alloy/config.alloy
+
 if grep -Eq '__ECR_REGISTRY__|__ECR_PREFIX__|__IMAGE_TAG__' bundle/docker-compose.yml; then
   echo "ERROR: quedaron marcadores sin reemplazar en bundle/docker-compose.yml" >&2
   exit 1

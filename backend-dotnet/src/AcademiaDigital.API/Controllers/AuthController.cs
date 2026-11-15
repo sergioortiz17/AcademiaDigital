@@ -14,13 +14,20 @@ public class AuthController(
     LogoutUseCase logoutUseCase,
     ForgotPasswordUseCase forgotPasswordUseCase,
     ResetPasswordUseCase resetPasswordUseCase,
-    ChangePasswordUseCase changePasswordUseCase) : ApiControllerBase
+    ChangePasswordUseCase changePasswordUseCase,
+    ILogger<AuthController> logger) : ApiControllerBase
 {
     // POST /api/v1/users/login
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
         var result = await loginUseCase.ExecuteAsync(request.Email, request.Password, ct);
+
+        // Auditoría de accesos (Grafana). Los intentos fallidos ya quedan en el log del
+        // request como 401/423 sobre esta ruta, con la IP; no se registra el email.
+        logger.LogInformation("{Event} {UserId} {Role} {Ip}", "login_success",
+            result.User.Id, (int)result.User.Role, HttpContext.Connection.RemoteIpAddress?.ToString());
+
         return Ok(new
         {
             success = result.Success,

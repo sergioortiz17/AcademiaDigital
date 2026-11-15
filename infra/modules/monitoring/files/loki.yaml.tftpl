@@ -1,0 +1,54 @@
+# Loki en modo monolítico (un solo proceso), con chunks e índice en S3.
+# Credenciales: el rol de la instancia (IMDSv2); no hay claves en este archivo.
+# Generado por Terraform (infra/modules/monitoring/files/loki.yaml.tftpl).
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn
+
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    s3:
+      region: ${region}
+      bucketnames: ${bucket}
+
+schema_config:
+  configs:
+    - from: "2026-01-01"
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+
+# El compactor aplica la retención: borra de S3 lo que pasa de retention_period.
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: s3
+
+limits_config:
+  retention_period: ${retention_days * 24}h
+  max_query_lookback: ${retention_days * 24}h
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  ingestion_rate_mb: 4
+  ingestion_burst_size_mb: 8
+  allow_structured_metadata: true
+
+analytics:
+  reporting_enabled: false

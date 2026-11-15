@@ -11,6 +11,19 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Logging ───────────────────────────────────────────────────────────────────
+// Fuera de Development: una línea JSON por evento, igual que el monolito, para que Alloy
+// la envíe a Loki y Grafana pueda filtrar por campo.
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddJsonConsole(o =>
+    {
+        o.UseUtcTimestamp = true;
+        o.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+    });
+}
+
 // ── Infrastructure (FinanceDbContext, repositories, policies, services, directory) ──
 builder.Services.AddFinanceInfrastructure(builder.Configuration);
 builder.Services.AddSingleton(TimeProvider.System);

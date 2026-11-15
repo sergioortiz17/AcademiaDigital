@@ -39,6 +39,7 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 8 | `itsc/certificate` | ✅ Hecho | 10/11/2026 | 3 recursos: certificado `ISSUED` para `itsc.dryvn.org`, vence el 27/05/2027 |
 | 9 | `itsc/email` | ✅ Hecho | 10/11/2026 | 8 recursos: dominio verificado en SES, DKIM y MAIL FROM en `SUCCESS` |
 | 10 a 11 | Fase 4: base de datos | ⏸️ En espera | | |
+| 11b | `itsc/monitoring` (Grafana, Loki, Prometheus) | ⏸️ En espera | | Va antes del paso 12: la app necesita las direcciones de Loki y Prometheus |
 | 12 a 13 | Fase 5: aplicación | ⏸️ En espera | | |
 | — | ~~OIDC de GitHub~~ | ❌ Descartado | 14/11/2026 | La SCP de AWS (`DenyIAMRestrictedActions`: `iam:*Provider*`) lo bloquea y no se puede modificar. Se reemplaza por CodePipeline |
 | 14 | `shared/github-connection` | ✅ Hecho | 14/11/2026 | 1 recurso: conexión `academiadigital-github` |
@@ -398,6 +399,60 @@ Esperado: `Apply complete! Resources: 4 added, 0 changed, 0 destroyed.`
 **No avanzar hasta** tener las imágenes en ECR y el bundle de Beanstalk. Sin eso, Beanstalk solo muestra la aplicación de ejemplo de AWS.
 
 Costo: ~40 USD/mes con el horario de servicio (ALB, 2 EC2 e IPs públicas).
+
+### Paso 11b. Monitoreo (`itsc/monitoring`)
+
+Una EC2 `t4g.small` con Grafana, Loki y Prometheus en Docker. Loki guarda los logs en S3 (90 días) y Prometheus las métricas en el disco (30 días). No abre puertos a internet: Loki (3100) y Prometheus (9090) solo aceptan a las instancias de la app, y Grafana escucha en `127.0.0.1` y se abre con Session Manager. Sigue el mismo horario que la plataforma. Suma una instancia del mismo tipo que las de la app, su disco y el almacenamiento de S3.
+
+Plan:
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/monitoring && terragrunt plan
+```
+
+Esperado: `Plan: 28 to add, 0 to change, 0 to destroy.`
+
+- 6 del bucket `academiadigital-itsc-prod-monitoring-740227232235`: bucket, ownership, bloqueo público, cifrado, política de solo TLS y ciclo de vida.
+- 6 `aws_s3_object` en `config/`: `docker-compose.yml`, `loki.yaml`, `prometheus.yml`, data sources, proveedor de dashboards y el dashboard.
+- `random_password.grafana_admin` y `aws_ssm_parameter.grafana_admin` (`/academiadigital-itsc-prod/monitoring/grafana-admin-password`).
+- 4 de red: security group `academiadigital-itsc-prod-monitoring`, 2 reglas de entrada (3100 y 9090) **con origen en el security group de la app**, ninguna desde `0.0.0.0/0`, y la regla de salida.
+- `aws_instance.this` con `private_ip = "10.20.0.10"`, `http_tokens = "required"` y disco cifrado.
+- 4 de IAM: rol, `AmazonSSMManagedInstanceCore`, política (S3 del bucket, el parámetro de Grafana y lectura de CloudWatch) y perfil de instancia.
+- 5 del horario: rol, política y 3 schedules (`start`, `stop-weekday`, `stop-saturday`).
+
+Apply:
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/monitoring && terragrunt apply
+```
+
+Esperado: `Apply complete! Resources: 28 added, 0 changed, 0 destroyed.` La instancia tarda unos 3 a 5 minutos en instalar Docker y levantar los contenedores.
+
+**Abrir Grafana** (requiere el [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) instalado):
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/monitoring && \
+aws ssm start-session --target "$(terragrunt output -raw instance_id)" \
+  --document-name AWS-StartPortForwardingSession \
+  --parameters 'portNumber=3000,localPortNumber=3000'
+```
+
+Con la sesión abierta, entrar a `http://localhost:3000` con el usuario `admin`. La contraseña está en SSM; leerla en la terminal y no pegarla en chats ni tickets:
+
+```bash
+aws ssm get-parameter --with-decryption --name /academiadigital-itsc-prod/monitoring/grafana-admin-password --query Parameter.Value --output text
+```
+
+El dashboard está en **Dashboards → AcademiaDigital → Accesos, errores e instancias**.
+
+**Cambiar la configuración** (dashboards, Loki, Prometheus): editar `infra/modules/monitoring/files/`, aplicar esta unidad (solo actualiza objetos de S3) y reiniciar el servicio, que vuelve a sincronizar desde S3:
+
+```bash
+aws ssm send-command --instance-ids "$(cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/monitoring && terragrunt output -raw instance_id)" \
+  --document-name AWS-RunShellScript --parameters 'commands=["systemctl restart monitoring"]'
+```
+
+El encendido diario también sincroniza la configuración.
 
 ### Paso 12. Elastic Beanstalk (`itsc/app`)
 

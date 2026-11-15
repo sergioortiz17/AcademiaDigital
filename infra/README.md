@@ -40,6 +40,7 @@ flowchart LR
 | Correo | Amazon SES con DKIM, MAIL FROM, SPF y DMARC |
 | Secretos | SSM Parameter Store (SecureString); Beanstalk los inyecta como variables de entorno |
 | Imágenes | ECR, una por servicio, con tags inmutables, compartidas entre instituciones |
+| Observabilidad | Alloy en cada instancia → Loki (logs en S3) y Prometheus (métricas) en una EC2 de monitoreo con Grafana. Sin puertos abiertos a internet; acceso por Session Manager |
 | CI/CD | CodePipeline + CodeBuild arm64 dentro de la cuenta. Lee GitHub por CodeConnections: GitHub no guarda credenciales de AWS. (OIDC lo bloquea la SCP administrada por AWS) |
 | Estado | S3, un estado por unidad, con bloqueo nativo (`use_lockfile`) |
 
@@ -62,6 +63,7 @@ infra/
 │   ├── schedule/             Horario de servicio
 │   ├── github-connection/    Conexión con GitHub por CodeConnections (una por cuenta)
 │   ├── pipeline/             CodePipeline + CodeBuild arm64 → ECR → Beanstalk
+│   ├── monitoring/           EC2 con Grafana, Loki (S3) y Prometheus; acceso por Session Manager
 │   ├── registry/             Repositorios ECR
 │   └── budget/               Presupuesto y alertas
 └── live/                     Lo que está desplegado
@@ -75,7 +77,7 @@ infra/
     └── itsc/                 Una institución
         ├── scope.hcl         Dominio, capacidad, horario, repositorio
         ├── network/  app-security/  dns-zone/  certificate/  cdn-certificate/  email/  storage/
-        └── database/  secrets/  app/  schedule/  pipeline/
+        └── database/  secrets/  monitoring/  app/  schedule/  pipeline/
 ```
 
 Cada carpeta con `terragrunt.hcl` es una **unidad** con su propio estado: un error al aplicar la app no puede tocar la base de datos ni la red.
@@ -90,7 +92,8 @@ flowchart TD
     dns-zone --> certificate
     dns-zone --> email
     database --> secrets
-    network & app-security & certificate & email & storage & secrets --> app
+    network & app-security --> monitoring
+    network & app-security & certificate & email & storage & secrets & monitoring --> app
     app & database --> schedule
     dns-zone --> cdn-certificate
     registry[shared/registry] & conn[shared/github-connection] --> pipeline

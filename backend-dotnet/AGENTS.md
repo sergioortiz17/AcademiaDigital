@@ -4,7 +4,7 @@ Este archivo es la memoria operativa del backend. Aplica a todo lo que está den
 
 ## Estado actual
 
-Actualizado: **2026-08-24**.
+Actualizado: **2026-11-14**.
 
 - Solución ASP.NET Core **.NET 8 / C# 12**, con Entity Framework Core 8 y SQL Server.
 - Arquitectura en cuatro proyectos: `Domain`, `Application`, `Infrastructure` y `API`.
@@ -334,7 +334,7 @@ La suite completa requiere su `.env`, Docker y una base descartable. `npm.cmd ru
 
 - Careers, Courses, StudyPlans y StudyPlanCourses están expuestos sin control de sesión, aunque Swagger muestre Bearer global.
 - Enrollment ya valida el plan vigente, correlativas estrictas, materias aprobadas/en curso y cupos concurrentes por turno; todavía no expone advertencias `Soft` en la respuesta de inscripción.
-- El challenge de admisión usa `Disabled` por defecto para compatibilidad local. Producción debe configurar `AdmissionAntiAbuse__Challenge__Mode=Turnstile` y `AdmissionAntiAbuse__Challenge__Secret`; `StaticToken` se reserva para E2E o entornos controlados. Si existe reverse proxy, debe establecerse una política confiable de forwarded headers antes de usar la IP original.
+- El challenge de admisión usa `Disabled` por defecto para compatibilidad local. Producción debe configurar `AdmissionAntiAbuse__Challenge__Mode=Turnstile` y `AdmissionAntiAbuse__Challenge__Secret`; `StaticToken` se reserva para E2E o entornos controlados. Detrás de un reverse proxy, la IP original se normaliza en `Observability/ObservabilityExtensions.cs` sólo si `ReverseProxy__TrustForwardedHeaders=true` (último salto de `X-Forwarded-For`, `ForwardLimit = 1`). Activarlo únicamente donde el backend no publique puertos y sólo lo alcance el proxy (hoy, Beanstalk: ALB → nginx → backend); en local queda apagado.
 - Los valores de turno no están normalizados: Commission usa inglés y Enrollment usa español.
 - Swagger no describe con precisión todos los guards ni todos los contratos de respuesta/error.
 - El adaptador actual de notificaciones de admisión escribe un artefacto local idempotente; todavía debe reemplazarse/configurarse un proveedor real para email. El procesamiento outbox se dispara explícitamente por un endpoint Admin y requiere un worker programado para operación autónoma.
@@ -347,6 +347,8 @@ La suite completa requiere su `.env`, Docker y una base descartable. `npm.cmd ru
 No corregir estas deudas incidentalmente dentro de una tarea no relacionada. Si un cambio las afecta, documentar el alcance y agregar una prueba de regresión.
 
 ## Últimos cambios relevantes
+
+- **2026-11-14 — observabilidad (v1.1.0):** fuera de Development la API y Finance escriben logs JSON por línea. `RequestLoggingMiddleware` (primero del pipeline) registra `Event = http_request` con método, ruta sin query string, estado, duración, IP, usuario y rol; el login exitoso registra `login_success`; `POST /api/v1/client-errors` (anónimo, rate limit `ClientErrors` por IP, 16 KB) recibe errores del frontend. La configuración vive en `Observability/ObservabilityExtensions.cs` para no sumar complejidad a `Program.cs`. Forwarded headers sólo con `ReverseProxy__TrustForwardedHeaders=true`. EF Core en `Warning` en `appsettings.json`. Sin cambios de esquema ni de contratos existentes (endpoint nuevo aditivo). Verificado: build de la solución sin errores, Domain 172/172, Application 93/93, ArchUnitNET 8/8 y formato JSON del log en modo Production; no se ejecutó la regresión API.
 
 - **2026-08-24 — guía funcional M4–M11:** se consolidaron funcionalidades, actores, casos de uso, estados, API disponible, pantallas sugeridas, circuitos integrados y criterios de aceptación para frontend. El relevamiento Angular deja explícita la integración parcial de M8, el placeholder M5 y la brecha de los demás módulos. Se verificaron formato, enlaces y `git diff --check`; no se modificó código ni se reejecutaron suites para este cambio documental.
 - **2026-08-24 — cierre MVP M11 recibos:** se agregó emisión automática vinculada al pago, correlativo global serializado, snapshot inmutable, PDF/SHA-256 reintentable, historial/descarga Admin o propietario, campos fiscales opcionales, volumen durable y backup coordinado. La migración es `AddDigitalReceipts`; pasaron 291/291 unit tests, build Release, ArchUnitNET 8/8, modelo EF, typecheck, migración/backfill M1–M11, M11 1/1 y regresión 34/34. Swagger confirmó 196 operaciones y Allure fue generado. M4–M11 quedan cerrados y el roadmap continúa en estabilización/release.
