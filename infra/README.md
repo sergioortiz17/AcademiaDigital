@@ -31,7 +31,7 @@ flowchart LR
 
 | Pieza | Decisión |
 |---|---|
-| Región | us-east-2 (Ohio). Es la única región que habilita la SCP de la organización de la cuenta |
+| Región | us-east-2 (Ohio). La cuenta es un proyecto de *Sign up for AWS (new)*: AWS asigna la región por país y sus SCP solo permiten us-east-2, más servicios globales en us-east-1 ([AWS](https://docs.aws.amazon.com/accounts/latest/reference/project-regions.html)) |
 | Red | VPC propia, 2 zonas, sin NAT Gateway. Las instancias están en subnets públicas pero solo aceptan tráfico del ALB |
 | Cómputo | Elastic Beanstalk, plataforma Docker sobre Amazon Linux 2023, 2 × t4g.small (arm64) detrás de un ALB |
 | Base de datos | RDS PostgreSQL 16, db.t4g.micro Multi-AZ, cifrada, backups de 7 días, protección contra borrado |
@@ -40,7 +40,7 @@ flowchart LR
 | Correo | Amazon SES con DKIM, MAIL FROM, SPF y DMARC |
 | Secretos | SSM Parameter Store (SecureString); Beanstalk los inyecta como variables de entorno |
 | Imágenes | ECR, una por servicio, con tags inmutables, compartidas entre instituciones |
-| Acceso de la CI | GitHub Actions por OIDC, sin claves guardadas |
+| CI/CD | CodePipeline + CodeBuild arm64 dentro de la cuenta. Lee GitHub por CodeConnections: GitHub no guarda credenciales de AWS. (OIDC lo bloquea la SCP administrada por AWS) |
 | Estado | S3, un estado por unidad, con bloqueo nativo (`use_lockfile`) |
 
 ## Estructura
@@ -60,8 +60,8 @@ infra/
 │   ├── secrets/              Connection strings y JWT en Parameter Store
 │   ├── app/                  Elastic Beanstalk (aplicación, entorno, IAM, registro DNS)
 │   ├── schedule/             Horario de servicio
-│   ├── github-oidc-provider/ Proveedor OIDC de GitHub (uno por cuenta)
-│   ├── github-oidc/          Rol de GitHub Actions de una institución
+│   ├── github-connection/    Conexión con GitHub por CodeConnections (una por cuenta)
+│   ├── pipeline/             CodePipeline + CodeBuild arm64 → ECR → Beanstalk
 │   ├── registry/             Repositorios ECR
 │   └── budget/               Presupuesto y alertas
 └── live/                     Lo que está desplegado
@@ -70,12 +70,12 @@ infra/
     ├── shared/               Recursos únicos por cuenta
     │   ├── scope.hcl
     │   ├── registry/
-    │   ├── github-oidc-provider/
+    │   ├── github-connection/
     │   └── budget/
     └── itsc/                 Una institución
         ├── scope.hcl         Dominio, capacidad, horario, repositorio
-        ├── network/  app-security/  dns-zone/  certificate/  email/  storage/
-        └── database/  secrets/  app/  schedule/  github-oidc/
+        ├── network/  app-security/  dns-zone/  certificate/  cdn-certificate/  email/  storage/
+        └── database/  secrets/  app/  schedule/  pipeline/
 ```
 
 Cada carpeta con `terragrunt.hcl` es una **unidad** con su propio estado: un error al aplicar la app no puede tocar la base de datos ni la red.
@@ -92,8 +92,8 @@ flowchart TD
     database --> secrets
     network & app-security & certificate & email & storage & secrets --> app
     app & database --> schedule
-    app & database & schedule --> github-oidc
-    registry[shared/registry] & oidc[shared/github-oidc-provider] --> github-oidc
+    dns-zone --> cdn-certificate
+    registry[shared/registry] & conn[shared/github-connection] --> pipeline
 ```
 
 El security group de las instancias está en su propia unidad para cortar un ciclo: RDS necesita autorizarlo, y la app necesita los secretos, que dependen de RDS.
@@ -200,7 +200,7 @@ La cuenta empieza en el sandbox de SES: solo puede enviar a direcciones verifica
 2. Cambiar `scope.hcl`: `client`, `domain_name`, capacidad y horario.
 3. Delegar su subdominio y aplicar como en los pasos 2 a 4.
 
-Las imágenes de ECR, el proveedor OIDC y el presupuesto se comparten (`live/shared/`). Cada institución tiene su red, su base de datos, su Beanstalk y su dominio.
+Las imágenes de ECR, la conexión con GitHub y el presupuesto se comparten (`live/shared/`). Cada institución tiene su red, su base de datos, su Beanstalk y su dominio.
 
 ## Reglas de operación
 

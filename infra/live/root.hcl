@@ -13,6 +13,14 @@ locals {
   project    = "academiadigital"
   aws_region = local.account.aws_region
 
+  # Región del provider. Por defecto la de la cuenta; una unidad puede pisarla con un
+  # region.hcl propio (solo lo usa el certificado de CloudFront, que AWS exige en
+  # us-east-1). El estado de Terraform siempre queda en el bucket de aws_region.
+  provider_region = try(
+    read_terragrunt_config("${get_terragrunt_dir()}/region.hcl").locals.aws_region,
+    local.aws_region,
+  )
+
   # Control de cuenta: se ejecuta al leer la configuración, antes de crear el bucket del
   # estado o correr Terraform. Si las credenciales activas son de otra cuenta (p. ej. de
   # un cliente), Terragrunt aborta sin tocar nada. El bucket y allowed_account_ids usan
@@ -66,7 +74,7 @@ generate "provider" {
     }
 
     provider "aws" {
-      region = "${local.aws_region}"
+      region = "${local.provider_region}"
 
       # Corta cualquier plan o apply si el perfil activo apunta a otra cuenta.
       allowed_account_ids = ["${local.account_id}"]

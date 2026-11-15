@@ -40,13 +40,18 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 9 | `itsc/email` | ✅ Hecho | 10/11/2026 | 8 recursos: dominio verificado en SES, DKIM y MAIL FROM en `SUCCESS` |
 | 10 a 11 | Fase 4: base de datos | ⏸️ En espera | | |
 | 12 a 13 | Fase 5: aplicación | ⏸️ En espera | | |
-| 14 a 15 | Fase 6: CI | ⏸️ En espera | | |
+| — | ~~OIDC de GitHub~~ | ❌ Descartado | 14/11/2026 | La SCP de AWS (`DenyIAMRestrictedActions`: `iam:*Provider*`) lo bloquea y no se puede modificar. Se reemplaza por CodePipeline |
+| 14 | `shared/github-connection` | ✅ Hecho | 14/11/2026 | 1 recurso: conexión `academiadigital-github` |
+| 15 | Confirmar la conexión en la consola | ✅ Hecho | 14/11/2026 | App "AWS Connector for GitHub" instalada solo en `AcademiaDigital` (instalación `182079371`). Estado `AVAILABLE` |
+| 16 | `deploy/` en `main` (PR) | ⏸️ Pendiente | | |
+| 17 | `itsc/pipeline` | ⏸️ Pendiente | | |
+| 18 | Activar el despliegue (`deploy_enabled = true`) | ⏸️ Después de la fase 5 | | |
 
 Pendientes fuera de Terraform:
 
 - [ ] Confirmar el correo de verificación de AWS Budgets en `sergioortiz170992@gmail.com`.
 - [ ] Pedir acceso a producción de SES en us-east-2 (hoy: sandbox, 200 correos por día, solo a direcciones verificadas).
-- [ ] Confirmar con Gabriel que la producción del ITSC puede vivir en esta cuenta, antes de la fase 4.
+- [ ] Ver en [settings.aws.com](https://settings.aws.com) el crédito restante y la fecha de fin del plan Free. Al terminar, AWS suspende la cuenta ([AWS](https://docs.aws.amazon.com/accounts/latest/reference/bcm-lite-free-tier.html)). Para producción, la universidad tiene que pasarla a pago antes de la fase 4.
 
 ---
 
@@ -441,49 +446,122 @@ Esperado: `Apply complete! Resources: 9 added, 0 changed, 0 destroyed.`
 
 ---
 
-## Fase 6: CI ⏸️
+## Fase 6: CI/CD con CodePipeline ⏸️
 
-**Bloqueo conocido:** la política de la organización niega listar proveedores OIDC de IAM. Es probable que el paso 14 falle con `AccessDenied`. Si pasa, no reintentar: hay que pedirle a Gabriel que lo habilite.
+**Por qué no GitHub Actions con OIDC:** la cuenta es un proyecto de *Sign up for AWS (new)*. AWS administra la organización y sus SCP, y `DenyIAMRestrictedActions` niega `iam:*Provider*` sin posibilidad de cambio ([AWS](https://docs.aws.amazon.com/accounts/latest/reference/scps-and-rcps-for-projects.html)). El apply del 14/11/2026 lo confirmó con `explicit deny in a service control policy`.
 
-### Paso 14. Proveedor OIDC de GitHub (`shared/github-oidc-provider`)
+**Cómo funciona ahora:** AWS lee el repositorio por una conexión de CodeConnections (la app "AWS Connector for GitHub"), así que GitHub no guarda ninguna credencial de AWS.
+
+```
+push a main → CodePipeline → CodeBuild arm64 (deploy/buildspec.yml)
+            → ECR (backend, finance, frontend con el SHA del commit)
+            → Elastic Beanstalk (desde el paso 18)
+```
+
+Costo: CodeBuild incluye 100 minutos al mes en `arm1.small` y CodePipeline V2 incluye 100 minutos de acción al mes ([CodeBuild](https://aws.amazon.com/codebuild/pricing/), [CodePipeline](https://aws.amazon.com/codepipeline/pricing/)).
+
+### Paso 14. Conexión con GitHub (`shared/github-connection`)
 
 Plan:
 
 ```bash
-cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/shared/github-oidc-provider && terragrunt plan
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/shared/github-connection && terragrunt plan
 ```
 
-Esperado: `Plan: 1 to add, 0 to change, 0 to destroy.` con `aws_iam_openid_connect_provider.github` (`token.actions.githubusercontent.com`).
+Esperado: `Plan: 1 to add, 0 to change, 0 to destroy.` con `aws_codeconnections_connection.github`, `name = "academiadigital-github"` y `provider_type = "GitHub"`.
 
 Apply:
 
 ```bash
-cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/shared/github-oidc-provider && terragrunt apply
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/shared/github-connection && terragrunt apply
 ```
 
-Esperado: `Apply complete! Resources: 1 added, 0 changed, 0 destroyed.`
+Esperado: `Apply complete! Resources: 1 added` y la salida `status = "PENDING"`. Es normal: falta el paso 15.
 
-### Paso 15. Rol de GitHub Actions (`itsc/github-oidc`)
+### Paso 15. Confirmar la conexión en la consola (manual, una sola vez)
+
+Terraform no puede hacer este paso, porque requiere autorizar en GitHub ([AWS](https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-update.html)).
+
+1. En la consola de AWS (us-east-2): **Developer Tools → Settings → Connections**.
+2. Elegir `academiadigital-github` (estado *Pending*) → **Update pending connection**.
+3. Se abre GitHub: **Install a new app** → cuenta `sergioortiz17` → **Only select repositories** → `AcademiaDigital` → **Install**.
+4. De vuelta en AWS: **Connect**. El estado pasa a **Available**.
+
+Verificación:
+
+```bash
+aws codeconnections list-connections --query 'Connections[].{Nombre:ConnectionName,Estado:ConnectionStatus}' --output table
+```
+
+Esperado: `academiadigital-github` en `AVAILABLE`.
+
+### Paso 16. Llevar `deploy/` a `main`
+
+CodeBuild lee `deploy/buildspec.yml` de la rama `main`. Si el pipeline se crea antes, la primera ejecución falla con `YAML_FILE_ERROR`. Antes del paso 17, mergear a `main` un PR con:
+
+- `deploy/buildspec.yml`
+- `deploy/scripts/build-and-push.sh`
+- `deploy/eb/docker-compose.yml`
+
+### Paso 17. Pipeline (`itsc/pipeline`)
 
 Plan:
 
 ```bash
-cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/github-oidc && terragrunt plan
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/pipeline && terragrunt plan
 ```
 
-Esperado:
+Esperado: `Plan: 13 to add, 0 to change, 0 to destroy.`
 
-- `Plan: 3 to add, 0 to change, 0 to destroy.`
-- `aws_iam_role.github_actions` con nombre `academiadigital-itsc-prod-github-actions`; la condición de confianza solo admite `repo:sergioortiz17/AcademiaDigital:ref:refs/heads/main`.
-- `aws_iam_role_policy_attachment.beanstalk` y `aws_iam_role_policy.github_actions`.
+- 6 del bucket de artefactos `academiadigital-itsc-prod-pipeline-740227232235`: bucket, ownership, bloqueo público, cifrado, política de solo TLS y ciclo de vida de 30 días.
+- `aws_cloudwatch_log_group.build` (`/aws/codebuild/academiadigital-itsc-prod-images`).
+- `aws_codebuild_project.images` con `type = "ARM_CONTAINER"` y `privileged_mode = true`.
+- 2 del rol de CodeBuild (`academiadigital-itsc-prod-codebuild` y su política).
+- 2 del rol de CodePipeline (`academiadigital-itsc-prod-codepipeline` y su política).
+- `aws_codepipeline.this` (`academiadigital-itsc-prod-deploy`) con 2 etapas, `Source` y `Build`, **sin** `Deploy`.
 
 Apply:
 
 ```bash
-cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/github-oidc && terragrunt apply
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/pipeline && terragrunt apply
 ```
 
-Esperado: `Apply complete! Resources: 3 added, 0 changed, 0 destroyed.`
+Esperado: `Apply complete! Resources: 13 added, 0 changed, 0 destroyed.`
+
+Al crearse, el pipeline ejecuta una vez sobre el último commit de `main`. El build tarda unos 15 a 20 minutos la primera vez, porque construye 3 imágenes sin caché. Seguimiento:
+
+```bash
+aws codepipeline get-pipeline-state --name academiadigital-itsc-prod-deploy \
+  --query 'stageStates[].{Etapa:stageName,Estado:latestExecution.status}' --output table
+```
+
+Resultado esperado al terminar: las dos etapas en `Succeeded`, y en ECR una imagen por repositorio con el SHA del commit:
+
+```bash
+for r in backend finance frontend; do aws ecr list-images --repository-name academiadigital/$r --query 'imageIds[].imageTag' --output text; done
+```
+
+Logs del build: CloudWatch → `/aws/codebuild/academiadigital-itsc-prod-images`.
+
+### Paso 18. Activar el despliegue (después de la fase 5)
+
+Con el entorno de Beanstalk creado (paso 12), cambiar `deploy_enabled = false` a `true` en `/home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/pipeline/terragrunt.hcl`.
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/pipeline && terragrunt plan
+```
+
+Esperado: `Plan: 1 to add, 1 to change, 0 to destroy.` Agrega la política de Beanstalk al rol del pipeline y la etapa `Deploy` al pipeline.
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/pipeline && terragrunt apply
+```
+
+Desde ahí, cada push a `main` construye y despliega solo. Para reprocesar el último commit sin hacer push:
+
+```bash
+aws codepipeline start-pipeline-execution --name academiadigital-itsc-prod-deploy
+```
 
 ---
 
@@ -493,6 +571,10 @@ Esperado: `Apply complete! Resources: 3 added, 0 changed, 0 destroyed.`
 |---|---|
 | `ERROR: la cuenta activa es ... pero esta infraestructura es de la cuenta 740227232235` | La terminal no tiene el entorno correcto. `ad-off`, `source infra/scripts/aws-env.sh`, `ad-whoami` |
 | `ExpiredToken` o credenciales vencidas | `aws login --profile academiadigital` |
-| `explicit deny in a service control policy` | La organización no permite esa acción o región. No reintentar; anotar la acción y consultarlo con Gabriel |
+| `explicit deny in a service control policy` | Lo bloquea una SCP administrada por AWS (cuenta de *Sign up for AWS (new)*), que no se puede modificar. No reintentar; buscar la acción en las [políticas publicadas](https://docs.aws.amazon.com/accounts/latest/reference/scps-and-rcps-for-projects.html) |
 | El `plan` muestra `to destroy` o `to change` en algo que ya existía | No aplicar. Revisar qué cambió |
 | `Error acquiring the state lock` | Otra ejecución está usando el estado. Esperar a que termine; no forzar el desbloqueo sin saber cuál es |
+| El pipeline falla en `Source` | La conexión con GitHub no está en `AVAILABLE` (paso 15), o la app de GitHub no tiene acceso al repositorio |
+| CodeBuild falla con `YAML_FILE_ERROR` | `deploy/buildspec.yml` no está en `main` (paso 16) |
+| CodeBuild no arranca: `Cannot have more than 0 builds in queue` o similar | Cuota de builds concurrentes de la cuenta. Revisarla en **Service Quotas → AWS CodeBuild** y pedir un aumento |
+| El build falla en `docker push` con `tag invalid` / `already exists` | El tag es inmutable; el script ya lo saltea. Si pasa, revisar que `IMAGE_TAG` llegue con el SHA |

@@ -4,6 +4,8 @@ Cómo pasa el código de GitHub a `https://itsc.dryvn.org`: conexión del reposi
 
 La infraestructura base ya existe (ver [DESPLIEGUE-ITSC.md](DESPLIEGUE-ITSC.md), pasos 0 a 9). Este documento cubre lo que falta para que la aplicación funcione.
 
+> **Actualización 14/11/2026:** la conexión con GitHub por OIDC y GitHub Actions (opciones A y B de este documento) quedó **descartada**: la SCP administrada por AWS niega `iam:*Provider*` y no se puede modificar. El CI/CD ahora es CodePipeline + CodeBuild arm64 dentro de la cuenta, sin credenciales en GitHub. Ver [DESPLIEGUE-ITSC.md, fase 6](DESPLIEGUE-ITSC.md#fase-6-cicd-con-codepipeline-️). El compose de producción vive en `deploy/eb/docker-compose.yml`. Las secciones de base de datos, correos y cambios de código siguen vigentes.
+
 ## 1. Cómo funciona el despliegue
 
 ```mermaid
