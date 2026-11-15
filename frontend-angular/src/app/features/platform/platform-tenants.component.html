@@ -67,6 +67,13 @@
                      placeholder="ucv.localhost, campus.ucv.edu" autocomplete="off" />
               <mat-hint>Separados por coma. Sin https:// ni puerto. En desarrollo: &lt;id&gt;.localhost</mat-hint>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Dominio de correo docente (opcional)</mat-label>
+              <input matInput [(ngModel)]="teacherEmailDomain" name="teacherEmailDomain" maxlength="253"
+                     placeholder="itscordoba.edu.ar" autocomplete="off" />
+              <mat-hint>Quien se registre con un email de este dominio queda como docente, pendiente de alta.</mat-hint>
+            </mat-form-field>
           </div>
 
           <h2>Administrador inicial</h2>
@@ -125,6 +132,7 @@
               <td>{{ tenant.name }}</td>
               <td>
                 <span *ngFor="let domain of tenant.domains" class="chip">{{ domain }}</span>
+                <span *ngIf="tenant.teacherEmailDomain" class="chip">docentes: &#64;{{ tenant.teacherEmailDomain }}</span>
               </td>
               <td>{{ tenant.createdAt | date: 'dd/MM/yyyy' }}</td>
             </tr>

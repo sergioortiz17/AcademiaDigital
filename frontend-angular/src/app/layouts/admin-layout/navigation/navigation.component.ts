@@ -49,7 +49,7 @@ const MENU_ADMIN: MenuItem[] = [
       { id: 'student-commission', title: 'Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
     ]
   },
-  { id: 'registros',   title: 'Registros',          icon: 'assignment_ind',
+  { id: 'registros',   title: 'Registros Académicos', icon: 'assignment_ind',
     children: [
       { id: 'attendance', title: 'Asistencias', url: '/app/admin/attendance', icon: '' },
       { id: 'gradebooks-shared', title: 'Calificaciones', url: '/app/grades', icon: '' }
@@ -64,6 +64,7 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'admin-exam-form', title: 'Mesa de examen', url: '/app/admin/exam-form', icon: 'event_note' },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
+  { id: 'applicants',  title: 'Aspirantes',         url: '/app/admin/applicants', icon: 'person_add' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
   { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
   { id: 'approval-rules', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' },

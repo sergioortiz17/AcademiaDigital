@@ -137,5 +137,9 @@ inputs = {
     # Correo saliente (recuperación de contraseña) por Amazon SES con el rol de la instancia.
     # Remitente: MAIL_FROM. Con la cuenta SES en sandbox solo llega a direcciones verificadas.
     Email__Provider = "Ses"
+
+    # Registro público: los emails de este dominio se registran como Profesor, pendientes de
+    # alta en "Aspirantes". Se aplica al arrancar solo si la institución todavía no tiene uno.
+    Tenancy__DefaultTeacherEmailDomain = "itscordoba.edu.ar"
   }
 }

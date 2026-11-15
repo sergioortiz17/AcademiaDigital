@@ -4,6 +4,24 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.6.0] - 2026-11-15
+
+Alta de usuarios controlada por la institución.
+
+### Agregado
+
+- **Sección "Aspirantes"** (menú del Admin): cuentas del registro público pendientes de alta, con filtro por rol (Alumnos/Profesores), búsqueda por nombre, email o DNI, fecha de registro y carrera. Botón "Dar de alta" por fila, casillas con "Seleccionar todos" y alta en masa. La pestaña "Dados de alta (últimos 7 días)" muestra las altas recientes.
+- **Dominio de correo docente por institución** (`TeacherEmailDomain`): quien se registra con un email de ese dominio (en ITSC, `itscordoba.edu.ar`) queda como Profesor con su perfil docente, sin elegir carrera. Al darlo de alta, el perfil queda activo para asignarle materias y divisiones. Se configura al crear la institución en `/platform` y, para ITSC, con `Tenancy__DefaultTeacherEmailDomain`.
+- API: `GET /api/v1/admin/applicants` y `POST /api/v1/admin/applicants/approve`. `GET /api/v1/tenant/current` informa el dominio docente.
+- Clave de la página `/platform` en SSM (`Platform__AdminKey`, Terraform).
+
+### Cambiado
+
+- **El registro público ya no habilita la cuenta**: queda pendiente y el login responde 403 "Tu cuenta está pendiente de aprobación" hasta que un Admin la da de alta. Los usuarios existentes, los creados por un Admin, la plataforma, DevTools y los seeds quedan aprobados.
+- Gestión de Usuarios muestra solo cuentas dadas de alta.
+- El menú "Registros" pasa a llamarse "Registros Académicos".
+- Migraciones: `AddUserRegistrationApproval` (base de cada institución) y `AddTenantTeacherEmailDomain` (base de control).
+
 ## [1.5.0] - 2026-11-15
 
 ### Agregado

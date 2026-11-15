@@ -39,6 +39,10 @@ public class LoginUseCase(
             throw new InvalidCredentialsException();
         }
 
+        // La contraseña ya se verificó: avisar que falta el alta no revela nada a un tercero.
+        if (user.RegistrationStatus == RegistrationStatus.Pending)
+            throw new PendingApprovalException();
+
         if (!user.IsActive)
             throw new InactiveUserException();
 

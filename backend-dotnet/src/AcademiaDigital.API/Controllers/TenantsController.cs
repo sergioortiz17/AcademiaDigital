@@ -13,7 +13,7 @@ public class TenantController(ITenantContext tenant) : ApiControllerBase
 {
     [HttpGet("current")]
     public ActionResult<CurrentTenantDto> GetCurrent()
-        => Ok(new CurrentTenantDto(tenant.Current.Slug, tenant.Current.Name));
+        => Ok(new CurrentTenantDto(tenant.Current.Slug, tenant.Current.Name, tenant.Current.TeacherEmailDomain));
 }
 
 /// <summary>

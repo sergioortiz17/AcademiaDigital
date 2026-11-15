@@ -1,5 +1,6 @@
 using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Domain.Entities;
+using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure.Persistence.Control;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,6 +83,10 @@ public static class TenancyInitializer
             logger.LogInformation("Registrando la institución por defecto {Slug} sobre la base {Database}.",
                 tenant.Slug, tenant.DatabaseName);
         }
+
+        var teacherDomain = TeacherEmailDomains.Normalize(options.DefaultTeacherEmailDomain);
+        if (tenant.TeacherEmailDomain is null && teacherDomain is not null)
+            tenant.TeacherEmailDomain = teacherDomain;
 
         // Solo agrega hosts faltantes (y que no pertenezcan a otra institución); nunca quita.
         var wanted = options.DefaultDomains

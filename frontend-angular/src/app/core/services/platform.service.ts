@@ -12,6 +12,7 @@ export interface TenantSummary {
   isDefault: boolean;
   createdAt: string;
   domains: string[];
+  teacherEmailDomain?: string | null;
 }
 
 export interface CreateTenantPayload {
@@ -23,6 +24,8 @@ export interface CreateTenantPayload {
   adminLastName: string;
   adminDni: string;
   adminPassword: string;
+  /** Opcional: los emails de este dominio se registran como Profesor (pendiente de alta). */
+  teacherEmailDomain?: string | null;
 }
 
 const KEY_STORAGE = 'academia-platform-key';

@@ -51,6 +51,10 @@ namespace AcademiaDigital.Infrastructure.Migrations.Control
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("TeacherEmailDomain")
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DatabaseName")

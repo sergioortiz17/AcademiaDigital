@@ -11,7 +11,9 @@ public class AdminController(
     GetUsersUseCase getUsersUseCase,
     UpdateUserRoleUseCase updateUserRoleUseCase,
     UpdateUserActiveStatusUseCase updateUserActiveStatusUseCase,
-    DeleteUserUseCase deleteUserUseCase) : ApiControllerBase
+    DeleteUserUseCase deleteUserUseCase,
+    GetApplicantsUseCase getApplicantsUseCase,
+    ApproveApplicantsUseCase approveApplicantsUseCase) : ApiControllerBase
 {
     private IActionResult RequireAdmin()
     {
@@ -52,6 +54,32 @@ public class AdminController(
         return Ok(new { success = true, user = updated });
     }
 
+    // GET /api/v1/admin/applicants?status=pending|approved&role=&search=&page=1&pageSize=20
+    // Aspirantes del registro público: pendientes de alta o dados de alta en los últimos 7 días.
+    [HttpGet("applicants")]
+    public async Task<IActionResult> GetApplicants(
+        [FromQuery] string? search,
+        [FromQuery] UserRole? role,
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var guard = RequireAdmin(); if (guard != null) return guard;
+        var approved = string.Equals(status, "approved", StringComparison.OrdinalIgnoreCase);
+        var result = await getApplicantsUseCase.ExecuteAsync(search, role, approved, page, pageSize, ct);
+        return Ok(new { success = true, result.Items, result.Total, result.Page, result.PageSize });
+    }
+
+    // POST /api/v1/admin/applicants/approve  { "userIds": [1, 2, 3] }
+    [HttpPost("applicants/approve")]
+    public async Task<IActionResult> ApproveApplicants([FromBody] ApproveApplicantsRequest request, CancellationToken ct)
+    {
+        var guard = RequireAdmin(); if (guard != null) return guard;
+        var result = await approveApplicantsUseCase.ExecuteAsync(CurrentUserId!.Value, request.UserIds, ct);
+        return Ok(new { success = true, result.ApprovedIds, result.Skipped });
+    }
+
     // DELETE /api/v1/admin/users/{id}
     [HttpDelete("users/{id:long}")]
     public async Task<IActionResult> DeleteUser(long id, CancellationToken ct)
@@ -62,5 +90,6 @@ public class AdminController(
     }
 }
 
+public record ApproveApplicantsRequest([Required] long[] UserIds);
 public record UpdateRoleRequest([Required] UserRole Role);
 public record UpdateActiveStatusRequest([Required] bool IsActive);

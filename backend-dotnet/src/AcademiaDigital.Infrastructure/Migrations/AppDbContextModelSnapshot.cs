@@ -3519,6 +3519,14 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<long?>("ApprovedByUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("approved_by_user_id");
+
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("birth_date");
@@ -3585,6 +3593,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("phone_code");
 
+                    b.Property<int>("RegistrationStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("registration_status");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer")
                         .HasColumnName("role");
@@ -3603,6 +3615,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("RegistrationStatus", "DateJoined");
 
                     b.ToTable("Users", (string)null);
                 });

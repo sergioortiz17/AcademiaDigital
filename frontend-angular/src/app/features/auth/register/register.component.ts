@@ -10,6 +10,7 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CareerService, Career } from '../../../core/services/career.service';
+import { TenantService, isTeacherEmail } from '../../../core/services/tenant.service';
 
 @Component({
   selector: 'app-register',
@@ -26,6 +27,9 @@ export class RegisterComponent implements OnInit {
   hidePassword = true;
   hideConfirmPassword = true;
   careers: Career[] = [];
+  /** El email es del dominio docente: se registra como Profesor y no elige carrera. */
+  isTeacherEmail = false;
+  registeredAsTeacher = false;
 
   registerForm: FormGroup;
   personalForm: FormGroup;
@@ -34,6 +38,7 @@ export class RegisterComponent implements OnInit {
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly careerService: CareerService,
+    private readonly tenantService: TenantService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef
   ) {
@@ -56,6 +61,9 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.email?.valueChanges.subscribe(() => this.updateTeacherMode());
+    this.tenantService.tenant$.subscribe(() => this.updateTeacherMode());
+
     this.careerService.getCareers().subscribe({
       next: data => this.careers = data,
       error: err => console.error('Error loading careers', err)
@@ -63,6 +71,18 @@ export class RegisterComponent implements OnInit {
   }
 
   get email() { return this.registerForm.get('email'); }
+
+  /** Con email docente la carrera no aplica: se quita el validador y el campo se oculta. */
+  private updateTeacherMode(): void {
+    const teacher = isTeacherEmail(this.email?.value, this.tenantService.current?.teacherEmailDomain);
+    if (teacher === this.isTeacherEmail) return;
+    this.isTeacherEmail = teacher;
+    const career = this.personalForm.get('careerId');
+    career?.setValidators(teacher ? null : [Validators.required, Validators.min(1)]);
+    if (teacher) career?.reset(null);
+    career?.updateValueAndValidity();
+    this.cdr.detectChanges();
+  }
   get password() { return this.registerForm.get('password'); }
   get confirmPassword() { return this.registerForm.get('confirmPassword'); }
 
@@ -98,13 +118,14 @@ export class RegisterComponent implements OnInit {
       email: this.registerForm.value.email,
       password: this.registerForm.value.password,
       DNI: this.personalForm.value.dni,
-      careerId: this.personalForm.value.careerId
+      careerId: this.isTeacherEmail ? null : this.personalForm.value.careerId
     };
 
     this.authService.register(registerData).subscribe({
       next: (response) => {
         this.isLoading = false;
         if (response.success) {
+          this.registeredAsTeacher = response.role === 2;
           this.currentStep = 3;
           this.cdr.detectChanges();
         } else {

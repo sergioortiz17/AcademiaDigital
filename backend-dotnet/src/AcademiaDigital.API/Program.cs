@@ -53,6 +53,8 @@ builder.Services.AddScoped<GetUsersUseCase>();
 builder.Services.AddScoped<UpdateUserRoleUseCase>();
 builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
+builder.Services.AddScoped<GetApplicantsUseCase>();
+builder.Services.AddScoped<ApproveApplicantsUseCase>();
 
 // Tenants (multitenant: alta de instituciones por el operador de la plataforma)
 builder.Services.AddScoped<TenantPolicy>();

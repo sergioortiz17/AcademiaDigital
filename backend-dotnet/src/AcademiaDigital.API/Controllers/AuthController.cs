@@ -1,6 +1,7 @@
 using AcademiaDigital.API.Models;
 using AcademiaDigital.API.Observability;
 using AcademiaDigital.API.Security;
+using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.User;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ public class AuthController(
     ResetPasswordUseCase resetPasswordUseCase,
     ChangePasswordUseCase changePasswordUseCase,
     AuditLog audit,
+    ITenantContext tenantContext,
     IConfiguration configuration) : ApiControllerBase
 {
     // POST /api/v1/users/login
@@ -45,12 +47,16 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var result = await registerUseCase.ExecuteAsync(request.Email, request.Name, request.LastName, request.Password, request.Dni, request.CareerId, ct);
+        var result = await registerUseCase.ExecutePublicAsync(
+            request.Email, request.Name, request.LastName, request.Password, request.Dni, request.CareerId,
+            tenantContext.Current.TeacherEmailDomain, ct);
         return StatusCode(StatusCodes.Status201Created, new
         {
             success = result.Success,
             userID = result.UserId,
-            msg = result.Msg
+            msg = result.Msg,
+            role = (int)result.Role,
+            pendingApproval = result.PendingApproval
         });
     }
 
@@ -128,8 +134,9 @@ public record RegisterRequest(
     [RegularExpression(@"^\d{7,8}$", ErrorMessage = "DNI must contain only numbers and have 7 or 8 digits.")]
     string Dni,
 
+    // Opcional solo para el email del dominio docente de la institución (se registra como Profesor).
     [property: JsonPropertyName("careerId")]
-    [Required][Range(1, int.MaxValue)] int CareerId);
+    [Range(1, int.MaxValue)] int? CareerId);
 
 public record ChangePasswordRequest(
     [Required] string CurrentPassword,

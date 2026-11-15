@@ -13,6 +13,11 @@ public class Tenant
     public string DatabaseName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    /// <summary>
+    /// Dominio de correo del personal docente (ej. "itscordoba.edu.ar"). Quien se registra con un
+    /// email de este dominio queda como Profesor (pendiente de alta). Null: sin esta regla.
+    /// </summary>
+    public string? TeacherEmailDomain { get; set; }
 
     public ICollection<TenantDomain> Domains { get; set; } = [];
 }

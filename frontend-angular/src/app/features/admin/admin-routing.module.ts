@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { UsersManagementComponent } from './users-management/users-management.component';
+import { ApplicantsManagementComponent } from './applicants-management/applicants-management.component';
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
 import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students.component';
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
@@ -21,6 +22,12 @@ const routes: Routes = [
   {
     path: 'exam-form',
     loadComponent: () => import('./exam-form-management/exam-form-management.component').then(m => m.ExamFormManagementComponent),
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'applicants',
+    component: ApplicantsManagementComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

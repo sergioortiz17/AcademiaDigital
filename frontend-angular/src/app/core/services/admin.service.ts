@@ -23,6 +23,36 @@ export interface GetUsersResponse {
   pageSize: number;
 }
 
+/** Cuenta del registro público (sección "Aspirantes"). */
+export interface ApplicantSummary {
+  id: number;
+  username: string;
+  lastName: string;
+  email: string;
+  dni?: string | null;
+  role: UserRole;
+  pending: boolean;
+  dateJoined: string;
+  approvedAt?: string | null;
+  careerName?: string | null;
+}
+
+export type ApplicantStatus = 'pending' | 'approved';
+
+export interface GetApplicantsResponse {
+  success: boolean;
+  items: ApplicantSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ApproveApplicantsResponse {
+  success: boolean;
+  approvedIds: number[];
+  skipped: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly base = environment.apiServer;
@@ -51,6 +81,20 @@ export class AdminService {
       `${this.base}v1/admin/users/${userId}/active`,
       { isActive: true }
     );
+  }
+
+  getApplicants(status: ApplicantStatus, search?: string, role?: number | null, page = 1, pageSize = 20): Observable<GetApplicantsResponse> {
+    let params = new HttpParams()
+      .set('status', status)
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+    if (search?.trim()) params = params.set('search', search.trim());
+    if (role != null) params = params.set('role', role.toString());
+    return this.http.get<GetApplicantsResponse>(`${this.base}v1/admin/applicants`, { params });
+  }
+
+  approveApplicants(userIds: number[]): Observable<ApproveApplicantsResponse> {
+    return this.http.post<ApproveApplicantsResponse>(`${this.base}v1/admin/applicants/approve`, { userIds });
   }
 
   disableUser(userId: number): Observable<{ success: boolean; user: UserSummary }> {

@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '../../shared/material.module';
 import { AdminRoutingModule } from './admin-routing.module';
 import { UsersManagementComponent } from './users-management/users-management.component';
+import { ApplicantsManagementComponent } from './applicants-management/applicants-management.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { UserDetailsDialogComponent } from '../../shared/user-details-dialog/user-details-dialog.component';
 import { EnrollmentManagementComponent } from './enrollment-management/enrollment-management.component';
@@ -37,6 +38,7 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 @NgModule({
   declarations: [
     UsersManagementComponent,
+    ApplicantsManagementComponent,
     ConfirmDialogComponent,
     UserDetailsDialogComponent,
     EnrollmentManagementComponent,

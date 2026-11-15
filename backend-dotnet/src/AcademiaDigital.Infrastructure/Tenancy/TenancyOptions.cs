@@ -13,6 +13,11 @@ public sealed class TenancyOptions
     public string DefaultName { get; set; } = "Instituto Tecnológico Superior Córdoba";
     /// <summary>Hosts que se asignan a la institución por defecto al arrancar (solo agrega, nunca quita).</summary>
     public string[] DefaultDomains { get; set; } = ["localhost", "127.0.0.1"];
+    /// <summary>
+    /// Dominio de correo docente de la institución por defecto. Se aplica al arrancar solo si la
+    /// institución todavía no tiene uno (no pisa un valor cargado desde la plataforma).
+    /// </summary>
+    public string? DefaultTeacherEmailDomain { get; set; }
 }
 
 /// <summary>

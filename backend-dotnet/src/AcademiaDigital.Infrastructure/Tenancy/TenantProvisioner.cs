@@ -47,6 +47,7 @@ public sealed class TenantProvisioner(
             DatabaseName = request.DatabaseName,
             IsActive = true,
             CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
+            TeacherEmailDomain = request.TeacherEmailDomain,
             Domains = request.Hosts.Select(host => new TenantDomain { Id = Guid.NewGuid(), Host = host }).ToList()
         };
         control.Tenants.Add(tenant);

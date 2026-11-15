@@ -24,6 +24,7 @@ public class ControlDbContext(DbContextOptions<ControlDbContext> options) : DbCo
             builder.Property(t => t.DatabaseName).HasMaxLength(63).IsRequired();
             builder.HasIndex(t => t.DatabaseName).IsUnique();
             builder.Property(t => t.IsActive).HasDefaultValue(true);
+            builder.Property(t => t.TeacherEmailDomain).HasMaxLength(253);
         });
 
         modelBuilder.Entity<TenantDomain>(builder =>
