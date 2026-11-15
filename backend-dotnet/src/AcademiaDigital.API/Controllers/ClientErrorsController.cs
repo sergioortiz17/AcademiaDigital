@@ -18,7 +18,8 @@ public class ClientErrorsController(ILogger<ClientErrorsController> logger) : Ap
     [RequestSizeLimit(16_384)]
     public IActionResult Report([FromBody] ClientErrorReport report)
     {
-        logger.LogWarning(
+        // Error y no Warning: en producción solo se guardan los errores.
+        logger.LogError(
             "{Event} {ErrorMessage} {Url} {Stack} {UserId} {Role}",
             "client_error",
             Truncate(report.Message, 1_000),

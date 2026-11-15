@@ -124,6 +124,8 @@ inputs = {
     LOKI_PUSH_URL                       = dependency.monitoring.outputs.loki_push_url
     PROMETHEUS_REMOTE_WRITE_URL         = dependency.monitoring.outputs.prometheus_remote_write_url
     OBS_ENV                             = "${local.scope.client}-${local.scope.environment}"
-    ReverseProxy__TrustForwardedHeaders = "true" # ALB → nginx → backend; el backend no publica puertos
+    ReverseProxy__TrustForwardedHeaders = "true"  # ALB → nginx → backend; el backend no publica puertos
+    Observability__MinimumLevel         = "Error" # solo errores + auditoría de accesos (logins, logouts)
+    Swagger__Enabled                    = "false" # no publicar Swagger/Scalar en producción
   }
 }

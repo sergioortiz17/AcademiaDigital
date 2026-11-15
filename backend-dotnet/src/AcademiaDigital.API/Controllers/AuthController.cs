@@ -1,4 +1,5 @@
 using AcademiaDigital.API.Models;
+using AcademiaDigital.API.Observability;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.User;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ public class AuthController(
     ForgotPasswordUseCase forgotPasswordUseCase,
     ResetPasswordUseCase resetPasswordUseCase,
     ChangePasswordUseCase changePasswordUseCase,
-    ILogger<AuthController> logger) : ApiControllerBase
+    AuditLog audit) : ApiControllerBase
 {
     // POST /api/v1/users/login
     [HttpPost("login")]
@@ -23,10 +24,11 @@ public class AuthController(
     {
         var result = await loginUseCase.ExecuteAsync(request.Email, request.Password, ct);
 
-        // Auditoría de accesos (Grafana). Los intentos fallidos ya quedan en el log del
-        // request como 401/423 sobre esta ruta, con la IP; no se registra el email.
-        logger.LogInformation("{Event} {UserId} {Role} {Ip}", "login_success",
-            result.User.Id, (int)result.User.Role, HttpContext.Connection.RemoteIpAddress?.ToString());
+        // Auditoría de accesos (Grafana). Los fallidos los registra RequestLoggingMiddleware,
+        // porque la excepción se resuelve fuera de este método. No se registra el email.
+        audit.LoginSucceeded(result.User.Id, (int)result.User.Role,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            Request.Headers.UserAgent.ToString());
 
         return Ok(new
         {

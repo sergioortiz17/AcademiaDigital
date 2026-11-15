@@ -1,5 +1,4 @@
 using System.Threading.RateLimiting;
-using AcademiaDigital.API.Middleware;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -17,6 +16,9 @@ public static class ObservabilityExtensions
 
     public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
     {
+        ApplyMinimumLevel(builder.Configuration);
+        builder.Services.AddSingleton<AuditLog>();
+
         // Fuera de Development: una línea JSON por evento, con los placeholders del mensaje
         // como campos (Event, UserId, Ip, Status, DurationMs...).
         if (!builder.Environment.IsDevelopment())
@@ -75,6 +77,37 @@ public static class ObservabilityExtensions
 
         app.UseMiddleware<RequestLoggingMiddleware>();
         return app;
+    }
+
+    /// <summary>
+    /// Observability__MinimumLevel (por ejemplo "Error") sube el nivel mínimo de TODAS las
+    /// categorías de Logging:LogLevel, incluidas las específicas de appsettings.json
+    /// (Microsoft.AspNetCore, Microsoft.EntityFrameworkCore). En producción se usa "Error":
+    /// solo se guardan errores. Se cambia desde Terraform sin recompilar la imagen.
+    /// La auditoría de accesos (AuditLog) queda siempre en Information, salvo
+    /// Observability__AuditEnabled=false.
+    /// </summary>
+    public static void ApplyMinimumLevel(ConfigurationManager configuration)
+    {
+        if (!Enum.TryParse<LogLevel>(configuration["Observability:MinimumLevel"], ignoreCase: true, out var minimum))
+            return;
+
+        var overrides = new Dictionary<string, string?>
+        {
+            ["Logging:LogLevel:Default"] = minimum.ToString()
+        };
+        foreach (var category in configuration.GetSection("Logging:LogLevel").GetChildren())
+        {
+            if (Enum.TryParse<LogLevel>(category.Value, ignoreCase: true, out var level) && level < minimum)
+                overrides[category.Path] = minimum.ToString();
+        }
+
+        var auditLevel = configuration.GetValue("Observability:AuditEnabled", true)
+            ? LogLevel.Information
+            : LogLevel.None;
+        overrides[$"Logging:LogLevel:{AuditLog.Category}"] = auditLevel.ToString();
+
+        configuration.AddInMemoryCollection(overrides);
     }
 
     private static bool TrustForwardedHeaders(IConfiguration configuration)

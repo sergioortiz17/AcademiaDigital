@@ -13,7 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 // Fuera de Development: una línea JSON por evento, igual que el monolito, para que Alloy
-// la envíe a Loki y Grafana pueda filtrar por campo.
+// la envíe a Loki y Grafana pueda filtrar por campo. Observability__MinimumLevel=Error
+// (producción) deja solo los errores, también en las categorías de appsettings.json.
+ApplyMinimumLogLevel(builder.Configuration);
 if (!builder.Environment.IsDevelopment())
 {
     builder.Logging.ClearProviders();
@@ -108,16 +110,20 @@ await using (var scope = app.Services.CreateAsyncScope())
     }
 }
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Swagger y Scalar: habilitados salvo Swagger__Enabled=false (producción).
+if (app.Configuration.GetValue("Swagger:Enabled", true))
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AcademiaDigital Finance API v1");
-    c.RoutePrefix = "swagger";
-});
-app.MapScalarApiReference("/scalar", options =>
-{
-    options.OpenApiRoutePattern = "/swagger/v1/swagger.json";
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AcademiaDigital Finance API v1");
+        c.RoutePrefix = "swagger";
+    });
+    app.MapScalarApiReference("/scalar", options =>
+    {
+        options.OpenApiRoutePattern = "/swagger/v1/swagger.json";
+    });
+}
 
 app.MapControllers();
 
@@ -182,6 +188,23 @@ static async Task SeedPaymentMethodsAsync(FinanceDbContext db)
     if (missing.Length == 0) return;
     db.PaymentMethods.AddRange(missing);
     await db.SaveChangesAsync();
+}
+
+// Observability__MinimumLevel sube el nivel mínimo de todas las categorías de
+// Logging:LogLevel (incluidas las específicas de appsettings.json). Igual que en el monolito.
+static void ApplyMinimumLogLevel(ConfigurationManager configuration)
+{
+    if (!Enum.TryParse<LogLevel>(configuration["Observability:MinimumLevel"], ignoreCase: true, out var minimum))
+        return;
+
+    var overrides = new Dictionary<string, string?> { ["Logging:LogLevel:Default"] = minimum.ToString() };
+    foreach (var category in configuration.GetSection("Logging:LogLevel").GetChildren())
+    {
+        if (Enum.TryParse<LogLevel>(category.Value, ignoreCase: true, out var level) && level < minimum)
+            overrides[category.Path] = minimum.ToString();
+    }
+
+    configuration.AddInMemoryCollection(overrides);
 }
 
 public partial class Program;

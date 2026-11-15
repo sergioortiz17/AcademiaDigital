@@ -404,6 +404,8 @@ Costo: ~40 USD/mes con el horario de servicio (ALB, 2 EC2 e IPs públicas).
 
 Una EC2 `t4g.small` con Grafana, Loki y Prometheus en Docker. Loki guarda los logs en S3 (90 días) y Prometheus las métricas en el disco (30 días). No abre puertos a internet: Loki (3100) y Prometheus (9090) solo aceptan a las instancias de la app, y Grafana escucha en `127.0.0.1` y se abre con Session Manager. Sigue el mismo horario que la plataforma. Suma una instancia del mismo tipo que las de la app, su disco y el almacenamiento de S3.
 
+**Qué se guarda:** solo errores (5xx, excepciones, errores del navegador y de nginx) y la auditoría de accesos (login exitoso, login fallido con IP, logout). Los requests normales, Info y Warning no se escriben (`Observability__MinimumLevel=Error` en la unidad `app`) y Alloy los vuelve a filtrar. Para diagnosticar algo puntual se puede bajar a `Warning` o `Information` en `infra/live/itsc/app/terragrunt.hcl` y aplicar; conviene volver a `Error` después.
+
 Plan:
 
 ```bash

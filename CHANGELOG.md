@@ -6,20 +6,24 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [1.1.0] - 2026-11-14
 
-Observabilidad autogestionada: quién se conecta, desde dónde, qué errores hay y cómo están las instancias.
+Observabilidad autogestionada: quién entra, desde dónde, qué errores hay y cómo están las instancias. En producción se guardan **solo errores y accesos**.
 
 ### Agregado
 
-- **Logs estructurados en JSON** en backend y Finance fuera de Development, con una línea por request (`Event = http_request`): método, ruta, estado, duración, IP real, usuario, rol y user agent. Sin query string ni cuerpos.
-- **Auditoría de accesos:** evento `login_success` con usuario, rol e IP. Los intentos fallidos quedan en el log del request (401/423 en `/api/v1/users/login`).
+- **Logs estructurados en JSON** en backend y Finance fuera de Development.
+- **Solo errores en producción:** `Observability__MinimumLevel=Error` sube el nivel mínimo de todas las categorías sin recompilar; Info y Warning no se escriben. Alloy aplica el mismo filtro como segunda barrera y descarta el access log de nginx.
+- **Auditoría de accesos** (`AuditLog`, categoría propia que queda activa aunque el resto esté en Error): `login_success` (usuario, rol, IP, user agent), `login_failed` (estado e IP, sin email) y `logout`. Se desactiva con `Observability__AuditEnabled=false`.
+- **Línea por request** (`Event = http_request`: método, ruta sin query string, estado, duración, IP, usuario, rol); en producción solo se guardan las de estado 5xx.
 - **Errores del frontend:** `ErrorHandler` global de Angular que reporta los errores de JavaScript a `POST /api/v1/client-errors` (anónimo, limitado por IP, sin query string ni datos de formularios).
 - **Monitoreo en AWS** (`infra/modules/monitoring`): EC2 arm64 con Grafana, Loki (logs en S3, retención de 90 días) y Prometheus (métricas, 30 días), sin puertos abiertos a internet; Grafana se abre con Session Manager. Dashboard "Accesos, errores e instancias" versionado en el repositorio.
-- **Agente Grafana Alloy** en cada instancia de Beanstalk: logs de los contenedores a Loki y métricas del host a Prometheus.
+- **Agente Grafana Alloy** en cada instancia de Beanstalk: logs filtrados a Loki y métricas del host a Prometheus.
 
 ### Cambiado
 
 - **IP real del cliente detrás del ALB:** con `ReverseProxy__TrustForwardedHeaders=true` (solo en Beanstalk) el backend toma la IP de `X-Forwarded-For`. Corrige también el rate limiter de admisiones, que veía la IP del proxy para todos.
-- Logs de Entity Framework en `Warning` en producción: las consultas SQL dejan de escribirse en el log.
+- **`ExceptionMiddleware`** registra como Error solo las excepciones que terminan en 5xx; las de negocio esperadas (credenciales inválidas, conflictos, no encontrado) pasan a Information y no llenan el log de errores.
+- **Swagger y Scalar apagados en producción** (`Swagger__Enabled=false`) en el monolito y en Finance; siguen activos en desarrollo y en el docker-compose local.
+- Logs de Entity Framework en `Warning` por defecto: las consultas SQL dejan de escribirse en el log.
 
 ## [1.0.0] - 2026-11-14
 

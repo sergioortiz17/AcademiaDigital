@@ -45,6 +45,23 @@ loki.process "app" {
     values = { level = "" }
   }
 
+  // Solo errores y auditoría de accesos. El backend ya filtra por nivel
+  // (Observability__MinimumLevel=Error); esto es la segunda barrera, por si cambia esa
+  // variable o una librería escribe a la consola por su cuenta.
+  stage.match {
+    selector            = "{service=~\"backend|finance\", level!~\"Error|Critical\"} != \"Observability.AuditLog\""
+    action              = "drop"
+    drop_counter_reason = "not_error_or_audit"
+  }
+
+  // nginx (frontend): descarta el access log (una línea por archivo servido) y conserva
+  // solo su error log, cuyas líneas tienen la forma "... [error] 29#29: ...".
+  stage.match {
+    selector            = "{service=\"frontend\"} !~ \".(error|crit|alert|emerg). [0-9]+#\""
+    action              = "drop"
+    drop_counter_reason = "nginx_access_log"
+  }
+
   forward_to = [loki.write.monitoring.receiver]
 }
 

@@ -20,7 +20,6 @@ using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure;
 using AcademiaDigital.Infrastructure.Persistence;
-using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
@@ -348,19 +347,8 @@ await using (var scope = app.Services.CreateAsyncScope())
 // Primero: IP real del cliente y una línea de log por request.
 app.UseObservability();
 
-// Swagger disponible siempre (no solo en Development)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AcademiaDigital API v1");
-    c.RoutePrefix = "swagger";
-});
-
-// Scalar convive con Swagger durante la migración del equipo: reutiliza el mismo swagger.json
-app.MapScalarApiReference("/scalar", options =>
-{
-    options.OpenApiRoutePattern = "/swagger/v1/swagger.json";
-});
+// Swagger y Scalar: habilitados salvo Swagger__Enabled=false (producción).
+app.UseApiDocumentation();
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionMiddleware>();
