@@ -44,9 +44,11 @@ locals {
     })
   }
 
+  # Excluye las plantillas (.tftpl, se suben renderizadas) y los archivos ocultos, como el
+  # .terragrunt-source-manifest que Terragrunt deja en cada carpeta al copiar el módulo.
   static_files = {
     for f in fileset(local.config_dir, "**") : f => "${local.config_dir}/${f}"
-    if !endswith(f, ".tftpl")
+    if !endswith(f, ".tftpl") && !startswith(basename(f), ".")
   }
 }
 

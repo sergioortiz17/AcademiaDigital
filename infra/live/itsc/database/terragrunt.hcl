@@ -42,4 +42,9 @@ inputs = {
   # UTC, dentro del horario de encendido (lunes a sábado desde las 10:00 UTC = 07:00 en Córdoba).
   backup_window      = "11:00-11:30"
   maintenance_window = "sat:13:00-sat:13:30"
+
+  # El plan Free de la cuenta rechaza 7 días (FreeTierRestrictionError). Con 1 día los
+  # backups automáticos siguen activos (restauración a cualquier punto de las últimas 24 h).
+  # Subir a 7 cuando la cuenta pase a pago.
+  backup_retention_days = 1
 }

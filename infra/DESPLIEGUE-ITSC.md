@@ -38,15 +38,17 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 7 | `itsc/storage` | ✅ Hecho | 10/11/2026 | 7 recursos: bucket `academiadigital-itsc-prod-files-740227232235`, privado, cifrado y versionado |
 | 8 | `itsc/certificate` | ✅ Hecho | 10/11/2026 | 3 recursos: certificado `ISSUED` para `itsc.dryvn.org`, vence el 27/05/2027 |
 | 9 | `itsc/email` | ✅ Hecho | 10/11/2026 | 8 recursos: dominio verificado en SES, DKIM y MAIL FROM en `SUCCESS` |
-| 10 a 11 | Fase 4: base de datos | ⏸️ En espera | | |
-| 11a | `shared/ec2-metadata-defaults` (IMDSv2, hop limit 2) | ⏸️ En espera | | Va antes del paso 12: sin esto los contenedores no obtienen las credenciales del rol |
-| 11b | `itsc/monitoring` (Grafana, Loki, Prometheus) | ⏸️ En espera | | Va antes del paso 12: la app necesita las direcciones de Loki y Prometheus |
-| 12 a 13 | Fase 5: aplicación | ⏸️ En espera | | |
+| 10 | `itsc/database` | ✅ Hecho | 14/11/2026 | 5 recursos: RDS PostgreSQL 16 `db.t4g.micro`, sin Multi-AZ, privada y cifrada (`academiadigital-itsc-prod.cxmuy04cq35c.us-east-2.rds.amazonaws.com`). Backups de 1 día: el plan Free rechazó 7 (`FreeTierRestrictionError`) |
+| 11 | `itsc/secrets` | ✅ Hecho | 14/11/2026 | 4 recursos: clave JWT y 3 parámetros `SecureString` en SSM (`/academiadigital-itsc-prod/...`) |
+| 11a | `shared/ec2-metadata-defaults` (IMDSv2, hop limit 2) | ✅ Hecho | 14/11/2026 | 1 recurso. `get-instance-metadata-defaults`: `HttpTokens: required`, `HttpPutResponseHopLimit: 2` |
+| 11b | `itsc/monitoring` (Grafana, Loki, Prometheus) | ✅ Hecho | 15/11/2026 | 28 recursos: instancia `i-09df2b11d76c8c790` (10.20.0.10), Online en Session Manager |
+| 12 | `itsc/app` | ✅ Hecho | 15/11/2026 | 12 recursos: entorno Beanstalk `e-pmmd5tb3ck` (1 instancia `t4g.small`), ALB con HTTPS y registro A `itsc.dryvn.org`. Muestra la app de ejemplo de AWS hasta el paso 18 |
+| 13 | `itsc/schedule` | ⏸️ Pendiente | | |
 | — | ~~OIDC de GitHub~~ | ❌ Descartado | 14/11/2026 | La SCP de AWS (`DenyIAMRestrictedActions`: `iam:*Provider*`) lo bloquea y no se puede modificar. Se reemplaza por CodePipeline |
 | 14 | `shared/github-connection` | ✅ Hecho | 14/11/2026 | 1 recurso: conexión `academiadigital-github` |
 | 15 | Confirmar la conexión en la consola | ✅ Hecho | 14/11/2026 | App "AWS Connector for GitHub" instalada solo en `AcademiaDigital` (instalación `182079371`). Estado `AVAILABLE` |
-| 16 | `deploy/` en `main` (PR) | ⏸️ Pendiente | | |
-| 17 | `itsc/pipeline` | ⏸️ Pendiente | | |
+| 16 | `deploy/` en `main` (PR) | ✅ Hecho | 14/11/2026 | PR de `feat/almacenamiento-s3` (v1.0.0 a v1.2.0) mergeado |
+| 17 | `itsc/pipeline` | ✅ Hecho | 14/11/2026 | 13 recursos: pipeline `academiadigital-itsc-prod-deploy`, CodeBuild arm64 y bucket de artefactos. Primer build OK en ~3 min: imágenes `05a7a780…98f522` en ECR (backend 96 MB, frontend 29 MB) |
 | 18 | Activar el despliegue (`deploy_enabled = true`) | ⏸️ Después de la fase 5 | | |
 
 Pendientes fuera de Terraform:
@@ -656,6 +658,23 @@ aws codepipeline start-pipeline-execution --name academiadigital-itsc-prod-deplo
 ```
 
 ---
+
+## Escalar: pasar de 1 a 2 instancias (o activar Multi-AZ)
+
+Arranca con 1 instancia de Beanstalk y la base sin Multi-AZ, para minimizar el costo. Con 1 instancia, una falla de la instancia deja la plataforma caída unos minutos hasta que Beanstalk la reemplaza (los datos están en RDS y S3, no se pierden); los despliegues no cortan el servicio.
+
+**Más instancias:** cambiar `instance_count` en `/home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/scope.hcl` y aplicar **las dos** unidades que lo usan (si solo se aplica `app`, el encendido diario vuelve al valor anterior):
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/app && terragrunt plan
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/schedule && terragrunt plan
+```
+
+Esperado en cada plan: `0 to add, 1 to change, 0 to destroy` (`MinSize`/`MaxSize` en el entorno; las entradas del schedule de encendido). Beanstalk agrega la instancia sin recrear el entorno ni cortar el servicio. Requiere los archivos en S3 (v1.2.0), que ya está activo.
+
+**Multi-AZ en la base:** cambiar `db_multi_az = true` en el mismo archivo y aplicar `itsc/database`. RDS crea la réplica sin recrear la base. El módulo usa `apply_immediately = false`, así que el cambio se aplica en la siguiente ventana de mantenimiento (sábados 13:00 UTC); para hacerlo antes, aplicarlo desde la consola de RDS con "Aplicar inmediatamente".
+
+**Probar si alcanza con 1 instancia:** mirar en Grafana (paso 11b) el panel de CPU y memoria durante el uso real, por ejemplo en un período de inscripciones. Si la CPU queda sostenida por encima del 70 % o la memoria cerca del límite, conviene pasar a 2 instancias o a un tipo más grande (`instance_type`).
 
 ## Si algo sale mal
 
