@@ -16,12 +16,21 @@ namespace AcademiaDigital.Infrastructure.Services;
 /// La identidad se reenvía por headers (X-User-Id/X-User-Role) — Finance confía en el borde
 /// interno y no re-autentica. La base URL viene de configuración (Finance:BaseUrl).
 /// </summary>
-public sealed class HttpFinanceClient(HttpClient http, IConfiguration configuration, ILogger<HttpFinanceClient> logger)
+public sealed class HttpFinanceClient(
+    HttpClient http, IConfiguration configuration, ITenantContext tenant, ILogger<HttpFinanceClient> logger)
     : IFinanceClient
 {
     public async Task<bool> TryGenerateMatriculationDebtsAsync(
         GenerateMatriculationDebtsRequest request, CancellationToken ct = default)
     {
+        // Finance todavía no es multitenant (una sola base y numeración): solo atiende a la
+        // institución por defecto. Para las demás se omite en vez de mezclar deudas entre instituciones.
+        if (!tenant.Current.IsDefault)
+        {
+            logger.LogInformation("Finance: la institución {Tenant} no usa Finance todavía; se omite la generación de deuda.", tenant.Current.Slug);
+            return false;
+        }
+
         // Sin plan de facturación configurado no hay nada que generar (Finance lo exige).
         // No es un error: se loguea y se sigue. La deuda se podrá generar cuando exista un plan.
         if (request.BillingPlanId is null)

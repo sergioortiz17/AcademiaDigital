@@ -1,0 +1,137 @@
+<div class="platform-page">
+  <header class="platform-header">
+    <div>
+      <h1>Instituciones</h1>
+      <p>Administración de la plataforma Academia Digital. Cada institución tiene su propia base de datos.</p>
+    </div>
+    <button *ngIf="unlocked" mat-stroked-button type="button" (click)="lock()">
+      <mat-icon>lock</mat-icon> Bloquear
+    </button>
+  </header>
+
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert">
+    <mat-icon>error</mat-icon> {{ errorMsg }}
+  </div>
+  <div *ngIf="successMsg" class="msg msg--ok" role="status">
+    <mat-icon>check_circle</mat-icon> {{ successMsg }}
+  </div>
+
+  <!-- Clave de operador -->
+  <mat-card *ngIf="!unlocked" class="unlock-card">
+    <mat-card-content>
+      <form (ngSubmit)="unlock()" #unlockForm="ngForm">
+        <mat-form-field appearance="outline">
+          <mat-label>Clave de plataforma</mat-label>
+          <input matInput [type]="hideKey ? 'password' : 'text'" [(ngModel)]="keyInput" name="platformKey"
+                 autocomplete="off" required />
+          <button mat-icon-button matSuffix type="button" (click)="hideKey = !hideKey">
+            <mat-icon>{{ hideKey ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="submit" [disabled]="!keyInput.trim() || isLoading">
+          Ingresar
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <ng-container *ngIf="unlocked">
+    <div class="toolbar">
+      <button mat-raised-button color="primary" type="button" (click)="toggleForm()">
+        <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+        {{ showForm ? 'Cancelar' : 'Nueva institución' }}
+      </button>
+    </div>
+
+    <mat-card *ngIf="showForm" class="form-card">
+      <mat-card-content>
+        <form (ngSubmit)="create()" #createForm="ngForm">
+          <h2>Datos de la institución</h2>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Identificador</mat-label>
+              <input matInput [(ngModel)]="slug" name="slug" required maxlength="30" placeholder="ucv"
+                     autocomplete="off" />
+              <mat-hint>Minúsculas, números y guiones. No se puede cambiar después.</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput [(ngModel)]="name" name="name" required maxlength="200"
+                     placeholder="Universidad Central de Venezuela" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Dominios</mat-label>
+              <input matInput [(ngModel)]="domainsText" name="domains" required
+                     placeholder="ucv.localhost, campus.ucv.edu" autocomplete="off" />
+              <mat-hint>Separados por coma. Sin https:// ni puerto. En desarrollo: &lt;id&gt;.localhost</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <h2>Administrador inicial</h2>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput [(ngModel)]="adminName" name="adminName" required maxlength="255" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Apellido</mat-label>
+              <input matInput [(ngModel)]="adminLastName" name="adminLastName" required maxlength="255" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" [(ngModel)]="adminEmail" name="adminEmail" required maxlength="254"
+                     autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Documento (DNI)</mat-label>
+              <input matInput [(ngModel)]="adminDni" name="adminDni" required maxlength="20" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Contraseña inicial</mat-label>
+              <input matInput [type]="hidePassword ? 'password' : 'text'" [(ngModel)]="adminPassword"
+                     name="adminPassword" required minlength="8" maxlength="128" autocomplete="new-password" />
+              <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-hint>Mínimo 8 caracteres. El administrador puede cambiarla después.</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="isCreating || !isFormValid">
+              <mat-spinner *ngIf="isCreating" diameter="18" class="btn-spinner"></mat-spinner>
+              {{ isCreating ? 'Creando (puede tardar unos segundos)...' : 'Crear institución' }}
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="list-card">
+      <mat-card-content>
+        <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+        <table class="tenants-table" *ngIf="tenants.length">
+          <thead>
+            <tr><th>Identificador</th><th>Nombre</th><th>Dominios</th><th>Creada</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tenant of tenants">
+              <td>
+                <code>{{ tenant.slug }}</code>
+                <span *ngIf="tenant.isDefault" class="badge">por defecto</span>
+              </td>
+              <td>{{ tenant.name }}</td>
+              <td>
+                <span *ngFor="let domain of tenant.domains" class="chip">{{ domain }}</span>
+              </td>
+              <td>{{ tenant.createdAt | date: 'dd/MM/yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="!isLoading && !tenants.length" class="empty">Todavía no hay instituciones.</p>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

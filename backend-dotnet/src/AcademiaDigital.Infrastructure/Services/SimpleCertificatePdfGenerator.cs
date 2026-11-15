@@ -16,7 +16,7 @@ namespace AcademiaDigital.Infrastructure.Services;
 /// </summary>
 public sealed class SimpleCertificatePdfGenerator : ICertificatePdfGenerator
 {
-    private const string InstitutionName = "Instituto Tecnológico Superior Córdoba";
+    private const string DefaultInstitutionName = "Instituto Tecnológico Superior Córdoba";
 
     private const double PageWidth = 595;
     private const double PageHeight = 842;
@@ -31,7 +31,9 @@ public sealed class SimpleCertificatePdfGenerator : ICertificatePdfGenerator
         var isTeacher = model.CertificateType.Contains("docente", StringComparison.OrdinalIgnoreCase);
 
         var content = new StringBuilder();
-        var logo = Logo.Value;
+        // El logo embebido es el del ITSC: otras instituciones salen sin logo hasta tener el propio.
+        var logo = model.UseDefaultLogo ? Logo.Value : null;
+        var institutionName = string.IsNullOrWhiteSpace(model.InstitutionName) ? DefaultInstitutionName : model.InstitutionName;
 
         // 1) Marco de página.
         DrawFrame(content);
@@ -51,7 +53,7 @@ public sealed class SimpleCertificatePdfGenerator : ICertificatePdfGenerator
 
         // 3) Encabezado institucional.
         var cursorY = headerTop;
-        cursorY = CenteredText(content, InstitutionName.ToUpperInvariant(), "F2", 14, cursorY);
+        cursorY = CenteredText(content, institutionName.ToUpperInvariant(), "F2", 14, cursorY);
         cursorY -= 16;
         cursorY = CenteredText(content, isTeacher ? "Secretaría Académica" : "Secretaría Académica", "F1", 10, cursorY);
         cursorY -= 40;

@@ -86,6 +86,9 @@ SA_PASSWORD=Admin1234!
 
 # Clave secreta para firmar los JWT (mínimo 32 caracteres)
 JWT_SECRET_KEY=cambia-esto-por-una-clave-larga-y-segura
+
+# Clave para crear instituciones desde /platform (mínimo 16 caracteres; vacía = deshabilitado)
+PLATFORM_ADMIN_KEY=
 ```
 
 > El archivo `.env` es leído automáticamente por Docker Compose.  
@@ -121,6 +124,12 @@ dotnet ef database update \
   --project src/AcademiaDigital.Infrastructure \
   --startup-project src/AcademiaDigital.API
 ```
+
+---
+
+## Multitenant
+
+Cada institución (ITSC, UCV, ...) tiene su propia base de datos y se identifica por el dominio con el que se accede. Las instituciones se crean desde `/platform` (requiere `PLATFORM_ADMIN_KEY` en el `.env`). Ver [backend-dotnet/docs/MULTITENANT.md](backend-dotnet/docs/MULTITENANT.md).
 
 ---
 

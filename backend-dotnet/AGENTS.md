@@ -300,9 +300,9 @@ La API ejecuta `Database.MigrateAsync()` al arrancar y reintenta mientras SQL Se
 Comandos desde `backend-dotnet/`:
 
 ```powershell
-dotnet ef migrations add <Nombre> --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
-dotnet ef database update --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
-dotnet ef migrations list --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
+dotnet ef migrations add <Nombre> --context AppDbContext --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
+dotnet ef database update --context AppDbContext --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
+dotnet ef migrations list --context AppDbContext --project src/AcademiaDigital.Infrastructure --startup-project src/AcademiaDigital.API
 ```
 
 Usar `dotnet-ef` **8.x** (el README fija 8.0.13). Revisar siempre el SQL/model snapshot generado antes de dar una migración por válida.
@@ -347,7 +347,18 @@ La suite completa requiere su `.env`, Docker y una base descartable. `npm.cmd ru
 
 No corregir estas deudas incidentalmente dentro de una tarea no relacionada. Si un cambio las afecta, documentar el alcance y agregar una prueba de regresión.
 
+## Multitenant (una base por institución)
+
+- La institución original es ITSC (`Tenancy:DefaultSlug`, base = la de `DefaultConnection`, sin mover datos). Cada institución nueva tiene su base `academiadigital_<slug>` en el mismo servidor; la base de control (`<DefaultDatabase>_control`, `ControlDbContext`, migraciones en `Migrations/Control`) guarda `Tenants` y `TenantDomains`.
+- `TenantResolutionMiddleware` resuelve la institución por el header `X-Tenant` (host del navegador, lo agrega Angular) o el host de `Origin`; sin ninguno usa la institución por defecto; un host informado y desconocido responde 404 (loopback cae en la por defecto). `AppDbContext` se arma por request con la base de esa institución; sin institución resuelta falla (nunca asume una base). El aislamiento lo da la base separada, no el header.
+- Alta: `POST /api/v1/platform/tenants` (y `GET`), protegida con `X-Platform-Key` = `Platform:AdminKey` (sin valor o < 16 caracteres = 404). Crea la base, aplica migraciones, siembra el admin y registra el tenant al final (reintentable). Pantalla Angular: `/platform`. `GET /api/v1/tenant/current` devuelve nombre y slug.
+- Archivos: `TenantFileStorage` antepone `tenants/<slug>/` salvo en la institución por defecto. Certificados usan el nombre de la institución; el logo embebido es solo del ITSC.
+- Limitaciones: Finance (microservicio) no es multitenant, el cliente lo omite para instituciones no por defecto; no hay baja/edición de instituciones; varias instancias arrancando a la vez pueden competir al migrar (igual que antes).
+- Los comandos `dotnet ef` necesitan `--context AppDbContext` o `--context ControlDbContext`.
+
 ## Últimos cambios relevantes
+
+- **2026-11-14 — multitenant (rama `feat/multitenant`):** base por institución, base de control, resolución por dominio, alta por API/pantalla `/platform`, archivos y certificados por institución. Verificado: build, Domain 209/209, Application 98/98, ArchUnitNET 8/8, modelo EF sin cambios en `AppDbContext`, y prueba manual contra PostgreSQL: alta de `ucv`, login aislado entre instituciones, CORS dinámico, 401/404/409/400 de la API de plataforma, capturas del login. No se ejecutó la regresión API ni se probó S3/Finance.
 
 - **2026-11-14 — almacenamiento en S3 (v1.2.0):** se agregó `S3FileStorage` (AWSSDK.S3 4.1.0) en Infrastructure del monolito y de Finance, y `FileStorageRegistration.AddFileStorage` elige el adaptador por `Storage:Provider`; la clave lógica devuelta y guardada en la base no cambia y la validación rechaza segmentos vacíos, `.` y `..`. Sin cambios de esquema, contratos ni casos de uso. Verificado: build del monolito y de Finance sin errores, Domain 172/172, Application 93/93, ArchUnitNET 8/8 y prueba contra un S3 compatible local (S3Mock): guardar, leer, inexistente → null, rechazo de `..`, prefijo aplicado y fallback a disco sin configuración. No se ejecutó la regresión API ni se probó contra AWS.
 

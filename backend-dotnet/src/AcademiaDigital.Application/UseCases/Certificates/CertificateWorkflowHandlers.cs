@@ -62,7 +62,8 @@ public sealed class IssueCertificateCommandHandler(
     IUnitOfWork unitOfWork,
     ICertificatePdfGenerator pdfGenerator,
     IFileStorage fileStorage,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ITenantContext tenant)
 {
     public async Task<CertificateIssuanceDto> Handle(IssueCertificateCommand command, CancellationToken ct = default)
     {
@@ -127,7 +128,7 @@ public sealed class IssueCertificateCommandHandler(
         {
             var snapshot = JsonSerializer.Deserialize<CertificateSnapshot>(prepared.Issuance.SnapshotJson)
                 ?? throw new InvalidOperationException("La instantánea del certificado es inválida.");
-            var pdf = await pdfGenerator.GenerateAsync(ToPdfModel(prepared.Issuance.CertificateNumber, snapshot), ct);
+            var pdf = await pdfGenerator.GenerateAsync(ToPdfModel(prepared.Issuance.CertificateNumber, snapshot, tenant.Current), ct);
             var storageKey = await fileStorage.SaveAsync(
                 $"certificates/{prepared.Issuance.CreatedAt:yyyy}/{prepared.Issuance.PublicId:N}/{prepared.Issuance.FileName}",
                 pdf, prepared.Issuance.ContentType, prepared.Issuance.FileName, ct);
@@ -181,17 +182,18 @@ public sealed class IssueCertificateCommandHandler(
             certificateType, teacher.FullName, teacher.Dni, teacher.EmployeeNumber,
             teacher.Department ?? "Cuerpo docente", issuedAt, issuerName, [], null);
 
-    private static CertificatePdfModel ToPdfModel(string certificateNumber, CertificateSnapshot snapshot)
+    private static CertificatePdfModel ToPdfModel(string certificateNumber, CertificateSnapshot snapshot, TenantInfo institution)
         => new(
             certificateNumber, snapshot.CertificateType, snapshot.StudentName, snapshot.Dni,
             snapshot.LegajoNumber, snapshot.CareerName, snapshot.IssuedAt, snapshot.IssuerName,
-            "Firma autorizada - Secretaría Académica", "Sello institucional - Instituto Tecnológico Superior Córdoba",
+            "Firma autorizada - Secretaría Académica", $"Sello institucional - {institution.Name}",
             snapshot.Courses.Select(course => new CertificatePdfCourse(
                 course.Code, course.Name, course.AcademicYear, course.Semester,
                 course.Status, course.FinalGrade)).ToArray(),
             snapshot.Exam is null ? null : new CertificatePdfExam(
                 snapshot.Exam.CourseCode, snapshot.Exam.CourseName, snapshot.Exam.ExamDateUtc,
-                snapshot.Exam.Location, snapshot.Exam.CallNumber));
+                snapshot.Exam.Location, snapshot.Exam.CallNumber),
+            institution.Name, institution.IsDefault);
 }
 
 public sealed record GetCertificateHistoryQuery(long ActorUserId, bool IsAdmin, long? StudentId = null);

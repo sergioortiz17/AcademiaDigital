@@ -1,0 +1,83 @@
+.platform-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.platform-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  h1 { margin: 0 0 .25rem; }
+  p { margin: 0; color: #555; }
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: .9rem;
+
+  &--error { background: #fdecea; color: #b3261e; }
+  &--ok { background: #e6f4ea; color: #1e6b34; }
+}
+
+.unlock-card {
+  max-width: 420px;
+
+  form { display: flex; flex-direction: column; gap: .5rem; }
+}
+
+.toolbar { margin-bottom: 1rem; }
+
+.form-card, .list-card { margin-bottom: 1.5rem; }
+
+.form-card h2 { font-size: 1.05rem; margin: .5rem 0 1rem; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.form-actions { display: flex; justify-content: flex-end; margin-top: .5rem; }
+
+.btn-spinner { display: inline-block; margin-right: .5rem; vertical-align: middle; }
+
+.tenants-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+  th { font-size: .8rem; text-transform: uppercase; color: #666; }
+}
+
+.chip {
+  display: inline-block;
+  background: #eef2f7;
+  border-radius: 12px;
+  padding: .1rem .6rem;
+  margin: 0 .25rem .25rem 0;
+  font-size: .85rem;
+}
+
+.badge {
+  margin-left: .5rem;
+  background: #005495;
+  color: #fff;
+  border-radius: 10px;
+  padding: .05rem .5rem;
+  font-size: .72rem;
+}
+
+.empty { color: #666; margin: 1rem 0 0; }

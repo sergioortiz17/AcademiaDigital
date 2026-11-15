@@ -98,6 +98,7 @@ jobs:
           ConnectionStrings__DefaultConnection: ${{ secrets.SQL_CONNECTION_STRING }}
         run: |
           dotnet ef database update \
+            --context AppDbContext \
             --project ${{ env.INFRA_PROJECT }} \
             --startup-project ${{ env.API_PROJECT }} \
             --configuration Release \

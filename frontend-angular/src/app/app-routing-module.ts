@@ -64,6 +64,11 @@ const routes: Routes = [
       { path: '', redirectTo: 'dashboard/default', pathMatch: 'full' }
     ]
   },
+  {
+    // Alta de instituciones: fuera de AuthGuard, se protege con la clave de operador (no es un usuario).
+    path: 'platform',
+    loadChildren: () => import('./features/platform/platform.module').then(m => m.PlatformModule)
+  },
   { path: '', redirectTo: 'auth/signin', pathMatch: 'full' },
   { path: '**', redirectTo: 'auth/signin' }
 ];
