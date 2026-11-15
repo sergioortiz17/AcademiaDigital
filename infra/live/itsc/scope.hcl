@@ -10,9 +10,9 @@ locals {
   # Capacidad
   instance_type         = "t4g.small"
   instance_architecture = "arm64"
-  instance_count        = 2
+  instance_count        = 1 # pasar a 2 para alta disponibilidad: aplicar app y schedule (ver DESPLIEGUE-ITSC.md)
   db_instance_class     = "db.t4g.micro"
-  db_multi_az           = true
+  db_multi_az           = false # una sola instancia: prioridad costo. Activar antes de abrir al público si se necesita alta disponibilidad
 
   # Horario de servicio (modules/schedule). false = siempre encendido.
   power_schedule_enabled = true

@@ -43,6 +43,6 @@ inputs = {
   ecr_prefix          = include.root.locals.project
   ecr_repository_arns = dependency.registry.outputs.repository_arns
 
-  # Pasar a true después de crear el entorno de Beanstalk (unidad app).
-  deploy_enabled = false
+  # Etapa Deploy activa: el entorno de Beanstalk ya existe (unidad app, 15/11/2026).
+  deploy_enabled = true
 }
