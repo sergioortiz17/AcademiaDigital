@@ -14,7 +14,12 @@ set -euo pipefail
 
 REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:?Falta la región}}"
 
-echo "Registro: $ECR_REGISTRY  Prefijo: $ECR_PREFIX  Tag: $IMAGE_TAG"
+# Versión de la plataforma (SemVer). Si frontend, backend y Finance no coinciden con
+# /VERSION, el build se corta antes de subir nada.
+bash tools/version.sh check
+APP_VERSION="$(bash tools/version.sh)"
+
+echo "Versión: $APP_VERSION  Registro: $ECR_REGISTRY  Prefijo: $ECR_PREFIX  Tag: $IMAGE_TAG"
 aws ecr get-login-password --region "$REGION" |
   docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
@@ -32,7 +37,12 @@ build_push() {
   fi
 
   echo "== $name: construyendo $image"
-  docker build --platform linux/arm64 -t "$image" -f "$dockerfile" "$context"
+  # Etiquetas OCI: cualquier imagen de ECR dice de qué versión y qué commit sale.
+  docker build --platform linux/arm64 \
+    --label "org.opencontainers.image.version=$APP_VERSION" \
+    --label "org.opencontainers.image.revision=$IMAGE_TAG" \
+    --label "org.opencontainers.image.source=https://github.com/sergioortiz17/AcademiaDigital" \
+    -t "$image" -f "$dockerfile" "$context"
   docker push "$image"
 }
 
@@ -52,5 +62,5 @@ if grep -Eq '__ECR_REGISTRY__|__ECR_PREFIX__|__IMAGE_TAG__' bundle/docker-compos
   exit 1
 fi
 
-echo "Bundle listo:"
+echo "Bundle listo (versión $APP_VERSION, commit $IMAGE_TAG):"
 cat bundle/docker-compose.yml
