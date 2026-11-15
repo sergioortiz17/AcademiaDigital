@@ -1,0 +1,96 @@
+// Grafana Alloy en cada instancia de Beanstalk (servicio "alloy" del compose de producción).
+//   - Logs de los contenedores (backend, finance, frontend) → Loki de la instancia de monitoreo.
+//   - Métricas del host (CPU, memoria, disco, red)           → Prometheus (remote write).
+// Los endpoints llegan por variables de entorno que define Terraform (unidad app):
+//   LOKI_PUSH_URL, PROMETHEUS_REMOTE_WRITE_URL, OBS_ENV.
+
+// ── Logs ─────────────────────────────────────────────────────────────────────
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// Etiqueta "service" = nombre del servicio en el compose; se descartan los logs del propio Alloy.
+discovery.relabel "containers" {
+  targets = []
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = "alloy"
+    action        = "drop"
+  }
+}
+
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  relabel_rules = discovery.relabel.containers.rules
+  forward_to    = [loki.process.app.receiver]
+}
+
+// Solo el nivel como etiqueta (pocos valores). Usuario, IP, ruta y estado quedan dentro
+// de la línea JSON y se filtran en la consulta con "| json": como etiquetas tendrían
+// demasiados valores distintos y Loki se degradaría.
+loki.process "app" {
+  stage.json {
+    expressions = { level = "LogLevel" }
+  }
+
+  stage.labels {
+    values = { level = "" }
+  }
+
+  // Solo errores y auditoría de accesos. El backend ya filtra por nivel
+  // (Observability__MinimumLevel=Error); esto es la segunda barrera, por si cambia esa
+  // variable o una librería escribe a la consola por su cuenta.
+  stage.match {
+    selector            = "{service=~\"backend|finance\", level!~\"Error|Critical\"} != \"Observability.AuditLog\""
+    action              = "drop"
+    drop_counter_reason = "not_error_or_audit"
+  }
+
+  // nginx (frontend): descarta el access log (una línea por archivo servido) y conserva
+  // solo su error log, cuyas líneas tienen la forma "... [error] 29#29: ...".
+  stage.match {
+    selector            = "{service=\"frontend\"} !~ \".(error|crit|alert|emerg). [0-9]+#\""
+    action              = "drop"
+    drop_counter_reason = "nginx_access_log"
+  }
+
+  forward_to = [loki.write.monitoring.receiver]
+}
+
+loki.write "monitoring" {
+  endpoint {
+    url = sys.env("LOKI_PUSH_URL")
+  }
+
+  external_labels = { env = sys.env("OBS_ENV") }
+}
+
+// ── Métricas del host ────────────────────────────────────────────────────────
+
+prometheus.exporter.unix "host" {
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+  rootfs_path = "/host/root"
+}
+
+prometheus.scrape "host" {
+  targets         = prometheus.exporter.unix.host.targets
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.monitoring.receiver]
+}
+
+prometheus.remote_write "monitoring" {
+  endpoint {
+    url = sys.env("PROMETHEUS_REMOTE_WRITE_URL")
+  }
+
+  external_labels = { env = sys.env("OBS_ENV") }
+}

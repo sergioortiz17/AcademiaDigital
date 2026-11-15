@@ -14,12 +14,19 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unhandled exception");
-            await HandleExceptionAsync(context, ex);
+            var statusCode = await HandleExceptionAsync(context, ex);
+
+            // Solo los 5xx son errores del sistema. Las excepciones de negocio esperadas
+            // (credenciales inválidas, conflictos, no encontrado) no se registran como Error:
+            // en producción se guardan solo los errores y estas los inundarían.
+            if (statusCode >= StatusCodes.Status500InternalServerError)
+                logger.LogError(ex, "Unhandled exception");
+            else
+                logger.LogInformation("Handled {ExceptionType} -> {StatusCode}", ex.GetType().Name, statusCode);
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
+    private static async Task<int> HandleExceptionAsync(HttpContext context, Exception ex)
     {
         var (statusCode, msg) = ex switch
         {
@@ -53,5 +60,6 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
 
         var response = new { success = false, msg };
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        return statusCode;
     }
 }

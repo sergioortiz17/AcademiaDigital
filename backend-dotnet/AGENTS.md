@@ -4,7 +4,7 @@ Este archivo es la memoria operativa del backend. Aplica a todo lo que está den
 
 ## Estado actual
 
-Actualizado: **2026-08-24**.
+Actualizado: **2026-11-14**.
 
 - Solución ASP.NET Core **.NET 8 / C# 12**, con Entity Framework Core 8 y SQL Server.
 - Arquitectura en cuatro proyectos: `Domain`, `Application`, `Infrastructure` y `API`.
@@ -334,19 +334,24 @@ La suite completa requiere su `.env`, Docker y una base descartable. `npm.cmd ru
 
 - Careers, Courses, StudyPlans y StudyPlanCourses están expuestos sin control de sesión, aunque Swagger muestre Bearer global.
 - Enrollment ya valida el plan vigente, correlativas estrictas, materias aprobadas/en curso y cupos concurrentes por turno; todavía no expone advertencias `Soft` en la respuesta de inscripción.
-- El challenge de admisión usa `Disabled` por defecto para compatibilidad local. Producción debe configurar `AdmissionAntiAbuse__Challenge__Mode=Turnstile` y `AdmissionAntiAbuse__Challenge__Secret`; `StaticToken` se reserva para E2E o entornos controlados. Si existe reverse proxy, debe establecerse una política confiable de forwarded headers antes de usar la IP original.
+- El challenge de admisión usa `Disabled` por defecto para compatibilidad local. Producción debe configurar `AdmissionAntiAbuse__Challenge__Mode=Turnstile` y `AdmissionAntiAbuse__Challenge__Secret`; `StaticToken` se reserva para E2E o entornos controlados. Detrás de un reverse proxy, la IP original se normaliza en `Observability/ObservabilityExtensions.cs` sólo si `ReverseProxy__TrustForwardedHeaders=true` (último salto de `X-Forwarded-For`, `ForwardLimit = 1`). Activarlo únicamente donde el backend no publique puertos y sólo lo alcance el proxy (hoy, Beanstalk: ALB → nginx → backend); en local queda apagado.
 - Los valores de turno no están normalizados: Commission usa inglés y Enrollment usa español.
 - Swagger no describe con precisión todos los guards ni todos los contratos de respuesta/error.
 - El adaptador actual de notificaciones de admisión escribe un artefacto local idempotente; todavía debe reemplazarse/configurarse un proveedor real para email. El procesamiento outbox se dispara explícitamente por un endpoint Admin y requiere un worker programado para operación autónoma.
 - El almacenamiento local de acuerdos, certificados y recibos es efímero si no se configura `AdmissionStorage__RootPath` sobre un volumen persistente; comparten el adaptador `IFileStorage`. El compose productivo ya monta `backend_files`, pero despliegues alternativos deben proveer persistencia equivalente y backup coordinado.
 - La cobertura funcional .NET tiene 291 unit tests sobre M4–M11; todavía no hay integration tests .NET dedicados de persistencia fuera de la regresión API/SQL Server, que pasa 34/34 con M11 incluido.
-- Swagger está habilitado también en Production.
+- Swagger/Scalar quedan habilitados por defecto (también con `ASPNETCORE_ENVIRONMENT=Production`, que usa el docker-compose local); el despliegue en Beanstalk los apaga con `Swagger__Enabled=false`. Otros despliegues deben definir esa variable.
+- `IFileStorage` tiene dos adaptadores elegidos por `Storage:Provider` (`FileStorageRegistration`): `LocalFileStorage` (por defecto, disco) y `S3FileStorage` (`Storage:Provider=S3`, bucket `Storage:S3:Bucket`, prefijo `Storage:S3:Prefix`). Beanstalk usa S3 porque corre varias instancias; con disco local un archivo generado en una instancia no existe en las otras. Las claves lógicas son las mismas en ambos adaptadores. Finance replica el mismo patrón en su propia Infrastructure.
 - `StudentManagementService.cs` concentra muchas responsabilidades y merece separación gradual, acompañada por pruebas.
 - Varios repositorios llaman `SaveChangesAsync` internamente; al crear flujos multi-entidad, comprobar límites transaccionales y evitar persistencia parcial.
 
 No corregir estas deudas incidentalmente dentro de una tarea no relacionada. Si un cambio las afecta, documentar el alcance y agregar una prueba de regresión.
 
 ## Últimos cambios relevantes
+
+- **2026-11-14 — almacenamiento en S3 (v1.2.0):** se agregó `S3FileStorage` (AWSSDK.S3 4.1.0) en Infrastructure del monolito y de Finance, y `FileStorageRegistration.AddFileStorage` elige el adaptador por `Storage:Provider`; la clave lógica devuelta y guardada en la base no cambia y la validación rechaza segmentos vacíos, `.` y `..`. Sin cambios de esquema, contratos ni casos de uso. Verificado: build del monolito y de Finance sin errores, Domain 172/172, Application 93/93, ArchUnitNET 8/8 y prueba contra un S3 compatible local (S3Mock): guardar, leer, inexistente → null, rechazo de `..`, prefijo aplicado y fallback a disco sin configuración. No se ejecutó la regresión API ni se probó contra AWS.
+
+- **2026-11-14 — observabilidad (v1.1.0):** todo vive en `API/Observability/`. Fuera de Development la API y Finance escriben logs JSON. `Observability__MinimumLevel=Error` (producción) sube el nivel de todas las categorías sin recompilar; `AuditLog` es una categoría propia que queda en Information (login exitoso/fallido y logout, sin email) salvo `Observability__AuditEnabled=false`. `RequestLoggingMiddleware` (primero del pipeline) registra cada request con nivel por estado (5xx Error) y alimenta `login_failed`/`logout`. `ExceptionMiddleware` registra Error sólo para 5xx; las excepciones de negocio van a Information. `POST /api/v1/client-errors` (anónimo, rate limit `ClientErrors` por IP, 16 KB) registra errores del frontend como Error. Swagger/Scalar se apagan con `Swagger__Enabled=false` (producción); por defecto siguen activos. Forwarded headers sólo con `ReverseProxy__TrustForwardedHeaders=true`. Sin cambios de esquema ni de contratos existentes (endpoint nuevo aditivo). Verificado: build sin errores, Domain 172/172, Application 93/93, ArchUnitNET 8/8 (se corrigió un ciclo Middleware↔Observability moviendo el middleware) y prueba manual en modo Production contra PostgreSQL local: con nivel Error sólo se emiten `login_failed`, `login_success`, `logout` y `client_error`, y Swagger responde 404. No se ejecutó la regresión API.
 
 - **2026-08-24 — guía funcional M4–M11:** se consolidaron funcionalidades, actores, casos de uso, estados, API disponible, pantallas sugeridas, circuitos integrados y criterios de aceptación para frontend. El relevamiento Angular deja explícita la integración parcial de M8, el placeholder M5 y la brecha de los demás módulos. Se verificaron formato, enlaces y `git diff --check`; no se modificó código ni se reejecutaron suites para este cambio documental.
 - **2026-08-24 — cierre MVP M11 recibos:** se agregó emisión automática vinculada al pago, correlativo global serializado, snapshot inmutable, PDF/SHA-256 reintentable, historial/descarga Admin o propietario, campos fiscales opcionales, volumen durable y backup coordinado. La migración es `AddDigitalReceipts`; pasaron 291/291 unit tests, build Release, ArchUnitNET 8/8, modelo EF, typecheck, migración/backfill M1–M11, M11 1/1 y regresión 34/34. Swagger confirmó 196 operaciones y Allure fue generado. M4–M11 quedan cerrados y el roadmap continúa en estabilización/release.

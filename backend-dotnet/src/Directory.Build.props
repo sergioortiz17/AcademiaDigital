@@ -1,0 +1,11 @@
+<!--
+  Versión de la plataforma para los proyectos del backend (src/). Se aplica a todos los
+  .csproj de esta carpeta. Fuente de verdad: /VERSION. No editar a mano: usar
+  tools/version.sh set X.Y.Z (ver VERSIONADO.md).
+  Está en src/ y no en backend-dotnet/ porque el Dockerfile solo copia src/.
+-->
+<Project>
+  <PropertyGroup>
+    <Version>1.2.0</Version>
+  </PropertyGroup>
+</Project>

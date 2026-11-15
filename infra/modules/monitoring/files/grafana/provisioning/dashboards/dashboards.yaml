@@ -1,0 +1,12 @@
+# Dashboards versionados en el repositorio (infra/modules/monitoring/files/grafana/dashboards).
+# Los cambios hechos a mano en Grafana no se guardan: exportar el JSON y commitearlo.
+apiVersion: 1
+
+providers:
+  - name: academiadigital
+    folder: AcademiaDigital
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

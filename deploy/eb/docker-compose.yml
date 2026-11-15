@@ -1,0 +1,76 @@
+# Plantilla del docker-compose de producción para Elastic Beanstalk (Docker sobre AL2023).
+# CodeBuild reemplaza __ECR_REGISTRY__, __ECR_PREFIX__ y __IMAGE_TAG__ (deploy/scripts/build-and-push.sh).
+# No usar en local: para desarrollo están los docker-compose de la raíz.
+#
+# Variables: Beanstalk escribe en .env las propiedades del entorno (Terraform, unidad app)
+# y los secretos de SSM (BACKEND_DB_CONNECTION, FINANCE_DB_CONNECTION, JWT_SECRET_KEY).
+# Backend y Finance leen la MISMA clave (ConnectionStrings__DefaultConnection) con valores
+# distintos, por eso cada uno la arma en su entrypoint a partir de su secreto.
+# "$$" es un "$" literal para compose: la variable la expande el shell del contenedor.
+
+services:
+  # nginx con el build de Angular: sirve la SPA y hace de proxy de /api al backend.
+  # El ALB envía el tráfico al puerto 80 de la instancia.
+  frontend:
+    image: __ECR_REGISTRY__/__ECR_PREFIX__/frontend:__IMAGE_TAG__
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    image: __ECR_REGISTRY__/__ECR_PREFIX__/backend:__IMAGE_TAG__
+    env_file: .env
+    environment:
+      Storage__S3__Prefix: backend # carpeta propia dentro del bucket de archivos
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        export
+        ConnectionStrings__DefaultConnection="$$BACKEND_DB_CONNECTION"
+        Jwt__SecretKey="$$JWT_SECRET_KEY"
+        Jwt__ExpirationDays=7
+        Finance__BaseUrl=http://finance:8091
+        Cors__AllowedOrigins__0="$$APP_PUBLIC_URL";
+        exec dotnet AcademiaDigital.API.dll
+    restart: always
+
+  finance:
+    image: __ECR_REGISTRY__/__ECR_PREFIX__/finance:__IMAGE_TAG__
+    env_file: .env
+    environment:
+      Storage__S3__Prefix: finance # carpeta propia dentro del bucket de archivos
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        export
+        ConnectionStrings__DefaultConnection="$$FINANCE_DB_CONNECTION"
+        Monolith__BaseUrl=http://backend:8000;
+        exec dotnet AcademiaDigital.Finance.API.dll
+    restart: always
+
+  # Agente de observabilidad: logs de los contenedores → Loki, métricas del host →
+  # Prometheus (instancia de monitoreo). Configuración en alloy/config.alloy.
+  # Si la instancia de monitoreo no responde, la app sigue funcionando: Alloy reintenta.
+  alloy:
+    image: grafana/alloy:v1.5.1
+    env_file: .env # LOKI_PUSH_URL, PROMETHEUS_REMOTE_WRITE_URL, OBS_ENV
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+      - alloy-data:/var/lib/alloy/data
+    mem_limit: 256m
+    restart: always
+
+volumes:
+  alloy-data:

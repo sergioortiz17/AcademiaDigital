@@ -1,0 +1,27 @@
+# Data sources de Grafana, cargados al arrancar. Generado por Terraform.
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: true
+    jsonData:
+      maxLines: 1000
+
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+
+  # Métricas de AWS (ALB, RDS, EC2) con el rol de la instancia, sin claves.
+  # Cada panel que lo usa llama a GetMetricData, que se cobra: paneles con refresco manual.
+  - name: CloudWatch
+    uid: cloudwatch
+    type: cloudwatch
+    jsonData:
+      authType: default
+      defaultRegion: ${region}

@@ -1,0 +1,16 @@
+# CodeBuild (arm64) del pipeline academiadigital-<institución>-deploy.
+# Variables que llegan de afuera:
+#   ECR_REGISTRY, ECR_PREFIX  proyecto de CodeBuild (Terraform, módulo pipeline)
+#   IMAGE_TAG                 CodePipeline: SHA del commit (#{SourceVariables.CommitId})
+# Salida: el bundle de Beanstalk (bundle/docker-compose.yml) como artefacto del pipeline.
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - bash deploy/scripts/build-and-push.sh
+
+artifacts:
+  base-directory: bundle
+  files:
+    - '**/*'
