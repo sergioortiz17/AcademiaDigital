@@ -4,6 +4,13 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.4.1] - 2026-11-15
+
+### Corregido
+
+- **El correo de recuperación no se enviaba en producción.** El rol de la instancia solo podía usar la identidad SES del dominio remitente; con la cuenta en sandbox, SES también exige permiso sobre la identidad del destinatario y respondía *AccessDenied* (el backend lo registraba y la pantalla igual decía "revisa tu correo"). El permiso `SendEmail` ahora cubre `identity/*` de la cuenta y región (Terraform, unidad `app`).
+- **El encabezado seguía consultando `/api/v1/devtools/time` cada 30 segundos** (403 en producción). El arreglo de 1.4.0 comprobaba si el error era un `HttpErrorResponse`, pero el `ErrorInterceptor` lo reemplaza por un `ApiError`; ahora se lee el `status` del error. Con la función deshabilitada se hace una sola consulta por carga de página. Test nuevo: `time-travel.service.spec.ts`, con el interceptor real.
+
 ## [1.4.0] - 2026-11-15
 
 Recuperación de contraseña por correo (Amazon SES).

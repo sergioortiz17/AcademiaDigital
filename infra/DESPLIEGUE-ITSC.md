@@ -50,6 +50,8 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 16 | `deploy/` en `main` (PR) | ✅ Hecho | 14/11/2026 | PR de `feat/almacenamiento-s3` (v1.0.0 a v1.2.0) mergeado |
 | 17 | `itsc/pipeline` | ✅ Hecho | 14/11/2026 | 13 recursos: pipeline `academiadigital-itsc-prod-deploy`, CodeBuild arm64 y bucket de artefactos. Primer build OK en ~3 min: imágenes `05a7a780…98f522` en ECR (backend 96 MB, frontend 29 MB) |
 | 18 | Activar el despliegue (`deploy_enabled = true`) | ✅ Hecho | 15/11/2026 | Etapa Deploy activa. Primera ejecución completa (Source, Build, Deploy) en 5 min 19 s: v1.3.0 (`47fb220`) en Beanstalk |
+| 19 | `itsc/app`: `Email__Provider = "Ses"` | ✅ Hecho | 15/11/2026 | 1 cambio en el entorno (reinicio de 4 min 27 s). v1.4.0 (`143073f`) desplegada por el pipeline |
+| 20 | `itsc/app`: permiso SES sobre `identity/*` | ✅ Hecho | 15/11/2026 | 1 cambio en la política `app-access`, sin reinicio. Correo de recuperación recibido en el Gmail verificado |
 
 Pendientes fuera de Terraform:
 
@@ -688,4 +690,5 @@ Esperado en cada plan: `0 to add, 1 to change, 0 to destroy` (`MinSize`/`MaxSize
 | El pipeline falla en `Source` | La conexión con GitHub no está en `AVAILABLE` (paso 15), o la app de GitHub no tiene acceso al repositorio |
 | CodeBuild falla con `YAML_FILE_ERROR` | `deploy/buildspec.yml` no está en `main` (paso 16) |
 | CodeBuild no arranca: `Cannot have more than 0 builds in queue` o similar | Cuota de builds concurrentes de la cuenta. Revisarla en **Service Quotas → AWS CodeBuild** y pedir un aumento |
+| "¿Olvidaste tu contraseña?" dice "revisa tu correo" pero no llega nada | La pantalla responde igual aunque el envío falle. Ver si hubo envío: `aws cloudwatch get-metric-statistics --namespace AWS/SES --metric-name Send --period 60 --statistics Sum --start-time ... --end-time ...` (el contador `SentLast24Hours` de `get-account` se actualiza con demora). Sin envío: buscar en Loki `{service="backend"} \|= "email_send_failed"`. En sandbox el destinatario tiene que estar verificado (`aws sesv2 list-email-identities`), y el DNI y el email tienen que coincidir exactamente con los del usuario |
 | El build falla en `docker push` con `tag invalid` / `already exists` | El tag es inmutable; el script ya lo saltea. Si pasa, revisar que `IMAGE_TAG` llegue con el SHA |
