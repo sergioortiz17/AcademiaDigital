@@ -133,5 +133,9 @@ inputs = {
     Storage__Provider   = "S3"
     Storage__S3__Bucket = dependency.storage.outputs.bucket_name
     Storage__S3__Region = include.root.locals.aws_region
+
+    # Correo saliente (recuperación de contraseña) por Amazon SES con el rol de la instancia.
+    # Remitente: MAIL_FROM. Con la cuenta SES en sandbox solo llega a direcciones verificadas.
+    Email__Provider = "Ses"
   }
 }

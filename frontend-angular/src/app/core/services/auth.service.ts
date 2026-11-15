@@ -40,8 +40,9 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseURL}v1/users/register`, credentials);
   }
 
-  forgotPassword(email: string, dni: string): Observable<{ success: boolean; resetToken: string | null }> {
-    return this.http.post<{ success: boolean; resetToken: string | null }>(
+  /** Pide el correo de recuperación. La respuesta es siempre la misma: el token solo viaja por email. */
+  forgotPassword(email: string, dni: string): Observable<{ success: boolean; msg: string }> {
+    return this.http.post<{ success: boolean; msg: string }>(
       `${this.baseURL}v1/users/forgot-password`, { email, dni }
     );
   }

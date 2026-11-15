@@ -9,6 +9,8 @@ const routes: Routes = [
   { path: 'signin', component: LoginComponent, canActivate: [GuestGuard] },
   { path: 'signup', component: RegisterComponent, canActivate: [GuestGuard] },
   { path: 'forgot-password', component: ForgotPasswordComponent, canActivate: [GuestGuard] },
+  // Enlace del correo de recuperación (?token=...): misma pantalla, directo al paso de la contraseña nueva.
+  { path: 'reset-password', component: ForgotPasswordComponent, canActivate: [GuestGuard] },
   { path: '', redirectTo: 'signin', pathMatch: 'full' }
 ];
 

@@ -1,8 +1,10 @@
 using AcademiaDigital.API.Models;
 using AcademiaDigital.API.Observability;
+using AcademiaDigital.API.Security;
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Application.UseCases.User;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -16,7 +18,8 @@ public class AuthController(
     ForgotPasswordUseCase forgotPasswordUseCase,
     ResetPasswordUseCase resetPasswordUseCase,
     ChangePasswordUseCase changePasswordUseCase,
-    AuditLog audit) : ApiControllerBase
+    AuditLog audit,
+    IConfiguration configuration) : ApiControllerBase
 {
     // POST /api/v1/users/login
     [HttpPost("login")]
@@ -85,10 +88,13 @@ public class AuthController(
 
     // POST /api/v1/users/forgot-password  [público]
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(PasswordResetLinks.RateLimitPolicy)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
     {
-        var result = await forgotPasswordUseCase.ExecuteAsync(request.Email, ct);
-        return Ok(new { success = result.Success, resetToken = result.ResetToken, msg = "Si el correo está registrado, recibirás instrucciones" });
+        // Respuesta idéntica exista o no la cuenta; el enlace con el token solo viaja por correo.
+        await forgotPasswordUseCase.ExecuteAsync(
+            request.Email, request.Dni, PasswordResetLinks.ResetPageUrl(Request, configuration), ct);
+        return Ok(new { success = true, msg = "Si los datos corresponden a una cuenta, te enviamos un correo con las instrucciones." });
     }
 
     // POST /api/v1/users/reset-password  [público]
@@ -130,7 +136,8 @@ public record ChangePasswordRequest(
     [Required][MinLength(8)] string NewPassword);
 
 public record ForgotPasswordRequest(
-    [Required][EmailAddress] string Email);
+    [Required][EmailAddress] string Email,
+    string? Dni = null);
 
 public record ResetPasswordRequest(
     [Required] string ResetToken,

@@ -4,7 +4,7 @@ Este archivo es la memoria operativa del backend. Aplica a todo lo que está den
 
 ## Estado actual
 
-Actualizado: **2026-11-14**.
+Actualizado: **2026-11-15**.
 
 - Solución ASP.NET Core **.NET 8 / C# 12**, con Entity Framework Core 8 y SQL Server.
 - Arquitectura en cuatro proyectos: `Domain`, `Application`, `Infrastructure` y `API`.
@@ -357,6 +357,8 @@ No corregir estas deudas incidentalmente dentro de una tarea no relacionada. Si 
 - Los comandos `dotnet ef` necesitan `--context AppDbContext` o `--context ControlDbContext`.
 
 ## Últimos cambios relevantes
+
+- **2026-11-15 — recuperación de contraseña por correo (v1.4.0):** `ForgotPasswordUseCase` ya no devuelve el token: valida email (y DNI si llega), genera un token atado a la institución (`tenant`) y a una huella de la contraseña (`pst`, `PasswordResetStamp`) y lo envía por `IEmailSender` (puerto en Application; `SesEmailSender` con AWSSDK.SimpleEmailV2 y `LogEmailSender` en Infrastructure, elegidos por `Email:Provider`). `ResetPasswordUseCase` rechaza tokens de otra institución o ya usados y cierra las sesiones del usuario. `ITokenService` cambió a `GeneratePasswordResetToken(userId, tenant, passwordStamp)` / `ReadPasswordResetToken`. API: enlace con el dominio de la institución (`Security/PasswordResetLinks`), rate limit `PasswordReset` (5 por IP cada 15 min) e `InvalidResetTokenException` mapeada a 400 (antes 500). Verificado: build sin errores, Domain 210/210, Application 106/106 (8 nuevos), ArchUnitNET 8/8 y prueba de punta a punta contra PostgreSQL local (DNI incorrecto sin correo, token rechazado en otra institución y en segundo uso, sesión previa cerrada, 429 al sexto pedido). No se ejecutó la regresión API ni se probó contra SES real.
 
 - **2026-11-14 — multitenant (rama `feat/multitenant`):** base por institución, base de control, resolución por dominio, alta por API/pantalla `/platform`, archivos y certificados por institución. Verificado: build, Domain 209/209, Application 98/98, ArchUnitNET 8/8, modelo EF sin cambios en `AppDbContext`, y prueba manual contra PostgreSQL: alta de `ucv`, login aislado entre instituciones, CORS dinámico, 401/404/409/400 de la API de plataforma, capturas del login. No se ejecutó la regresión API ni se probó S3/Finance.
 
