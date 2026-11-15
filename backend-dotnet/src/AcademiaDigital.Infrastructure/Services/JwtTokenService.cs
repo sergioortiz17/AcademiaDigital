@@ -93,7 +93,9 @@ public class JwtTokenService(IConfiguration configuration) : ITokenService
         }
     }
 
-    public string GeneratePasswordResetToken(long userId)
+    private const string ResetPurpose = "password-reset";
+
+    public string GeneratePasswordResetToken(long userId, string tenant, string passwordStamp)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -101,7 +103,9 @@ public class JwtTokenService(IConfiguration configuration) : ITokenService
         var claims = new[]
         {
             new Claim("id", userId.ToString()),
-            new Claim("purpose", "password-reset")
+            new Claim("purpose", ResetPurpose),
+            new Claim("tenant", tenant),   // no sirve en otra institución (ids repetidos)
+            new Claim("pst", passwordStamp) // huella de la contraseña: un solo uso
         };
 
         var token = new JwtSecurityToken(
@@ -113,7 +117,7 @@ public class JwtTokenService(IConfiguration configuration) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public long? ValidatePasswordResetToken(string token)
+    public PasswordResetClaims? ReadPasswordResetToken(string token)
     {
         try
         {
@@ -130,11 +134,15 @@ public class JwtTokenService(IConfiguration configuration) : ITokenService
             }, out _);
 
             var jwt = handler.ReadJwtToken(token);
-            var purposeClaim = jwt.Claims.FirstOrDefault(c => c.Type == "purpose");
-            if (purposeClaim?.Value != "password-reset") return null;
+            string? ClaimValue(string type) => jwt.Claims.FirstOrDefault(c => c.Type == type)?.Value;
 
-            var idClaim = jwt.Claims.FirstOrDefault(c => c.Type == "id");
-            return idClaim != null && long.TryParse(idClaim.Value, out var id) ? id : null;
+            if (ClaimValue("purpose") != ResetPurpose) return null;
+            if (!long.TryParse(ClaimValue("id"), out var id)) return null;
+            var tenant = ClaimValue("tenant");
+            var stamp = ClaimValue("pst");
+            if (string.IsNullOrEmpty(tenant) || string.IsNullOrEmpty(stamp)) return null;
+
+            return new PasswordResetClaims(id, tenant, stamp);
         }
         catch
         {

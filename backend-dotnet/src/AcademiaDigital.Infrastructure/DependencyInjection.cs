@@ -6,6 +6,7 @@ using AcademiaDigital.Infrastructure.Persistence;
 using AcademiaDigital.Infrastructure.Persistence.Repositories;
 using AcademiaDigital.Infrastructure.Tenancy;
 using AcademiaDigital.Infrastructure.Services;
+using AcademiaDigital.Infrastructure.Services.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<IStudentManagementService, StudentManagementService>();
         // Disco local por defecto; S3 con Storage:Provider=S3 (AWS, varias instancias).
         services.AddFileStorage(configuration);
+        // Correo saliente: log en desarrollo, Amazon SES con Email:Provider=Ses (producción).
+        services.AddEmailSender(configuration);
         services.AddSingleton<IAdmissionAgreementPdfGenerator, SimpleAdmissionAgreementPdfGenerator>();
         // Scoped (no singleton): escribe vía IFileStorage, que es por institución.
         services.AddScoped<IAdmissionNotificationSender, LocalAdmissionNotificationSender>();

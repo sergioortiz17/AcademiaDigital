@@ -1,28 +1,34 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
+/**
+ * Recuperación de contraseña en dos momentos:
+ *  1. /auth/forgot-password — email y DNI. El backend envía un correo con un enlace (si los
+ *     datos corresponden a una cuenta) y responde siempre lo mismo: el token nunca llega acá.
+ *  2. /auth/reset-password?token=... — el enlace del correo abre esta misma pantalla directo
+ *     en el formulario de contraseña nueva.
+ *
+ * Pasos: 1 datos · 2 "revisa tu correo" · 3 contraseña nueva · 4 listo.
+ */
 @Component({
   selector: 'app-forgot-password',
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss'],
   standalone: false
 })
-export class ForgotPasswordComponent {
+export class ForgotPasswordComponent implements OnInit {
 
   currentStep = 1;
 
-  // Step 1 — email + DNI
+  // Paso 1 — email + DNI
   step1Form: FormGroup;
   step1Loading = false;
   step1Error = '';
+  sentToEmail = '';
 
-  // Step 2 — OTP code
-  otpDigits: string[] = ['', '', '', '', '', ''];
-  otpError = '';
-
-  // Step 3 — new password
+  // Paso 3 — contraseña nueva
   passwordForm: FormGroup;
   passwordLoading = false;
   passwordError = '';
@@ -35,6 +41,7 @@ export class ForgotPasswordComponent {
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef
   ) {
     this.step1Form = this.fb.group({
@@ -52,6 +59,16 @@ export class ForgotPasswordComponent {
     }, { validators: this.passwordsMatch });
   }
 
+  ngOnInit(): void {
+    const token = this.route.snapshot.queryParamMap.get('token');
+    if (token) {
+      this.resetToken = token;
+      this.currentStep = 3;
+      // El token no queda en la barra de direcciones ni en el historial del navegador.
+      history.replaceState(null, '', '/auth/reset-password');
+    }
+  }
+
   private passwordsMatch(form: AbstractControl): ValidationErrors | null {
     const np = form.get('newPassword')?.value;
     const cp = form.get('confirmPassword')?.value;
@@ -65,7 +82,7 @@ export class ForgotPasswordComponent {
   hasLowerCase(): boolean { return /[a-z]/.test(this.newPassword?.value || ''); }
   hasSpecialChar(): boolean { return /[@$!%*?&._-]/.test(this.newPassword?.value || ''); }
 
-  // ── Step 1 ──────────────────────────────────────────────────────────────────
+  // ── Paso 1 ──────────────────────────────────────────────────────────────────
 
   submitStep1(): void {
     if (this.step1Form.invalid) {
@@ -79,69 +96,24 @@ export class ForgotPasswordComponent {
     const { email, dni } = this.step1Form.value;
 
     this.authService.forgotPassword(email, dni).subscribe({
-      next: (res) => {
+      next: () => {
+        // Misma respuesta exista o no la cuenta: no se revela qué emails están registrados.
         this.step1Loading = false;
-        if (!res.resetToken) {
-          this.step1Error = 'No encontramos una cuenta con ese correo y DNI. Verificá los datos.';
-          this.cdr.detectChanges();
-          return;
-        }
-        this.resetToken = res.resetToken;
+        this.sentToEmail = email;
         this.currentStep = 2;
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err) => {
         this.step1Loading = false;
-        this.step1Error = 'Error al procesar la solicitud. Intentá de nuevo.';
+        this.step1Error = err?.status === 429
+          ? 'Hiciste demasiados pedidos. Espera unos minutos e intenta de nuevo.'
+          : 'Error al procesar la solicitud. Intenta de nuevo.';
         this.cdr.detectChanges();
       }
     });
   }
 
-  // ── Step 2 — OTP ─────────────────────────────────────────────────────────────
-
-  trackByIndex(index: number): number { return index; }
-
-  onDigitInput(event: Event, index: number): void {
-    const input = event.target as HTMLInputElement;
-    const cleaned = input.value.replace(/\D/g, '');
-    input.value = cleaned ? (cleaned.at(-1) ?? '') : '';
-
-    if (input.value && index < 5) {
-      (document.getElementById(`otp-${index + 1}`) as HTMLInputElement)?.focus();
-    }
-  }
-
-  onDigitKeydown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'Backspace') {
-      const input = event.target as HTMLInputElement;
-      if (!input.value && index > 0) {
-        (document.getElementById(`otp-${index - 1}`) as HTMLInputElement)?.focus();
-      }
-    }
-  }
-
-  submitOtp(): void {
-    const code = Array.from({ length: 6 }, (_, i) =>
-      (document.getElementById(`otp-${i}`) as HTMLInputElement)?.value ?? ''
-    ).join('');
-
-    if (code.length < 6) {
-      this.otpError = 'Ingresá los 6 dígitos del código.';
-      return;
-    }
-
-    if (code !== '000000') {
-      this.otpError = 'Código incorrecto. Verificá e intentá de nuevo.';
-      return;
-    }
-
-    this.otpError = '';
-    this.currentStep = 3;
-    this.cdr.detectChanges();
-  }
-
-  // ── Step 3 ───────────────────────────────────────────────────────────────────
+  // ── Paso 3 ───────────────────────────────────────────────────────────────────
 
   submitPassword(): void {
     if (this.passwordForm.invalid) {
@@ -160,22 +132,29 @@ export class ForgotPasswordComponent {
         this.currentStep = 4;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: () => {
         this.passwordLoading = false;
-        this.passwordError = err?.error?.msg || 'Error al actualizar la contraseña.';
+        this.passwordError = 'El enlace venció o ya fue usado. Pide uno nuevo desde "¿Olvidaste tu contraseña?".';
         this.cdr.detectChanges();
       }
     });
   }
 
-  // ── Navigation ───────────────────────────────────────────────────────────────
+  // ── Navegación ───────────────────────────────────────────────────────────────
 
   goBack(): void {
-    if (this.currentStep > 1) {
-      this.currentStep--;
+    if (this.currentStep === 2) {
+      this.currentStep = 1;
     } else {
       this.router.navigate(['/auth/signin']);
     }
+  }
+
+  requestNewLink(): void {
+    this.resetToken = '';
+    this.passwordError = '';
+    this.currentStep = 1;
+    this.router.navigate(['/auth/forgot-password']);
   }
 
   goLogin(): void {

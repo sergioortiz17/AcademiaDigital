@@ -4,6 +4,27 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.4.0] - 2026-11-15
+
+Recuperación de contraseña por correo (Amazon SES).
+
+### Agregado
+
+- **Correo de recuperación**: el pedido de "¿Olvidaste tu contraseña?" envía un enlace a `/auth/reset-password?token=...` desde `no-reply@itsc.dryvn.org` por Amazon SES, con el rol de la instancia y sin claves. En desarrollo el correo se escribe en el log (`Email:Provider=Log`).
+- El enlace usa el dominio de la institución que hizo el pedido (multitenant).
+- Límite de 5 pedidos de recuperación por IP cada 15 minutos.
+
+### Cambiado
+
+- **El token de recuperación ya no vuelve en la respuesta** de `POST /api/v1/users/forgot-password`: la respuesta es siempre la misma, exista o no la cuenta. Si se informa el DNI, tiene que coincidir.
+- El token queda atado a la institución y a la contraseña actual: no sirve en otra institución ni se puede usar dos veces. Al cambiar la contraseña se cierran las sesiones abiertas.
+- Frontend: se eliminó el paso del código de 6 dígitos (el código válido era siempre `000000`); el enlace del correo abre directamente el formulario de contraseña nueva.
+
+### Corregido
+
+- Un token de recuperación inválido o vencido respondía 500; ahora responde 400.
+- El encabezado del panel consultaba `/api/v1/devtools/time` cada 30 segundos y en producción mostraba "No tenés permisos para realizar esta acción". Ahora, si la función está deshabilitada, consulta una sola vez y sin alerta.
+
 ## [1.3.0] - 2026-11-15
 
 Multitenant: una base de datos por institución sobre la misma plataforma.
@@ -80,7 +101,8 @@ Primera versión de producción de la plataforma.
 - **Versionado semántico** con una versión única para frontend, backend y Finance (`VERSION`, `tools/version.sh`).
 - Plan de pruebas de sistema con 75 casos (`PRUEBAS_SISTEMA.md`).
 
-[Sin publicar]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.3.0...HEAD
+[Sin publicar]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.0.0...v1.1.0

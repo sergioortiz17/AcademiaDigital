@@ -25,6 +25,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 using AcademiaDigital.API.Observability;
+using AcademiaDigital.API.Security;
 using Npgsql;
 using AcademiaDigital.Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -271,6 +272,7 @@ builder.Services.AddRateLimiter(options =>
     });
 
     options.AddClientErrorsPolicy();
+    options.AddPasswordResetPolicy();
 
     // API de plataforma (alta de instituciones): freno a la fuerza bruta de la clave de operador.
     options.AddPolicy("PlatformAdmin", httpContext => RateLimitPartition.GetFixedWindowLimiter(
