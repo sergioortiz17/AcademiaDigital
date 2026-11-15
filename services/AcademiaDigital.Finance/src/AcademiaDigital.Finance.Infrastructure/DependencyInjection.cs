@@ -35,7 +35,8 @@ public static class DependencyInjection
         services.AddScoped<PaymentPolicy>();
 
         // Services
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        // Disco local por defecto; S3 con Storage:Provider=S3 (AWS, varias instancias).
+        services.AddFileStorage(configuration);
         services.AddSingleton<IReceiptPdfGenerator, SimpleReceiptPdfGenerator>();
 
         // Directory client (display names from the monolito, degrades to id).

@@ -39,6 +39,7 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 8 | `itsc/certificate` | ✅ Hecho | 10/11/2026 | 3 recursos: certificado `ISSUED` para `itsc.dryvn.org`, vence el 27/05/2027 |
 | 9 | `itsc/email` | ✅ Hecho | 10/11/2026 | 8 recursos: dominio verificado en SES, DKIM y MAIL FROM en `SUCCESS` |
 | 10 a 11 | Fase 4: base de datos | ⏸️ En espera | | |
+| 11a | `shared/ec2-metadata-defaults` (IMDSv2, hop limit 2) | ⏸️ En espera | | Va antes del paso 12: sin esto los contenedores no obtienen las credenciales del rol |
 | 11b | `itsc/monitoring` (Grafana, Loki, Prometheus) | ⏸️ En espera | | Va antes del paso 12: la app necesita las direcciones de Loki y Prometheus |
 | 12 a 13 | Fase 5: aplicación | ⏸️ En espera | | |
 | — | ~~OIDC de GitHub~~ | ❌ Descartado | 14/11/2026 | La SCP de AWS (`DenyIAMRestrictedActions`: `iam:*Provider*`) lo bloquea y no se puede modificar. Se reemplaza por CodePipeline |
@@ -400,6 +401,32 @@ Esperado: `Apply complete! Resources: 4 added, 0 changed, 0 destroyed.`
 
 Costo: ~40 USD/mes con el horario de servicio (ALB, 2 EC2 e IPs públicas).
 
+### Paso 11a. Metadatos de EC2 (`shared/ec2-metadata-defaults`)
+
+Ajuste de cuenta para us-east-2, sin costo. Toda instancia EC2 **nueva** arranca con IMDSv2 obligatorio y *hop limit* 2. Beanstalk no expone esa opción, y con el valor 1 los contenedores no reciben el token de IMDSv2: el backend no podría usar el rol para S3 (archivos), SES (correo) ni SSM ([AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html)). No modifica instancias que ya existan.
+
+Plan:
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/shared/ec2-metadata-defaults && terragrunt plan
+```
+
+Esperado: `Plan: 1 to add, 0 to change, 0 to destroy.` con `aws_ec2_instance_metadata_defaults.this`, `http_tokens = "required"` y `http_put_response_hop_limit = 2`.
+
+Apply:
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/shared/ec2-metadata-defaults && terragrunt apply
+```
+
+Verificación:
+
+```bash
+aws ec2 get-instance-metadata-defaults --query 'AccountLevel'
+```
+
+Esperado: `HttpTokens: required` y `HttpPutResponseHopLimit: 2`.
+
 ### Paso 11b. Monitoreo (`itsc/monitoring`)
 
 Una EC2 `t4g.small` con Grafana, Loki y Prometheus en Docker. Loki guarda los logs en S3 (90 días) y Prometheus las métricas en el disco (30 días). No abre puertos a internet: Loki (3100) y Prometheus (9090) solo aceptan a las instancias de la app, y Grafana escucha en `127.0.0.1` y se abre con Session Manager. Sigue el mismo horario que la plataforma. Suma una instancia del mismo tipo que las de la app, su disco y el almacenamiento de S3.
@@ -478,6 +505,14 @@ cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/app &&
 ```
 
 Esperado: el entorno tarda entre 10 y 15 minutos. `Apply complete! Resources: 12 added, 0 changed, 0 destroyed.`
+
+Verificar que las instancias de Beanstalk tomaron el *hop limit* 2 del paso 11a (si dice 1, los archivos y el correo van a fallar):
+
+```bash
+aws ec2 describe-instances \
+  --filters "Name=tag:elasticbeanstalk:environment-name,Values=academiadigital-itsc-prod" "Name=instance-state-name,Values=running" \
+  --query 'Reservations[].Instances[].{Id:InstanceId,Hop:MetadataOptions.HttpPutResponseHopLimit,Tokens:MetadataOptions.HttpTokens}' --output table
+```
 
 ### Paso 13. Horario de servicio (`itsc/schedule`)
 

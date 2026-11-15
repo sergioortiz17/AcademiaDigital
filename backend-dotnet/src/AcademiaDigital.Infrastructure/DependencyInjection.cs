@@ -68,7 +68,8 @@ public static class DependencyInjection
         services.AddScoped<AcademiaDigital.Application.UseCases.StudyPlanImport.IStudyPlanCsvParser,
             AcademiaDigital.Infrastructure.Csv.CsvHelperStudyPlanParser>();
         services.AddScoped<IStudentManagementService, StudentManagementService>();
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        // Disco local por defecto; S3 con Storage:Provider=S3 (AWS, varias instancias).
+        services.AddFileStorage(configuration);
         services.AddSingleton<IAdmissionAgreementPdfGenerator, SimpleAdmissionAgreementPdfGenerator>();
         services.AddSingleton<IAdmissionNotificationSender, LocalAdmissionNotificationSender>();
         services.AddSingleton<IAdmissionChallengeVerifier, ConfigurableAdmissionChallengeVerifier>();

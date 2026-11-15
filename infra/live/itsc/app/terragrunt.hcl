@@ -127,5 +127,11 @@ inputs = {
     ReverseProxy__TrustForwardedHeaders = "true"  # ALB → nginx → backend; el backend no publica puertos
     Observability__MinimumLevel         = "Error" # solo errores + auditoría de accesos (logins, logouts)
     Swagger__Enabled                    = "false" # no publicar Swagger/Scalar en producción
+
+    # Archivos (acuerdos, certificados, recibos) en S3 y no en el disco de cada instancia.
+    # El prefijo (backend/ o finance/) lo define cada servicio en deploy/eb/docker-compose.yml.
+    Storage__Provider   = "S3"
+    Storage__S3__Bucket = dependency.storage.outputs.bucket_name
+    Storage__S3__Region = include.root.locals.aws_region
   }
 }

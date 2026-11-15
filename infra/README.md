@@ -64,6 +64,7 @@ infra/
 │   ├── github-connection/    Conexión con GitHub por CodeConnections (una por cuenta)
 │   ├── pipeline/             CodePipeline + CodeBuild arm64 → ECR → Beanstalk
 │   ├── monitoring/           EC2 con Grafana, Loki (S3) y Prometheus; acceso por Session Manager
+│   ├── ec2-metadata-defaults/ IMDSv2 y hop limit 2 para instancias nuevas (contenedores)
 │   ├── registry/             Repositorios ECR
 │   └── budget/               Presupuesto y alertas
 └── live/                     Lo que está desplegado
@@ -73,6 +74,7 @@ infra/
     │   ├── scope.hcl
     │   ├── registry/
     │   ├── github-connection/
+    │   ├── ec2-metadata-defaults/
     │   └── budget/
     └── itsc/                 Una institución
         ├── scope.hcl         Dominio, capacidad, horario, repositorio

@@ -4,6 +4,24 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.2.0] - 2026-11-14
+
+Archivos en S3: la plataforma puede correr en varias instancias.
+
+### Agregado
+
+- **`S3FileStorage`** en el monolito y en Finance: acuerdos, certificados y recibos se guardan en el bucket de archivos (`Storage:Provider=S3`), con el rol de la instancia y sin claves. Cada servicio usa su prefijo (`backend/`, `finance/`). Las claves lógicas guardadas en la base no cambian.
+- **IMDSv2 con hop limit 2** por defecto para las instancias nuevas de la cuenta (`infra/live/shared/ec2-metadata-defaults`): sin esto, los contenedores de Beanstalk no obtienen las credenciales del rol.
+
+### Cambiado
+
+- El adaptador de almacenamiento se elige por configuración. Por defecto sigue siendo el disco local (desarrollo y docker-compose); Beanstalk usa S3.
+- Validación de claves de almacenamiento: se rechazan segmentos vacíos, `.` y `..`.
+
+### Corregido
+
+- Con más de una instancia, un PDF generado en una no existía en la otra y se perdía al reemplazarla.
+
 ## [1.1.0] - 2026-11-14
 
 Observabilidad autogestionada: quién entra, desde dónde, qué errores hay y cómo están las instancias. En producción se guardan **solo errores y accesos**.
@@ -40,6 +58,7 @@ Primera versión de producción de la plataforma.
 - **Versionado semántico** con una versión única para frontend, backend y Finance (`VERSION`, `tools/version.sh`).
 - Plan de pruebas de sistema con 75 casos (`PRUEBAS_SISTEMA.md`).
 
-[Sin publicar]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.1.0...HEAD
+[Sin publicar]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/sergioortiz17/AcademiaDigital/releases/tag/v1.0.0

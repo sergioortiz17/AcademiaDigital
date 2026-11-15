@@ -22,6 +22,8 @@ services:
   backend:
     image: __ECR_REGISTRY__/__ECR_PREFIX__/backend:__IMAGE_TAG__
     env_file: .env
+    environment:
+      Storage__S3__Prefix: backend # carpeta propia dentro del bucket de archivos
     entrypoint:
       - /bin/sh
       - -c
@@ -38,6 +40,8 @@ services:
   finance:
     image: __ECR_REGISTRY__/__ECR_PREFIX__/finance:__IMAGE_TAG__
     env_file: .env
+    environment:
+      Storage__S3__Prefix: finance # carpeta propia dentro del bucket de archivos
     entrypoint:
       - /bin/sh
       - -c
