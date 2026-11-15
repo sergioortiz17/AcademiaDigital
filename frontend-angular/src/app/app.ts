@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
 import { accountInitialize } from './store/account/account.actions';
 import { ThemeService } from './core/services/theme.service';
+import { TenantService } from './core/services/tenant.service';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +15,8 @@ export class App implements OnInit {
   constructor(
     private translate: TranslateService,
     private store: Store,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private tenantService: TenantService
   ) {}
 
   ngOnInit(): void {
@@ -24,6 +26,9 @@ export class App implements OnInit {
     localStorage.removeItem('i18nextLng');
     this.translate.setDefaultLang('es');
     this.translate.use('es');
+
+    // Institución del dominio actual (nombre para el título y el login).
+    this.tenantService.load();
 
     // Restore persisted auth session
     try {

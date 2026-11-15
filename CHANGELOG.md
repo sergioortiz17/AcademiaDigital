@@ -4,6 +4,28 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.3.0] - 2026-11-15
+
+Multitenant: una base de datos por institución sobre la misma plataforma.
+
+### Agregado
+
+- **Base de control** (`academiadigital_control`) con el catálogo de instituciones y sus dominios. El ITSC queda como institución por defecto sobre su base actual, sin mover datos.
+- **Resolución de la institución por dominio**: el frontend envía el dominio del navegador en `X-Tenant` (o se toma de `Origin`); el backend elige la base de esa institución en cada request. Un dominio no registrado responde 404.
+- **Alta de instituciones** desde la pantalla `/platform` y la API `api/v1/platform/tenants`, protegidas con la clave de operador `X-Platform-Key` (`Platform__AdminKey`). Sin clave configurada la API de plataforma queda deshabilitada. El alta crea y migra la base de la institución y su usuario administrador.
+- **CORS dinámico** para los dominios registrados, sin reiniciar.
+- Archivos y certificados separados por institución.
+
+### Cambiado
+
+- Las sesiones y los usuarios viven en la base de cada institución: un usuario o un token de una institución no sirven en otra.
+- El microservicio Finance solo atiende a la institución por defecto.
+
+### Corregido
+
+- `itsc.dryvn.org` registrado como dominio de la institución por defecto: sin él, en producción todas las llamadas a la API respondían 404.
+- El identificador `finance` queda reservado: su base (`academiadigital_finance`) es la del microservicio Finance.
+
 ## [1.2.0] - 2026-11-14
 
 Archivos en S3: la plataforma puede correr en varias instancias.
@@ -58,7 +80,8 @@ Primera versión de producción de la plataforma.
 - **Versionado semántico** con una versión única para frontend, backend y Finance (`VERSION`, `tools/version.sh`).
 - Plan de pruebas de sistema con 75 casos (`PRUEBAS_SISTEMA.md`).
 
-[Sin publicar]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.2.0...HEAD
+[Sin publicar]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sergioortiz17/AcademiaDigital/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/sergioortiz17/AcademiaDigital/releases/tag/v1.0.0

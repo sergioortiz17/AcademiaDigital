@@ -1,6 +1,7 @@
 using Amazon;
 using Amazon.S3;
 using AcademiaDigital.Application.Interfaces;
+using AcademiaDigital.Infrastructure.Tenancy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,12 +20,16 @@ public static class FileStorageRegistration
     {
         if (!string.Equals(configuration["Storage:Provider"], "S3", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddSingleton<IFileStorage, LocalFileStorage>();
+            services.AddSingleton<LocalFileStorage>();
+            services.AddScoped<IFileStorage>(sp => new TenantFileStorage(
+                sp.GetRequiredService<LocalFileStorage>(), sp.GetRequiredService<ITenantContext>()));
             return services;
         }
 
         services.AddSingleton<IAmazonS3>(_ => CreateClient(configuration));
-        services.AddSingleton<IFileStorage, S3FileStorage>();
+        services.AddSingleton<S3FileStorage>();
+        services.AddScoped<IFileStorage>(sp => new TenantFileStorage(
+            sp.GetRequiredService<S3FileStorage>(), sp.GetRequiredService<ITenantContext>()));
         return services;
     }
 

@@ -16,6 +16,7 @@ using AcademiaDigital.Application.UseCases.StudyPlanDiff;
 using AcademiaDigital.Application.UseCases.StudyPlanImport;
 using AcademiaDigital.Application.UseCases.StudyPlans;
 using AcademiaDigital.Application.UseCases.Teachers;
+using AcademiaDigital.Application.UseCases.Tenants;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Domain.Services;
 using AcademiaDigital.Infrastructure;
@@ -25,6 +26,8 @@ using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 using AcademiaDigital.API.Observability;
 using Npgsql;
+using AcademiaDigital.Infrastructure.Tenancy;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +52,11 @@ builder.Services.AddScoped<GetUsersUseCase>();
 builder.Services.AddScoped<UpdateUserRoleUseCase>();
 builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
+
+// Tenants (multitenant: alta de instituciones por el operador de la plataforma)
+builder.Services.AddScoped<TenantPolicy>();
+builder.Services.AddScoped<GetTenantsQueryHandler>();
+builder.Services.AddScoped<CreateTenantCommandHandler>();
 
 // Admissions
 // Time-travel (dev): un único OverridableTimeProvider reemplaza TimeProvider.System, para que todos
@@ -212,9 +220,15 @@ var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>() ?? [];
 
-builder.Services.AddCors(options =>
+// Además de la lista fija, se aceptan los dominios registrados de cada institución: dar de alta
+// una institución nueva no requiere tocar configuración ni reiniciar.
+builder.Services.AddCors();
+builder.Services.AddOptions<CorsOptions>().Configure<ITenantDirectory>((options, directory) =>
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins(allowedOrigins)
+        policy.SetIsOriginAllowed(origin =>
+                allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)
+                || (Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                    && directory.IsKnownHost(uri.Host.ToLowerInvariant())))
               .AllowAnyHeader()
               .AllowAnyMethod()));
 
@@ -257,6 +271,11 @@ builder.Services.AddRateLimiter(options =>
     });
 
     options.AddClientErrorsPolicy();
+
+    // API de plataforma (alta de instituciones): freno a la fuerza bruta de la clave de operador.
+    options.AddPolicy("PlatformAdmin", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 
 // ── Controllers ───────────────────────────────────────────────────────────────
@@ -307,6 +326,9 @@ var app = builder.Build();
 // verification URL fails fast instead of weakening the first public request.
 _ = app.Services.GetRequiredService<IAdmissionChallengeVerifier>();
 
+// Multitenant: migra la base de control, registra la institución por defecto y migra las demás.
+await app.Services.InitializeTenancyAsync();
+
 // Aplicar migraciones al iniciar con reintentos.
 // Aunque docker-compose usa "depends_on: condition: service_healthy" con pg_isready,
 // eso solo garantiza que Postgres acepta conexiones, no que la primera conexión desde
@@ -314,7 +336,9 @@ _ = app.Services.GetRequiredService<IAdmissionChallengeVerifier>();
 // contenedores juntos. Se mantiene un reintento acotado por las dudas.
 await using (var scope = app.Services.CreateAsyncScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // Base de la institución por defecto (la ya existente). Las demás las migra InitializeTenancyAsync.
+    await using var db = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>()
+        .Create(scope.ServiceProvider.GetRequiredService<ITenantDirectory>().Default.DatabaseName);
     var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
     const int maxAttempts = 10;
 
@@ -354,7 +378,10 @@ app.UseApiDocumentation();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors();
 app.UseRateLimiter();
-app.UseMiddleware<ActiveSessionMiddleware>();
+app.UseMiddleware<TenantResolutionMiddleware>();
+// La sesión vive en la base de la institución: solo se valida donde hay institución resuelta.
+app.UseWhen(context => TenantResolutionMiddleware.IsTenantScoped(context.Request.Path),
+    branch => branch.UseMiddleware<ActiveSessionMiddleware>());
 
 app.MapControllers();
 

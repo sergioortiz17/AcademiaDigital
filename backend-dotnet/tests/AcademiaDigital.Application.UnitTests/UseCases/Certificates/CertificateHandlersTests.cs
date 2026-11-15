@@ -76,7 +76,7 @@ public sealed class CertificateHandlersTests
         storage.SaveAsync(Arg.Any<string>(), Arg.Any<ReadOnlyMemory<byte>>(), "application/pdf", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(call => call.ArgAt<string>(0));
         var handler = new IssueCertificateCommandHandler(
-            repository, new CertificatePolicy(), new ImmediateUnitOfWork(), pdf, storage, new FixedTimeProvider(Now));
+            repository, new CertificatePolicy(), new ImmediateUnitOfWork(), pdf, storage, new FixedTimeProvider(Now), TestTenant.Context());
 
         var result = await handler.Handle(new IssueCertificateCommand(10, 99), TestContext.Current.CancellationToken);
 
@@ -85,6 +85,33 @@ public sealed class CertificateHandlersTests
         Assert.Equal(CertificateStatus.Issued, request.Status);
         Assert.Equal(64, result.Sha256!.Length);
         repository.Received(1).AddIssuance(Arg.Is<CertificateIssuance>(item => item.SequenceNumber == 1));
+    }
+
+    [Fact]
+    public async Task Issue_uses_the_institution_of_the_current_tenant_in_the_pdf()
+    {
+        var repository = Substitute.For<ICertificateRequestRepository>();
+        var request = Request(CertificateStatus.Approved);
+        repository.FindForUpdateAsync(10, Arg.Any<CancellationToken>()).Returns(request);
+        repository.GetAcademicRecordAsync(7, 20, null, Arg.Any<CancellationToken>()).Returns(Academic());
+        repository.LockSequenceAsync(Arg.Any<CancellationToken>()).Returns(new CertificateSequence());
+        var pdf = Substitute.For<ICertificatePdfGenerator>();
+        pdf.GenerateAsync(Arg.Any<CertificatePdfModel>(), Arg.Any<CancellationToken>())
+            .Returns(Encoding.ASCII.GetBytes("%PDF-1.4 certificate"));
+        var storage = Substitute.For<IFileStorage>();
+        storage.SaveAsync(Arg.Any<string>(), Arg.Any<ReadOnlyMemory<byte>>(), "application/pdf", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<string>(0));
+        var handler = new IssueCertificateCommandHandler(
+            repository, new CertificatePolicy(), new ImmediateUnitOfWork(), pdf, storage, new FixedTimeProvider(Now),
+            TestTenant.Context("ucv", "Universidad Central de Venezuela", isDefault: false));
+
+        await handler.Handle(new IssueCertificateCommand(10, 99), TestContext.Current.CancellationToken);
+
+        await pdf.Received(1).GenerateAsync(
+            Arg.Is<CertificatePdfModel>(model => model.InstitutionName == "Universidad Central de Venezuela"
+                && !model.UseDefaultLogo
+                && model.SealText.Contains("Universidad Central de Venezuela")),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -98,7 +125,7 @@ public sealed class CertificateHandlersTests
         var pdf = Substitute.For<ICertificatePdfGenerator>();
         var handler = new IssueCertificateCommandHandler(
             repository, new CertificatePolicy(), new ImmediateUnitOfWork(), pdf,
-            Substitute.For<IFileStorage>(), new FixedTimeProvider(Now));
+            Substitute.For<IFileStorage>(), new FixedTimeProvider(Now), TestTenant.Context());
 
         var result = await handler.Handle(new IssueCertificateCommand(10, 99), TestContext.Current.CancellationToken);
 

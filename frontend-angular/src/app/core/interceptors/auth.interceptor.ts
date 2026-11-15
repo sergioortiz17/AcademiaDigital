@@ -33,7 +33,7 @@ export class AuthInterceptor implements HttpInterceptor {
           );
         }
         
-        if (error.status === 401 && !this.isLoginRequest(request) ) {
+        if (error.status === 401 && !this.isLoginRequest(request) && !this.isPlatformRequest(request)) {
           this.store.dispatch(logout());
           localStorage.removeItem('academia-account');
           if (this.router.url !== '/auth/signin') {
@@ -50,11 +50,20 @@ export class AuthInterceptor implements HttpInterceptor {
     return request.url.endsWith('/v1/users/login');
   }
 
+  /** La API de plataforma usa su propia clave: un 401 ahí no es una sesión vencida. */
+  private isPlatformRequest(request: HttpRequest<any>): boolean {
+    return request.url.includes('/v1/platform/');
+  }
+
+  /**
+   * Multitenant: X-Tenant lleva el dominio del navegador (la institución). El backend lo usa para
+   * elegir la base de datos; no es un secreto, el aislamiento lo da la base separada por institución.
+   */
   private addAuth(request: HttpRequest<any>): HttpRequest<any> {
     const token = this.getToken();
-    return token
-      ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-      : request;
+    const setHeaders: Record<string, string> = { 'X-Tenant': window.location.hostname };
+    if (token) setHeaders['Authorization'] = `Bearer ${token}`;
+    return request.clone({ setHeaders });
   }
 
   private getToken(): string | null {

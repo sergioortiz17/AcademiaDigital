@@ -27,7 +27,10 @@ public sealed record CertificatePdfModel(
     string SignatureText,
     string SealText,
     IReadOnlyList<CertificatePdfCourse> Courses,
-    CertificatePdfExam? Exam);
+    CertificatePdfExam? Exam,
+    // Multitenant: null conserva el encabezado y logo históricos (ITSC).
+    string? InstitutionName = null,
+    bool UseDefaultLogo = true);
 
 public interface ICertificatePdfGenerator
 {

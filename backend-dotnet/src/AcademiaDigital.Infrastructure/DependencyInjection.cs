@@ -4,6 +4,7 @@ using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Application.Services;
 using AcademiaDigital.Infrastructure.Persistence;
 using AcademiaDigital.Infrastructure.Persistence.Repositories;
+using AcademiaDigital.Infrastructure.Tenancy;
 using AcademiaDigital.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,9 +18,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // EF Core + PostgreSQL
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        // Multitenant: base de control + una base académica por institución (AppDbContext por request).
+        services.AddTenancy(configuration);
 
         // Repositorios
         services.AddScoped<IUserRepository, UserRepository>();
@@ -71,7 +71,8 @@ public static class DependencyInjection
         // Disco local por defecto; S3 con Storage:Provider=S3 (AWS, varias instancias).
         services.AddFileStorage(configuration);
         services.AddSingleton<IAdmissionAgreementPdfGenerator, SimpleAdmissionAgreementPdfGenerator>();
-        services.AddSingleton<IAdmissionNotificationSender, LocalAdmissionNotificationSender>();
+        // Scoped (no singleton): escribe vía IFileStorage, que es por institución.
+        services.AddScoped<IAdmissionNotificationSender, LocalAdmissionNotificationSender>();
         services.AddSingleton<IAdmissionChallengeVerifier, ConfigurableAdmissionChallengeVerifier>();
         services.AddSingleton<IAttendanceReportGenerator, SimpleAttendanceReportGenerator>();
         services.AddSingleton<ICertificatePdfGenerator, SimpleCertificatePdfGenerator>();

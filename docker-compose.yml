@@ -42,6 +42,8 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-AcademiaDigital};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-Admin1234!}
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__ExpirationDays=7
+      # Clave de operador para crear instituciones en /platform (multitenant). Vacía = deshabilitado.
+      - Platform__AdminKey=${PLATFORM_ADMIN_KEY:-}
       - Cors__AllowedOrigins__0=http://localhost:4200
       # dev-tools (:8090) llama al backend para el time-travel; se permite su origen en dev.
       - Cors__AllowedOrigins__1=http://localhost:8090

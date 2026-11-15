@@ -8,6 +8,8 @@ import { finalize } from 'rxjs/internal/operators/finalize';
 import { EMPTY } from 'rxjs/internal/observable/empty';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError } from 'rxjs/internal/operators/catchError';
+import { Observable } from 'rxjs';
+import { CurrentTenant, DEFAULT_TENANT_SLUG, TenantService } from '../../../core/services/tenant.service';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +18,8 @@ import { catchError } from 'rxjs/internal/operators/catchError';
   standalone: false
 })
 export class LoginComponent {
+  readonly tenant$: Observable<CurrentTenant | null>;
+  readonly defaultTenantSlug = DEFAULT_TENANT_SLUG;
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -26,8 +30,10 @@ export class LoginComponent {
     private readonly authService: AuthService,
     private readonly store: Store,
     private readonly router: Router,
-    private readonly changeDetectorRef: ChangeDetectorRef
+    private readonly changeDetectorRef: ChangeDetectorRef,
+    private readonly tenantService: TenantService
   ) {
+    this.tenant$ = this.tenantService.tenant$;
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
