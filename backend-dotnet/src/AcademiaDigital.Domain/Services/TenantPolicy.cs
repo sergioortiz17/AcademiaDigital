@@ -12,9 +12,13 @@ public sealed partial class TenantPolicy
     public const string DatabasePrefix = "academiadigital_";
     public const int MinPasswordLength = 8;
 
+    // Además de nombres de sistema, se reservan los slugs cuya base (academiadigital_<slug>)
+    // ya pertenece a otro componente: "control" (catálogo de instituciones) y "finance"
+    // (microservicio Finance, base academiadigital_finance). Sin esto, dar de alta "finance"
+    // migraría el esquema académico dentro de la base de Finance.
     private static readonly HashSet<string> ReservedSlugs = new(StringComparer.Ordinal)
     {
-        "control", "platform", "admin", "api", "www", "postgres", "template0", "template1"
+        "control", "finance", "platform", "admin", "api", "www", "postgres", "template0", "template1"
     };
 
     [GeneratedRegex("^[a-z0-9]([a-z0-9-]{0,28}[a-z0-9])?$")]

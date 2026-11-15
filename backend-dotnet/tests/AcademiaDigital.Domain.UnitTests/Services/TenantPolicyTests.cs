@@ -26,6 +26,7 @@ public sealed class TenantPolicyTests
     [InlineData("ñandu")]
     [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")] // 31
     [InlineData("control")]
+    [InlineData("finance")] // academiadigital_finance es la base del microservicio Finance
     [InlineData("platform")]
     [InlineData("postgres")]
     public void NormalizeSlug_rejects_invalid_or_reserved_values(string? input)
