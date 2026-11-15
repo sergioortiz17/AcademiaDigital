@@ -18,7 +18,11 @@
     class="sidenav"
     [mode]="isMobile ? 'over' : 'side'"
     [opened]="!isMobile">
-    <app-navigation (menuItemClick)="isMobile && sidenav.close()"></app-navigation>
+    <div class="sidenav-inner">
+      <app-navigation (menuItemClick)="isMobile && sidenav.close()"></app-navigation>
+      <!-- Versión publicada (VERSION del repo, la sincroniza tools/version.sh) -->
+      <div class="sidenav-version">Versión {{ appVersion }}</div>
+    </div>
     </mat-sidenav>
 
     <mat-sidenav-content class="content-area">

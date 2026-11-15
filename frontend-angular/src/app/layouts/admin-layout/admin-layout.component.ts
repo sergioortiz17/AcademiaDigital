@@ -3,6 +3,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatSidenav } from '@angular/material/sidenav';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { APP_VERSION } from '../../../environments/version';
 
 @Component({
   selector: 'app-admin-layout',
@@ -13,6 +14,7 @@ import { takeUntil } from 'rxjs/operators';
 export class AdminLayoutComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav!: MatSidenav;
   isMobile = false;
+  readonly appVersion = APP_VERSION;
   private readonly destroy$ = new Subject<void>();
 
   constructor(private readonly breakpointObserver: BreakpointObserver) {}

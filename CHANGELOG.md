@@ -4,6 +4,17 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.5.0] - 2026-11-15
+
+### Agregado
+
+- **Versión visible**: la barra lateral muestra al pie la versión publicada ("Versión 1.5.0"). Sale de `frontend-angular/src/environments/version.ts`, que `tools/version.sh` actualiza y verifica junto con el resto.
+- **Acceso a Google Classroom** en el menú de usuario: abre `https://classroom.google.com/` en una pestaña nueva.
+
+### Cambiado
+
+- El menú de usuario ya no muestra "Mis Mensajes"; su lugar lo ocupa "Classroom". La ruta `/app/messages` sigue existiendo.
+
 ## [1.4.1] - 2026-11-15
 
 ### Corregido
