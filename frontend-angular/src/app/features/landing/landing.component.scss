@@ -332,3 +332,68 @@
   .topbar .btn { padding: 9px 14px; font-size: 13px; white-space: nowrap; }
   .brand { font-size: 17px; }
 }
+
+// ── Animaciones Lottie ─────────────────────────────────────────────────────
+.hero__layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+  gap: 32px;
+
+  .hero__content {
+    margin: 48px 0 0;
+    text-align: left;
+  }
+
+  .hero__lead { margin-left: 0; }
+  .hero__actions { justify-content: flex-start; }
+}
+
+.hero__animation {
+  width: 100%;
+  max-width: 460px;
+  aspect-ratio: 1 / 1;
+  margin: 32px auto 0;
+  // Un halo suave detrás para que la animación se despegue del gradiente.
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 70%);
+}
+
+.steps-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 24px;
+
+  .steps { grid-template-columns: 1fr; margin-top: 0; }
+}
+
+.steps__animation {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.form__animation {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 4px;
+}
+
+@media (max-width: 860px) {
+  .hero__layout {
+    grid-template-columns: 1fr;
+
+    .hero__content { margin-top: 40px; text-align: center; }
+    .hero__lead { margin-left: auto; }
+    .hero__actions { justify-content: center; }
+  }
+
+  .hero__animation { max-width: 280px; margin-top: 8px; }
+
+  .steps-layout { grid-template-columns: 1fr; }
+  .steps__animation { max-width: 220px; }
+}

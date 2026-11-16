@@ -21,6 +21,31 @@ export function isTeacherEmail(email: string | null | undefined, domain: string 
 /** Slug de la institución original: es la única que usa el logo y los textos históricos de ITSC. */
 export const DEFAULT_TENANT_SLUG = 'itsc';
 
+export interface FaviconSet {
+  svg: string;
+  ico: string;
+  appleTouch: string;
+}
+
+/** Íconos de pestaña del ITSC (public/). Los de Academia Digital son los de index.html. */
+export const ITSC_FAVICON: FaviconSet = {
+  svg: 'favicon-itsc.svg',
+  ico: 'favicon-itsc.ico',
+  appleTouch: 'apple-touch-icon-itsc.png'
+};
+
+/** Cambia los íconos de la pestaña (SVG, ICO y el de la pantalla de inicio del celular). */
+export function applyFavicon(set: FaviconSet, doc: Document = document): void {
+  const hrefs: Record<string, string> = {
+    'link[rel="icon"][type="image/svg+xml"]': set.svg,
+    'link[rel="alternate icon"]': set.ico,
+    'link[rel="apple-touch-icon"]': set.appleTouch
+  };
+  for (const [selector, href] of Object.entries(hrefs)) {
+    doc.querySelector<HTMLLinkElement>(selector)?.setAttribute('href', href);
+  }
+}
+
 /**
  * Institución (tenant) del dominio actual. El backend la resuelve por el host del navegador
  * (header X-Tenant); acá solo se consulta su nombre para el título y el login.
@@ -45,6 +70,8 @@ export class TenantService {
         next: tenant => {
           this.subject.next(tenant);
           document.title = `${tenant.name} | Academia Digital`;
+          // El ITSC usa su logo; las demás instituciones, la landing y el panel, el de Academia Digital.
+          if (tenant.slug === DEFAULT_TENANT_SLUG) applyFavicon(ITSC_FAVICON);
         },
         // Dominio sin institución registrada u API caída: la app sigue con el branding por defecto.
         error: () => {}

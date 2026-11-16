@@ -4,6 +4,14 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.9.0] - 2026-11-15
+
+### Agregado
+
+- **Animaciones en la landing** (Lottie): educación en la portada, indicadores de gestión en "Cómo empezar" (sus violetas pasados al azul de la landing) y un avión de papel sobre el formulario, recoloreado con el azul metálico (el ala lleva un degradado). Provienen del proyecto `gestion-academica-frontend`.
+- **Ícono de la pestaña (favicon):** el librito de Academia Digital en blanco sobre el azul metálico de la landing (`favicon.svg`, con versiones `.ico` y `apple-touch-icon.png`). Reemplaza el ícono de Angular que se veía en producción. **El ITSC muestra su propio logo** (la "it" en su azul, `favicon-itsc.svg`): la aplicación cambia el ícono al reconocer la institución por defecto. La landing, el panel y las demás instituciones usan el de Academia Digital. El librito es el ícono `auto_stories` de Material Symbols (Google, Apache 2.0).
+- El reproductor (`lottie-web` 5.13.0, versión liviana solo SVG) se descarga recién cuando la animación entra en pantalla, en un fragmento aparte de 42 KB comprimido; no afecta al resto de la aplicación. Las animaciones se pausan fuera de pantalla y respetan "reducir movimiento" del sistema.
+
 ## [1.8.0] - 2026-11-15
 
 Landing comercial y pedidos de plataforma.
