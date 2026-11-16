@@ -55,6 +55,10 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 21 | `itsc/secrets`: clave de `/platform` (v1.6.0) | ✅ Hecho | 15/11/2026 | 2 recursos: `random_password` y parámetro `/academiadigital-itsc-prod/backend/platform-admin-key` |
 | 22 | `itsc/app`: `Platform__AdminKey` y `Tenancy__DefaultTeacherEmailDomain` | ✅ Hecho | 15/11/2026 | En dos apply: primero la política IAM (`-target`), después el entorno (4 min 37 s). `tenant/current` devuelve `teacherEmailDomain: itscordoba.edu.ar` |
 | 23 | Base compartida (v1.7.0) | ⏸️ Pendiente | | Lo aplica el pipeline: al arrancar se crea el esquema `control` en `academiadigital` y se registra ITSC en `public`. Después de verificar, borrar a mano la base vieja `academiadigital_control` (`DROP DATABASE academiadigital_control;` por el túnel SSM) |
+| 24 | `itsc/wildcard-certificate` (`*.dryvn.org`) | ⏸️ Pendiente | | 1 recurso. Ver "Fase 7" |
+| 25 | Cloudflare: CNAME de validación del certificado | ⏸️ Pendiente | | Hasta que el certificado esté `ISSUED` |
+| 26 | `itsc/app`: certificado comodín + `Platform__NotifyEmail` | ⏸️ Pendiente | | Recién con el certificado `ISSUED` |
+| 27 | Cloudflare: comodín `*.dryvn.org` → ALB | ⏸️ Pendiente | | Activa la landing, el panel y los subdominios de cada institución |
 
 Pendientes fuera de Terraform:
 
@@ -663,6 +667,69 @@ aws codepipeline start-pipeline-execution --name academiadigital-itsc-prod-deplo
 ```
 
 ---
+
+## Fase 7: landing, panel y subdominios por institución ⏸️
+
+Objetivo: `academiadigital.dryvn.org` (landing), `admin.dryvn.org` (panel de pedidos e instituciones) y `<institución>.dryvn.org` llegan al mismo ALB. La aplicación decide qué mostrar según el dominio. La zona `dryvn.org` está en **Cloudflare**; `itsc.dryvn.org` sigue delegado a Route 53 y no cambia.
+
+Requisito: la v1.8.0 desplegada (merge de `feat/landing-plataforma`).
+
+### Paso 24. Certificado comodín
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/wildcard-certificate
+terragrunt plan    # esperado: 1 to add (aws_acm_certificate, *.dryvn.org)
+terragrunt apply
+terragrunt output validation_records
+```
+
+### Paso 25. Validarlo en Cloudflare
+
+En Cloudflare → `dryvn.org` → **DNS** → **Add record**, cargar el registro de `validation_records`:
+
+- Tipo `CNAME`. **Name**: el `name` sin el sufijo `.dryvn.org.` (ej. `_abc123`). **Target**: el `value`.
+- **Proxy status: DNS only** (nube gris). Con el proxy activo, ACM no puede validarlo.
+
+Esperar a que diga `ISSUED`, normalmente unos minutos ([AWS](https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html)):
+
+```bash
+aws acm describe-certificate --region us-east-2 \
+  --certificate-arn "$(cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/wildcard-certificate && terragrunt output -raw certificate_arn)" \
+  --query 'Certificate.Status' --output text
+```
+
+Dejar el CNAME de validación publicado: ACM lo usa para renovar el certificado.
+
+### Paso 26. Usar el certificado en el ALB
+
+Solo con el certificado `ISSUED`:
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/app
+terragrunt plan    # esperado: 0 to add, 1 to change (SSLCertificateArns y Platform__NotifyEmail)
+terragrunt apply
+```
+
+El comodín cubre `itsc.dryvn.org`, así que el sitio actual sigue funcionando. El certificado viejo (`itsc/certificate`) queda sin uso; no borrarlo hasta verificar.
+
+### Paso 27. Comodín en Cloudflare
+
+En Cloudflare → `dryvn.org` → **DNS**: tipo `CNAME`, **Name** `*`, **Target** el `environment_cname` de la unidad `app` (`terragrunt output -raw environment_cname`), **DNS only**.
+
+Los registros que ya existen (como la delegación `itsc`) tienen prioridad sobre el comodín y no se afectan.
+
+Verificar:
+
+```bash
+curl -sI https://academiadigital.dryvn.org | head -1    # 200: landing
+curl -sI https://admin.dryvn.org | head -1              # 200: panel (pide la clave de plataforma)
+```
+
+### Dar de alta una institución desde un pedido
+
+1. El pedido llega por correo y aparece en `https://admin.dryvn.org`, después de ingresar la clave de plataforma.
+2. **Crear institución** precarga los datos; completar el DNI y la contraseña del administrador.
+3. La institución queda en `https://<slug>.dryvn.org`, sin tocar DNS ni certificados, y el pedido queda aprobado.
 
 ## Escalar: pasar de 1 a 2 instancias (o activar Multi-AZ)
 

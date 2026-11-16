@@ -1,11 +1,16 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { PlatformService, TenantSummary } from '../../core/services/platform.service';
+import {
+  PlatformRequestItem, PlatformRequestStatus, PlatformService, TenantSummary
+} from '../../core/services/platform.service';
+import { siteBaseDomain } from '../../core/routing/platform-hosts';
 import { DEFAULT_TENANT_SLUG } from '../../core/services/tenant.service';
 
 /**
  * Alta de instituciones (multitenant). Pantalla de operador de la plataforma: no pertenece a
  * ninguna institución ni usa la sesión de un usuario; se desbloquea con la clave de plataforma.
- * Crear una institución provisiona su base de datos, su administrador y sus dominios.
+ * Crear una institución provisiona su esquema en la base compartida, su administrador y sus
+ * dominios. También muestra los pedidos del formulario "Pide tu plataforma" de la landing:
+ * "Crear institución" precarga el alta y, al crearla, el pedido queda aprobado.
  */
 @Component({
   selector: 'app-platform-tenants',
@@ -21,6 +26,11 @@ export class PlatformTenantsComponent implements OnInit {
   hideKey = true;
 
   tenants: TenantSummary[] = [];
+  requests: PlatformRequestItem[] = [];
+  showReviewed = false;
+  readonly RequestStatus = PlatformRequestStatus;
+  /** Pedido que originó el alta en curso: se aprueba al crear la institución. */
+  private sourceRequestId: string | null = null;
   isLoading = false;
   isCreating = false;
   errorMsg = '';
@@ -87,6 +97,7 @@ export class PlatformTenantsComponent implements OnInit {
         this.tenants = tenants;
         this.unlocked = true;
         this.isLoading = false;
+        this.loadRequests();
         this.cdr.detectChanges();
       },
       error: err => {
@@ -108,7 +119,59 @@ export class PlatformTenantsComponent implements OnInit {
     });
   }
 
+  get visibleRequests(): PlatformRequestItem[] {
+    return this.showReviewed ? this.requests : this.requests.filter(r => r.status === PlatformRequestStatus.Pending);
+  }
+
+  get pendingCount(): number {
+    return this.requests.filter(r => r.status === PlatformRequestStatus.Pending).length;
+  }
+
+  requestStatusLabel(status: PlatformRequestStatus): string {
+    return status === PlatformRequestStatus.Approved ? 'Aprobado'
+      : status === PlatformRequestStatus.Rejected ? 'Rechazado' : 'Pendiente';
+  }
+
+  loadRequests(): void {
+    this.platform.listRequests().subscribe({
+      next: requests => { this.requests = requests; this.cdr.detectChanges(); },
+      error: () => { this.errorMsg = 'No se pudieron cargar los pedidos.'; this.cdr.detectChanges(); }
+    });
+  }
+
+  /** Precarga el alta con los datos del pedido: subdominio, nombre, dominio y admin inicial. */
+  createFromRequest(request: PlatformRequestItem): void {
+    const slug = request.requestedSlug || this.slugify(request.institutionName);
+    const [first, ...rest] = request.contactName.trim().split(/\s+/);
+    this.resetForm();
+    this.slug = slug;
+    this.name = request.institutionName;
+    this.domainsText = `${slug}.${siteBaseDomain(location.hostname)}`;
+    this.adminEmail = request.contactEmail;
+    this.adminName = first ?? '';
+    this.adminLastName = rest.join(' ');
+    this.sourceRequestId = request.id;
+    this.showForm = true;
+    this.errorMsg = '';
+    this.successMsg = `Datos precargados del pedido de "${request.institutionName}". Completa el DNI y la contraseña del administrador.`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  rejectRequest(request: PlatformRequestItem): void {
+    if (!confirm(`¿Rechazar el pedido de "${request.institutionName}"?`)) return;
+    this.platform.reviewRequest(request.id, PlatformRequestStatus.Rejected).subscribe({
+      next: () => { this.successMsg = `Pedido de "${request.institutionName}" rechazado.`; this.loadRequests(); },
+      error: err => { this.errorMsg = err?.error?.msg || 'No se pudo rechazar el pedido.'; this.cdr.detectChanges(); }
+    });
+  }
+
+  private slugify(name: string): string {
+    return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/g, '');
+  }
+
   toggleForm(): void {
+    if (this.showForm) this.sourceRequestId = null;
     this.showForm = !this.showForm;
     this.errorMsg = '';
     this.successMsg = '';
@@ -137,9 +200,20 @@ export class PlatformTenantsComponent implements OnInit {
       next: tenant => {
         this.isCreating = false;
         this.successMsg = `Institución "${tenant.name}" creada. Ya se puede ingresar desde: ${tenant.domains.join(', ')}.`;
+        const requestId = this.sourceRequestId;
         this.resetForm();
         this.showForm = false;
-        this.load();
+        if (requestId) {
+          this.platform.reviewRequest(requestId, PlatformRequestStatus.Approved, tenant.slug).subscribe({
+            next: () => this.load(),
+            error: () => {
+              this.errorMsg = 'La institución se creó, pero no se pudo marcar el pedido como aprobado.';
+              this.load();
+            }
+          });
+        } else {
+          this.load();
+        }
       },
       error: err => {
         this.isCreating = false;
@@ -155,6 +229,7 @@ export class PlatformTenantsComponent implements OnInit {
   }
 
   private resetForm(): void {
+    this.sourceRequestId = null;
     this.slug = this.name = this.domainsText = this.teacherEmailDomain = '';
     this.adminEmail = this.adminName = this.adminLastName = this.adminDni = this.adminPassword = '';
   }

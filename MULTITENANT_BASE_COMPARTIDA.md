@@ -57,6 +57,6 @@ No hay cambios de Terraform. Hoy solo existe ITSC, que se queda en `public`.
 2. Comprobar `https://itsc.dryvn.org/api/v1/tenant/current` y el login.
 3. Más adelante, después de verificar, borrar a mano la base vieja `academiadigital_control`, que queda sin uso.
 
-## Siguiente trabajo
+## Landing y alta de instituciones
 
-Landing en `academiadigital.dryvn.org` (sin planes por ahora), formulario "Pide tu plataforma", panel en `admin.dryvn.org`, comodín `*.dryvn.org` en Cloudflare y certificado `*.dryvn.org` en el ALB.
+Desde la v1.8.0: la landing (`academiadigital.dryvn.org`) recibe pedidos, y el panel (`admin.dryvn.org`) los convierte en instituciones con su subdominio. Ver la fase 7 de `infra/DESPLIEGUE-ITSC.md`.

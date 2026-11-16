@@ -11,6 +11,7 @@ public class ControlDbContext(DbContextOptions<ControlDbContext> options) : DbCo
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
+    public DbSet<PlatformRequest> PlatformRequests => Set<PlatformRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,21 @@ public class ControlDbContext(DbContextOptions<ControlDbContext> options) : DbCo
             builder.HasIndex(t => t.SchemaName).IsUnique();
             builder.Property(t => t.IsActive).HasDefaultValue(true);
             builder.Property(t => t.TeacherEmailDomain).HasMaxLength(253);
+        });
+
+        modelBuilder.Entity<PlatformRequest>(builder =>
+        {
+            builder.ToTable("PlatformRequests");
+            builder.HasKey(r => r.Id);
+            builder.Property(r => r.InstitutionName).HasMaxLength(200).IsRequired();
+            builder.Property(r => r.RequestedSlug).HasMaxLength(30);
+            builder.Property(r => r.ContactName).HasMaxLength(200).IsRequired();
+            builder.Property(r => r.ContactEmail).HasMaxLength(254).IsRequired();
+            builder.Property(r => r.ContactPhone).HasMaxLength(40);
+            builder.Property(r => r.Location).HasMaxLength(200);
+            builder.Property(r => r.Message).HasMaxLength(2000);
+            builder.Property(r => r.TenantSlug).HasMaxLength(30);
+            builder.HasIndex(r => new { r.Status, r.CreatedAt });
         });
 
         modelBuilder.Entity<TenantDomain>(builder =>

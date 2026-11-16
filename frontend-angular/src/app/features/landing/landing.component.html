@@ -1,0 +1,149 @@
+<div class="landing">
+
+  <!-- ── Encabezado + portada ─────────────────────────────────────────── -->
+  <section class="hero">
+    <header class="topbar">
+      <div class="brand">
+        <mat-icon aria-hidden="true">auto_stories</mat-icon>
+        <span>Academia Digital</span>
+      </div>
+      <button type="button" class="btn btn--ghost" (click)="scrollTo('pedido')">Pide tu plataforma</button>
+    </header>
+
+    <div class="hero__content">
+      <h1>La gestión académica de tu institución, en un solo lugar</h1>
+      <p class="hero__lead">
+        Inscripciones, calificaciones, asistencias y certificados en una plataforma propia,
+        con el nombre de tu institución.
+      </p>
+      <div class="hero__actions">
+        <button type="button" class="btn btn--primary" (click)="scrollTo('pedido')">
+          Pide tu plataforma
+          <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        </button>
+        <button type="button" class="btn btn--ghost" (click)="scrollTo('beneficios')">Ver beneficios</button>
+      </div>
+      <p class="hero__domain">
+        <mat-icon aria-hidden="true">language</mat-icon>
+        <span>tuinstitucion.{{ baseDomain }}</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Beneficios ───────────────────────────────────────────────────── -->
+  <section class="section" id="beneficios">
+    <h2>Lo que gana tu institución</h2>
+    <div class="benefits">
+      <article class="benefit" *ngFor="let b of benefits">
+        <mat-icon aria-hidden="true">{{ b.icon }}</mat-icon>
+        <h3>{{ b.title }}</h3>
+        <p>{{ b.text }}</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ── Cómo funciona ────────────────────────────────────────────────── -->
+  <section class="section section--tinted">
+    <h2>Cómo empezar</h2>
+    <ol class="steps">
+      <li *ngFor="let s of steps; let i = index">
+        <span class="steps__n">{{ i + 1 }}</span>
+        <div>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ── Confían en nosotros ──────────────────────────────────────────── -->
+  <section class="trust">
+    <h2>Instituciones que confían en nosotros</h2>
+    <div class="trust__logos">
+      <figure class="trust__item">
+        <img src="assets/images/logo-white.svg" alt="Instituto Técnico Superior Córdoba" />
+        <figcaption>Instituto Técnico Superior Córdoba</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ── Formulario ───────────────────────────────────────────────────── -->
+  <section class="section" id="pedido">
+    <h2>Pide tu plataforma</h2>
+    <p class="section__lead">Déjanos los datos de tu institución y te contactamos para ponerla en marcha.</p>
+
+    <div class="card card--form" *ngIf="!sent; else thanks">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="grid">
+          <label class="field field--wide">
+            <span>Nombre de la institución *</span>
+            <input formControlName="institutionName" maxlength="200" autocomplete="organization" />
+            <small class="error" *ngIf="invalid('institutionName')">Escribe el nombre (mínimo 3 caracteres).</small>
+          </label>
+
+          <label class="field field--wide">
+            <span>Subdominio que te gustaría</span>
+            <input formControlName="requestedSlug" maxlength="30" placeholder="tuinstitucion" autocomplete="off" />
+            <small class="hint">Tu plataforma quedaría en <strong>{{ slugPreview }}</strong></small>
+            <small class="error" *ngIf="invalid('requestedSlug')">Solo minúsculas, números y guiones (no al inicio ni al final).</small>
+          </label>
+
+          <label class="field">
+            <span>Tu nombre *</span>
+            <input formControlName="contactName" maxlength="200" autocomplete="name" />
+            <small class="error" *ngIf="invalid('contactName')">Escribe tu nombre.</small>
+          </label>
+
+          <label class="field">
+            <span>Email *</span>
+            <input type="email" formControlName="contactEmail" maxlength="254" autocomplete="email" />
+            <small class="error" *ngIf="invalid('contactEmail')">Escribe un email válido.</small>
+          </label>
+
+          <label class="field">
+            <span>Teléfono</span>
+            <input formControlName="contactPhone" maxlength="40" autocomplete="tel" />
+          </label>
+
+          <label class="field">
+            <span>Ciudad</span>
+            <input formControlName="location" maxlength="200" />
+          </label>
+
+          <label class="field">
+            <span>Cantidad aproximada de alumnos</span>
+            <input type="number" formControlName="studentsEstimate" min="0" />
+          </label>
+
+          <label class="field field--wide">
+            <span>¿Algo más que debamos saber?</span>
+            <textarea formControlName="message" rows="3" maxlength="2000"></textarea>
+          </label>
+
+          <!-- Trampa para bots: oculto para las personas. -->
+          <label class="honeypot" aria-hidden="true">
+            Sitio web <input formControlName="website" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
+        <p class="error error--block" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+        <button type="submit" class="btn btn--solid btn--block" [disabled]="sending">
+          {{ sending ? 'Enviando…' : 'Enviar pedido' }}
+        </button>
+      </form>
+    </div>
+
+    <ng-template #thanks>
+      <div class="card card--thanks">
+        <mat-icon aria-hidden="true">mark_email_read</mat-icon>
+        <h3>¡Recibimos tu pedido!</h3>
+        <p>Te escribiremos al email que dejaste para coordinar la puesta en marcha.</p>
+      </div>
+    </ng-template>
+  </section>
+
+  <footer class="footer">
+    <span>© {{ year }} Academia Digital</span>
+  </footer>
+</div>
