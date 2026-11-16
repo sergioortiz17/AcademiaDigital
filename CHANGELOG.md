@@ -4,6 +4,13 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.9.0] - 2026-11-15
+
+### Agregado
+
+- **Animaciones en la landing** (Lottie): educación en la portada, indicadores de gestión en "Cómo empezar" y un avión de papel sobre el formulario. Provienen del proyecto `gestion-academica-frontend`.
+- El reproductor (`lottie-web` 5.13.0, versión liviana solo SVG) se descarga recién cuando la animación entra en pantalla, en un fragmento aparte de 42 KB comprimido; no afecta al resto de la aplicación. Las animaciones se pausan fuera de pantalla y respetan "reducir movimiento" del sistema.
+
 ## [1.8.0] - 2026-11-15
 
 Landing comercial y pedidos de plataforma.

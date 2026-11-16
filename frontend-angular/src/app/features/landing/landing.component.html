@@ -10,6 +10,7 @@
       <button type="button" class="btn btn--ghost" (click)="scrollTo('pedido')">Pide tu plataforma</button>
     </header>
 
+    <div class="hero__layout">
     <div class="hero__content">
       <h1>La gestión académica de tu institución, en un solo lugar</h1>
       <p class="hero__lead">
@@ -28,6 +29,9 @@
         <span>tuinstitucion.{{ baseDomain }}</span>
       </p>
     </div>
+    <app-lottie-animation class="hero__animation" src="assets/lottie/education-edit.json"
+      label="Animación: gestión académica en una computadora"></app-lottie-animation>
+    </div>
   </section>
 
   <!-- ── Beneficios ───────────────────────────────────────────────────── -->
@@ -45,6 +49,9 @@
   <!-- ── Cómo funciona ────────────────────────────────────────────────── -->
   <section class="section section--tinted">
     <h2>Cómo empezar</h2>
+    <div class="steps-layout">
+    <app-lottie-animation class="steps__animation" src="assets/lottie/financial-stats.json"
+      label="Animación: indicadores de gestión"></app-lottie-animation>
     <ol class="steps">
       <li *ngFor="let s of steps; let i = index">
         <span class="steps__n">{{ i + 1 }}</span>
@@ -54,6 +61,7 @@
         </div>
       </li>
     </ol>
+    </div>
   </section>
 
   <!-- ── Confían en nosotros ──────────────────────────────────────────── -->
@@ -69,6 +77,8 @@
 
   <!-- ── Formulario ───────────────────────────────────────────────────── -->
   <section class="section" id="pedido">
+    <app-lottie-animation class="form__animation" src="assets/lottie/paper-plane.json"
+      label="Animación: avión de papel"></app-lottie-animation>
     <h2>Pide tu plataforma</h2>
     <p class="section__lead">Déjanos los datos de tu institución y te contactamos para ponerla en marcha.</p>
 

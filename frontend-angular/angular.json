@@ -42,6 +42,7 @@
                 "output": "assets"
               }
             ],
+            "allowedCommonJsDependencies": ["lottie-web"],
             "styles": [
               "src/styles.scss"
             ],

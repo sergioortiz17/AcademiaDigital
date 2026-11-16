@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatIconModule } from '@angular/material/icon';
 import { PlatformService } from '../../core/services/platform.service';
 import { siteBaseDomain } from '../../core/routing/platform-hosts';
+import { LottieAnimationComponent } from './lottie-animation.component';
 
 interface Benefit {
   icon: string;
@@ -19,7 +20,7 @@ interface Benefit {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, MatIconModule, LottieAnimationComponent],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
