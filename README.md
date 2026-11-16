@@ -48,6 +48,16 @@ AcademiaDigital/
 
 ---
 
+## Arquitectura en AWS
+
+Diagrama interactivo de la infraestructura de producción (`https://itsc.dryvn.org`): red, Elastic Beanstalk, RDS, S3, SES, CI/CD y monitoreo.
+
+**[Ver el diagrama](https://raw.githack.com/sergioortiz17/AcademiaDigital/main/infra/aws-academiadigital-itsc.html)** · [archivo HTML](infra/aws-academiadigital-itsc.html)
+
+> GitHub muestra los `.html` como código; el enlace "Ver el diagrama" lo abre como página mediante [raw.githack.com](https://raw.githack.com/), que sirve archivos de repositorios públicos.
+
+---
+
 ## Documentación por servicio
 
 | Servicio | README |
