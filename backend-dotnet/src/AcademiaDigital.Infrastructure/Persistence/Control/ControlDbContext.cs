@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 namespace AcademiaDigital.Infrastructure.Persistence.Control;
 
 /// <summary>
-/// Base de control de la plataforma: catálogo de instituciones y sus dominios. Es independiente
-/// de las bases académicas (una por institución, ver <see cref="AppDbContext"/>).
+/// Catálogo de la plataforma (instituciones y dominios), en el esquema "control" de la base
+/// compartida. Las tablas académicas de cada institución están en su propio esquema.
 /// </summary>
 public class ControlDbContext(DbContextOptions<ControlDbContext> options) : DbContext(options)
 {
@@ -21,8 +21,8 @@ public class ControlDbContext(DbContextOptions<ControlDbContext> options) : DbCo
             builder.Property(t => t.Slug).HasMaxLength(30).IsRequired();
             builder.HasIndex(t => t.Slug).IsUnique();
             builder.Property(t => t.Name).HasMaxLength(200).IsRequired();
-            builder.Property(t => t.DatabaseName).HasMaxLength(63).IsRequired();
-            builder.HasIndex(t => t.DatabaseName).IsUnique();
+            builder.Property(t => t.SchemaName).HasMaxLength(63).IsRequired();
+            builder.HasIndex(t => t.SchemaName).IsUnique();
             builder.Property(t => t.IsActive).HasDefaultValue(true);
             builder.Property(t => t.TeacherEmailDomain).HasMaxLength(253);
         });

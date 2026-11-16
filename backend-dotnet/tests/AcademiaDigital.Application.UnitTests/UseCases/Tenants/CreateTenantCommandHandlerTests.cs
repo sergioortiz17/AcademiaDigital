@@ -30,7 +30,7 @@ public sealed class CreateTenantCommandHandlerTests
 
         await _provisioner.Received(1).ProvisionAsync(
             Arg.Is<ProvisionTenantRequest>(r => r.Slug == "ucv" && r.Name == "Universidad Central"
-                && r.DatabaseName == "academiadigital_ucv" && r.Hosts.SequenceEqual(new[] { "ucv.localhost" })
+                && r.SchemaName == "ucv" && r.Hosts.SequenceEqual(new[] { "ucv.localhost" })
                 && r.AdminEmail == "admin@ucv.edu"),
             Arg.Any<CancellationToken>());
     }

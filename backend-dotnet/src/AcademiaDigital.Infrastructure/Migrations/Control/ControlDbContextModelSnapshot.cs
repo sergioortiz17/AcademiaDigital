@@ -31,11 +31,6 @@ namespace AcademiaDigital.Infrastructure.Migrations.Control
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DatabaseName")
-                        .IsRequired()
-                        .HasMaxLength(63)
-                        .HasColumnType("character varying(63)");
-
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -45,6 +40,11 @@ namespace AcademiaDigital.Infrastructure.Migrations.Control
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SchemaName")
+                        .IsRequired()
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -57,7 +57,7 @@ namespace AcademiaDigital.Infrastructure.Migrations.Control
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DatabaseName")
+                    b.HasIndex("SchemaName")
                         .IsUnique();
 
                     b.HasIndex("Slug")

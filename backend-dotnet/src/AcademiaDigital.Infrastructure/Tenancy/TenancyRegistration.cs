@@ -11,8 +11,8 @@ namespace AcademiaDigital.Infrastructure.Tenancy;
 public static class TenancyRegistration
 {
     /// <summary>
-    /// Registra el multitenant: una base de control con el catálogo y, por request, un
-    /// <see cref="AppDbContext"/> apuntando a la base de la institución resuelta.
+    /// Registra el multitenant: el catálogo en el esquema "control" y, por request, un
+    /// <see cref="AppDbContext"/> apuntando al esquema de la institución resuelta (base compartida).
     /// </summary>
     public static IServiceCollection AddTenancy(this IServiceCollection services, IConfiguration configuration)
     {
@@ -21,7 +21,7 @@ public static class TenancyRegistration
         services.AddSingleton<TenantDbContextFactory>();
 
         services.AddDbContext<ControlDbContext>((sp, options) =>
-            options.UseNpgsql(sp.GetRequiredService<TenantConnectionStrings>().Control));
+            options.UseSchemaNpgsql(sp.GetRequiredService<TenantConnectionStrings>().Control));
 
         services.AddSingleton<ITenantDirectory, TenantDirectory>();
         services.AddScoped<ITenantRegistry, TenantRegistry>();
@@ -34,18 +34,18 @@ public static class TenancyRegistration
         services.AddDbContext<AppDbContext>((sp, options) =>
         {
             var connections = sp.GetRequiredService<TenantConnectionStrings>();
-            string database;
+            string schema;
             try
             {
-                database = sp.GetRequiredService<ITenantContext>().Current.DatabaseName;
+                schema = sp.GetRequiredService<ITenantContext>().Current.SchemaName;
             }
             catch (InvalidOperationException) when (IsEfCoreTool)
             {
-                // `dotnet ef` resuelve el contexto sin request: usa la base de DefaultConnection.
-                // En ejecución normal sin institución resuelta se falla (nunca se asume una base).
-                database = connections.DefaultDatabaseName;
+                // `dotnet ef` resuelve el contexto sin request: usa el esquema por defecto.
+                // En ejecución normal sin institución resuelta se falla (nunca se asume un esquema).
+                schema = TenantConnectionStrings.DefaultSchemaName;
             }
-            options.UseNpgsql(connections.For(database));
+            options.UseSchemaNpgsql(connections.For(schema));
         });
 
         return services;

@@ -6,7 +6,8 @@ namespace AcademiaDigital.Infrastructure.Tenancy;
 /// <summary>Crea un <see cref="AppDbContext"/> fuera del request (arranque, alta de institución).</summary>
 public sealed class TenantDbContextFactory(TenantConnectionStrings connectionStrings)
 {
-    public AppDbContext Create(string databaseName)
+    /// <param name="schemaName">Esquema de la institución en la base compartida.</param>
+    public AppDbContext Create(string schemaName)
         => new(new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(connectionStrings.For(databaseName)).Options);
+            .UseSchemaNpgsql(connectionStrings.For(schemaName)).Options);
 }

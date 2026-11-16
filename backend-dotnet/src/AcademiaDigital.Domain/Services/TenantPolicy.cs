@@ -3,22 +3,22 @@ using System.Text.RegularExpressions;
 namespace AcademiaDigital.Domain.Services;
 
 /// <summary>
-/// Reglas puras para dar de alta una institución: formato del slug, de los hosts y nombre de
-/// la base de datos derivada. Todo lo que termina en un nombre de base de datos o en un
-/// header se valida acá con una lista blanca estricta.
+/// Reglas puras para dar de alta una institución: formato del slug, de los hosts y nombre del
+/// esquema derivado. Todas las instituciones comparten la base; cada una tiene su esquema.
+/// Todo lo que termina en un identificador SQL o en un header se valida acá con una lista
+/// blanca estricta.
 /// </summary>
 public sealed partial class TenantPolicy
 {
-    public const string DatabasePrefix = "academiadigital_";
     public const int MinPasswordLength = 8;
 
-    // Además de nombres de sistema, se reservan los slugs cuya base (academiadigital_<slug>)
-    // ya pertenece a otro componente: "control" (catálogo de instituciones) y "finance"
-    // (microservicio Finance, base academiadigital_finance). Sin esto, dar de alta "finance"
-    // migraría el esquema académico dentro de la base de Finance.
+    // Se reservan los esquemas que ya existen en la base compartida ("public" = ITSC,
+    // "control" = catálogo de instituciones, "finance" = microservicio Finance) y los
+    // subdominios propios del sitio (admin.dryvn.org, academiadigital.dryvn.org, ...).
     private static readonly HashSet<string> ReservedSlugs = new(StringComparer.Ordinal)
     {
-        "control", "finance", "platform", "admin", "api", "www", "postgres", "template0", "template1"
+        "public", "control", "finance", "platform", "admin", "api", "www", "academiadigital",
+        "postgres", "template0", "template1"
     };
 
     [GeneratedRegex("^[a-z0-9]([a-z0-9-]{0,28}[a-z0-9])?$")]
@@ -33,7 +33,9 @@ public sealed partial class TenantPolicy
         if (!SlugPattern().IsMatch(normalized))
             throw new ArgumentException(
                 "El identificador de la institución debe tener entre 1 y 30 caracteres: letras minúsculas, números y guiones (no al inicio ni al final).");
-        if (ReservedSlugs.Contains(normalized))
+        // "pg-x" daría el esquema "pg_x": PostgreSQL reserva el prefijo pg_.
+        if (ReservedSlugs.Contains(normalized) || normalized.StartsWith("pg-", StringComparison.Ordinal)
+            || normalized.StartsWith("finance-", StringComparison.Ordinal))
             throw new ArgumentException($"El identificador '{normalized}' está reservado.");
         return normalized;
     }
@@ -80,8 +82,9 @@ public sealed partial class TenantPolicy
         return normalized;
     }
 
-    public string DatabaseNameFor(string normalizedSlug)
-        => DatabasePrefix + normalizedSlug.Replace('-', '_');
+    /// <summary>Esquema de la institución en la base compartida: el slug con "_" en lugar de "-".</summary>
+    public string SchemaNameFor(string normalizedSlug)
+        => normalizedSlug.Replace('-', '_');
 
     public void ValidateAdmin(string? email, string? name, string? lastName, string? dni, string? password)
     {
