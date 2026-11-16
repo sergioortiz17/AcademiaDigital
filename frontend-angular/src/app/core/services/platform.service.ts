@@ -28,6 +28,30 @@ export interface CreateTenantPayload {
   teacherEmailDomain?: string | null;
 }
 
+/** Pedido del formulario "Pide tu plataforma". */
+export interface PlatformRequestPayload {
+  institutionName: string;
+  requestedSlug?: string | null;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string | null;
+  location?: string | null;
+  studentsEstimate?: number | null;
+  message?: string | null;
+  /** Trampa para bots: campo oculto que una persona deja vacío. */
+  website?: string | null;
+}
+
+export enum PlatformRequestStatus { Pending = 0, Approved = 1, Rejected = 2 }
+
+export interface PlatformRequestItem extends PlatformRequestPayload {
+  id: string;
+  status: PlatformRequestStatus;
+  createdAt: string;
+  reviewedAt?: string | null;
+  tenantSlug?: string | null;
+}
+
 const KEY_STORAGE = 'academia-platform-key';
 
 /**
@@ -38,6 +62,7 @@ const KEY_STORAGE = 'academia-platform-key';
 @Injectable({ providedIn: 'root' })
 export class PlatformService {
   private readonly baseUrl = `${environment.apiServer}v1/platform/tenants`;
+  private readonly requestsUrl = `${environment.apiServer}v1/platform/requests`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -59,6 +84,22 @@ export class PlatformService {
 
   create(payload: CreateTenantPayload): Observable<TenantSummary> {
     return this.http.post<TenantSummary>(this.baseUrl, payload, this.options());
+  }
+
+  /** Formulario público de la landing: no usa la clave de operador. */
+  submitRequest(payload: PlatformRequestPayload): Observable<{ success: boolean; msg: string }> {
+    return this.http.post<{ success: boolean; msg: string }>(this.requestsUrl, payload, {
+      context: new HttpContext().set(SKIP_ERROR_ALERT, true)
+    });
+  }
+
+  listRequests(status?: PlatformRequestStatus): Observable<PlatformRequestItem[]> {
+    const query = status === undefined ? '' : `?status=${status}`;
+    return this.http.get<PlatformRequestItem[]>(`${this.requestsUrl}${query}`, this.options());
+  }
+
+  reviewRequest(id: string, status: PlatformRequestStatus, tenantSlug?: string): Observable<PlatformRequestItem> {
+    return this.http.patch<PlatformRequestItem>(`${this.requestsUrl}/${id}`, { status, tenantSlug: tenantSlug ?? null }, this.options());
   }
 
   private options() {

@@ -16,6 +16,7 @@ using AcademiaDigital.Application.UseCases.StudyPlanDiff;
 using AcademiaDigital.Application.UseCases.StudyPlanImport;
 using AcademiaDigital.Application.UseCases.StudyPlans;
 using AcademiaDigital.Application.UseCases.Teachers;
+using AcademiaDigital.Application.UseCases.Platform;
 using AcademiaDigital.Application.UseCases.Tenants;
 using AcademiaDigital.Application.UseCases.User;
 using AcademiaDigital.Domain.Services;
@@ -60,6 +61,9 @@ builder.Services.AddScoped<ApproveApplicantsUseCase>();
 builder.Services.AddScoped<TenantPolicy>();
 builder.Services.AddScoped<GetTenantsQueryHandler>();
 builder.Services.AddScoped<CreateTenantCommandHandler>();
+builder.Services.AddScoped<SubmitPlatformRequestHandler>();
+builder.Services.AddScoped<ListPlatformRequestsHandler>();
+builder.Services.AddScoped<ReviewPlatformRequestHandler>();
 
 // Admissions
 // Time-travel (dev): un único OverridableTimeProvider reemplaza TimeProvider.System, para que todos
@@ -280,6 +284,11 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("PlatformAdmin", httpContext => RateLimitPartition.GetFixedWindowLimiter(
         httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // Formulario público "Pide tu plataforma" (landing): pocos pedidos por IP.
+    options.AddPolicy("PlatformRequest", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
 });
 
 // ── Controllers ───────────────────────────────────────────────────────────────

@@ -51,8 +51,10 @@ dependency "dns_zone" {
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
 
+# Certificado comodín *.dryvn.org (cubre itsc, la landing, el panel y cada institución).
+# Aplicar esta unidad recién cuando el certificado esté ISSUED (ver wildcard-certificate).
 dependency "certificate" {
-  config_path = "../certificate"
+  config_path = "../wildcard-certificate"
 
   mock_outputs = {
     certificate_arn = "arn:aws:acm:us-east-2:000000000000:certificate/00000000-0000-0000-0000-000000000000"
@@ -141,5 +143,9 @@ inputs = {
     # Registro público: los emails de este dominio se registran como Profesor, pendientes de
     # alta en "Aspirantes". Se aplica al arrancar solo si la institución todavía no tiene uno.
     Tenancy__DefaultTeacherEmailDomain = "itscordoba.edu.ar"
+
+    # Aviso por correo de cada pedido del formulario "Pide tu plataforma" (landing).
+    # Con SES en sandbox tiene que ser una dirección verificada.
+    Platform__NotifyEmail = "sergioortiz170992@gmail.com"
   }
 }

@@ -81,3 +81,26 @@
 }
 
 .empty { color: #666; margin: 1rem 0 0; }
+
+// Pedidos de la landing
+.requests-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  h2 { margin: 0 0 8px; font-size: 18px; }
+}
+
+.request-message {
+  margin-top: 4px;
+  max-width: 320px;
+  font-size: 13px;
+  color: #555;
+  white-space: pre-line;
+}
+
+.request-actions {
+  white-space: nowrap;
+}

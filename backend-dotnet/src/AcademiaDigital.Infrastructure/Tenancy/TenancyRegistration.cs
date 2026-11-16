@@ -25,6 +25,7 @@ public static class TenancyRegistration
 
         services.AddSingleton<ITenantDirectory, TenantDirectory>();
         services.AddScoped<ITenantRegistry, TenantRegistry>();
+        services.AddScoped<IPlatformRequestStore, PlatformRequestStore>();
         services.AddScoped<ITenantProvisioner, TenantProvisioner>();
 
         // Misma instancia scoped bajo dos tipos: el middleware escribe TenantContext, el resto lee ITenantContext.

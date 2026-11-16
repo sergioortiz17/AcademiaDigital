@@ -4,6 +4,18 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.8.0] - 2026-11-15
+
+Landing comercial y pedidos de plataforma.
+
+### Agregado
+
+- **Landing en `academiadigital.<dominio>`** (en local, `/landing`): azul metálico, beneficios, "Cómo empezar", "Instituciones que confían en nosotros" (ITSC) y el formulario **"Pide tu plataforma"**, con el subdominio deseado y una vista previa (`<slug>.dryvn.org`).
+- **Pedidos de plataforma** (`PlatformRequests`, esquema `control`): `POST /api/v1/platform/requests` es público (5 por hora por IP, trampa para bots, subdominio validado y no tomado). Listarlos (`GET`) y revisarlos (`PATCH`) requiere la clave de plataforma. Cada pedido avisa por correo a `Platform:NotifyEmail`.
+- **Panel en `admin.<dominio>`** (`/platform`): lista de pedidos con "Crear institución", que precarga subdominio, dominio `<slug>.dryvn.org` y admin inicial, y aprueba el pedido al crearla. También permite "Rechazar".
+- La raíz del sitio depende del dominio: `academiadigital.*` → landing, `admin.*` → panel, cualquier otro → login de la institución.
+- Infra: certificado comodín `*.dryvn.org` (unidad `itsc/wildcard-certificate`, validado en Cloudflare) para el ALB, y `Platform__NotifyEmail` en Beanstalk.
+
 ## [1.7.0] - 2026-11-15
 
 Multitenant con base compartida. Ver [MULTITENANT_BASE_COMPARTIDA.md](MULTITENANT_BASE_COMPARTIDA.md).

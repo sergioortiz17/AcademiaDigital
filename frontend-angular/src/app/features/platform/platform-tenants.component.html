@@ -2,7 +2,7 @@
   <header class="platform-header">
     <div>
       <h1>Instituciones</h1>
-      <p>Administración de la plataforma Academia Digital. Cada institución tiene su propia base de datos.</p>
+      <p>Administración de la plataforma Academia Digital. Cada institución tiene su propio esquema en la base compartida.</p>
     </div>
     <button *ngIf="unlocked" mat-stroked-button type="button" (click)="lock()">
       <mat-icon>lock</mat-icon> Bloquear
@@ -113,6 +113,50 @@
             </button>
           </div>
         </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Pedidos de la landing ("Pide tu plataforma") -->
+    <mat-card class="list-card">
+      <mat-card-content>
+        <div class="requests-header">
+          <h2>Pedidos de plataforma <span class="badge" *ngIf="pendingCount">{{ pendingCount }} pendiente(s)</span></h2>
+          <mat-checkbox [(ngModel)]="showReviewed" name="showReviewed">Mostrar revisados</mat-checkbox>
+        </div>
+        <table class="tenants-table" *ngIf="visibleRequests.length">
+          <thead>
+            <tr><th>Institución</th><th>Contacto</th><th>Detalle</th><th>Recibido</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of visibleRequests">
+              <td>
+                <strong>{{ r.institutionName }}</strong>
+                <div *ngIf="r.requestedSlug"><code>{{ r.requestedSlug }}</code></div>
+              </td>
+              <td>
+                {{ r.contactName }}<br />
+                <a [href]="'mailto:' + r.contactEmail">{{ r.contactEmail }}</a>
+                <div *ngIf="r.contactPhone">{{ r.contactPhone }}</div>
+              </td>
+              <td>
+                <div *ngIf="r.location">{{ r.location }}</div>
+                <div *ngIf="r.studentsEstimate !== null && r.studentsEstimate !== undefined">~{{ r.studentsEstimate }} alumnos</div>
+                <div *ngIf="r.message" class="request-message">{{ r.message }}</div>
+              </td>
+              <td>{{ r.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="request-actions">
+                <ng-container *ngIf="r.status === RequestStatus.Pending; else reviewed">
+                  <button mat-raised-button color="primary" type="button" (click)="createFromRequest(r)">Crear institución</button>
+                  <button mat-button type="button" (click)="rejectRequest(r)">Rechazar</button>
+                </ng-container>
+                <ng-template #reviewed>
+                  <span class="chip">{{ requestStatusLabel(r.status) }}<ng-container *ngIf="r.tenantSlug">: {{ r.tenantSlug }}</ng-container></span>
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="!visibleRequests.length" class="empty">No hay pedidos {{ showReviewed ? '' : 'pendientes' }}.</p>
       </mat-card-content>
     </mat-card>
 

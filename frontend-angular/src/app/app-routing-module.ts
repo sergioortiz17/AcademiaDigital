@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { AuthGuard } from './core/guards/auth.guard';
+import { platformEntryFor } from './core/routing/platform-hosts';
 
 const routes: Routes = [
   {
@@ -69,7 +70,13 @@ const routes: Routes = [
     path: 'platform',
     loadChildren: () => import('./features/platform/platform.module').then(m => m.PlatformModule)
   },
-  { path: '', redirectTo: 'auth/signin', pathMatch: 'full' },
+  {
+    // Landing comercial (academiadigital.<dominio>). En local se abre con /landing.
+    path: 'landing',
+    loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
+  },
+  // La raíz depende del dominio: landing, panel del operador o login de la institución.
+  { path: '', redirectTo: () => platformEntryFor(location.hostname) ?? 'auth/signin', pathMatch: 'full' },
   { path: '**', redirectTo: 'auth/signin' }
 ];
 
