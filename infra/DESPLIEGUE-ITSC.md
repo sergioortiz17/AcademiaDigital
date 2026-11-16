@@ -52,8 +52,9 @@ Si se interrumpe un comando con Ctrl+C, esperar a que diga `Releasing state lock
 | 18 | Activar el despliegue (`deploy_enabled = true`) | ✅ Hecho | 15/11/2026 | Etapa Deploy activa. Primera ejecución completa (Source, Build, Deploy) en 5 min 19 s: v1.3.0 (`47fb220`) en Beanstalk |
 | 19 | `itsc/app`: `Email__Provider = "Ses"` | ✅ Hecho | 15/11/2026 | 1 cambio en el entorno (reinicio de 4 min 27 s). v1.4.0 (`143073f`) desplegada por el pipeline |
 | 20 | `itsc/app`: permiso SES sobre `identity/*` | ✅ Hecho | 15/11/2026 | 1 cambio en la política `app-access`, sin reinicio. Correo de recuperación recibido en el Gmail verificado |
-| 21 | `itsc/secrets`: clave de `/platform` (v1.6.0) | ⏸️ Pendiente | | 2 recursos: `random_password` y parámetro `/academiadigital-itsc-prod/backend/platform-admin-key` |
-| 22 | `itsc/app`: `Platform__AdminKey` y `Tenancy__DefaultTeacherEmailDomain` | ⏸️ Pendiente | | Después del paso 21. Cambia el entorno (reinicio de ~4 min) y agrega el ARN a la política de lectura de secretos |
+| 21 | `itsc/secrets`: clave de `/platform` (v1.6.0) | ✅ Hecho | 15/11/2026 | 2 recursos: `random_password` y parámetro `/academiadigital-itsc-prod/backend/platform-admin-key` |
+| 22 | `itsc/app`: `Platform__AdminKey` y `Tenancy__DefaultTeacherEmailDomain` | ✅ Hecho | 15/11/2026 | En dos apply: primero la política IAM (`-target`), después el entorno (4 min 37 s). `tenant/current` devuelve `teacherEmailDomain: itscordoba.edu.ar` |
+| 23 | Base compartida (v1.7.0) | ⏸️ Pendiente | | Lo aplica el pipeline: al arrancar se crea el esquema `control` en `academiadigital` y se registra ITSC en `public`. Después de verificar, borrar a mano la base vieja `academiadigital_control` (`DROP DATABASE academiadigital_control;` por el túnel SSM) |
 
 Pendientes fuera de Terraform:
 

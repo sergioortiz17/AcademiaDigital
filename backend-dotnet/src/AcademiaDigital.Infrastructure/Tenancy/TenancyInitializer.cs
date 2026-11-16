@@ -13,9 +13,9 @@ namespace AcademiaDigital.Infrastructure.Tenancy;
 public static class TenancyInitializer
 {
     /// <summary>
-    /// Arranque multitenant: migra la base de control, registra la institución por defecto
-    /// (apuntando a la base que ya existía, sin mover datos) y migra las demás instituciones.
-    /// La base de la institución por defecto la migra Program.cs con su lógica de reintentos.
+    /// Arranque multitenant (base compartida): crea y migra el esquema "control", registra la
+    /// institución por defecto (esquema public, donde ya estaban sus datos) y migra el esquema de
+    /// las demás. El esquema de la institución por defecto lo migra Program.cs con sus reintentos.
     /// </summary>
     public static async Task InitializeTenancyAsync(this IServiceProvider services, CancellationToken ct = default)
     {
@@ -30,6 +30,7 @@ public static class TenancyInitializer
         {
             try
             {
+                await SchemaNames.EnsureCreatedAsync(control, TenantConnectionStrings.SchemaOf(connections.Control), ct);
                 await control.Database.MigrateAsync(ct);
                 break;
             }
@@ -51,13 +52,14 @@ public static class TenancyInitializer
         {
             try
             {
-                await using var db = dbFactory.Create(tenant.DatabaseName);
+                await using var db = dbFactory.Create(tenant.SchemaName);
+                await SchemaNames.EnsureCreatedAsync(db, tenant.SchemaName, ct);
                 await db.Database.MigrateAsync(ct);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Una institución rota no debe impedir que arranquen las demás.
-                logger.LogError(ex, "No se pudo migrar la base de la institución {Slug}.", tenant.Slug);
+                logger.LogError(ex, "No se pudo migrar el esquema de la institución {Slug}.", tenant.Slug);
             }
         }
     }
@@ -75,13 +77,13 @@ public static class TenancyInitializer
                 Id = Guid.NewGuid(),
                 Slug = options.DefaultSlug,
                 Name = options.DefaultName,
-                DatabaseName = connections.DefaultDatabaseName,
+                SchemaName = TenantConnectionStrings.DefaultSchemaName,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
             control.Tenants.Add(tenant);
-            logger.LogInformation("Registrando la institución por defecto {Slug} sobre la base {Database}.",
-                tenant.Slug, tenant.DatabaseName);
+            logger.LogInformation("Registrando la institución por defecto {Slug} en el esquema {Schema}.",
+                tenant.Slug, tenant.SchemaName);
         }
 
         var teacherDomain = TeacherEmailDomains.Normalize(options.DefaultTeacherEmailDomain);

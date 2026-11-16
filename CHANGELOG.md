@@ -4,6 +4,20 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.7.0] - 2026-11-15
+
+Multitenant con base compartida. Ver [MULTITENANT_BASE_COMPARTIDA.md](MULTITENANT_BASE_COMPARTIDA.md).
+
+### Cambiado
+
+- **Todas las instituciones comparten la base `academiadigital`, cada una en su propio esquema.** ITSC sigue en `public` (no se migran datos), el catálogo de instituciones pasa de la base `academiadigital_control` al esquema `control`, y una institución nueva (`usb`) se crea como esquema `usb`. `Tenant.DatabaseName` pasa a `Tenant.SchemaName` (migración `TenantSchemaPerInstitution`).
+- Cada esquema lleva su propio historial de migraciones.
+- Nuevos identificadores reservados para instituciones: `public`, `academiadigital`, `finance-*` y `pg-*`.
+
+### Corregido
+
+- **El arranque ya no borra la base** si encuentra tablas sin historial de migraciones: registra un error crítico y se detiene. Antes ejecutaba `EnsureDeletedAsync`, que con la base compartida eliminaría todas las instituciones.
+
 ## [1.6.0] - 2026-11-15
 
 Alta de usuarios controlada por la institución.

@@ -12,10 +12,10 @@ using Microsoft.Extensions.Options;
 namespace AcademiaDigital.Infrastructure.Tenancy;
 
 /// <summary>
-/// Alta de una institución. El registro en la base de control es el ÚLTIMO paso (punto de
-/// confirmación): si algo falla antes, la institución no existe para nadie y se puede reintentar
-/// con los mismos datos, porque crear/migrar la base y sembrar el admin son idempotentes.
-/// Nunca se borra una base automáticamente.
+/// Alta de una institución en la base compartida. El registro en el catálogo (esquema control)
+/// es el ÚLTIMO paso (punto de confirmación): si algo falla antes, la institución no existe para
+/// nadie y se puede reintentar con los mismos datos, porque crear/migrar el esquema y sembrar el
+/// admin son idempotentes. Nunca se borra un esquema automáticamente.
 /// </summary>
 public sealed class TenantProvisioner(
     ControlDbContext control,
@@ -28,11 +28,12 @@ public sealed class TenantProvisioner(
 {
     public async Task<TenantSummaryDto> ProvisionAsync(ProvisionTenantRequest request, CancellationToken ct = default)
     {
-        logger.LogInformation("Alta de institución {Slug}: creando y migrando la base {Database}.", request.Slug, request.DatabaseName);
+        logger.LogInformation("Alta de institución {Slug}: creando y migrando el esquema {Schema}.", request.Slug, request.SchemaName);
 
-        await using (var db = dbFactory.Create(request.DatabaseName))
+        await using (var db = dbFactory.Create(request.SchemaName))
         {
-            await db.Database.MigrateAsync(ct); // crea la base si no existe
+            await SchemaNames.EnsureCreatedAsync(db, request.SchemaName, ct);
+            await db.Database.MigrateAsync(ct);
             var users = new UserRepository(db, passwordHasher);
             if (await users.FindByEmailAsync(request.AdminEmail, ct) is null)
                 await users.CreateAsync(request.AdminEmail, request.AdminName, request.AdminLastName,
@@ -44,7 +45,7 @@ public sealed class TenantProvisioner(
             Id = Guid.NewGuid(),
             Slug = request.Slug,
             Name = request.Name,
-            DatabaseName = request.DatabaseName,
+            SchemaName = request.SchemaName,
             IsActive = true,
             CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
             TeacherEmailDomain = request.TeacherEmailDomain,

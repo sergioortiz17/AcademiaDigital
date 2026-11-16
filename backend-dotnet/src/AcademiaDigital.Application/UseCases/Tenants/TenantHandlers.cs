@@ -31,7 +31,7 @@ public sealed class CreateTenantCommandHandler(
             throw new InvalidOperationException($"Los dominios ya están asignados a otra institución: {string.Join(", ", taken)}.");
 
         return await provisioner.ProvisionAsync(new ProvisionTenantRequest(
-            slug, name, policy.DatabaseNameFor(slug), hosts,
+            slug, name, policy.SchemaNameFor(slug), hosts,
             request.AdminEmail.Trim(), request.AdminName.Trim(), request.AdminLastName.Trim(),
             request.AdminDni.Trim(), request.AdminPassword, teacherDomain), ct);
     }

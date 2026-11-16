@@ -24,7 +24,7 @@ public interface ITenantRegistry
 public sealed record ProvisionTenantRequest(
     string Slug,
     string Name,
-    string DatabaseName,
+    string SchemaName,
     IReadOnlyList<string> Hosts,
     string AdminEmail,
     string AdminName,

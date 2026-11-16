@@ -68,7 +68,7 @@ public sealed class TenantDirectory(IServiceScopeFactory scopeFactory, IOptions<
             TenantInfo? defaultTenant = null;
             foreach (var tenant in tenants)
             {
-                var info = new TenantInfo(tenant.Id, tenant.Slug, tenant.Name, tenant.DatabaseName,
+                var info = new TenantInfo(tenant.Id, tenant.Slug, tenant.Name, tenant.SchemaName,
                     string.Equals(tenant.Slug, options.Value.DefaultSlug, StringComparison.Ordinal),
                     tenant.TeacherEmailDomain);
                 if (info.IsDefault) defaultTenant = info;

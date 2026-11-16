@@ -21,29 +21,34 @@ public sealed class TenancyOptions
 }
 
 /// <summary>
-/// Arma las cadenas de conexión: todas las instituciones comparten servidor y credenciales de
-/// <c>DefaultConnection</c> y solo cambia el nombre de la base.
+/// Arma las cadenas de conexión de la base compartida. Todas las instituciones usan el mismo
+/// servidor, la misma base y las mismas credenciales de <c>DefaultConnection</c>; solo cambia el
+/// esquema (<c>Search Path</c>). El catálogo de instituciones está en el esquema <c>control</c>.
 /// </summary>
 public sealed class TenantConnectionStrings
 {
+    /// <summary>Esquema de la institución por defecto (ITSC): sus tablas ya estaban en public.</summary>
+    public const string DefaultSchemaName = "public";
+    public const string ControlSchemaName = "control";
+
     private readonly string _baseConnectionString;
 
     public TenantConnectionStrings(IConfiguration configuration)
     {
         _baseConnectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Falta ConnectionStrings:DefaultConnection.");
-        DefaultDatabaseName = new NpgsqlConnectionStringBuilder(_baseConnectionString).Database
-            ?? throw new InvalidOperationException("DefaultConnection debe indicar la base de datos.");
-        ControlDatabaseName = new NpgsqlConnectionStringBuilder(
-            configuration.GetConnectionString("ControlConnection") ?? For($"{DefaultDatabaseName}_control")).Database!;
-        Control = configuration.GetConnectionString("ControlConnection") ?? For(ControlDatabaseName);
+        if (string.IsNullOrWhiteSpace(new NpgsqlConnectionStringBuilder(_baseConnectionString).Database))
+            throw new InvalidOperationException("DefaultConnection debe indicar la base de datos.");
+        Control = configuration.GetConnectionString("ControlConnection") ?? For(ControlSchemaName);
     }
 
-    /// <summary>Base de la institución original; no se renombra para no migrar datos existentes.</summary>
-    public string DefaultDatabaseName { get; }
-    public string ControlDatabaseName { get; }
     public string Control { get; }
 
-    public string For(string databaseName)
-        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { Database = databaseName }.ConnectionString;
+    /// <summary>Cadena de conexión de la base compartida con el esquema de la institución.</summary>
+    public string For(string schemaName)
+        => new NpgsqlConnectionStringBuilder(_baseConnectionString) { SearchPath = SchemaNames.Validate(schemaName) }.ConnectionString;
+
+    /// <summary>Esquema al que apunta una cadena de conexión (su primer Search Path).</summary>
+    public static string SchemaOf(string connectionString)
+        => (new NpgsqlConnectionStringBuilder(connectionString).SearchPath ?? DefaultSchemaName).Split(',')[0].Trim();
 }

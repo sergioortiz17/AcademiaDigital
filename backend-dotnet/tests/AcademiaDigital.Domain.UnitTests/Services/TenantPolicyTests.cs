@@ -26,7 +26,12 @@ public sealed class TenantPolicyTests
     [InlineData("ñandu")]
     [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")] // 31
     [InlineData("control")]
-    [InlineData("finance")] // academiadigital_finance es la base del microservicio Finance
+    [InlineData("finance")]      // esquema del microservicio Finance
+    [InlineData("finance-norte")] // finance_* queda para Finance
+    [InlineData("public")]       // esquema de ITSC
+    [InlineData("academiadigital")]
+    [InlineData("admin")]
+    [InlineData("pg-test")]      // daría el esquema pg_test, prefijo reservado de PostgreSQL
     [InlineData("platform")]
     [InlineData("postgres")]
     public void NormalizeSlug_rejects_invalid_or_reserved_values(string? input)
@@ -61,8 +66,8 @@ public sealed class TenantPolicyTests
     }
 
     [Fact]
-    public void DatabaseNameFor_uses_a_safe_prefixed_identifier()
-        => Assert.Equal("academiadigital_instituto_norte", _policy.DatabaseNameFor("instituto-norte"));
+    public void SchemaNameFor_uses_a_safe_identifier()
+        => Assert.Equal("instituto_norte", _policy.SchemaNameFor("instituto-norte"));
 
     [Fact]
     public void ValidateAdmin_accepts_complete_data()

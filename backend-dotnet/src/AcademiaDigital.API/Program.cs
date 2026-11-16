@@ -340,9 +340,9 @@ await app.Services.InitializeTenancyAsync();
 // contenedores juntos. Se mantiene un reintento acotado por las dudas.
 await using (var scope = app.Services.CreateAsyncScope())
 {
-    // Base de la institución por defecto (la ya existente). Las demás las migra InitializeTenancyAsync.
+    // Esquema de la institución por defecto (public, el ya existente). Los demás los migra InitializeTenancyAsync.
     await using var db = scope.ServiceProvider.GetRequiredService<TenantDbContextFactory>()
-        .Create(scope.ServiceProvider.GetRequiredService<ITenantDirectory>().Default.DatabaseName);
+        .Create(scope.ServiceProvider.GetRequiredService<ITenantDirectory>().Default.SchemaName);
     var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
     const int maxAttempts = 10;
 
@@ -355,12 +355,11 @@ await using (var scope = app.Services.CreateAsyncScope())
         }
         catch (PostgresException ex) when (ex.SqlState is PostgresErrorCodes.DuplicateTable or PostgresErrorCodes.DuplicateObject)
         {
-            // La DB fue creada con EnsureCreated sin historial de migraciones (los objetos ya existen).
-            // Se elimina y recrea limpiamente con todas las migraciones aplicadas.
-            startupLogger.LogWarning(ex, "DB creada sin historial de migraciones detectada, recreando con migraciones...");
-            await db.Database.EnsureDeletedAsync();
-            await db.Database.MigrateAsync();
-            break;
+            // Tablas que existen sin historial de migraciones. Antes se borraba la base y se
+            // recreaba: con la base compartida eso borraría TODAS las instituciones y el catálogo.
+            // Nunca se borra nada automáticamente: se detiene el arranque para revisarlo a mano.
+            startupLogger.LogCritical(ex, "El esquema tiene tablas sin historial de migraciones. Revisarlo a mano; no se borra nada.");
+            throw;
         }
         catch (Exception ex) when (attempt < maxAttempts
             && (ex is NpgsqlException or TimeoutException or System.Net.Sockets.SocketException))
