@@ -22,7 +22,7 @@
 
 .dialog-body {
   padding: 24px;
-  min-width: 500px;
+  min-width: min(500px, 100%); // en el celular, como máximo el ancho de la pantalla
   max-height: 65vh;
   overflow-y: auto;
 }
@@ -73,6 +73,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
+}
+
+// En el celular, una sola columna: dos columnas de ~150 px no dejan leer los campos.
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; row-gap: 12px; }
 }
 
 .section-title {

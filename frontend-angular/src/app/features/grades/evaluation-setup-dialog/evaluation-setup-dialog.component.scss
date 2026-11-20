@@ -22,7 +22,7 @@
 
 .dialog-body {
   padding: 24px;
-  min-width: 520px;
+  min-width: min(520px, 100%); // en el celular, como máximo el ancho de la pantalla
   max-height: 65vh;
   overflow-y: auto;
 }

@@ -1,6 +1,9 @@
 @use '../../../assets/scss/navigation-tokens' as nav;
 .layout-container {
+  // dvh = alto visible real. En Chrome para Android, 100vh incluye la barra de direcciones:
+  // en panorámico el final del contenido quedaba debajo de ella y no se podía alcanzar con el scroll.
   height: 100vh;
+  height: 100dvh;
   background: #f4f7fb;
   overflow: hidden;
 }
@@ -31,6 +34,7 @@
 
 .sidenav-container {
   height: calc(100vh - 74px);
+  height: calc(100dvh - 74px);
   margin-top: 74px;
     /*height: 100%;
   display: block;

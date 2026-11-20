@@ -9,9 +9,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap; // en pantallas angostas el botón baja debajo del título en vez de taparlo
+  gap: 12px;
   margin-bottom: 24px;
 
-  h2 { margin: 0; }
+  h2 { margin: 0; min-width: 0; }
+  button { flex-shrink: 0; }
 }
 
 .open-form-card {
