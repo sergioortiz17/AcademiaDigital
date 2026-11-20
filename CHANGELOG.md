@@ -4,6 +4,24 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.10.0] - 2026-11-20
+
+Asignaciones de a varios y arreglos para celular.
+
+### Agregado
+
+- **Asignar división a varios alumnos a la vez** (menú "Asignaciones"): se eligen carrera y división y se marcan los alumnos de una lista con buscador (nombre, legajo o DNI), "Solo sin división" y "Seleccionar todos". Cada alumno muestra su división actual. El plan de estudios, el año académico y el año del plan los toma el servidor. Endpoint `POST /api/v1/careers/{careerId}/divisions/{id}/students` (hasta 300 alumnos). Si un alumno falla, los demás se asignan igual y la pantalla lista los que no se pudieron asignar y por qué.
+- **Asignar materias a un docente en un paso** (legajo del docente → "Asignar materias"): se eligen carrera, división y cargo, y se marcan las materias del año de la división ("Ver otros años" muestra el resto del plan). Ya no hace falta crear antes la comisión: si existe una vacante se usa, y si no existe se crea con el cuatrimestre (o anual) del plan vigente. Cada materia indica si tiene comisión vacante, si la comisión se crea, si ya es del docente o si la tiene otro docente. Endpoint `POST /api/v1/teachers/{id}/assignments/bulk`.
+
+### Corregido
+
+- **Celular en horizontal:** no se podía desplazar la página hasta el final porque el alto usaba `100vh`, que en Android incluye la barra del navegador. Ahora usa `100dvh`.
+- **"Activar inscripción"** se superponía al título "Gestión de Inscripciones" en Android: el encabezado ahora pasa el botón abajo cuando no entra.
+- **Diálogos más anchos que la pantalla en el celular** (13 diálogos con ancho mínimo fijo): ahora el ancho mínimo nunca supera el de la pantalla.
+- **Etiquetas cortadas en los diálogos del celular** ("Carre" en vez de "Carrera"): un estilo global pisaba el ancho que Material le da a la etiqueta flotante.
+- Campos de filtro de "Condición de alumnos" y "Comisiones" que desbordaban en pantallas chicas, y la ayuda del legajo docente que se superponía en el formulario de docente.
+- Las comisiones creadas para materias anuales ahora quedan marcadas como anuales (antes nunca se guardaba).
+
 ## [1.9.0] - 2026-11-15
 
 ### Agregado
