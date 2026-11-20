@@ -19,6 +19,7 @@ public sealed class TeachersController(
     GetTeacherAssignmentsQueryHandler getAssignmentsHandler,
     GetMyTeacherAssignmentsQueryHandler getMyAssignmentsHandler,
     AssignTeacherCommandHandler assignHandler,
+    AssignCoursesToTeacherHandler assignCoursesHandler,
     EndTeacherAssignmentCommandHandler endAssignmentHandler) : ApiControllerBase
 {
     [HttpGet]
@@ -138,6 +139,30 @@ public sealed class TeachersController(
         return StatusCode(StatusCodes.Status201Created, created);
     }
 
+    /// <summary>
+    /// Asigna varias materias de una división en un paso: usa la comisión vacante de cada materia o
+    /// la crea si no existe. Devuelve las asignaciones creadas y las materias que no se pudieron asignar.
+    /// </summary>
+    [HttpPost("{id:long}/assignments/bulk")]
+    public async Task<IActionResult> AssignCourses(
+        long id,
+        [FromBody] AssignCoursesToTeacherRequest request,
+        CancellationToken ct)
+    {
+        var guard = RequireAdmin();
+        if (guard is not null) return guard;
+        var result = await assignCoursesHandler.Handle(new AssignCoursesToTeacherCommand(
+            id,
+            request.DivisionId,
+            request.CourseIds,
+            request.PositionType,
+            request.StartedOn,
+            request.MaxStudents ?? 30,
+            request.Reason,
+            CurrentUserId!.Value), ct);
+        return Ok(result);
+    }
+
     [HttpDelete("{id:long}/assignments/{assignmentId:long}")]
     public async Task<IActionResult> EndAssignment(
         long id,
@@ -232,6 +257,14 @@ public sealed record ReviewTeacherDocumentRequest(
 public sealed record AssignTeacherRequest(
     [Range(1, int.MaxValue)] int CourseSectionId,
     DateOnly StartedOn,
+    [StringLength(500)] string? Reason);
+
+public sealed record AssignCoursesToTeacherRequest(
+    [Range(1, int.MaxValue)] int DivisionId,
+    [Required] int[] CourseIds,
+    PositionType PositionType,
+    DateOnly StartedOn,
+    [Range(1, 1000)] int? MaxStudents,
     [StringLength(500)] string? Reason);
 
 public sealed record EndTeacherAssignmentRequest(

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface Student {
@@ -199,6 +200,26 @@ export class StudentService {
   }
 
   /** Crea el vínculo alumno-comisión (StudentAcademicAssignment). Backend valida carrera y deduplica. */
+  /** Todos los alumnos de una carrera (la API devuelve como máximo 100 por página). */
+  getAllStudentsOfCareer(careerId: number): Observable<StudentListItem[]> {
+    const pageSize = 100;
+    return this.searchStudents(undefined, careerId, 1, pageSize).pipe(
+      switchMap(first => {
+        const pages = Math.ceil(first.total / pageSize);
+        if (pages <= 1) return of(first.items);
+        const rest = Array.from({ length: pages - 1 }, (_, i) => this.searchStudents(undefined, careerId, i + 2, pageSize));
+        return forkJoin(rest).pipe(map(more => [...first.items, ...more.flatMap(p => p.items)]));
+      })
+    );
+  }
+
+  /** Asigna varios alumnos a una división; informa los asignados y el motivo de cada uno que falló. */
+  assignStudentsToDivision(careerId: number, divisionId: number, studentIds: number[], reason?: string | null):
+    Observable<{ success: boolean; assigned: number[]; failed: { studentId: number; reason: string }[] }> {
+    return this.http.post<{ success: boolean; assigned: number[]; failed: { studentId: number; reason: string }[] }>(
+      `${this.baseURL}v1/careers/${careerId}/divisions/${divisionId}/students`, { studentIds, reason: reason ?? null });
+  }
+
   assignAcademic(studentId: number, request: CreateAcademicAssignmentRequest): Observable<AcademicAssignment> {
     return this.http.post<AcademicAssignment>(`${this.baseURL}v1/students/${studentId}/academic-assignments`, request);
   }

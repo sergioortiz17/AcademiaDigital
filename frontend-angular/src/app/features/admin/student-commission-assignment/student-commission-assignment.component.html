@@ -1,12 +1,19 @@
 <div class="assign-page">
-  <h1>Asignar división a alumno</h1>
+  <h1>Asignar división a alumnos</h1>
   <p class="subtitle">
-    Elegí un alumno y una división de su carrera. El plan de estudios, el año académico y el
-    año del plan se derivan automáticamente de la división y del plan actual del alumno.
+    Elige la carrera y la división, marca los alumnos y asígnalos de una vez. El plan de estudios,
+    el año académico y el año del plan se toman del plan vigente de cada alumno y de la división.
   </p>
 
   <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
   <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+  <div *ngIf="failures.length" class="msg msg--error msg--list">
+    <mat-icon>warning</mat-icon>
+    <div>
+      <strong>No se pudieron asignar {{ failures.length }} alumno(s):</strong>
+      <ul><li *ngFor="let f of failures"><b>{{ f.name }}</b>: {{ f.reason }}</li></ul>
+    </div>
+  </div>
 
   <div class="form-grid">
     <mat-form-field appearance="outline">
@@ -17,50 +24,63 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Alumno</mat-label>
-      <mat-select [(ngModel)]="selectedStudentId" (selectionChange)="onStudentChange()" [disabled]="!selectedCareerId || isLoading">
-        <mat-option>
-          <ngx-mat-select-search [formControl]="studentFilterCtrl" placeholderLabel="Buscar alumno por nombre, legajo o DNI..." noEntriesFoundLabel="No se encontraron alumnos"></ngx-mat-select-search>
-        </mat-option>
-        <mat-option *ngFor="let s of filteredStudents" [value]="s.id">
-          {{ s.fullName }} · legajo {{ s.legajoNumber }}{{ s.dni ? (' · DNI ' + s.dni) : '' }}
-        </mat-option>
-      </mat-select>
-      <mat-hint *ngIf="selectedCareerId && !isLoading && students.length === 0">No hay alumnos en esta carrera.</mat-hint>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
       <mat-label>División</mat-label>
-      <mat-select [(ngModel)]="selectedCommissionId" [disabled]="!selectedCareerId">
-        <mat-option *ngFor="let cm of commissions" [value]="cm.id">
-          {{ cm.code }} · {{ cm.name }} (año {{ cm.academicYear }}, {{ cm.yearNumber }}° año)
+      <mat-select [(ngModel)]="selectedDivisionId" [disabled]="!selectedCareerId">
+        <mat-option *ngFor="let d of divisions" [value]="d.id">
+          {{ d.code }} · {{ d.name }} (año {{ d.academicYear }}, {{ d.yearNumber }}° año)
         </mat-option>
       </mat-select>
-      <mat-hint *ngIf="selectedCareerId && commissions.length === 0">No hay comisiones activas en esta carrera.</mat-hint>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Motivo (opcional)</mat-label>
-      <input matInput [(ngModel)]="reason" maxlength="500" placeholder="Ej: cambio de división" />
+      <mat-hint *ngIf="selectedCareerId && divisions.length === 0">No hay divisiones activas en esta carrera.</mat-hint>
     </mat-form-field>
   </div>
 
-  <!-- Resumen de lo que se va a asignar (derivado, solo lectura) -->
-  <div class="derived" *ngIf="selectedStudent && selectedCommission">
-    <h3>Se va a asignar</h3>
-    <ul>
-      <li><b>Alumno:</b> {{ selectedStudent.userName }} (plan actual: {{ selectedStudent.currentStudyPlanName || '—' }})</li>
-      <li><b>División:</b> {{ selectedCommission.code }} · {{ selectedCommission.name }}</li>
-      <li><b>Año académico:</b> {{ selectedCommission.academicYear }} · <b>Año del plan:</b> {{ selectedCommission.yearNumber }}°</li>
+  <section class="students" *ngIf="selectedCareerId">
+    <div class="sca-toolbar">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>Buscar por nombre, legajo o DNI</mat-label>
+        <input matInput [(ngModel)]="search" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      <mat-checkbox [(ngModel)]="onlyWithoutDivision">Solo sin división</mat-checkbox>
+    </div>
+
+    <div class="select-bar" *ngIf="visibleStudents.length">
+      <mat-checkbox [checked]="allVisibleSelected" [indeterminate]="someVisibleSelected"
+                    (change)="toggleAllVisible($event.checked)">
+        Seleccionar todos ({{ visibleStudents.length }})
+      </mat-checkbox>
+      <span class="count" *ngIf="selected.size">{{ selected.size }} seleccionado(s)</span>
+    </div>
+
+    <div class="loading" *ngIf="isLoading"><mat-spinner diameter="32"></mat-spinner></div>
+
+    <ul class="student-list" *ngIf="!isLoading">
+      <li *ngFor="let s of visibleStudents" [class.is-selected]="selected.has(s.id)">
+        <mat-checkbox [checked]="selected.has(s.id)" (change)="toggle(s, $event.checked)"
+                      [attr.aria-label]="'Seleccionar ' + s.fullName"></mat-checkbox>
+        <div class="student-info" (click)="toggle(s, !selected.has(s.id))">
+          <span class="name">{{ s.fullName }}</span>
+          <span class="meta">Legajo {{ s.legajoNumber }}<ng-container *ngIf="s.dni"> · DNI {{ s.dni }}</ng-container></span>
+        </div>
+        <span class="division-chip" [class.division-chip--same]="s.divisionId === selectedDivisionId"
+              [class.division-chip--none]="!s.divisionId">
+          {{ s.divisionName || 'Sin división' }}
+        </span>
+      </li>
     </ul>
-    <p class="warn" *ngIf="!selectedStudent.currentStudyPlanId">
-      ⚠️ El alumno no tiene un plan de estudios actual asignado; no se puede vincular la división.
+    <p class="empty" *ngIf="!isLoading && !visibleStudents.length">
+      {{ students.length ? 'No hay alumnos que coincidan.' : 'No hay alumnos en esta carrera.' }}
     </p>
-  </div>
+  </section>
 
-  <div class="actions">
+  <div class="sca-actions" *ngIf="selectedCareerId">
+    <mat-form-field appearance="outline" class="reason-field" subscriptSizing="dynamic">
+      <mat-label>Motivo (opcional)</mat-label>
+      <input matInput [(ngModel)]="reason" maxlength="500" placeholder="Ej: inicio de cursada" />
+    </mat-form-field>
     <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
-      {{ isSubmitting ? 'Asignando…' : 'Asignar división' }}
+      <mat-icon>group_add</mat-icon>
+      {{ isSubmitting ? 'Asignando…' : ('Asignar ' + (selected.size || '') + ' alumno(s)' + (selectedDivision ? ' a ' + selectedDivision.code : '')) }}
     </button>
   </div>
 </div>

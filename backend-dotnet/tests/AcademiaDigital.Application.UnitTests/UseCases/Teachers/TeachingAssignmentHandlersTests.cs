@@ -115,6 +115,116 @@ public sealed class TeachingAssignmentHandlersTests
         Assert.Equal("Reasignación", result.EndReason);
     }
 
+    // ── Asignar varias materias de una división en un paso ──────────────────────────────
+
+    private sealed class BulkFixture
+    {
+        public readonly ICourseSectionRepository Positions = Substitute.For<ICourseSectionRepository>();
+        public readonly IStudyPlanRepository Plans = Substitute.For<IStudyPlanRepository>();
+        public readonly IStudyPlanCourseRepository PlanCourses = Substitute.For<IStudyPlanCourseRepository>();
+        public readonly List<CourseSection> Created = [];
+        private readonly Dictionary<int, CourseSection> _byId = [];
+
+        public BulkFixture(params CourseSection[] existing)
+        {
+            foreach (var section in existing) _byId[section.Id] = section;
+            Positions.GetByCourseAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(call => _byId.Values.Where(s => s.CourseId == call.Arg<int>()).ToList());
+            Positions.FindByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(call => _byId.GetValueOrDefault(call.Arg<int>()));
+            Positions.CreateAsync(Arg.Any<CourseSection>(), Arg.Any<CancellationToken>()).Returns(call =>
+            {
+                var section = call.Arg<CourseSection>();
+                section.Id = 100 + Created.Count;
+                section.Course = Course(section.CourseId);
+                section.Division = Division();
+                Created.Add(section);
+                _byId[section.Id] = section;
+                return section;
+            });
+            Positions.FindActiveByCourseTermAsync(
+                    Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+                .Returns(new List<CourseSection>());
+            Plans.GetActiveByCareerIdAsync(10, Arg.Any<CancellationToken>())
+                .Returns(DomainTestFactory.StudyPlan(id: 70, careerId: 10));
+            PlanCourses.GetByStudyPlanIdAsync(70, Arg.Any<CancellationToken>()).Returns(new List<StudyPlanCourse>
+            {
+                new() { Id = 1, StudyPlanId = 70, CourseId = 2, YearNumber = 1, Semester = 1, IsActive = true },
+                new() { Id = 2, StudyPlanId = 70, CourseId = 6, YearNumber = 1, Semester = 2, IsAnnual = true, IsActive = true },
+                new() { Id = 3, StudyPlanId = 70, CourseId = 8, YearNumber = 1, Semester = 2, IsActive = true }
+            });
+        }
+
+        public AssignCoursesToTeacherHandler Handler()
+        {
+            var teachers = Substitute.For<ITeacherRepository>();
+            teachers.FindByIdAsync(4, Arg.Any<CancellationToken>()).Returns(Teacher());
+            var divisions = Substitute.For<IDivisionRepository>();
+            divisions.FindByIdAsync(3, Arg.Any<CancellationToken>()).Returns(Division());
+            var courses = Substitute.For<ICourseRepository>();
+            courses.FindByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(call => Course(call.Arg<int>()));
+            var assignments = Substitute.For<ITeacherAssignmentRepository>();
+            assignments.AssignAsync(Arg.Any<TeacherAssignment>(), Arg.Any<CancellationToken>()).Returns(call =>
+            {
+                var assignment = call.Arg<TeacherAssignment>();
+                assignment.Teacher = Teacher();
+                assignment.CourseSection = _byId[assignment.CourseSectionId];
+                return assignment;
+            });
+            var policy = new TeachingAssignmentPolicy();
+            var time = new FixedTimeProvider(Now);
+            var create = new CreateCourseSectionCommandHandler(Positions, courses, divisions,
+                Substitute.For<IEnrollmentRepository>(), policy, SerializableUnitOfWork<CourseSection>(), time);
+            var assign = new AssignTeacherCommandHandler(teachers, Positions, assignments,
+                Substitute.For<ITeacherCareerRepository>(), policy, SerializableUnitOfWork(), time);
+            return new AssignCoursesToTeacherHandler(teachers, divisions, Plans, PlanCourses, Positions, create, assign);
+        }
+    }
+
+    private static AssignCoursesToTeacherCommand BulkCommand(params int[] courseIds) => new(
+        4, 3, courseIds, PositionType.Titular, new DateOnly(2027, 3, 1), 30, null, 99);
+
+    [Fact]
+    public async Task AssignCourses_reuses_a_vacant_section_and_creates_the_missing_ones_from_the_plan()
+    {
+        var fixture = new BulkFixture(Position()); // Comisión vacante existente de la materia 2.
+
+        var result = await fixture.Handler().Handle(BulkCommand(2, 6), TestContext.Current.CancellationToken);
+
+        Assert.Empty(result.Failed);
+        Assert.Equal([5, 100], result.Assigned.Select(a => a.CourseSectionId));
+        var created = Assert.Single(fixture.Created);
+        Assert.Equal(6, created.CourseId);
+        Assert.True(created.IsAnnual); // Anual según el plan de estudios.
+        Assert.Equal(2027, created.AcademicYear);
+    }
+
+    [Fact]
+    public async Task AssignCourses_reports_each_course_that_fails_without_stopping_the_rest()
+    {
+        var taken = Position();
+        taken.IsVacant = false;
+        taken.TeacherId = 77;
+        var fixture = new BulkFixture(taken);
+
+        var result = await fixture.Handler().Handle(BulkCommand(2, 8, 999), TestContext.Current.CancellationToken);
+
+        Assert.Equal([8], result.Assigned.Select(a => a.CourseId));
+        Assert.Contains("otro docente", result.Failed.Single(f => f.CourseId == 2).Reason);
+        Assert.Contains("plan de estudios", result.Failed.Single(f => f.CourseId == 999).Reason);
+    }
+
+    [Fact]
+    public async Task AssignCourses_rejects_a_start_date_outside_the_division_year_before_creating_anything()
+    {
+        var fixture = new BulkFixture();
+        var command = BulkCommand(2) with { StartedOn = new DateOnly(2026, 12, 1) };
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => fixture.Handler().Handle(command, TestContext.Current.CancellationToken));
+        Assert.Empty(fixture.Created);
+    }
+
     private static IUnitOfWork SerializableUnitOfWork() => SerializableUnitOfWork<TeacherAssignment>();
 
     private static IUnitOfWork SerializableUnitOfWork<T>()
@@ -127,9 +237,9 @@ public sealed class TeachingAssignmentHandlersTests
         return unitOfWork;
     }
 
-    private static Course Course() => new()
+    private static Course Course(int id = 2) => new()
     {
-        Id = 2, CareerId = 10, Code = "ARQ", Name = "Arquitectura", IsActive = true
+        Id = id, CareerId = 10, Code = "ARQ" + id, Name = "Materia " + id, IsActive = true
     };
     private static Division Division() => new()
     {

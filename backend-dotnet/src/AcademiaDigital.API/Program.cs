@@ -97,6 +97,7 @@ builder.Services.AddScoped<DownloadAdmissionAgreementQueryHandler>();
 builder.Services.AddScoped<ProcessAdmissionOutboxCommandHandler>();
 builder.Services.AddScoped<StudentRematriculationPolicy>();
 builder.Services.AddScoped<CreateStudentRematriculationCommandHandler>();
+builder.Services.AddScoped<AssignDivisionToStudentsHandler>();
 
 // Certificates
 builder.Services.AddScoped<GetCertificateRequestsUseCase>();
@@ -166,6 +167,7 @@ builder.Services.AddScoped<DeactivateCourseSectionCommandHandler>();
 builder.Services.AddScoped<GetTeacherAssignmentsQueryHandler>();
 builder.Services.AddScoped<GetMyTeacherAssignmentsQueryHandler>();
 builder.Services.AddScoped<AssignTeacherCommandHandler>();
+builder.Services.AddScoped<AssignCoursesToTeacherHandler>();
 builder.Services.AddScoped<EndTeacherAssignmentCommandHandler>();
 
 // Attendance

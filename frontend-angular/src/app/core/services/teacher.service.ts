@@ -72,6 +72,19 @@ export interface TeacherAssignment {
   endedAt: string | null;
 }
 
+export interface AssignCoursesRequest {
+  divisionId: number;
+  courseIds: number[];
+  positionType: string;
+  startedOn: string;
+  reason: string | null;
+}
+
+export interface AssignCoursesResult {
+  assigned: TeacherAssignment[];
+  failed: { courseId: number; reason: string }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class TeacherService {
   private readonly base = environment.apiServer;
@@ -120,6 +133,14 @@ export class TeacherService {
       startedOn,
       reason: reason || null
     });
+  }
+
+  /**
+   * Asigna varias materias de una división en un paso. El servidor usa la comisión vacante de cada
+   * materia o la crea (con el cuatrimestre del plan vigente) si todavía no existe.
+   */
+  assignCourses(teacherId: number, request: AssignCoursesRequest): Observable<AssignCoursesResult> {
+    return this.http.post<AssignCoursesResult>(`${this.base}v1/teachers/${teacherId}/assignments/bulk`, request);
   }
 
   endAssignment(teacherId: number, assignmentId: number, endedOn: string, reason: string): Observable<TeacherAssignment> {
