@@ -1,0 +1,78 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+  color: #1b2a3a;
+}
+
+.subtitle {
+  margin: 0 0 20px;
+  color: #555;
+}
+
+.teacher-field {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 12px;
+    font-size: 18px;
+    color: #045797;
+  }
+}
+
+.current {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    border: 1px solid #dbe5ef;
+    border-radius: 8px;
+    min-width: 0;
+  }
+
+  .name { font-weight: 600; overflow-wrap: anywhere; }
+  .meta { font-size: 12px; color: #666; }
+}
+
+.empty {
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.msg--error {
+  color: #b3261e;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+  .page { padding: 16px; }
+  .card { padding: 16px; }
+  .current { grid-template-columns: minmax(0, 1fr); }
+}

@@ -4,94 +4,9 @@
 </div>
 
 <div class="dialog-body">
-  <p class="hint">
-    Elige la división y marca las materias. Si la comisión de una materia no existe, se crea sola.
-  </p>
-
-  <div *ngIf="errorMsg" class="msg msg--error">{{ errorMsg }}</div>
-  <div *ngIf="successMsg" class="msg msg--success">{{ successMsg }}</div>
-  <div *ngIf="failures.length" class="msg msg--error">
-    <strong>No se pudieron asignar:</strong>
-    <ul><li *ngFor="let f of failures"><b>{{ f.name }}</b>: {{ f.reason }}</li></ul>
-  </div>
-
-  <div class="form-grid">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Carrera</mat-label>
-      <mat-select [(ngModel)]="careerId" (selectionChange)="onCareerChange()">
-        <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.code }} · {{ c.name }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>División</mat-label>
-      <mat-select [(ngModel)]="divisionId" (selectionChange)="onDivisionChange()" [disabled]="!careerId">
-        <mat-option *ngFor="let d of divisions" [value]="d.id">
-          {{ d.code }} · {{ d.name }} ({{ d.academicYear }}, {{ d.yearNumber }}° año)
-        </mat-option>
-      </mat-select>
-      <mat-hint *ngIf="careerId && !isLoading && divisions.length === 0">No hay divisiones activas.</mat-hint>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Cargo</mat-label>
-      <mat-select [(ngModel)]="positionType" (selectionChange)="onPositionTypeChange()">
-        <mat-option *ngFor="let t of positionTypes" [value]="t.value">{{ t.label }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Fecha de inicio</mat-label>
-      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startedOn">
-      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-      <mat-datepicker #startPicker></mat-datepicker>
-    </mat-form-field>
-  </div>
-
-  <div class="loading-row" *ngIf="isLoading"><mat-spinner diameter="28"></mat-spinner></div>
-
-  <section class="courses" *ngIf="division && !isLoading">
-    <div class="courses-bar">
-      <mat-checkbox [checked]="allSelected" [indeterminate]="someSelected" [disabled]="!selectableRows.length"
-                    (change)="toggleAll($event.checked)">
-        Seleccionar todas ({{ selectableRows.length }})
-      </mat-checkbox>
-      <mat-checkbox [(ngModel)]="showAllYears" (change)="buildRows()">Ver otros años</mat-checkbox>
-    </div>
-
-    <ul class="course-list">
-      <li *ngFor="let r of rows" [class.is-disabled]="r.status === 'mine' || r.status === 'taken'"
-          [class.is-selected]="selected.has(r.course.courseId)">
-        <mat-checkbox [checked]="selected.has(r.course.courseId)"
-                      [disabled]="r.status === 'mine' || r.status === 'taken'"
-                      (change)="toggle(r, $event.checked)"
-                      [attr.aria-label]="'Seleccionar ' + r.course.courseName"></mat-checkbox>
-        <div class="course-info" (click)="toggle(r, !selected.has(r.course.courseId))">
-          <span class="name">{{ r.course.courseName }}</span>
-          <span class="meta">{{ r.course.yearNumber }}° año · {{ semesterLabel(r.course) }}</span>
-        </div>
-        <span class="status status--{{ r.status }}" [ngSwitch]="r.status">
-          <ng-container *ngSwitchCase="'vacant'">Comisión vacante</ng-container>
-          <ng-container *ngSwitchCase="'create'">Se crea la comisión</ng-container>
-          <ng-container *ngSwitchCase="'mine'">Ya la tiene</ng-container>
-          <ng-container *ngSwitchCase="'taken'">{{ r.teacherName || 'Otro docente' }}</ng-container>
-        </span>
-      </li>
-    </ul>
-    <p class="empty" *ngIf="!rows.length">
-      No hay materias del {{ division.yearNumber }}° año en el plan vigente. Marca "Ver otros años".
-    </p>
-  </section>
-
-  <mat-form-field appearance="outline" class="full-width" *ngIf="division" subscriptSizing="dynamic">
-    <mat-label>Motivo (opcional)</mat-label>
-    <input matInput maxlength="500" [(ngModel)]="reason" placeholder="Ej: inicio de cursada">
-  </mat-form-field>
+  <app-assign-courses-form [teacherId]="data.teacherId" (submitted)="onSubmitted($event)"></app-assign-courses-form>
 </div>
 
 <div class="dialog-actions">
-  <button mat-flat-button class="cancel-btn" (click)="close()">Cerrar</button>
-  <button mat-stroked-button class="confirm-btn" [disabled]="!canSubmit" (click)="submit()">
-    {{ isSubmitting ? 'Asignando…' : 'Asignar ' + (selected.size || '') + ' materia(s)' }}
-  </button>
+  <button mat-button (click)="close()">Cerrar</button>
 </div>

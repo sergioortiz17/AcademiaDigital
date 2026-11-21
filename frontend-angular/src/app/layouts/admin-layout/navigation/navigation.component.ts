@@ -46,7 +46,8 @@ const MENU_ADMIN: MenuItem[] = [
       { id: 'teacher-list',       title: 'Legajos', url: '/app/admin/teachers',           icon: '' },
       { id: 'teaching-positions', title: 'Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
       { id: 'commissions',        title: 'Divisiones', url: '/app/admin/commissions',      icon: '' },
-      { id: 'student-commission', title: 'Asignar división a alumno', url: '/app/admin/student-commission-assignment', icon: '' }
+      { id: 'teacher-courses',    title: 'Asignar materia', url: '/app/admin/teacher-courses', icon: '' },
+      { id: 'student-commission', title: 'Asignar división a alumnos', url: '/app/admin/student-commission-assignment', icon: '' }
     ]
   },
   { id: 'registros',   title: 'Registros Académicos', icon: 'assignment_ind',
