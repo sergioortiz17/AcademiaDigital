@@ -1,0 +1,49 @@
+<div class="page">
+  <h1>Asignar materia</h1>
+  <p class="subtitle">
+    Elige el docente, la división y marca las materias. Si la comisión de una materia todavía no existe,
+    se crea sola.
+  </p>
+
+  <div *ngIf="errorMsg" class="msg msg--error">{{ errorMsg }}</div>
+
+  <mat-form-field appearance="outline" class="teacher-field" subscriptSizing="dynamic">
+    <mat-label>Docente</mat-label>
+    <mat-select [(ngModel)]="teacherId" (selectionChange)="onTeacherChange()">
+      <mat-option>
+        <ngx-mat-select-search [(ngModel)]="teacherSearch" placeholderLabel="Buscar por nombre, legajo o email"
+                               noEntriesFoundLabel="No hay docentes que coincidan"></ngx-mat-select-search>
+      </mat-option>
+      <mat-option *ngFor="let t of filteredTeachers" [value]="t.id">
+        {{ t.lastName }}, {{ t.firstName }} · {{ t.employeeNumber }}
+      </mat-option>
+    </mat-select>
+    <mat-hint *ngIf="!teachers.length">No hay docentes activos. Se crean en Docentes → Legajos.</mat-hint>
+  </mat-form-field>
+
+  <ng-container *ngIf="selectedTeacher as teacher">
+    <section class="card">
+      <h2>Materias actuales de {{ teacher.firstName }} {{ teacher.lastName }}</h2>
+      <div class="loading" *ngIf="isLoadingAssignments"><mat-spinner diameter="24"></mat-spinner></div>
+      <ng-container *ngIf="!isLoadingAssignments">
+        <ul class="current" *ngIf="assignments.length; else noAssignments">
+          <li *ngFor="let a of assignments">
+            <span class="name">{{ a.courseName }}</span>
+            <span class="meta">
+              {{ a.divisionCode || 'Sin división' }} · {{ a.academicYear }} · {{ positionLabel(a.positionType) }}
+            </span>
+          </li>
+        </ul>
+        <ng-template #noAssignments><p class="empty">Todavía no tiene materias asignadas.</p></ng-template>
+      </ng-container>
+      <a mat-button color="primary" [routerLink]="['/app/admin/teachers', teacher.id]">
+        <mat-icon>badge</mat-icon> Ver legajo
+      </a>
+    </section>
+
+    <section class="card">
+      <h2>Asignar materias nuevas</h2>
+      <app-assign-courses-form [teacherId]="teacher.id" (submitted)="onSubmitted($event)"></app-assign-courses-form>
+    </section>
+  </ng-container>
+</div>

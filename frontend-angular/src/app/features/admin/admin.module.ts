@@ -16,6 +16,8 @@ import { JustifyAttendanceDialogComponent } from './attendance-management/justif
 import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
 import { TeacherFormDialogComponent } from './teacher-management/teacher-form-dialog/teacher-form-dialog.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
+import { AssignCoursesFormComponent } from './assign-courses-form/assign-courses-form.component';
+import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/teacher-course-assignment.component';
 import { AssignPositionDialogComponent } from './teacher-detail/assign-position-dialog/assign-position-dialog.component';
 import { EndAssignmentDialogComponent } from './teacher-detail/end-assignment-dialog/end-assignment-dialog.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
@@ -52,6 +54,8 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
     TeacherFormDialogComponent,
     TeacherDetailComponent,
     AssignPositionDialogComponent,
+    AssignCoursesFormComponent,
+    TeacherCourseAssignmentComponent,
     EndAssignmentDialogComponent,
     TeachingPositionManagementComponent,
     TeachingPositionFormDialogComponent,

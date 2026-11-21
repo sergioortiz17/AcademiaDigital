@@ -19,7 +19,8 @@ public sealed record CreateCourseSectionCommand(
     int AcademicYear,
     int Semester,
     PositionType PositionType,
-    int MaxStudents);
+    int MaxStudents,
+    bool IsAnnual = false);
 
 public sealed record UpdateCourseSectionCommand(
     int CourseSectionId,
@@ -106,6 +107,7 @@ public sealed class CreateCourseSectionCommandHandler(
                 DivisionId = command.DivisionId,
                 AcademicYear = command.AcademicYear,
                 Semester = command.Semester,
+                IsAnnual = command.IsAnnual,
                 PositionType = command.PositionType,
                 MaxStudents = command.MaxStudents,
                 IsVacant = true,
@@ -118,9 +120,10 @@ public sealed class CreateCourseSectionCommandHandler(
             return section;
         }, ct);
 
-        created.Course = course;
-        created.Division = commission;
-        return CourseSectionMapper.Map(created);
+        // No se asignan Course/Division sobre `created`: es una entidad rastreada y la materia y la
+        // división vienen sin rastreo; EF las adjuntaría como modificadas y el próximo SaveChanges del
+        // mismo request (p. ej. la asignación masiva de materias) fallaría por concurrencia.
+        return CourseSectionMapper.Map(created, course, commission);
     }
 
     /// <summary>
@@ -212,14 +215,17 @@ public sealed class DeactivateCourseSectionCommandHandler(
 
 internal static class CourseSectionMapper
 {
-    public static CourseSectionDto Map(CourseSection position) => new(
+    public static CourseSectionDto Map(CourseSection position)
+        => Map(position, position.Course, position.Division);
+
+    public static CourseSectionDto Map(CourseSection position, Course course, Division? division) => new(
         position.Id,
         position.CourseId,
-        position.Course.Code,
-        position.Course.Name,
+        course.Code,
+        course.Name,
         position.DivisionId,
-        position.Division?.Code,
-        position.Division?.Name,
+        division?.Code,
+        division?.Name,
         position.AcademicYear,
         position.Semester,
         position.PositionType.ToString(),

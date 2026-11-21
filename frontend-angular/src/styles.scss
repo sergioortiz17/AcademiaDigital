@@ -530,6 +530,12 @@ html, body {
     max-width: 100%;
   }
 
+  // La etiqueta flotante se achica a 0.75 y Material le da max-width 133% para compensar; el 100%
+  // de la regla anterior la cortaba ("Carre" en vez de "Carrera") en los diálogos del celular.
+  body .cdk-overlay-pane .mdc-floating-label--float-above {
+    max-width: 133.3333333333%;
+  }
+
   .mat-mdc-dialog-content {
     max-height: calc(100dvh - 160px);
   }

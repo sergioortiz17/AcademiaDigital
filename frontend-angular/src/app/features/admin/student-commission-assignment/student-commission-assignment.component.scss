@@ -45,37 +45,126 @@
   color: #1b5e20;
 }
 
-.derived {
-  background: #f5f7fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin: 8px 0 20px;
+.msg--list {
+  align-items: flex-start;
+
+  ul { margin: 4px 0 0; padding-left: 18px; }
 }
 
-.derived h3 {
-  margin: 0 0 8px;
-  font-size: 14px;
+// ── Lista de alumnos ───────────────────────────────────────────────────────
+.students {
+  margin-top: 8px;
 }
 
-.derived ul {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 14px;
-}
-
-.derived .warn {
-  color: #b71c1c;
-  margin: 8px 0 0;
-}
-
-.actions {
+.sca-toolbar {
   display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .search-field { flex: 1 1 260px; min-width: min(220px, 100%); }
+}
+
+.select-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: #f4f7fb;
+
+  .count { font-size: 14px; color: #125081; font-weight: 600; }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.student-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 55vh;
+  overflow-y: auto;
+  border: 1px solid #e0e6ef;
+  border-radius: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-bottom: 1px solid #eef2f7;
+
+    &:last-child { border-bottom: 0; }
+    &.is-selected { background: #eef4fb; }
+  }
+}
+
+.student-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+
+  .name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { font-size: 12px; color: rgba(0, 0, 0, 0.6); }
+}
+
+.division-chip {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e8eef6;
+  color: #33475b;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--same { background: #e8f5e9; color: #1b5e20; }
+  &--none { background: #fff4e5; color: #8a5300; }
+}
+
+.empty {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 16px;
+}
+
+.sca-actions {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+
+  .reason-field { flex: 1 1 260px; min-width: min(220px, 100%); }
 }
 
 @media (max-width: 600px) {
+  .assign-page { padding: 12px; }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
+
+  // En el celular todo en una columna, a lo ancho.
+  .sca-toolbar,
+  .sca-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    .search-field,
+    .reason-field { flex: 0 0 auto; width: 100%; }
+  }
+
+  .sca-actions button { width: 100%; }
 }

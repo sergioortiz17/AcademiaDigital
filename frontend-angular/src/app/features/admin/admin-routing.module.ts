@@ -7,6 +7,7 @@ import { EnrolledStudentsComponent } from './enrolled-students/enrolled-students
 import { EnrollmentReportsComponent } from './enrollment-reports/enrollment-reports.component';
 import { AttendanceManagementComponent } from './attendance-management/attendance-management.component';
 import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
+import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/teacher-course-assignment.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
@@ -58,6 +59,12 @@ const routes: Routes = [
   {
     path: 'teachers',
     component: TeacherManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'teacher-courses',
+    component: TeacherCourseAssignmentComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

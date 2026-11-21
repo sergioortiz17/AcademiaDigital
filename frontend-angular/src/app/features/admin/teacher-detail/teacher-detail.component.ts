@@ -101,23 +101,17 @@ export class TeacherDetailComponent implements OnInit {
 
   assignPosition(): void {
     const dialogRef = this.dialog.open(AssignPositionDialogComponent, {
-      width: '480px',
-      disableClose: true
+      width: '640px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { teacherId: this.teacherId }
     });
 
-    dialogRef.afterClosed().subscribe((result: AssignPositionDialogResult | null) => {
-      if (!result) return;
-      this.teacherService.assignTeacher(this.teacherId, result.courseSectionId, result.startedOn, result.reason).subscribe({
-        next: () => {
-          this.successMsg = 'Comisión asignada correctamente.';
-          this.loadAssignments();
-          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
-        },
-        error: (err) => {
-          this.errorMsg = err.message || 'Error al asignar la comisión.';
-          this.cdr.detectChanges();
-        }
-      });
+    dialogRef.afterClosed().subscribe((result: AssignPositionDialogResult | undefined) => {
+      if (!result?.assigned) return;
+      this.successMsg = `${result.assigned} materia(s) asignada(s) correctamente.`;
+      this.loadAssignments();
+      setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
     });
   }
 

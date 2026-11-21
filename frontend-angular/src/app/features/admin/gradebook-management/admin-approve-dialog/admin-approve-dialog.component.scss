@@ -22,8 +22,7 @@
 
 .dialog-body {
   padding: 24px;
-  min-width: 400px;
-
+  min-width: min(400px, 100%); // en el celular, como máximo el ancho de la pantalla
   p {
     margin: 0 0 16px;
     color: rgba(0, 0, 0, .65);

@@ -1,5 +1,5 @@
 .dialog-content {
-  min-width: 480px;
+  min-width: min(480px, 100%); // en el celular, como máximo el ancho de la pantalla
   max-width: 100%;
 }
 
