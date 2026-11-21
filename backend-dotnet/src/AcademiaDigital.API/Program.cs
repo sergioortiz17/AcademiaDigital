@@ -188,6 +188,7 @@ builder.Services.AddScoped<GradebookPolicy>();
 builder.Services.AddScoped<ExamTablePolicy>();
 builder.Services.AddScoped<GetGradebooksQueryHandler>();
 builder.Services.AddScoped<GetGradebookQueryHandler>();
+builder.Services.AddScoped<GetSectionStudentsQueryHandler>();
 builder.Services.AddScoped<CreateGradebookCommandHandler>();
 builder.Services.AddScoped<SaveGradeEntriesCommandHandler>();
 builder.Services.AddScoped<SubmitGradebookCommandHandler>();

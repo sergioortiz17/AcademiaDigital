@@ -70,6 +70,8 @@ export interface TeacherAssignment {
   endedByUserId: number | null;
   createdAt: string;
   endedAt: string | null;
+  /** Carrera de la división de la comisión (null si la comisión no tiene división). */
+  careerId?: number | null;
 }
 
 export interface AssignCoursesRequest {

@@ -34,6 +34,8 @@ public interface IGradebookRepository
     Task<Gradebook?> FindForUpdateAsync(long gradebookId, CancellationToken ct = default);
     Task<(Gradebook Gradebook, bool Created)> CreateIdempotentAsync(Gradebook gradebook, CancellationToken ct = default);
     Task<IReadOnlyList<GradebookRosterRow>> GetRosterAsync(Gradebook gradebook, CancellationToken ct = default);
+    /// <summary>Alumnos de una comisión, exista o no su planilla de notas.</summary>
+    Task<IReadOnlyList<GradebookRosterRow>> GetSectionRosterAsync(CourseSection section, CancellationToken ct = default);
     Task<IReadOnlyList<GradebookExamResultRow>> GetLatestExamResultsAsync(
         int courseId, int academicYear, IReadOnlyCollection<long> enrollmentIds, CancellationToken ct = default);
     Task SaveGradeRevisionsAsync(IReadOnlyList<GradeEntryRevision> revisions, CancellationToken ct = default);

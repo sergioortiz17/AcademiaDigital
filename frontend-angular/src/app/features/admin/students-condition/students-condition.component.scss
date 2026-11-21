@@ -98,3 +98,19 @@
 
   mat-icon { font-size: 40px; width: 40px; height: 40px; }
 }
+
+.no-gradebook {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.85em;
+}
+
+.msg--info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: #e8f1fb;
+  color: #0d47a1;
+}

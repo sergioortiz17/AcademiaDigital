@@ -16,7 +16,8 @@ public sealed class GradebooksController(
     PublishGradebookCommandHandler publishHandler,
     CloseGradebookCommandHandler closeHandler,
     ReopenGradebookCommandHandler reopenHandler,
-    GetMyGradesQueryHandler myGradesHandler) : ApiControllerBase
+    GetMyGradesQueryHandler myGradesHandler,
+    GetSectionStudentsQueryHandler sectionStudentsHandler) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(
@@ -30,6 +31,16 @@ public sealed class GradebooksController(
         return Ok(await listHandler.Handle(new GetGradebooksQuery(
             academicYear, courseId, commissionId,
             CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+    }
+
+    /// <summary>Alumnos de una comisión, tenga o no planilla de notas.</summary>
+    [HttpGet("sections/{sectionId:int}/students")]
+    public async Task<IActionResult> GetSectionStudents(int sectionId, CancellationToken ct)
+    {
+        var guard = RequireAdminOrProfessor();
+        if (guard is not null) return guard;
+        return Ok(await sectionStudentsHandler.Handle(new GetSectionStudentsQuery(
+            sectionId, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
     }
 
     [HttpGet("me")]

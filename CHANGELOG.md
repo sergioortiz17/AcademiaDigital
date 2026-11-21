@@ -4,6 +4,20 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.10.1] - 2026-11-20
+
+Pantallas del docente: "Mis asignaciones" y "Alumnos".
+
+### Agregado
+
+- **Alumnos de una comisión sin planilla de notas**: endpoint `GET /api/v1/gradebooks/sections/{sectionId}/students` (Admin o el docente asignado a la comisión).
+- Las asignaciones del docente (`TeacherAssignmentDto`) informan `careerId`, la carrera de la división de la comisión.
+
+### Corregido
+
+- **"Alumnos" no mostraba las materias recién asignadas al docente**: el desplegable solo listaba planillas de notas, y una materia asignada todavía no tiene planilla. Ahora también lista las comisiones asignadas (marcadas "sin planilla") y muestra sus alumnos inscriptos; la condición aparece cuando se cargan las notas. Si el docente tiene una sola materia, se abre directamente.
+- **"Mis asignaciones"**: el filtro de carrera va primero y "Buscar por materia" después. Al entrar, el docente ya ve seleccionada la carrera de sus comisiones vigentes.
+
 ## [1.10.0] - 2026-11-20
 
 Asignaciones de a varios y arreglos para celular.

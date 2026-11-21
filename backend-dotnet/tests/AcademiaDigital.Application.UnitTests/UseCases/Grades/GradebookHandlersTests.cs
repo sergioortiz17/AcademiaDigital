@@ -43,6 +43,40 @@ public sealed class GradebookHandlersTests
     }
 
     [Fact]
+    public async Task Section_students_are_listed_for_assigned_professor_without_gradebook()
+    {
+        var positions = Substitute.For<ICourseSectionRepository>();
+        var gradebooks = Substitute.For<IGradebookRepository>();
+        var position = Position();
+        positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(position);
+        gradebooks.CanTeacherManagePositionAsync(88, 5, Arg.Any<CancellationToken>()).Returns(true);
+        gradebooks.GetSectionRosterAsync(position, Arg.Any<CancellationToken>())
+            .Returns([new GradebookRosterRow(1, 2, "Ana Perez", "L-1", "30111222")]);
+        var handler = new GetSectionStudentsQueryHandler(positions, gradebooks);
+
+        var result = await handler.Handle(new GetSectionStudentsQuery(5, 88, false),
+            TestContext.Current.CancellationToken);
+
+        var student = Assert.Single(result);
+        Assert.Equal("Ana Perez", student.StudentName);
+        Assert.Equal(1, student.EnrollmentId);
+    }
+
+    [Fact]
+    public async Task Section_students_are_forbidden_for_unassigned_professor()
+    {
+        var positions = Substitute.For<ICourseSectionRepository>();
+        var gradebooks = Substitute.For<IGradebookRepository>();
+        positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
+        gradebooks.CanTeacherManagePositionAsync(88, 5, Arg.Any<CancellationToken>()).Returns(false);
+        var handler = new GetSectionStudentsQueryHandler(positions, gradebooks);
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => handler.Handle(
+            new GetSectionStudentsQuery(5, 88, false), TestContext.Current.CancellationToken));
+        await gradebooks.DidNotReceive().GetSectionRosterAsync(Arg.Any<CourseSection>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Professor_cannot_create_gradebook_outside_current_assignment()
     {
         var positions = Substitute.For<ICourseSectionRepository>();

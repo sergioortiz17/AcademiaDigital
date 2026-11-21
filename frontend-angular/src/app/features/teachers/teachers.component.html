@@ -27,12 +27,6 @@
     </div>
 
     <div class="filters-row career-filters">
-      <div class="search-box">
-        <label for="assignment-career">Buscar por materia:</label>
-        <input type="text" [(ngModel)]="searchTerm" aria-label="Buscar por materia">
-        <mat-icon>search</mat-icon>
-      </div>
-        
       <div class="filter-field">
         <label for="assignment-career">Carrera:</label>
         <select id="assignment-career" [(ngModel)]="selectedCareerId" (ngModelChange)="onCareerChange($event)">
@@ -43,6 +37,12 @@
             {{ career.name }}
           </option>
         </select>
+      </div>
+
+      <div class="search-box">
+        <label for="assignment-search">Buscar por materia:</label>
+        <input id="assignment-search" type="text" [(ngModel)]="searchTerm" aria-label="Buscar por materia">
+        <mat-icon>search</mat-icon>
       </div>
 
       <div class="filter-field">

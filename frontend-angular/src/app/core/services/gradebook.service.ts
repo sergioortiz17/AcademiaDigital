@@ -35,6 +35,14 @@ export interface GradebookStudent {
   latestExam: GradebookExam | null;
 }
 
+export interface SectionStudent {
+  enrollmentId: number;
+  studentId: number;
+  studentName: string;
+  legajoNumber: string;
+  dni: string;
+}
+
 export interface GradebookExam {
   examDateUtc: string;
   attemptNumber: number;
@@ -121,6 +129,11 @@ export class GradebookService {
     // internamente lo traduce a DivisionId.
     if (filters.divisionId != null) params = params.set('commissionId', filters.divisionId);
     return this.http.get<Gradebook[]>(`${this.base}v1/gradebooks`, { params });
+  }
+
+  /** Alumnos de una comisión aunque todavía no tenga planilla de notas. */
+  getSectionStudents(sectionId: number): Observable<SectionStudent[]> {
+    return this.http.get<SectionStudent[]>(`${this.base}v1/gradebooks/sections/${sectionId}/students`);
   }
 
   getGradebook(id: number): Observable<GradebookDetail> {

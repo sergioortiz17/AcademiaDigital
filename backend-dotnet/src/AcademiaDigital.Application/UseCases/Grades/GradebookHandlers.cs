@@ -23,6 +23,8 @@ public sealed record PublishGradebookCommand(long GradebookId, long ActorUserId)
 public sealed record CloseGradebookCommand(long GradebookId, long ActorUserId);
 public sealed record ReopenGradebookCommand(long GradebookId, string Reason, long ActorUserId);
 public sealed record GetMyGradesQuery(long UserId, int? CourseId);
+public sealed record GetSectionStudentsQuery(int CourseSectionId, long ActorUserId, bool IsAdmin);
+public sealed record SectionStudentDto(long EnrollmentId, long StudentId, string StudentName, string LegajoNumber, string Dni);
 
 public sealed record GradebookEvaluationDto(long Id, string Name, decimal WeightPercentage, decimal MaximumScore, int DisplayOrder, bool IsRecovery);
 public sealed record GradeEntryDto(long? RevisionId, long EvaluationId, decimal? Score, int? Version, string? Notes, DateTime? UpdatedAt);
@@ -97,6 +99,27 @@ public sealed class GetGradebookQueryHandler(IGradebookRepository repository, Gr
     {
         await GradebookAuthorization.EnsureCanManage(repository, query.GradebookId, query.ActorUserId, query.IsAdmin, ct);
         return await GradebookMapper.LoadDetail(repository, policy, query.GradebookId, ct);
+    }
+}
+
+/// <summary>
+/// Alumnos de una comisión aunque todavía no tenga planilla de notas, para que el docente vea
+/// el listado apenas se le asigna la materia.
+/// </summary>
+public sealed class GetSectionStudentsQueryHandler(
+    ICourseSectionRepository positionRepository,
+    IGradebookRepository gradebookRepository)
+{
+    public async Task<IReadOnlyList<SectionStudentDto>> Handle(GetSectionStudentsQuery query, CancellationToken ct = default)
+    {
+        var position = await positionRepository.FindByIdAsync(query.CourseSectionId, ct)
+            ?? throw new KeyNotFoundException("Comisión no encontrada.");
+        if (!query.IsAdmin && !await gradebookRepository.CanTeacherManagePositionAsync(
+                query.ActorUserId, position.Id, ct))
+            throw new ForbiddenException("El docente no está asignado a esta materia y comisión.");
+        var roster = await gradebookRepository.GetSectionRosterAsync(position, ct);
+        return roster.Select(row => new SectionStudentDto(
+            row.EnrollmentId, row.StudentId, row.StudentName, row.LegajoNumber, row.Dni)).ToArray();
     }
 }
 

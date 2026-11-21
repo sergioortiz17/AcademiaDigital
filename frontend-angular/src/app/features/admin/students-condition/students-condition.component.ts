@@ -2,8 +2,10 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { forkJoin, of, Subject } from 'rxjs';
-import { catchError, map, takeUntil } from 'rxjs/operators';
+import { catchError, map, switchMap, take, takeUntil } from 'rxjs/operators';
 import { GradebookService, Gradebook, GradebookStudent } from '../../../core/services/gradebook.service';
+import { TeacherService } from '../../../core/services/teacher.service';
+import { TeachingPositionService } from '../../../core/services/teaching-position.service';
 import { selectIsAdmin } from '../../../store/account/account.selectors';
 import {
   AdminApproveDialogComponent,
@@ -17,6 +19,23 @@ const RESULT_LABELS: Record<string, string> = {
   Failed: 'Libre'
 };
 
+/** Una materia del desplegable: con planilla de notas o solo la comisión asignada. */
+export interface SubjectOption {
+  key: string;
+  sectionId: number;
+  gradebookId: number | null;
+  courseName: string;
+  label: string;
+}
+
+interface SectionInfo {
+  sectionId: number;
+  courseName: string;
+  divisionName: string | null;
+  divisionCode: string | null;
+  academicYear: number;
+}
+
 @Component({
   selector: 'app-students-condition',
   templateUrl: './students-condition.component.html',
@@ -27,9 +46,11 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   // Materias visibles según el rol: el backend ya limita GET /gradebooks a las del profesor
-  // cuando no es admin, así que la lista de materias es correcta por permisos sin lógica extra.
+  // cuando no es admin. Se suman las comisiones asignadas que todavía no tienen planilla,
+  // para que el docente vea a sus alumnos apenas se le asigna la materia.
   gradebooks: Gradebook[] = [];
-  selectedGradebookId: number | null = null;
+  subjectOptions: SubjectOption[] = [];
+  selectedKey: string | null = null;
 
   students: GradebookStudent[] = [];
   searchTerm = '';
@@ -46,6 +67,8 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly gradebookService: GradebookService,
+    private readonly teacherService: TeacherService,
+    private readonly teachingPositionService: TeachingPositionService,
     private readonly dialog: MatDialog,
     private readonly store: Store,
     private readonly cdr: ChangeDetectorRef
@@ -58,9 +81,23 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
     });
 
     this.isLoading = true;
-    this.gradebookService.getGradebooks({}).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (gradebooks) => {
+    this.store.select(selectIsAdmin).pipe(
+      take(1),
+      switchMap(isAdmin => forkJoin({
+        gradebooks: this.gradebookService.getGradebooks({}),
+        // Si fallan las comisiones igual se muestran las planillas.
+        sections: this.loadSections(isAdmin).pipe(catchError(() => of([] as SectionInfo[])))
+      })),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ({ gradebooks, sections }) => {
         this.gradebooks = gradebooks;
+        this.subjectOptions = this.buildOptions(gradebooks, sections);
+        if (this.subjectOptions.length === 1) {
+          this.selectedKey = this.subjectOptions[0].key;
+          this.onGradebookChange();
+          return;
+        }
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -70,6 +107,53 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private loadSections(isAdmin: boolean) {
+    if (isAdmin) {
+      return this.teachingPositionService.getTeachingPositions({ includeInactive: false }).pipe(
+        map(positions => positions.map(p => ({
+          sectionId: p.id, courseName: p.courseName, divisionName: p.divisionName,
+          divisionCode: p.divisionCode, academicYear: p.academicYear
+        }) as SectionInfo)));
+    }
+    return this.teacherService.getMyAssignments(false).pipe(
+      map(assignments => assignments.filter(a => a.isCurrent).map(a => ({
+        sectionId: a.courseSectionId, courseName: a.courseName, divisionName: a.divisionName,
+        divisionCode: a.divisionCode, academicYear: a.academicYear
+      }) as SectionInfo)));
+  }
+
+  private buildOptions(gradebooks: Gradebook[], sections: SectionInfo[]): SubjectOption[] {
+    const options: SubjectOption[] = gradebooks.map(g => ({
+      key: `g${g.id}`,
+      sectionId: g.courseSectionId,
+      gradebookId: g.id,
+      courseName: g.courseName,
+      label: this.subjectLabel(g.courseName, g.divisionName, g.divisionCode, g.academicYear)
+    }));
+    const withGradebook = new Set(gradebooks.map(g => g.courseSectionId));
+    const seen = new Set<number>();
+    for (const section of sections) {
+      if (withGradebook.has(section.sectionId) || seen.has(section.sectionId)) continue;
+      seen.add(section.sectionId);
+      options.push({
+        key: `s${section.sectionId}`,
+        sectionId: section.sectionId,
+        gradebookId: null,
+        courseName: section.courseName,
+        label: this.subjectLabel(section.courseName, section.divisionName, section.divisionCode, section.academicYear)
+      });
+    }
+    return options.sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  get selectedOption(): SubjectOption | undefined {
+    return this.subjectOptions.find(o => o.key === this.selectedKey);
+  }
+
+  get selectedGradebookId(): number | null {
+    return this.selectedOption?.gradebookId ?? null;
   }
 
   ngOnDestroy(): void {
@@ -85,10 +169,10 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
       (s.legajoNumber ?? '').toLowerCase().includes(term));
   }
 
-  gradebookLabel(g: Gradebook): string {
-    const division = g.divisionName ? ` — ${g.divisionName}` : '';
-    const code = g.divisionCode ? ` [${g.divisionCode}]` : '';
-    return `${g.courseName}${division}${code} (${g.academicYear})`;
+  private subjectLabel(courseName: string, divisionName: string | null, divisionCode: string | null, year: number): string {
+    const division = divisionName ? ` — ${divisionName}` : '';
+    const code = divisionCode ? ` [${divisionCode}]` : '';
+    return `${courseName}${division}${code} (${year})`;
   }
 
   resultLabel(status: string | null): string {
@@ -106,12 +190,32 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
   }
 
   onGradebookChange(): void {
-    if (this.selectedGradebookId == null) return;
+    const option = this.selectedOption;
+    if (!option) return;
     this.isLoading = true;
     this.errorMsg = '';
     this.students = [];
     this.selectedIds.clear();
-    this.gradebookService.getGradebook(this.selectedGradebookId).pipe(takeUntil(this.destroy$)).subscribe({
+    if (option.gradebookId == null) {
+      // Sin planilla todavía: listado de alumnos sin notas ni condición.
+      this.gradebookService.getSectionStudents(option.sectionId).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (rows) => {
+          this.students = rows.map(r => ({
+            ...r, grades: [], average: null, resultStatus: null, latestExam: null
+          }));
+          this.loadedOnce = true;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.errorMsg = err.message || 'No se pudo cargar el listado de alumnos.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+      return;
+    }
+    this.gradebookService.getGradebook(option.gradebookId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (detail) => {
         this.students = detail.students;
         this.loadedOnce = true;
@@ -131,13 +235,13 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
   // exige RequireAdmin(), así que un Profesor nunca puede aprobar aunque fuerce la llamada.
   approve(row: GradebookStudent): void {
     if (!this.isAdmin || !this.isPromoted(row) || this.isProcessing) return;
-    const gb = this.gradebooks.find(g => g.id === this.selectedGradebookId);
+    const courseName = this.selectedOption?.courseName;
     const dialogRef = this.dialog.open(AdminApproveDialogComponent, {
       width: '480px',
       disableClose: true,
       data: {
         studentName: row.studentName,
-        courseName: gb?.courseName ?? 'la materia',
+        courseName: courseName ?? 'la materia',
         initialGrade: row.average
       }
     });
@@ -213,11 +317,11 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
     const targets = this.selectablePromoted.filter(row => this.isSelected(row));
     if (targets.length === 0) return;
 
-    const gb = this.gradebooks.find(g => g.id === this.selectedGradebookId);
+    const courseName = this.selectedOption?.courseName;
     const dialogRef = this.dialog.open(ApproveReasonDialogComponent, {
       width: '480px',
       disableClose: true,
-      data: { count: targets.length, courseName: gb?.courseName ?? 'la materia' }
+      data: { count: targets.length, courseName: courseName ?? 'la materia' }
     });
 
     dialogRef.afterClosed().subscribe((reason: string | null) => {

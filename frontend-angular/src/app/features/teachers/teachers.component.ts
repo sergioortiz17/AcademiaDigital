@@ -21,6 +21,7 @@ interface TeacherTableAssignment {
   semester: number;
   positionType: string;
   isCurrent: boolean;
+  careerId: number | null;
 }
 
 @Component({
@@ -76,6 +77,7 @@ export class TeachersComponent implements OnInit {
       next: careers => {
         this.careers = careers ?? [];
         this.isCareersLoading = false;
+        this.selectTeacherCareer();
         this.cdr.detectChanges();
       },
       error: err => {
@@ -116,8 +118,10 @@ export class TeachersComponent implements OnInit {
             academicYear: assignment.academicYear,
             semester: assignment.semester,
             positionType: assignment.positionType,
-            isCurrent: assignment.isCurrent
+            isCurrent: assignment.isCurrent,
+            careerId: assignment.careerId ?? null
           }));
+          this.selectTeacherCareer();
           this.cdr.detectChanges();
         },
         error: err => {
@@ -168,8 +172,26 @@ export class TeachersComponent implements OnInit {
       academicYear: position.academicYear,
       semester: position.semester,
       positionType: position.positionType,
-      isCurrent: position.isActive
+      isCurrent: position.isActive,
+      careerId: null
     };
+  }
+
+  /**
+   * El docente entra directo a su carrera: se elige la carrera con más comisiones vigentes
+   * suyas, cuando ya llegaron carreras y asignaciones y todavía no eligió ninguna.
+   */
+  private selectTeacherCareer(): void {
+    if (this.userRole !== UserRole.Profesor || this.selectedCareerId != null || this.careers.length === 0) return;
+    const counts = new Map<number, number>();
+    for (const assignment of this.assignments) {
+      if (!assignment.isCurrent || assignment.careerId == null) continue;
+      counts.set(assignment.careerId, (counts.get(assignment.careerId) ?? 0) + 1);
+    }
+    const best = [...counts.entries()]
+      .filter(([careerId]) => this.careers.some(career => career.id === careerId))
+      .sort((a, b) => b[1] - a[1])[0];
+    if (best) this.onCareerChange(best[0]);
   }
 
   changeTab(tab: TeachersTab): void {
