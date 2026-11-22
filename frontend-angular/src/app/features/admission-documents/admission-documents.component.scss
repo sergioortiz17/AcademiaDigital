@@ -8,12 +8,16 @@
 
 .intro { color: #536575; margin: 0 0 12px; }
 
-.pre-enrollment-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.pre-enrollment {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
   margin-bottom: 16px;
-  font-weight: 600;
+  background: #eef5fc;
+
+  > mat-icon { color: #0d4f86; flex-shrink: 0; }
+  p { margin: 0 0 10px; color: #3d5266; }
 }
 
 .msg {

@@ -15,12 +15,27 @@ namespace AcademiaDigital.Infrastructure.Services;
 /// es la misma que con LocalFileStorage; S3 solo le antepone Storage:S3:Prefix
 /// ("backend/"), para que el monolito y Finance compartan el bucket sin pisarse.
 /// </summary>
-public sealed class S3FileStorage(IAmazonS3 s3, IConfiguration configuration) : IFileStorage
+public sealed class S3FileStorage : IFileStorage
 {
-    private readonly string _bucket = configuration["Storage:S3:Bucket"]
-        ?? throw new InvalidOperationException("Storage:S3:Bucket es obligatorio con Storage:Provider=S3.");
+    private readonly IAmazonS3 s3;
+    private readonly string _bucket;
+    private readonly string _prefix;
 
-    private readonly string _prefix = NormalizePrefix(configuration["Storage:S3:Prefix"]);
+    /// <summary>Bucket general de la app (Storage:S3:Bucket y Storage:S3:Prefix).</summary>
+    public S3FileStorage(IAmazonS3 s3, IConfiguration configuration)
+        : this(s3, configuration["Storage:S3:Bucket"]
+            ?? throw new InvalidOperationException("Storage:S3:Bucket es obligatorio con Storage:Provider=S3."),
+            configuration["Storage:S3:Prefix"])
+    {
+    }
+
+    /// <summary>Un bucket puntual (por ejemplo, el de documentos de los alumnos).</summary>
+    public S3FileStorage(IAmazonS3 s3, string bucket, string? prefix)
+    {
+        this.s3 = s3;
+        _bucket = string.IsNullOrWhiteSpace(bucket) ? throw new ArgumentException("El bucket es obligatorio.") : bucket.Trim();
+        _prefix = NormalizePrefix(prefix);
+    }
 
     public async Task<string> SaveAsync(
         string storageKey,

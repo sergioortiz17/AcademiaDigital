@@ -1,24 +1,13 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Career, CareerService } from '../../../core/services/career.service';
 import {
-  ApplicantImportResult,
-  ApplicantImportRow,
   ReportsService,
   StudentReportFilter,
   StudentReportKind,
   StudentReportRow,
   StudentStatusFilter
 } from '../../../core/services/reports.service';
-import { downloadExcel, ExcelColumn, normalizeHeader, readExcelRows } from '../../../core/utils/excel';
-
-/** Encabezados aceptados en el Excel de prematriculados (sin tildes ni mayúsculas). */
-const IMPORT_HEADERS: Record<keyof Omit<ApplicantImportRow, 'rowNumber'>, string[]> = {
-  dni: ['dni', 'documento', 'nrodocumento', 'numerodedocumento'],
-  lastName: ['apellido', 'apellidos'],
-  firstName: ['nombre', 'nombres'],
-  email: ['correo', 'email', 'mail', 'correoelectronico'],
-  careerCode: ['codigodecarrera', 'codigocarrera', 'carrera', 'codigo']
-};
+import { downloadExcel, ExcelColumn } from '../../../core/utils/excel';
 
 const COLUMNS: ExcelColumn<StudentReportRow>[] = [
   { header: 'Legajo', value: r => r.legajoNumber, width: 12 },
@@ -80,13 +69,6 @@ export class ReportsComponent implements OnInit {
   ];
   readonly previewColumns = COLUMNS.slice(0, 6).concat(COLUMNS.filter(c => ['Carrera', 'Estado'].includes(c.header)));
 
-  // --- Importar prematriculados ---
-  importRows: ApplicantImportRow[] = [];
-  importFileName = '';
-  importError = '';
-  importResult: ApplicantImportResult | null = null;
-  isImporting = false;
-
   constructor(
     private readonly reports: ReportsService,
     private readonly careerService: CareerService,
@@ -135,64 +117,5 @@ export class ReportsComponent implements OnInit {
   cell(row: StudentReportRow, column: ExcelColumn<StudentReportRow>): string {
     const value = column.value(row);
     return value == null || value === '' ? '—' : String(value);
-  }
-
-  async downloadImportTemplate(): Promise<void> {
-    const example = [{ dni: '40123456', lastName: 'Pérez', firstName: 'Ana', email: 'ana.perez@gmail.com', careerCode: this.careers[0]?.code ?? 'DS2023' }];
-    await downloadExcel('plantilla_prematriculados.xlsx', 'Prematriculados',
-      'Prematriculados — una fila por persona (el código de carrera está en Gestión de Carreras)', [
-        { header: 'DNI', value: r => r.dni, width: 12 },
-        { header: 'Apellido', value: r => r.lastName, width: 20 },
-        { header: 'Nombre', value: r => r.firstName, width: 20 },
-        { header: 'Correo', value: r => r.email, width: 28 },
-        { header: 'Código de carrera', value: r => r.careerCode, width: 18 }
-      ], example);
-  }
-
-  async onImportFile(input: HTMLInputElement): Promise<void> {
-    const file = input.files?.[0];
-    input.value = '';
-    this.importRows = [];
-    this.importResult = null;
-    this.importError = '';
-    if (!file) return;
-    this.importFileName = file.name;
-    try {
-      const { headers, rows } = await readExcelRows(file, Object.values(IMPORT_HEADERS).flat());
-      const index = (field: keyof typeof IMPORT_HEADERS) =>
-        headers.findIndex(h => IMPORT_HEADERS[field].includes(normalizeHeader(h)));
-      const columns = { dni: index('dni'), lastName: index('lastName'), firstName: index('firstName'), email: index('email'), careerCode: index('careerCode') };
-      const missing = Object.entries(columns).filter(([, i]) => i < 0).map(([k]) => k);
-      if (missing.length > 0) {
-        this.importError = 'Faltan columnas en el Excel: DNI, Apellido, Nombre, Correo y Código de carrera. Use la plantilla.';
-        this.cdr.markForCheck();
-        return;
-      }
-      this.importRows = rows.map(({ rowNumber, cells }) => ({
-        rowNumber,
-        dni: cells[columns.dni] ?? '', lastName: cells[columns.lastName] ?? '', firstName: cells[columns.firstName] ?? '',
-        email: cells[columns.email] ?? '', careerCode: cells[columns.careerCode] ?? ''
-      }));
-    } catch {
-      this.importError = 'No se pudo leer el archivo. Debe ser un Excel (.xlsx).';
-    }
-    this.cdr.markForCheck();
-  }
-
-  runImport(): void {
-    if (this.importRows.length === 0) return;
-    this.isImporting = true;
-    this.reports.importApplicants(this.importRows).subscribe({
-      next: result => {
-        this.importResult = result;
-        this.isImporting = false;
-        this.cdr.markForCheck();
-      },
-      error: err => {
-        this.importError = err?.message || 'No se pudo importar el archivo.';
-        this.isImporting = false;
-        this.cdr.markForCheck();
-      }
-    });
   }
 }

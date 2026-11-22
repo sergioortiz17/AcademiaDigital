@@ -82,6 +82,16 @@ dependency "storage" {
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
 
+dependency "student_documents" {
+  config_path = "../student-documents"
+
+  mock_outputs = {
+    bucket_name = "mock-student-docs"
+    bucket_arn  = "arn:aws:s3:::mock-student-docs"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
 dependency "secrets" {
   config_path = "../secrets"
 
@@ -96,20 +106,21 @@ dependency "secrets" {
 }
 
 inputs = {
-  name                       = include.root.locals.name
-  vpc_id                     = dependency.network.outputs.vpc_id
-  instance_subnet_ids        = dependency.network.outputs.public_subnet_ids
-  load_balancer_subnet_ids   = dependency.network.outputs.public_subnet_ids
-  instance_security_group_id = dependency.app_security.outputs.instance_security_group_id
-  instance_type              = local.scope.instance_type
-  instance_architecture      = local.scope.instance_architecture
-  instance_count             = local.scope.instance_count
-  certificate_arn            = dependency.certificate.outputs.certificate_arn
-  dns_zone_id                = dependency.dns_zone.outputs.zone_id
-  domain_name                = dependency.dns_zone.outputs.domain_name
-  files_bucket_arn           = dependency.storage.outputs.bucket_arn
-  ses_identity_arn           = dependency.email.outputs.identity_arn
-  secret_parameter_arns      = dependency.secrets.outputs.parameter_arns
+  name                         = include.root.locals.name
+  vpc_id                       = dependency.network.outputs.vpc_id
+  instance_subnet_ids          = dependency.network.outputs.public_subnet_ids
+  load_balancer_subnet_ids     = dependency.network.outputs.public_subnet_ids
+  instance_security_group_id   = dependency.app_security.outputs.instance_security_group_id
+  instance_type                = local.scope.instance_type
+  instance_architecture        = local.scope.instance_architecture
+  instance_count               = local.scope.instance_count
+  certificate_arn              = dependency.certificate.outputs.certificate_arn
+  dns_zone_id                  = dependency.dns_zone.outputs.zone_id
+  domain_name                  = dependency.dns_zone.outputs.domain_name
+  files_bucket_arn             = dependency.storage.outputs.bucket_arn
+  student_documents_bucket_arn = dependency.student_documents.outputs.bucket_arn
+  ses_identity_arn             = dependency.email.outputs.identity_arn
+  secret_parameter_arns        = dependency.secrets.outputs.parameter_arns
 
   # UTC: sábado 10:30 en Córdoba, dentro del horario de encendido.
   managed_updates_start_time = "Sat:13:30"
@@ -135,6 +146,9 @@ inputs = {
     Storage__Provider   = "S3"
     Storage__S3__Bucket = dependency.storage.outputs.bucket_name
     Storage__S3__Region = include.root.locals.aws_region
+
+    # Requisitos de ingreso: bucket propio, una carpeta por alumno (DNI_Apellido_Nombre/REQUISITO/).
+    Storage__StudentDocuments__Bucket = dependency.student_documents.outputs.bucket_name
 
     # Correo saliente (recuperación de contraseña) por Amazon SES con el rol de la instancia.
     # Remitente: MAIL_FROM. Con la cuenta SES en sandbox solo llega a direcciones verificadas.

@@ -10,6 +10,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { catchError } from 'rxjs/internal/operators/catchError';
 import { Observable } from 'rxjs';
 import { CurrentTenant, DEFAULT_TENANT_SLUG, TenantService } from '../../../core/services/tenant.service';
+import { environment } from '../../../../environments/environment';
 
 /** API mínima de Google Identity Services que usa la pantalla. */
 interface GoogleIdentityApi {
@@ -30,6 +31,8 @@ const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 })
 export class LoginComponent implements AfterViewInit, OnDestroy {
   @ViewChild('googleButton') googleButton?: ElementRef<HTMLDivElement>;
+  /** Página del Ministerio para prematricularse (vacío = solo se muestra la explicación). */
+  readonly preEnrollmentUrl = environment.preEnrollmentUrl;
   /** Hay Client ID configurado: se muestra "Continuar con Google". */
   googleEnabled = false;
   readonly tenant$: Observable<CurrentTenant | null>;

@@ -63,17 +63,6 @@ public class RegisterUseCase(IUserRepository userRepository, IStudentRepository 
         }, ct);
     }
 
-    /// <summary>
-    /// Aspirante importado desde un listado (prematriculados del ministerio): queda pendiente de
-    /// alta como en el registro público. La contraseña es aleatoria; la persona entra con
-    /// "¿Olvidaste tu contraseña?" o con Google.
-    /// </summary>
-    public Task<RegisterResult> ImportApplicantAsync(
-        string email, string name, string lastName, string dni, int careerId, CancellationToken ct = default)
-        => RegisterStudentAsync(email, name, lastName,
-            Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24)) + "aA1!",
-            dni, careerId, pending: true, ct);
-
     private async Task<RegisterResult> RegisterStudentAsync(
         string email, string name, string lastName, string password, string dni, int careerId,
         bool pending, CancellationToken ct)

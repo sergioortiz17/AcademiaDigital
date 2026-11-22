@@ -74,6 +74,19 @@
           Registrarse
         </button>
         </form>
+
+        <!-- Ingresantes: la prematrícula se hace en el sistema del Ministerio, no acá -->
+        <div class="pre-enrollment">
+          <p class="pre-enrollment__title">¿Es ingresante?</p>
+          <p class="pre-enrollment__text">
+            Antes de empezar, tiene que prematricularse en el sistema del Ministerio de Educación de Córdoba
+            (Sistema de Gestión de Estudiantes, con su usuario CiDi). Con la prematrícula hecha, el instituto
+            completa su matrícula.
+          </p>
+          <a *ngIf="preEnrollmentUrl" mat-stroked-button class="pre-enrollment__button" [href]="preEnrollmentUrl" target="_blank" rel="noopener">
+            <mat-icon>open_in_new</mat-icon> Ir a la prematriculación
+          </a>
+        </div>
       </mat-card-content>
     </mat-card>
   </section>

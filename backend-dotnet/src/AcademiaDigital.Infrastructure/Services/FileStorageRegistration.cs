@@ -23,13 +23,26 @@ public static class FileStorageRegistration
             services.AddSingleton<LocalFileStorage>();
             services.AddScoped<IFileStorage>(sp => new TenantFileStorage(
                 sp.GetRequiredService<LocalFileStorage>(), sp.GetRequiredService<ITenantContext>()));
+            // Sin S3: los documentos de los alumnos van al mismo disco local.
+            services.AddScoped<IStudentDocumentStorage>(sp => new StudentDocumentStorage(sp.GetRequiredService<IFileStorage>()));
             return services;
         }
 
         services.AddSingleton<IAmazonS3>(_ => CreateClient(configuration));
-        services.AddSingleton<S3FileStorage>();
+        services.AddSingleton(sp => new S3FileStorage(sp.GetRequiredService<IAmazonS3>(), configuration));
         services.AddScoped<IFileStorage>(sp => new TenantFileStorage(
             sp.GetRequiredService<S3FileStorage>(), sp.GetRequiredService<ITenantContext>()));
+
+        // Requisitos de ingreso: bucket propio (Storage:StudentDocuments:Bucket) para que
+        // Secretaría los descargue sin mezclarlos con certificados y recibos. Si no está
+        // configurado, se guardan en el bucket general.
+        var studentBucket = configuration["Storage:StudentDocuments:Bucket"];
+        services.AddScoped<IStudentDocumentStorage>(sp => new StudentDocumentStorage(
+            string.IsNullOrWhiteSpace(studentBucket)
+                ? sp.GetRequiredService<IFileStorage>()
+                : new TenantFileStorage(
+                    new S3FileStorage(sp.GetRequiredService<IAmazonS3>(), studentBucket, configuration["Storage:StudentDocuments:Prefix"]),
+                    sp.GetRequiredService<ITenantContext>())));
         return services;
     }
 

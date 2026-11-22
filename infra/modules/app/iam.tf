@@ -69,6 +69,13 @@ resource "aws_iam_role_policy" "instance_app" {
         Resource = "${var.files_bucket_arn}/*"
       },
       {
+        # Documentos de los alumnos: la app sube y lee; no borra (un reemplazo queda versionado).
+        Sid      = "StudentDocumentsObjects"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject"]
+        Resource = "${var.student_documents_bucket_arn}/*"
+      },
+      {
         Sid      = "FilesBucketList"
         Effect   = "Allow"
         Action   = ["s3:ListBucket"]

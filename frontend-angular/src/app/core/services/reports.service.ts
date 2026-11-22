@@ -40,20 +40,6 @@ export interface StudentReportRow {
   registryFolio: string | null;
 }
 
-export interface ApplicantImportRow {
-  rowNumber: number;
-  dni: string;
-  lastName: string;
-  firstName: string;
-  email: string;
-  careerCode: string;
-}
-
-export interface ApplicantImportResult {
-  created: number;
-  failed: { rowNumber: number; reason: string }[];
-}
-
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
   private readonly base = environment.apiServer;
@@ -67,9 +53,5 @@ export class ReportsService {
     if (filter.from) params = params.set('from', filter.from);
     if (filter.to) params = params.set('to', filter.to);
     return this.http.get<StudentReportRow[]>(`${this.base}v1/admin/reports/students`, { params });
-  }
-
-  importApplicants(rows: ApplicantImportRow[]): Observable<ApplicantImportResult> {
-    return this.http.post<ApplicantImportResult>(`${this.base}v1/admin/applicants/import`, { rows });
   }
 }

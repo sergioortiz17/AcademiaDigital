@@ -24,7 +24,11 @@ public static class UploadedDocumentPolicy
     /// <summary>Nombre seguro para la clave de almacenamiento (sin rutas ni caracteres raros).</summary>
     public static string SafeFileName(string fileName)
     {
-        var chars = fileName.Trim().Select(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_' ? c : '_').ToArray();
+        // Sin tildes ("Pérez" → "Perez") y sin caracteres raros: queda legible en el bucket.
+        var withoutAccents = new string(fileName.Trim().Normalize(System.Text.NormalizationForm.FormD)
+            .Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            .ToArray());
+        var chars = withoutAccents.Select(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_' ? c : '_').ToArray();
         var safe = new string(chars).Trim('.');
         return string.IsNullOrEmpty(safe) ? "documento" : safe[..Math.Min(safe.Length, 100)];
     }

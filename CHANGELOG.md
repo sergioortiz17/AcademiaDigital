@@ -12,7 +12,9 @@ Cambios grandes de la reunión con Secretaría y login con Google.
 
 - **Iniciar sesión con Google**: solo para cuentas que ya existen con ese correo (aprobadas y activas); no crea cuentas. Se activa configurando `Authentication:Google:ClientId`.
 - **Reportes y Excel**: listados de alumnos, egresados, libres, bajas y aspirantes con todas sus columnas, filtrados por carrera y fechas.
-- **Importar desde Excel**: prematriculados (quedan como aspirantes pendientes) y notas de una planilla (se cargan para revisar antes de guardar).
+- **Importar notas desde Excel** en la planilla de calificaciones (se cargan para revisar antes de guardar).
+- **Prematriculación**: botón al sitio del Ministerio en el inicio de sesión y en Requisitos de ingreso, con la explicación de que sin prematrícula el instituto no puede matricular a un ingresante (la dirección se configura en `environment.preEnrollmentUrl`).
+- **Bucket propio para los documentos de los alumnos** (`itsc/student-documents`): privado, cifrado y versionado, con una carpeta por alumno (`DNI_Apellido_Nombre/REQUISITO/`) y una política de solo lectura para descargarlos.
 - **Acciones masivas**: egresar varios alumnos con fecha y acto administrativo; inscribir a toda una división en las materias de su año y cuatrimestre.
 - **Analíticos**: datos personales y académicos con todas las materias del plan, libro matriz y folio del alumno y libro/folio del acta de cada mesa; vista para imprimir o guardar como PDF (formato provisorio).
 - **Mesas de examen automáticas**: propuesta de fechas en días hábiles sin feriados, sin dos materias del mismo año el mismo día y con correlativas antes; tribunal sugerido; se ajusta y se confirma.

@@ -16,3 +16,9 @@ public interface IFileStorage
         string fileName,
         CancellationToken ct = default);
 }
+
+/// <summary>
+/// Almacenamiento de los documentos que suben los alumnos (requisitos de ingreso). En AWS es un
+/// bucket propio; en desarrollo, el mismo almacenamiento que el resto de los archivos.
+/// </summary>
+public interface IStudentDocumentStorage : IFileStorage;

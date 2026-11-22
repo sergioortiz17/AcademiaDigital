@@ -13,20 +13,9 @@ public class AdminController(
     UpdateUserActiveStatusUseCase updateUserActiveStatusUseCase,
     DeleteUserUseCase deleteUserUseCase,
     GetApplicantsUseCase getApplicantsUseCase,
-    ApproveApplicantsUseCase approveApplicantsUseCase,
-    ImportApplicantsUseCase importApplicantsUseCase) : ApiControllerBase
+    ApproveApplicantsUseCase approveApplicantsUseCase) : ApiControllerBase
 {
     protected override Permission? Area => Permission.ManageUsers;
-
-    // POST /api/v1/admin/applicants/import — filas leídas del Excel de prematriculados
-    [HttpPost("applicants/import")]
-    public async Task<IActionResult> ImportApplicants([FromBody] ImportApplicantsRequest request, CancellationToken ct)
-    {
-        var guard = RequireStudentsArea(); if (guard != null) return guard;
-        var result = await importApplicantsUseCase.ExecuteAsync(request.Rows.Select(r => new ApplicantImportRow(
-            r.RowNumber, r.Dni, r.LastName, r.FirstName, r.Email, r.CareerCode)).ToArray(), ct);
-        return Ok(new { success = true, result.Created, result.Failed });
-    }
 
     private IActionResult RequireStudentsArea()
     {
@@ -114,5 +103,3 @@ public record ApproveApplicantsRequest([Required] long[] UserIds);
 public record UpdateRoleRequest([Required] UserRole Role);
 public record UpdateActiveStatusRequest([Required] bool IsActive);
 
-public record ImportApplicantsRequest([System.ComponentModel.DataAnnotations.Required] IReadOnlyList<ImportApplicantRowRequest> Rows);
-public record ImportApplicantRowRequest(int RowNumber, string? Dni, string? LastName, string? FirstName, string? Email, string? CareerCode);

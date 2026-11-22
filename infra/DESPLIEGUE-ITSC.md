@@ -731,6 +731,72 @@ curl -sI https://admin.dryvn.org | head -1              # 200: panel (pide la cl
 2. **Crear institución** precarga los datos; completar el DNI y la contraseña del administrador.
 3. La institución queda en `https://<slug>.dryvn.org`, sin tocar DNS ni certificados, y el pedido queda aprobado.
 
+## Bucket de documentos de alumnos (v1.12) ⏳
+
+Los documentos de "Requisitos de ingreso" (analítico, DNI, partida, etc.) van a un bucket propio, separado del de certificados y recibos. Estructura dentro del bucket:
+
+```text
+<DNI>_<Apellido>_<Nombre>/<REQUISITO>/<AAAAMMDD-HHMMSS>_<archivo>
+40123456_Perez_Ana/ANALITICO/20261122-153000_analitico.pdf
+```
+
+El orden con el despliegue de la versión no importa: sin la variable `Storage__StudentDocuments__Bucket`, la app guarda esos documentos en el bucket general.
+
+### Paso A. Crear el bucket (`itsc/student-documents`)
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/student-documents && terragrunt plan
+```
+
+Esperado:
+
+- `Plan: 8 to add, 0 to change, 0 to destroy.`
+- `aws_s3_bucket.documents` con nombre `academiadigital-itsc-prod-student-docs-740227232235`.
+- Ownership controls, bloqueo de acceso público, versionado, cifrado, política de solo TLS, ciclo de vida (versiones anteriores a los 365 días) y la política IAM `academiadigital-itsc-prod-student-docs-read`.
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/student-documents && terragrunt apply
+```
+
+Esperado: `Apply complete! Resources: 8 added, 0 changed, 0 destroyed.`
+
+### Paso B. Darle acceso a la app (`itsc/app`)
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/app && terragrunt plan
+```
+
+Esperado: solo cambios en el lugar (`0 to add`, `0 to destroy`):
+
+- `aws_iam_role_policy.instance_app`: nueva sentencia `StudentDocumentsObjects` (`s3:GetObject` y `s3:PutObject` sobre el bucket nuevo; sin borrar).
+- El entorno de Beanstalk: nueva variable `Storage__StudentDocuments__Bucket`. Aplicarla reinicia los contenedores.
+
+```bash
+cd /home/sergio/Videos/ITSC/3erAnio/TESIS/AcademiaDigital/infra/live/itsc/app && terragrunt apply
+```
+
+### Paso C. Descargar los documentos
+
+Con credenciales de la cuenta 740227232235 (verificar antes con `infra/scripts/assert-account.sh 740227232235`):
+
+```bash
+# Todo el bucket a una carpeta local (solo baja lo nuevo o cambiado)
+aws s3 sync s3://academiadigital-itsc-prod-student-docs-740227232235/ ./documentos-alumnos --region us-east-2
+
+# Solo los analíticos
+aws s3 sync s3://academiadigital-itsc-prod-student-docs-740227232235/ ./analiticos --region us-east-2 \
+  --exclude "*" --include "*/ANALITICO/*"
+```
+
+Para que otra persona (por ejemplo, Secretaría) los descargue con su propio usuario de IAM, asociarle la política de solo lectura:
+
+```bash
+aws iam attach-user-policy --user-name <usuario> \
+  --policy-arn arn:aws:iam::740227232235:policy/academiadigital-itsc-prod-student-docs-read
+```
+
+Los archivos también se descargan desde la app: Administración → Requisitos de ingreso.
+
 ## Escalar: pasar de 1 a 2 instancias (o activar Multi-AZ)
 
 Arranca con 1 instancia de Beanstalk y la base sin Multi-AZ, para minimizar el costo. Con 1 instancia, una falla de la instancia deja la plataforma caída unos minutos hasta que Beanstalk la reemplaza (los datos están en RDS y S3, no se pierden); los despliegues no cortan el servicio.

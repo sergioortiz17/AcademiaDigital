@@ -24,5 +24,5 @@ public sealed class UploadedDocumentPolicyTests
 
     [Fact]
     public void Builds_a_safe_storage_name()
-        => Assert.Equal("Anal_tico_secundario.pdf", UploadedDocumentPolicy.SafeFileName("Analítico secundario.pdf"));
+        => Assert.Equal("Analitico_secundario.pdf", UploadedDocumentPolicy.SafeFileName("Analítico secundario.pdf"));
 }

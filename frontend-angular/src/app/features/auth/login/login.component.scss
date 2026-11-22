@@ -315,3 +315,15 @@ form {
 .google-button {
   min-height: 44px;
 }
+
+.pre-enrollment {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eef5fc;
+  text-align: left;
+
+  &__title { margin: 0 0 4px; font-weight: 700; color: #0d4f86; }
+  &__text { margin: 0 0 10px; font-size: 0.85rem; color: #3d5266; line-height: 1.4; }
+  &__button { width: 100%; }
+}

@@ -18,7 +18,8 @@ public sealed record AdmissionDocumentsDto(
 public sealed class StudentAdmissionDocumentsUseCase(
     IStudentRepository students,
     IStudentManagementService service,
-    IFileStorage storage)
+    IStudentDocumentStorage storage,
+    TimeProvider timeProvider)
 {
     public async Task<AdmissionDocumentsDto> GetMineAsync(long userId, CancellationToken ct = default)
     {
@@ -35,7 +36,12 @@ public sealed class StudentAdmissionDocumentsUseCase(
         var contentType = UploadedDocumentPolicy.Validate(fileName, content);
         var requirement = (await service.GetRequirementsAsync(student.CareerId, ct)).FirstOrDefault(r => r.Id == requirementId && r.IsActive)
             ?? throw new KeyNotFoundException("El requisito no existe o no corresponde a su carrera.");
-        var key = $"student-documents/{student.Id}/{Guid.NewGuid():N}/{UploadedDocumentPolicy.SafeFileName(fileName)}";
+        // Clave legible para descargar desde el bucket: una carpeta por alumno y una por requisito.
+        //   40123456_Perez_Ana/ANALITICO/20261122-153000_analitico.pdf
+        var folder = UploadedDocumentPolicy.SafeFileName(
+            $"{student.User.Dni ?? student.LegajoNumber}_{student.User.LastName}_{student.User.Username}");
+        var stamp = timeProvider.GetUtcNow().UtcDateTime.ToString("yyyyMMdd-HHmmss");
+        var key = $"{folder}/{UploadedDocumentPolicy.SafeFileName(requirement.Code)}/{stamp}_{UploadedDocumentPolicy.SafeFileName(fileName)}";
         var storedKey = await storage.SaveAsync(key, content, contentType, fileName, ct);
         return await service.AddDocumentAsync(student.Id, new CreateStudentDocumentRequest(
             requirement.Id, storedKey, fileName.Trim(), contentType, content.LongLength), ct);

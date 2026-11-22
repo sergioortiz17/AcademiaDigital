@@ -60,33 +60,4 @@
     </div>
   </ng-container>
 
-  <h2 class="section-title">Importar prematriculados</h2>
-  <mat-card class="filters-card">
-    <p class="intro">
-      Cargue el Excel de prematriculados (una fila por persona con DNI, Apellido, Nombre, Correo y Código de carrera).
-      Cada fila queda como aspirante pendiente de alta en <strong>Aspirantes</strong>. La persona entra después con
-      "¿Olvidaste tu contraseña?" o con Google.
-    </p>
-    <div class="actions">
-      <button mat-stroked-button type="button" (click)="downloadImportTemplate()">
-        <mat-icon>description</mat-icon> Descargar plantilla
-      </button>
-      <input #importInput type="file" hidden accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        (change)="onImportFile(importInput)">
-      <button mat-stroked-button type="button" (click)="importInput.click()">
-        <mat-icon>upload_file</mat-icon> Elegir Excel
-      </button>
-      <button mat-raised-button color="primary" type="button" [disabled]="importRows.length === 0 || isImporting" (click)="runImport()">
-        <mat-icon>group_add</mat-icon> Importar {{ importRows.length || '' }} fila(s)
-      </button>
-    </div>
-    <p class="file" *ngIf="importFileName">Archivo: {{ importFileName }} · {{ importRows.length }} fila(s) leídas.</p>
-    <div *ngIf="importError" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ importError }}</div>
-    <ng-container *ngIf="importResult as r">
-      <p class="count">{{ r.created }} aspirante(s) creado(s). {{ r.failed.length }} fila(s) con problemas.</p>
-      <ul class="failures" *ngIf="r.failed.length > 0">
-        <li *ngFor="let f of r.failed">Fila {{ f.rowNumber }}: {{ f.reason }}</li>
-      </ul>
-    </ng-container>
-  </mat-card>
 </div>
