@@ -298,10 +298,13 @@ export class GradesComponent implements OnInit {
   private preselectTeacherCourse(): void {
     if (!this.autoSelectPending) return;
     this.autoSelectPending = false;
+    // Primera materia del docente en el orden del plan (año y luego orden dentro del año).
     const planYears = new Map(this.studyPlanCourses.map(c => [c.courseId, c.yearNumber]));
+    const planOrder = new Map(this.studyPlanCourses.map(c => [c.courseId, c.sortOrder]));
     const mine = this.assignments
       .filter(a => a.careerId === this.selectedCareerId && planYears.has(a.courseId))
-      .sort((a, b) => (planYears.get(a.courseId)! - planYears.get(b.courseId)!) || a.courseName.localeCompare(b.courseName, 'es'));
+      .sort((a, b) => (planYears.get(a.courseId)! - planYears.get(b.courseId)!)
+        || (planOrder.get(a.courseId)! - planOrder.get(b.courseId)!));
     const first = mine[0];
     if (!first) return;
     this.selectedCareerYear = planYears.get(first.courseId)!;

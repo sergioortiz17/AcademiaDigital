@@ -87,7 +87,9 @@ export class AttendanceComponent implements OnInit {
   get careerAssignments(): TeacherAssignment[] {
     return this.assignments
       .filter(a => this.selectedCareerId == null || a.careerId == null || a.careerId === this.selectedCareerId)
-      .sort((a, b) => this.assignmentLabel(a).localeCompare(this.assignmentLabel(b), 'es'));
+      // Anuales y 1.er cuatrimestre primero; dentro de cada período, por nombre.
+      .sort((a, b) => ((a.isAnnual ? 0 : a.semester) - (b.isAnnual ? 0 : b.semester))
+        || this.assignmentLabel(a).localeCompare(this.assignmentLabel(b), 'es'));
   }
 
   assignmentLabel(a: TeacherAssignment): string {

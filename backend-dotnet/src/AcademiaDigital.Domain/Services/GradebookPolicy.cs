@@ -90,7 +90,7 @@ public sealed class GradebookPolicy
     public void EnsureScoreIsValid(GradebookEvaluation evaluation, decimal score)
     {
         if (score < 0m || score > evaluation.MaximumScore)
-            throw new ArgumentException($"El puntaje de '{evaluation.Name}' debe estar entre cero y {evaluation.MaximumScore}.");
+            throw new ArgumentException($"El puntaje de '{evaluation.Name}' debe estar entre 0 y {evaluation.MaximumScore:0.##}.");
     }
 
     public void EnsureCanSubmit(Gradebook gradebook, int rosterCount)

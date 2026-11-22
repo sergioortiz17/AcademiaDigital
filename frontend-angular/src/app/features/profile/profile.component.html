@@ -65,15 +65,15 @@
             <div class="phone-group">
               <mat-form-field appearance="fill" class="custom-field">
                 <input matInput formControlName="phoneCode" inputmode="numeric" maxlength="4"
-                  placeholder="Cód. de área" aria-label="Código de área (sin 0)">
+                  placeholder="Área" aria-label="Código de área (sin 0)">
               </mat-form-field>
               <mat-form-field appearance="fill" class="custom-field">
                 <input matInput formControlName="phone" inputmode="numeric" maxlength="8"
-                  placeholder="Número (sin 15)" aria-label="Número de teléfono (sin 15)">
+                  placeholder="Número" aria-label="Número de teléfono (sin 15)">
               </mat-form-field>
             </div>
             <small class="field-hint" [class.field-hint--error]="phoneErrorText">
-              {{ phoneErrorText || 'Sin 0 ni 15: código de área y número suman 10 dígitos (por ejemplo 351 y 5551234).' }}
+              {{ phoneErrorText || 'Sin 0 ni 15. Ej.: 351 y 5551234 (10 dígitos).' }}
             </small>
         </div>
 
