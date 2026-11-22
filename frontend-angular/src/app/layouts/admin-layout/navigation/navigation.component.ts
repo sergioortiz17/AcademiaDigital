@@ -63,7 +63,10 @@ const MENU_ADMIN: MenuItem[] = [
       { id: 'certificate-requests', title: 'Peticiones',url: '/app/certificates',icon: '' }
     ]
   },
-  { id: 'admin-exam-form', title: 'Mesa de examen', url: '/app/admin/exam-form', icon: 'event_note' },
+  { id: 'admin-exam-form', title: 'Mesa de examen', icon: 'event_note', children: [
+    { id: 'exam-form', title: 'Formulario de inscripción', url: '/app/admin/exam-form' },
+    { id: 'exam-schedule', title: 'Armar mesas automáticas', url: '/app/admin/exam-schedule' }
+  ] },
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'applicants',  title: 'Aspirantes',         url: '/app/admin/applicants', icon: 'person_add' },

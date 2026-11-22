@@ -12,6 +12,7 @@ import { StudentDocumentsReviewComponent } from './student-documents-review/stud
 import { ReportsComponent } from './reports/reports.component';
 import { BulkActionsComponent } from './bulk-actions/bulk-actions.component';
 import { TranscriptsComponent } from './transcripts/transcripts.component';
+import { ExamScheduleComponent } from './exam-schedule/exam-schedule.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
@@ -87,6 +88,12 @@ const routes: Routes = [
   {
     path: 'transcripts',
     component: TranscriptsComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'exam-schedule',
+    component: ExamScheduleComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },
