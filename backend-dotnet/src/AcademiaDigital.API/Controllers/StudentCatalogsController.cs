@@ -8,6 +8,8 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1")]
 public class StudentCatalogsController(IStudentManagementService service) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     [HttpGet("document-requirements")]
     public async Task<IActionResult> Requirements([FromQuery] int? careerId, CancellationToken ct)
     { var g = Admin(); if (g is not null) return g; return Ok(await service.GetRequirementsAsync(careerId, ct)); }
@@ -59,6 +61,6 @@ public class StudentCatalogsController(IStudentManagementService service) : ApiC
     private IActionResult? Admin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 }

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { selectUser, selectUserRole } from '../../../store/account/account.selectors';
 import { UserModel, UserRole } from '../../../store/account/account.actions';
 import { CalendarService, CalendarEvent } from '../../../core/services/calendar.service';
+import { isStaff } from '../../../core/auth/permissions';
 
 @Component({
   selector: 'app-dashboard',
@@ -38,6 +39,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.user$ = this.store.select(selectUser);
     this.userRole$ = this.store.select(selectUserRole) as Observable<UserRole | null>;
   }
+
+  /** Admin y personal de gestión ven los accesos de Administración. */
+  readonly isStaffRole = isStaff;
 
   ngOnInit(): void {
     this.startCarousel();

@@ -17,6 +17,11 @@ public class Student
     public string? EmergencyContactPhone { get; set; }
     /// <summary>Obra social o prepaga (texto libre).</summary>
     public string? HealthInsurance { get; set; }
+    /// <summary>Fecha de egreso (la carga Administración al marcarlo egresado).</summary>
+    public DateOnly? GraduatedOn { get; set; }
+    /// <summary>Libro matriz y folio donde está registrado el alumno (para el analítico).</summary>
+    public string? RegistryBook { get; set; }
+    public string? RegistryFolio { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public long UserId { get; set; }

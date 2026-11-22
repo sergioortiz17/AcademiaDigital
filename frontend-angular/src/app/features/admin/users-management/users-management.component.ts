@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AdminService, UserSummary } from '../../../core/services/admin.service';
 import { UserRole } from '../../../store/account/account.actions';
+import { ROLE_LABELS } from '../../../core/auth/permissions';
 import { Store } from '@ngrx/store';
 import { selectUser } from '../../../store/account/account.selectors';
 import { forkJoin, Observable, of, Subject } from 'rxjs';
@@ -40,6 +41,10 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
     { label: 'Alumnos',        value: UserRole.Alumno },
     { label: 'Profesores',     value: UserRole.Profesor },
     { label: 'Administradores', value: UserRole.Admin },
+    { label: 'Secretaría',     value: UserRole.Secretario },
+    { label: 'Coordinación',   value: UserRole.Coordinador },
+    { label: 'Preceptoría',    value: UserRole.Preceptor },
+    { label: 'Cooperadora',    value: UserRole.Cooperadora },
   ];
 
   displayedColumns = ['username', 'dni', 'role', 'dateJoined', 'actions'];
@@ -48,9 +53,16 @@ export class UsersManagementComponent implements OnInit, OnDestroy {
   private readonly search$ = new Subject<string>();
   private usersRequestId = 0;
 
+  /** Roles de gestión con lo que pueden hacer (propuesta a validar con Dirección). */
+  readonly staffRoles = [
+    { value: UserRole.Secretario, label: 'Secretaría', hint: 'Alumnos, aspirantes, docentes, notas, asistencia, mesas, inscripciones, certificados y reportes' },
+    { value: UserRole.Coordinador, label: 'Coordinación', hint: 'Planillas de notas, asistencia, mesas, calendario y reportes' },
+    { value: UserRole.Preceptor, label: 'Preceptoría', hint: 'Asistencia, calendario y consulta de alumnos' },
+    { value: UserRole.Cooperadora, label: 'Cooperadora', hint: 'Consulta de alumnos y reportes' }
+  ];
+
   getRoleLabel(role: number): string {
-    const labels: Record<number, string> = { 1: 'Alumno', 2: 'Profesor', 3: 'Admin' };
-    return labels[role] ?? 'Desconocido';
+    return ROLE_LABELS[role as UserRole] ?? 'Desconocido';
   }
 
   get selectedRoleLabel(): string {

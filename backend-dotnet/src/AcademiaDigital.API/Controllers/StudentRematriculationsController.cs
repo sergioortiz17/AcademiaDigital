@@ -9,6 +9,8 @@ namespace AcademiaDigital.API.Controllers;
 public sealed class StudentRematriculationsController(
     CreateStudentRematriculationCommandHandler createHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageEnrollments;
+
     [HttpPost]
     public async Task<IActionResult> Create(
         long studentId,
@@ -17,7 +19,7 @@ public sealed class StudentRematriculationsController(
     {
         if (CurrentUserId is null)
             return Unauthorized();
-        if (CurrentUserRole != UserRole.Admin)
+        if (!IsStaff)
             return StatusCode(StatusCodes.Status403Forbidden);
 
         var result = await createHandler.Handle(

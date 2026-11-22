@@ -6,7 +6,9 @@ import { catchError, map, switchMap, take, takeUntil } from 'rxjs/operators';
 import { GradebookService, Gradebook, GradebookStudent } from '../../../core/services/gradebook.service';
 import { TeacherService } from '../../../core/services/teacher.service';
 import { TeachingPositionService } from '../../../core/services/teaching-position.service';
-import { selectIsAdmin } from '../../../store/account/account.selectors';
+import { selectUserRole } from '../../../store/account/account.selectors';
+import { hasPermission } from '../../../core/auth/permissions';
+import { UserRole } from '../../../store/account/account.actions';
 import {
   AdminApproveDialogComponent,
   AdminApproveDialogResult
@@ -75,14 +77,16 @@ export class StudentsConditionComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.store.select(selectIsAdmin).pipe(takeUntil(this.destroy$)).subscribe(isAdmin => {
-      this.isAdmin = isAdmin;
+    this.store.select(selectUserRole).pipe(takeUntil(this.destroy$)).subscribe(role => {
+      // Admin y personal con permiso sobre calificaciones (secretaría, coordinación).
+      this.isAdmin = hasPermission(role as UserRole, 'ManageGrades');
       this.cdr.detectChanges();
     });
 
     this.isLoading = true;
-    this.store.select(selectIsAdmin).pipe(
+    this.store.select(selectUserRole).pipe(
       take(1),
+      map(role => hasPermission(role as UserRole, 'ManageGrades')),
       switchMap(isAdmin => forkJoin({
         gradebooks: this.gradebookService.getGradebooks({}),
         // Si fallan las comisiones igual se muestran las planillas.

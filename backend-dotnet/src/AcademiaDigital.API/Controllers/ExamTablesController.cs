@@ -16,15 +16,31 @@ public sealed class ExamTablesController(
     SaveExamResultsCommandHandler resultsHandler,
     PublishExamTableCommandHandler publishHandler,
     ReopenExamTableCommandHandler reopenHandler,
-    GetMyExamTablesQueryHandler myTablesHandler) : ApiControllerBase
+    GetMyExamTablesQueryHandler myTablesHandler,
+    AcademiaDigital.Application.Services.IExamSchedulePlanner schedulePlanner) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageExams;
+
+    // POST /api/v1/exam-tables/schedule-proposal — propone fechas y tribunal; no crea mesas.
+    [HttpPost("schedule-proposal")]
+    public async Task<IActionResult> ProposeSchedule([FromBody] ExamScheduleProposalRequest request, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        if (!IsStaff) return StatusCode(StatusCodes.Status403Forbidden);
+        var holidays = Enumerable.Range(request.From.Year, request.To.Year - request.From.Year + 1)
+            .SelectMany(year => AcademiaDigital.API.Helpers.ArgentineHolidays.GetForYear(year).Select(h => h.Date));
+        var days = AcademiaDigital.Domain.Services.ExamScheduler.BusinessDays(request.From, request.To,
+            holidays.Concat(request.BlockedDates ?? []));
+        return Ok(await schedulePlanner.ProposeAsync(request.CareerId, request.AcademicYear, days, request.YearNumbers, ct));
+    }
+
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] int? academicYear, [FromQuery] int? courseId, CancellationToken ct = default)
     {
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await listHandler.Handle(new GetExamTablesQuery(
-            academicYear, courseId, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            academicYear, courseId, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpGet("me")]
@@ -41,7 +57,7 @@ public sealed class ExamTablesController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await getHandler.Handle(new GetExamTableQuery(
-            id, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            id, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpPost]
@@ -64,10 +80,10 @@ public sealed class ExamTablesController(
     public async Task<IActionResult> Register(long id, [FromBody] RegisterForExamRequest request, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole is not (UserRole.Admin or UserRole.Alumno))
+        if (!(IsStaff || CurrentUserRole == UserRole.Alumno))
             return StatusCode(StatusCodes.Status403Forbidden);
         var created = await registerHandler.Handle(new RegisterForExamCommand(
-            id, request.EnrollmentId, CurrentUserId.Value, CurrentUserRole == UserRole.Admin), ct);
+            id, request.EnrollmentId, CurrentUserId.Value, IsStaff), ct);
         return StatusCode(StatusCodes.Status201Created, created);
     }
 
@@ -89,7 +105,7 @@ public sealed class ExamTablesController(
             request.Results.Select(item => new ExamResultInput(
                 item.RegistrationId, item.Outcome, item.Grade, item.Notes)).ToArray(),
             CurrentUserId!.Value,
-            CurrentUserRole == UserRole.Admin), ct));
+            IsStaff), ct));
     }
 
     [HttpPost("{id:long}/publish")]
@@ -112,7 +128,7 @@ public sealed class ExamTablesController(
     private IActionResult? RequireAdminOrProfessor()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole is UserRole.Admin or UserRole.Profesor
+        return IsStaff || CurrentUserRole == UserRole.Profesor
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }
@@ -120,7 +136,7 @@ public sealed class ExamTablesController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }
@@ -146,3 +162,10 @@ public sealed record SaveExamResultRequest(
     [StringLength(500)] string? Notes);
 public sealed record ReopenExamTableRequest(
     [Required, StringLength(1000, MinimumLength = 3)] string Reason);
+public sealed record ExamScheduleProposalRequest(
+    [Range(1, int.MaxValue)] int CareerId,
+    [Range(2000, 2200)] int AcademicYear,
+    DateOnly From,
+    DateOnly To,
+    int[]? YearNumbers,
+    DateOnly[]? BlockedDates);

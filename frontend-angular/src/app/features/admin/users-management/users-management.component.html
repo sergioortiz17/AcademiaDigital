@@ -139,6 +139,10 @@
                   <button mat-menu-item (click)="changeRole(u, UserRole.Admin)" [disabled]="u.role === UserRole.Admin">
                     <mat-icon>admin_panel_settings</mat-icon> Admin
                   </button>
+                  <button mat-menu-item *ngFor="let r of staffRoles" (click)="changeRole(u, r.value)" [disabled]="u.role === r.value"
+                    [matTooltip]="r.hint" matTooltipPosition="right">
+                    <mat-icon>badge</mat-icon> {{ r.label }}
+                  </button>
                 </mat-menu>
 
                 <!-- Delete -->

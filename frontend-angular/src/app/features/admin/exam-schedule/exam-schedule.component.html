@@ -1,0 +1,75 @@
+<div class="es-wrap">
+  <h1>Mesas de examen automáticas</h1>
+  <p class="intro">Elija carrera, llamado y rango de fechas. El sistema propone una fecha por materia (días hábiles, sin feriados,
+    sin dos materias del mismo año el mismo día y con las correlativas antes) y sugiere el tribunal con los docentes de cada materia.
+    Revise, ajuste y confirme: recién ahí se crean las mesas.</p>
+
+  <mat-card class="card">
+    <div class="row">
+      <mat-form-field appearance="outline"><mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="careerId"><mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option></mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="small"><mat-label>Año académico</mat-label><input matInput type="number" [(ngModel)]="academicYear"></mat-form-field>
+      <mat-form-field appearance="outline" class="small"><mat-label>Llamado</mat-label><input matInput type="number" min="1" max="10" [(ngModel)]="callNumber"></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Desde</mat-label><input matInput type="date" [(ngModel)]="fromDate"></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="toDate"></mat-form-field>
+    </div>
+    <div class="row">
+      <span class="label">Años:</span>
+      <mat-checkbox *ngFor="let y of years" [checked]="selectedYears.has(y)" (change)="toggleYear(y, $event.checked)">{{ y }}.º</mat-checkbox>
+      <mat-form-field appearance="outline" class="small"><mat-label>Hora</mat-label><input matInput type="time" [(ngModel)]="examTime"></mat-form-field>
+      <mat-form-field appearance="outline" class="small"><mat-label>Cierre de inscripción (días antes)</mat-label><input matInput type="number" min="1" max="15" [(ngModel)]="deadlineDays"></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Lugar</mat-label><input matInput [(ngModel)]="location" maxlength="200"></mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="full"><mat-label>Otros días sin mesas (AAAA-MM-DD, separados por coma)</mat-label>
+      <input matInput [(ngModel)]="blockedText" placeholder="2027-02-15, 2027-02-16">
+      <mat-hint>Los fines de semana y feriados nacionales ya se excluyen.</mat-hint>
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="button" [disabled]="!canPropose || isLoading" (click)="propose()">
+      <mat-icon>auto_awesome</mat-icon> Proponer fechas
+    </button>
+  </mat-card>
+
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+  <div class="loading" *ngIf="isLoading"><mat-spinner diameter="36"></mat-spinner></div>
+
+  <mat-card class="card" *ngIf="exams.length > 0 && !isLoading">
+    <div class="table-wrap">
+      <table class="proposal">
+        <thead><tr><th></th><th>Materia</th><th>Año</th><th>Fecha</th><th>Presidente</th><th>Vocales</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let e of exams" [class.off]="!e.include">
+            <td><mat-checkbox [(ngModel)]="e.include" [disabled]="e.ok === true"></mat-checkbox></td>
+            <td>{{ e.row.courseName }}</td>
+            <td class="c">{{ e.row.yearNumber }}.º</td>
+            <td><input type="date" [(ngModel)]="e.date" [class.warn]="sameDayWarning(e)" [disabled]="e.ok === true"
+              [title]="sameDayWarning(e) ? 'Otra materia del mismo año tiene mesa ese día' : ''"></td>
+            <td>
+              <select [(ngModel)]="e.presidentId" [disabled]="e.ok === true">
+                <option [ngValue]="null">—</option>
+                <option *ngFor="let t of teachers" [ngValue]="t.id">{{ teacherName(t) }}</option>
+              </select>
+            </td>
+            <td>
+              <mat-form-field appearance="outline" class="vocals">
+                <mat-select multiple [(ngModel)]="e.vocalIds" [disabled]="e.ok === true" placeholder="Elegir">
+                  <mat-option *ngFor="let t of teachers" [value]="t.id">{{ teacherName(t) }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </td>
+            <td class="status">
+              <span *ngIf="e.result" [class.ok]="e.ok" [class.bad]="e.ok === false">{{ e.result }}</span>
+              <span *ngIf="!e.result && e.row.reason" class="bad">{{ e.row.reason }}</span>
+              <span *ngIf="!e.result && !e.row.reason && e.include && problem(e)" class="pending">{{ problem(e) }}</span>
+              <span *ngIf="!e.result && e.include && !problem(e)" class="ok">Lista</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="summary">{{ readyCount }} de {{ selectedCount }} mesa(s) seleccionadas listas para crear.</p>
+    <button mat-raised-button color="primary" type="button" [disabled]="readyCount === 0 || creating" (click)="create()">
+      <mat-icon>event_available</mat-icon> Crear mesas
+    </button>
+  </mat-card>
+</div>

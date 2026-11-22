@@ -15,6 +15,8 @@ public class EnrollmentsController(
     GetMyEnrollmentsQueryHandler getMyEnrollmentsHandler,
     IStudentRepository studentRepository) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageEnrollments;
+
     // GET /api/v1/enrollments/periods
     [HttpGet("periods")]
     public async Task<IActionResult> GetAllPeriods(CancellationToken ct)
@@ -200,7 +202,7 @@ public class EnrollmentsController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }

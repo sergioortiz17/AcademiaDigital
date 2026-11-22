@@ -16,6 +16,8 @@ public sealed class AdmissionDocumentsController(
     StudentAdmissionDocumentsUseCase useCase,
     IStudentManagementService service) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     // GET /api/v1/students/me/admission-documents — requisitos de su carrera y documentos enviados
     [HttpGet("students/me/admission-documents")]
     public async Task<IActionResult> GetMine(CancellationToken ct)
@@ -57,7 +59,7 @@ public sealed class AdmissionDocumentsController(
     public async Task<IActionResult> Download(long studentId, long documentId, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        var file = await useCase.ReadAsync(studentId, documentId, CurrentUserId.Value, CurrentUserRole == UserRole.Admin, ct);
+        var file = await useCase.ReadAsync(studentId, documentId, CurrentUserId.Value, IsStaff, ct);
         return File(file.Content, file.ContentType, file.FileName);
     }
 
@@ -66,7 +68,7 @@ public sealed class AdmissionDocumentsController(
     public async Task<IActionResult> ForReview([FromQuery] StudentDocumentStatus? status, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole != UserRole.Admin) return StatusCode(StatusCodes.Status403Forbidden);
+        if (!IsStaff) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await service.GetDocumentsForReviewAsync(status, ct));
     }
 }

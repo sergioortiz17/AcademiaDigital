@@ -20,6 +20,8 @@ public sealed class GradebooksController(
     GetSectionStudentsQueryHandler sectionStudentsHandler,
     UpdateGradebookEvaluationsCommandHandler evaluationsHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageGrades;
+
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] int? academicYear,
@@ -31,7 +33,7 @@ public sealed class GradebooksController(
         if (guard is not null) return guard;
         return Ok(await listHandler.Handle(new GetGradebooksQuery(
             academicYear, courseId, commissionId,
-            CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            CurrentUserId!.Value, IsStaff), ct));
     }
 
     /// <summary>Alumnos de una comisión, tenga o no planilla de notas.</summary>
@@ -41,7 +43,7 @@ public sealed class GradebooksController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await sectionStudentsHandler.Handle(new GetSectionStudentsQuery(
-            sectionId, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            sectionId, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpGet("me")]
@@ -58,7 +60,7 @@ public sealed class GradebooksController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await getHandler.Handle(new GetGradebookQuery(
-            id, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            id, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpPost]
@@ -75,7 +77,7 @@ public sealed class GradebooksController(
             request.Evaluations.Select(item => new GradebookEvaluationInput(
                 item.Name, item.WeightPercentage, item.MaximumScore, item.IsRecovery)).ToArray(),
             CurrentUserId!.Value,
-            CurrentUserRole == UserRole.Admin), ct);
+            IsStaff), ct);
         return StatusCode(StatusCodes.Status201Created, created);
     }
 
@@ -89,7 +91,7 @@ public sealed class GradebooksController(
             request.Grades.Select(item => new GradeEntryInput(
                 item.EvaluationId, item.EnrollmentId, item.Score, item.Notes, item.IsAbsent)).ToArray(),
             CurrentUserId!.Value,
-            CurrentUserRole == UserRole.Admin), ct));
+            IsStaff), ct));
     }
 
     /// <summary>Edita las instancias de una planilla en borrador (formato de la planilla).</summary>
@@ -103,7 +105,7 @@ public sealed class GradebooksController(
             request.Evaluations.Select(item => new GradebookEvaluationLayoutInput(
                 item.Id, item.Name, item.MaximumScore, item.IsRecovery, item.EvaluationDate)).ToArray(),
             CurrentUserId!.Value,
-            CurrentUserRole == UserRole.Admin), ct));
+            IsStaff), ct));
     }
 
     [HttpPost("{id:long}/submit")]
@@ -112,7 +114,7 @@ public sealed class GradebooksController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await submitHandler.Handle(new SubmitGradebookCommand(
-            id, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            id, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpPost("{id:long}/approve")]
@@ -151,7 +153,7 @@ public sealed class GradebooksController(
     private IActionResult? RequireAdminOrProfessor()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole is UserRole.Admin or UserRole.Profesor
+        return IsStaff || CurrentUserRole == UserRole.Profesor
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }
@@ -159,7 +161,7 @@ public sealed class GradebooksController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }

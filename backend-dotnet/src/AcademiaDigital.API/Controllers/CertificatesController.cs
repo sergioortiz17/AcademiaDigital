@@ -17,6 +17,8 @@ public sealed class CertificatesController(
     GetCertificateHistoryQueryHandler historyHandler,
     DownloadCertificateQueryHandler downloadHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageCertificates;
+
     [HttpGet("my")]
     public async Task<IActionResult> GetMyCertificates(CancellationToken ct)
     {
@@ -116,17 +118,17 @@ public sealed class CertificatesController(
     {
         if (CurrentUserId is null) return Unauthorized();
         // El handler verifica que el certificado sea del usuario (salvo Admin).
-        if (CurrentUserRole is not (UserRole.Admin or UserRole.Alumno or UserRole.Profesor))
+        if (!(IsStaff || CurrentUserRole is UserRole.Alumno or UserRole.Profesor))
             return StatusCode(StatusCodes.Status403Forbidden);
         var file = await downloadHandler.Handle(new DownloadCertificateQuery(
-            publicId, CurrentUserId.Value, CurrentUserRole == UserRole.Admin), ct);
+            publicId, CurrentUserId.Value, IsStaff), ct);
         return File(file.Content, file.ContentType, file.FileName);
     }
 
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
     }

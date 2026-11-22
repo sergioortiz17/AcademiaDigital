@@ -22,6 +22,8 @@ public sealed class ExamTableConfiguration : IEntityTypeConfiguration<ExamTable>
         builder.Property(item => item.ExamDateUtc).HasColumnName("exam_date_utc");
         builder.Property(item => item.RegistrationDeadlineUtc).HasColumnName("registration_deadline_utc");
         builder.Property(item => item.Location).HasColumnName("location").HasMaxLength(200).IsRequired();
+        builder.Property(item => item.ActBook).HasColumnName("act_book").HasMaxLength(30);
+        builder.Property(item => item.ActFolio).HasColumnName("act_folio").HasMaxLength(30);
         builder.Property(item => item.Status).HasColumnName("status").HasConversion<int>();
         builder.Property(item => item.CreatedAt).HasColumnName("created_at");
         builder.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");

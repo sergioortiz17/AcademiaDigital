@@ -84,6 +84,11 @@ variable "files_bucket_arn" {
   type = string
 }
 
+variable "student_documents_bucket_arn" {
+  description = "Bucket de los documentos que suben los alumnos (requisitos de ingreso)."
+  type        = string
+}
+
 variable "ses_identity_arn" {
   type = string
 }

@@ -2005,6 +2005,16 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("academic_year");
 
+                    b.Property<string>("ActBook")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("act_book");
+
+                    b.Property<string>("ActFolio")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("act_folio");
+
                     b.Property<int>("CallNumber")
                         .HasColumnType("integer")
                         .HasColumnName("call_number");
@@ -2568,6 +2578,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("enrollment_date");
 
+                    b.Property<DateOnly?>("GraduatedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("graduated_on");
+
                     b.Property<string>("HealthInsurance")
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
@@ -2588,6 +2602,16 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("province");
+
+                    b.Property<string>("RegistryBook")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("registry_book");
+
+                    b.Property<string>("RegistryFolio")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("registry_folio");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer")

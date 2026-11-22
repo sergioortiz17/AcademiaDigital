@@ -30,11 +30,25 @@ public sealed class GradebookPolicy
     // recuperación) deben superar este umbral. No se toca: es sobre el umbral, no sobre cuáles cuentan.
     public const decimal PromotionPerInstanceThreshold = 7m;
 
+    /// <summary>Mínimo de instancias regulares: 4 si la materia es anual y 2 si es cuatrimestral.</summary>
+    public const int MinimumAnnualInstances = 4;
+    public const int MinimumSemesterInstances = 2;
+
     public void EnsureCanCreate(CourseSection position, IReadOnlyCollection<GradebookEvaluation> evaluations)
     {
         if (!position.IsActive || !position.DivisionId.HasValue)
             throw new InvalidOperationException("El cargo docente debe estar activo y asignado a una comisión.");
         ValidateEvaluations(evaluations);
+        EnsureMinimumInstances(position.IsAnnual, evaluations);
+    }
+
+    public static void EnsureMinimumInstances(bool isAnnual, IReadOnlyCollection<GradebookEvaluation> evaluations)
+    {
+        var minimum = isAnnual ? MinimumAnnualInstances : MinimumSemesterInstances;
+        var regular = evaluations.Count(item => !item.IsRecovery);
+        if (regular < minimum)
+            throw new ArgumentException(
+                $"Una materia {(isAnnual ? "anual" : "cuatrimestral")} necesita al menos {minimum} instancias de evaluación (sin contar recuperatorios); la planilla tiene {regular}.");
     }
 
     public void ValidateEvaluations(IReadOnlyCollection<GradebookEvaluation> evaluations)

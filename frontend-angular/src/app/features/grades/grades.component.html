@@ -11,7 +11,7 @@
     <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
     <!-- ===================== PROFESOR ===================== -->
-    <ng-container *ngIf="userRole === UserRole.Profesor || userRole === UserRole.Admin">
+    <ng-container *ngIf="userRole === UserRole.Profesor || staffView">
 
       <div class="toolbar">
         <div class="filter-control filter-control--small">
@@ -55,8 +55,8 @@
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="selectedDivisionId == null">Elegí una división para ver las materias.</mat-hint>
-            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length === 0">{{ userRole === UserRole.Admin ? 'No hay secciones docentes para esta división.' : 'No tenés materias asignadas en esta división.' }}</mat-hint>
-            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length > 0">{{ userRole === UserRole.Admin ? 'Se muestran las secciones docentes de esta división.' : 'Se muestran únicamente las materias asignadas a tu usuario.' }}</mat-hint>
+            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length === 0">{{ staffView ? 'No hay secciones docentes para esta división.' : 'No tenés materias asignadas en esta división.' }}</mat-hint>
+            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length > 0">{{ staffView ? 'Se muestran las secciones docentes de esta división.' : 'Se muestran únicamente las materias asignadas a tu usuario.' }}</mat-hint>
           </mat-form-field>
         </div>
 
@@ -109,19 +109,19 @@
           <span class="status-note" *ngIf="!canEditGradebook">
             La planilla ya no se puede editar en este estado.
           </span>
-          <button *ngIf="userRole === UserRole.Admin && d.gradebook.status === 'Submitted'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="approveGradebook()">
+          <button *ngIf="staffView && d.gradebook.status === 'Submitted'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="approveGradebook()">
             <mat-icon>task_alt</mat-icon>
             Aprobar
           </button>
-          <button *ngIf="userRole === UserRole.Admin && d.gradebook.status === 'Approved'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="publishGradebook()">
+          <button *ngIf="staffView && d.gradebook.status === 'Approved'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="publishGradebook()">
             <mat-icon>publish</mat-icon>
             Publicar
           </button>
-          <button *ngIf="userRole === UserRole.Admin && d.gradebook.status === 'Published'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="closeGradebook()">
+          <button *ngIf="staffView && d.gradebook.status === 'Published'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="closeGradebook()">
             <mat-icon>lock</mat-icon>
             Cerrar instancia
           </button>
-          <button *ngIf="userRole === UserRole.Admin && d.gradebook.status !== 'Draft'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="reopenGradebook()">
+          <button *ngIf="staffView && d.gradebook.status !== 'Draft'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="reopenGradebook()">
             <mat-icon>edit</mat-icon>
             Editar otra vez
           </button>
@@ -170,7 +170,7 @@
                     <input type="text" inputmode="decimal" list="grade-options" autocomplete="off"
                       [attr.aria-label]="'Nota de ' + row.studentName + ' en ' + group.label"
                       [title]="gradeHint(row, ev)"
-                      [disabled]="!canEdit || isSubmitting"
+                      [disabled]="!canEdit || isSubmitting || !isRecoveryEnabled(row, ev)"
                       [ngModel]="gradeText(row, ev.id)" (ngModelChange)="updateGradeText(row, ev, $event)">
                   </td>
                   </ng-container>
@@ -207,8 +207,10 @@
         <datalist id="grade-options">
           <option *ngFor="let option of gradeOptions" [value]="option">{{ option === 'A' ? 'Ausente' : option }}</option>
         </datalist>
+        <p class="grades-help grades-help--import" *ngIf="importSummary">{{ importSummary }}</p>
         <p class="grades-help" *ngIf="canEdit">
           Escriba la nota o elíjala de la lista (admite decimales con coma, por ejemplo 7,5). Use <strong>A</strong> si el alumno estuvo ausente.
+          Los recuperatorios se habilitan para quien desaprobó (4 o menos) o faltó a una instancia.
           <span *ngIf="invalidGradeCount > 0" class="grades-help--error">{{ invalidGradeCount }} nota(s) inválidas, marcadas en rojo.</span>
         </p>
 
@@ -217,6 +219,8 @@
             <p><strong>Nombre:</strong> {{ s.studentName }}</p>
             <p><strong>Legajo:</strong> {{ s.legajoNumber }}</p>
             <p><strong>DNI:</strong> {{ s.dni }}</p>
+            <p><strong>Condición:</strong> {{ resultLabel(s.resultStatus) }}{{ s.average != null ? ' · Promedio ' + s.average : '' }}
+              <small>(se recalcula al guardar)</small></p>
           </div>
 
           <div class="detail-actions">
@@ -225,6 +229,16 @@
               <mat-icon>file_download</mat-icon>
             </button>
 
+            <ng-container *ngIf="canEdit">
+              <button class="download-link" type="button" (click)="downloadGradesTemplate()" matTooltip="Excel con sus alumnos y una columna por instancia">
+                Plantilla de notas <mat-icon>table_view</mat-icon>
+              </button>
+              <input #gradesInput type="file" hidden accept=".xlsx" (change)="importGrades(gradesInput)">
+              <button class="download-link" type="button" (click)="gradesInput.click()">
+                Importar Excel <mat-icon>upload_file</mat-icon>
+              </button>
+            </ng-container>
+
             <button mat-raised-button color="primary" *ngIf="canEdit" [disabled]="isSaving || isTransitioning || isSubmitting" (click)="saveGrades()">
               <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
               <span *ngIf="!isSaving">Guardar</span>
@@ -232,7 +246,7 @@
 
             <button mat-stroked-button *ngIf="canEdit" [disabled]="isSubmitting || isTransitioning" (click)="submitGradebook()">
               <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-              <span *ngIf="!isSubmitting">{{ userRole === UserRole.Admin ? 'Enviar planilla' : 'Enviar al coordinador/a' }}</span>
+              <span *ngIf="!isSubmitting">{{ staffView ? 'Enviar planilla' : 'Enviar al coordinador/a' }}</span>
             </button>
           </div>
         </div>

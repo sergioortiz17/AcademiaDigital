@@ -57,6 +57,7 @@ infra/
 │   ├── certificate/          Certificado ACM validado por DNS
 │   ├── email/                Identidad SES y registros de correo
 │   ├── storage/              Bucket S3 de archivos de la app
+│   ├── student-documents/    Bucket S3 de los documentos que suben los alumnos
 │   ├── database/             RDS PostgreSQL
 │   ├── secrets/              Connection strings y JWT en Parameter Store
 │   ├── app/                  Elastic Beanstalk (aplicación, entorno, IAM, registro DNS)
@@ -95,7 +96,7 @@ flowchart TD
     dns-zone --> email
     database --> secrets
     network & app-security --> monitoring
-    network & app-security & certificate & email & storage & secrets & monitoring --> app
+    network & app-security & certificate & email & storage & student-documents & secrets & monitoring --> app
     app & database --> schedule
     dns-zone --> cdn-certificate
     registry[shared/registry] & conn[shared/github-connection] --> pipeline

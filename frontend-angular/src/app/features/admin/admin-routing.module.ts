@@ -9,6 +9,10 @@ import { AttendanceManagementComponent } from './attendance-management/attendanc
 import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
 import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/teacher-course-assignment.component';
 import { StudentDocumentsReviewComponent } from './student-documents-review/student-documents-review.component';
+import { ReportsComponent } from './reports/reports.component';
+import { BulkActionsComponent } from './bulk-actions/bulk-actions.component';
+import { TranscriptsComponent } from './transcripts/transcripts.component';
+import { ExamScheduleComponent } from './exam-schedule/exam-schedule.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
@@ -25,109 +29,133 @@ const routes: Routes = [
     path: 'exam-form',
     loadComponent: () => import('./exam-form-management/exam-form-management.component').then(m => m.ExamFormManagementComponent),
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageExams' }
   },
   {
     path: 'applicants',
     component: ApplicantsManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageStudents' }
   },
   {
     path: 'users',
     component: UsersManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageUsers' }
   },
   {
     path: 'gradebooks',
     component: GradebookManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageGrades' }
   },
   {
     path: 'students-condition',
     component: StudentsConditionComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin, UserRole.Profesor] }
+    data: { roles: [UserRole.Admin, UserRole.Profesor], permission: 'ManageGrades' }
   },
   {
     path: 'approval-rules',
     component: ApprovalRulesComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageCareers' }
   },
   {
     path: 'teachers',
     component: TeacherManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageTeachers' }
   },
   {
     path: 'teacher-courses',
     component: TeacherCourseAssignmentComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageTeachers' }
+  },
+  {
+    path: 'reports',
+    component: ReportsComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin], permission: 'ViewReports' }
+  },
+  {
+    path: 'bulk-actions',
+    component: BulkActionsComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin], permission: 'ManageStudents' }
+  },
+  {
+    path: 'transcripts',
+    component: TranscriptsComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin], permission: 'ManageStudents' }
+  },
+  {
+    path: 'exam-schedule',
+    component: ExamScheduleComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin], permission: 'ManageExams' }
   },
   {
     path: 'student-documents',
     component: StudentDocumentsReviewComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageStudents' }
   },
   {
     path: 'teachers/:id',
     component: TeacherDetailComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageTeachers' }
   },
   {
     path: 'teaching-positions',
     component: TeachingPositionManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageCareers' }
   },
   {
     path: 'attendance',
     component: AttendanceManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageAttendance' }
   },
   {
     path: 'careers',
     component: CareerManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageCareers' }
   },
   {
     path: 'student-commission-assignment',
     component: StudentCommissionAssignmentComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageStudents' }
   },
   {
     path: 'commissions',
     component: CommissionManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageCareers' }
   },
   {
     path: 'enrollments',
     component: EnrollmentManagementComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageEnrollments' }
   },
   {
     path: 'enrollments/:id/students',
     component: EnrolledStudentsComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageEnrollments' }
   },
   {
     path: 'enrollments/:id/reports',
     component: EnrollmentReportsComponent,
     canActivate: [RoleGuard],
-    data: { roles: [UserRole.Admin] }
+    data: { roles: [UserRole.Admin], permission: 'ManageEnrollments' }
   },
   { path: '', redirectTo: 'users', pathMatch: 'full' }
 ];

@@ -1,0 +1,91 @@
+<div class="bulk-wrap">
+  <h1>Acciones masivas</h1>
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}
+    <button mat-icon-button type="button" (click)="errorMsg = ''" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+  </div>
+
+  <mat-card class="card">
+    <h2><mat-icon>school</mat-icon> Marcar egresados</h2>
+    <p class="intro">Elija la carrera, marque los alumnos y registre la fecha de egreso y el acto administrativo (por ejemplo, la resolución).</p>
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="graduateCareerId" (selectionChange)="loadStudents()">
+          <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de egreso</mat-label>
+        <input matInput type="date" [(ngModel)]="graduatedOn">
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="grow">
+        <mat-label>Motivo / acto administrativo</mat-label>
+        <input matInput [(ngModel)]="reason" maxlength="500" placeholder="Ej: Resolución 123/2026">
+      </mat-form-field>
+    </div>
+
+    <ng-container *ngIf="graduateCareerId != null">
+      <div class="row">
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Buscar por nombre, legajo o DNI</mat-label>
+          <input matInput [(ngModel)]="search">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+        <mat-checkbox [(ngModel)]="onlyFinalYear">Solo último año ({{ maxYear || '—' }}.º)</mat-checkbox>
+      </div>
+      <div class="loading" *ngIf="loadingStudents"><mat-spinner diameter="32"></mat-spinner></div>
+      <div class="list" *ngIf="!loadingStudents">
+        <mat-checkbox class="select-all" [checked]="allVisibleSelected" (change)="toggleAll($event.checked)">
+          Seleccionar todos ({{ visibleStudents.length }})
+        </mat-checkbox>
+        <div class="item" *ngFor="let s of visibleStudents">
+          <mat-checkbox [checked]="selected.has(s.id)" (change)="toggle(s.id, $event.checked)">
+            {{ s.fullName }} <small>· Legajo {{ s.legajoNumber }}{{ s.divisionName ? ' · ' + s.divisionName : '' }}</small>
+          </mat-checkbox>
+        </div>
+        <p class="empty" *ngIf="visibleStudents.length === 0">No hay alumnos para mostrar.</p>
+      </div>
+      <button mat-raised-button color="primary" type="button"
+        [disabled]="selected.size === 0 || reason.trim().length < 3 || graduating" (click)="graduate()">
+        <mat-icon>workspace_premium</mat-icon> Egresar {{ selected.size }} alumno(s)
+      </button>
+      <ng-container *ngIf="graduateResult as r">
+        <p class="result">{{ r.graduated }} alumno(s) egresado(s).</p>
+        <ul class="failures" *ngIf="r.failed.length"><li *ngFor="let f of r.failed">{{ studentName(f.id) }}: {{ f.reason }}</li></ul>
+      </ng-container>
+    </ng-container>
+  </mat-card>
+
+  <mat-card class="card">
+    <h2><mat-icon>playlist_add_check</mat-icon> Inscribir una división en sus materias</h2>
+    <p class="intro">Inscribe de una vez a todos los alumnos asignados a la división en las materias del plan de su año y cuatrimestre.</p>
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="enrollCareerId" (selectionChange)="loadDivisions()">
+          <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="grow">
+        <mat-label>División</mat-label>
+        <mat-select [(ngModel)]="divisionId" [disabled]="divisions.length === 0">
+          <mat-option *ngFor="let d of divisions" [value]="d.id">{{ d.code }} · {{ d.name }} ({{ d.academicYear }}, {{ d.yearNumber }}.º año, {{ d.shift }})</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Cuatrimestre</mat-label>
+        <mat-select [(ngModel)]="semester">
+          <mat-option [value]="1">1.º (y anuales)</mat-option>
+          <mat-option [value]="2">2.º</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <button mat-raised-button color="primary" type="button" [disabled]="divisionId == null || enrolling" (click)="enroll()">
+      <mat-icon>how_to_reg</mat-icon> Inscribir división
+    </button>
+    <ng-container *ngIf="enrollResult as r">
+      <p class="result">{{ r.students }} alumno(s): {{ r.created }} inscripción(es) nuevas, {{ r.alreadyEnrolled }} ya existían.</p>
+      <p class="courses">Materias: {{ r.courses.join(', ') }}.</p>
+    </ng-container>
+  </mat-card>
+</div>

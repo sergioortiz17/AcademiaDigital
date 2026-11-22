@@ -15,12 +15,15 @@ public class StudentsController(
     CreateStudentCommandHandler createStudentHandler,
     IStudentManagementService management) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? careerId,
         [FromQuery] StudentStatus? status, [FromQuery] int? academicYear, [FromQuery] int? commissionId,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
-        var guard = RequireAdmin(); if (guard is not null) return guard;
+        if (CurrentUserId is null) return Unauthorized();
+        if (!Can(Permission.ViewStudents)) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await management.SearchStudentsAsync(search, careerId, status, academicYear, commissionId, page, pageSize, ct));
     }
 
@@ -28,7 +31,7 @@ public class StudentsController(
     public async Task<IActionResult> GetById(long studentId, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole != UserRole.Admin && !await management.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
+        if (!Can(Permission.ViewStudents) && !await management.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
             return StatusCode(StatusCodes.Status403Forbidden);
         try
         {
@@ -51,7 +54,7 @@ public class StudentsController(
         CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole != UserRole.Admin
+        if (!IsStaff
             && !await management.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
             return StatusCode(StatusCodes.Status403Forbidden);
         await management.UpdateEmergencyContactPhoneAsync(studentId, request.EmergencyContactPhone, ct);
@@ -62,7 +65,7 @@ public class StudentsController(
     public async Task<IActionResult> GetCareers(long studentId, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole != UserRole.Admin && !await management.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
+        if (!Can(Permission.ViewStudents) && !await management.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
             return StatusCode(StatusCodes.Status403Forbidden);
         try { return Ok(await management.GetStudentCareersAsync(studentId, ct)); }
         catch (KeyNotFoundException ex) { return NotFoundProblem(ex.Message); }
@@ -112,7 +115,7 @@ public class StudentsController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 }
 

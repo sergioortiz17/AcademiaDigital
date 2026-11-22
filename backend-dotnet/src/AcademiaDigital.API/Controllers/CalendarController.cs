@@ -10,6 +10,8 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/calendar")]
 public class CalendarController(AppDbContext db) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageCalendar;
+
     [HttpGet("events")]
     public async Task<IActionResult> GetEvents([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
     {
@@ -111,7 +113,7 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
         var role = CurrentUserRole;
 
         if (uid is null) return Unauthorized();
-        if (role is not (UserRole.Admin or UserRole.Profesor))
+        if (!(IsStaff || role == UserRole.Profesor))
             return Denied("Solo administración y docentes pueden crear eventos.");
 
         if (string.IsNullOrWhiteSpace(req.Title))
@@ -142,14 +144,14 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
             scope = EventScope.CourseSection;
             courseSectionId = req.CourseSectionId.Value;
         }
-        else if (role == UserRole.Admin && req.CourseSectionId is not null)
+        else if (IsStaff && req.CourseSectionId is not null)
         {
             scope = EventScope.CourseSection;
             courseSectionId = req.CourseSectionId.Value;
         }
 
         string? modality = null;
-        if (role == UserRole.Admin && req.Modality is "Presencial" or "Virtual")
+        if (IsStaff && req.Modality is "Presencial" or "Virtual")
             modality = req.Modality;
 
         var ev = new AcademicEvent
@@ -197,7 +199,7 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
 
         if (role == UserRole.Profesor && ev.CreatedByUserId != uid.Value)
             return Denied("Solo puede modificar los eventos que creó.");
-        if (role is not (UserRole.Admin or UserRole.Profesor))
+        if (!(IsStaff || role == UserRole.Profesor))
             return Denied("No tiene permiso para modificar eventos.");
 
         if (!string.IsNullOrWhiteSpace(req.Title)) ev.Title = req.Title.Trim();
@@ -206,7 +208,7 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
         ev.StartTime = req.StartTime != null ? TimeOnly.Parse(req.StartTime) : null;
         ev.EventType = req.EventType ?? ev.EventType;
 
-        if (role == UserRole.Admin)
+        if (IsStaff)
             ev.Modality = req.Modality is "Presencial" or "Virtual" ? req.Modality : null;
 
         await db.SaveChangesAsync(ct);
@@ -225,7 +227,7 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
 
         if (role == UserRole.Profesor && ev.CreatedByUserId != uid.Value)
             return Denied("Solo puede modificar los eventos que creó.");
-        if (role is not (UserRole.Admin or UserRole.Profesor))
+        if (!(IsStaff || role == UserRole.Profesor))
             return Denied("No tiene permiso para modificar eventos.");
 
         db.AcademicEvents.Remove(ev);

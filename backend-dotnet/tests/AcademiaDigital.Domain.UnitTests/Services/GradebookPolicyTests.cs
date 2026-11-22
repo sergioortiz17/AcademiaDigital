@@ -260,4 +260,16 @@ public sealed class GradebookPolicyTests
         Assert.Equal([33.34m, 0m, 33.33m, 33.33m], evaluations.Select(item => item.WeightPercentage));
         Assert.Equal(100m, evaluations.Sum(item => item.WeightPercentage));
     }
+
+    [Fact]
+    public void Annual_courses_need_four_instances_and_semester_courses_two()
+    {
+        GradebookEvaluation Regular(string name) => new() { Name = name };
+        var two = new[] { Regular("1"), Regular("2"), new GradebookEvaluation { Name = "R", IsRecovery = true } };
+
+        GradebookPolicy.EnsureMinimumInstances(false, two);
+        var error = Assert.Throws<ArgumentException>(() => GradebookPolicy.EnsureMinimumInstances(true, two));
+        Assert.Contains("al menos 4", error.Message);
+        GradebookPolicy.EnsureMinimumInstances(true, [Regular("1"), Regular("2"), Regular("3"), Regular("4")]);
+    }
 }

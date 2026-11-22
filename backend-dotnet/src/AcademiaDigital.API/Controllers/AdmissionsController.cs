@@ -27,6 +27,8 @@ public sealed class AdmissionsController(
     DownloadAdmissionAgreementQueryHandler downloadAgreementHandler,
     ProcessAdmissionOutboxCommandHandler processOutboxHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     [HttpGet("forms/{slug}")]
     public async Task<IActionResult> GetForm(string slug, CancellationToken ct)
     {
@@ -263,7 +265,7 @@ public sealed class AdmissionsController(
     {
         if (CurrentUserId is null)
             return Unauthorized(ApiResponse.Fail("Not authenticated."));
-        if (CurrentUserRole != UserRole.Admin)
+        if (!IsStaff)
             return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
         return null;
     }

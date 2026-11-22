@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CalendarEvent, CalendarSection, CalendarService } from '../../../core/services/calendar.service';
 import { UserRole } from '../../../store/account/account.actions';
+import { hasPermission } from '../../../core/auth/permissions';
 
 export interface CreateEventDialogData {
   role: UserRole;
@@ -51,7 +52,8 @@ export class CreateEventDialogComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.isProfesor = data.role === UserRole.Profesor;
-    this.isAdmin = data.role === UserRole.Admin;
+    // Admin y el personal con permiso de calendario crean eventos institucionales.
+    this.isAdmin = !this.isProfesor && hasPermission(data.role, 'ManageCalendar');
     if (data.preselectedDate) {
       this.eventDate = new Date(data.preselectedDate + 'T12:00:00');
     }

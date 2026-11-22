@@ -5,6 +5,7 @@ import { Career, CareerDivision, CareerService, StudyPlan, StudyPlanCourse} from
 import { TeacherService } from '../../core/services/teacher.service';
 import { TeachingPosition, TeachingPositionService } from '../../core/services/teaching-position.service';
 import { selectUserRole } from '../../store/account/account.selectors';
+import { hasPermission } from '../../core/auth/permissions';
 import { UserRole } from '../../store/account/account.actions';
 
 type TeachersTab = 'assignments' | 'subjects';
@@ -35,6 +36,8 @@ export class TeachersComponent implements OnInit {
   UserRole = UserRole;
   activeTab: TeachersTab = 'assignments';
   userRole: UserRole | null = null;
+  /** Admin o personal con permiso sobre el área (ManageTeachers): ve y gestiona como Administración. */
+  get staffView(): boolean { return hasPermission(this.userRole, 'ManageTeachers'); }
 
   careers: Career[] = [];
   selectedCareerId: number | null = null;
@@ -66,7 +69,7 @@ export class TeachersComponent implements OnInit {
       this.userRole = role as UserRole;
       if (this.userRole === UserRole.Profesor) {
         this.loadAssignments();
-      } else if (this.userRole === UserRole.Admin) {
+      } else if (this.staffView) {
         this.loadAllTeachingPositions();
       }
     });
@@ -277,7 +280,7 @@ export class TeachersComponent implements OnInit {
           }
         });
 
-        if (this.userRole === UserRole.Admin) {
+        if (this.staffView) {
           this.careerService.getDivisions(careerId).subscribe({
             next: divisions => {
               if (this.selectedCareerId !== careerId) return;
@@ -355,7 +358,7 @@ export class TeachersComponent implements OnInit {
 
   /** * Materias del plan de estudio seleccionado, filtradas por año y búsqueda.*/
   get assignedSubjects(): StudyPlanCourse[] {
-    if (this.userRole !== UserRole.Admin && this.userRole !== UserRole.Profesor) return [];
+    if (!this.staffView && this.userRole !== UserRole.Profesor) return [];
 
     const term = this.subjectSearchTerm.trim().toLowerCase();
     const assignedCourseIds = this.userRole === UserRole.Profesor

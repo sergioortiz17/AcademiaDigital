@@ -15,10 +15,19 @@ public class AdminController(
     GetApplicantsUseCase getApplicantsUseCase,
     ApproveApplicantsUseCase approveApplicantsUseCase) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageUsers;
+
+    private IActionResult RequireStudentsArea()
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
+        if (!Can(Permission.ManageStudents)) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Sin permiso."));
+        return null!;
+    }
+
     private IActionResult RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
-        if (CurrentUserRole != UserRole.Admin) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
+        if (!IsStaff) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
         return null!;
     }
 
@@ -65,7 +74,7 @@ public class AdminController(
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
-        var guard = RequireAdmin(); if (guard != null) return guard;
+        var guard = RequireStudentsArea(); if (guard != null) return guard;
         var approved = string.Equals(status, "approved", StringComparison.OrdinalIgnoreCase);
         var result = await getApplicantsUseCase.ExecuteAsync(search, role, approved, page, pageSize, ct);
         return Ok(new { success = true, result.Items, result.Total, result.Page, result.PageSize });
@@ -75,7 +84,7 @@ public class AdminController(
     [HttpPost("applicants/approve")]
     public async Task<IActionResult> ApproveApplicants([FromBody] ApproveApplicantsRequest request, CancellationToken ct)
     {
-        var guard = RequireAdmin(); if (guard != null) return guard;
+        var guard = RequireStudentsArea(); if (guard != null) return guard;
         var result = await approveApplicantsUseCase.ExecuteAsync(CurrentUserId!.Value, request.UserIds, ct);
         return Ok(new { success = true, result.ApprovedIds, result.Skipped });
     }
@@ -93,3 +102,4 @@ public class AdminController(
 public record ApproveApplicantsRequest([Required] long[] UserIds);
 public record UpdateRoleRequest([Required] UserRole Role);
 public record UpdateActiveStatusRequest([Required] bool IsActive);
+

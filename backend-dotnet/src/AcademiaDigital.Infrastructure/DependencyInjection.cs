@@ -38,6 +38,11 @@ public static class DependencyInjection
         services.AddScoped<IRematriculationRepository, RematriculationRepository>();
         services.AddScoped<ITeacherRepository, TeacherRepository>();
         services.AddScoped<IProfileContactRepository, ProfileContactRepository>();
+        services.AddScoped<AcademiaDigital.Application.Services.IExamSchedulePlanner, Services.ExamSchedulePlanner>();
+        services.AddScoped<AcademiaDigital.Application.Interfaces.ITranscriptService, Services.TranscriptService>();
+        services.AddScoped<AcademiaDigital.Application.Services.IBulkStudentActionsService, Services.BulkStudentActionsService>();
+        services.AddScoped<AcademiaDigital.Application.Interfaces.IStudentReportQuery, Persistence.Queries.StudentReportQuery>();
+        services.AddSingleton<AcademiaDigital.Application.Interfaces.IGoogleIdentityVerifier, Services.GoogleIdentityVerifier>();
         services.AddScoped<ITeacherDocumentRepository, TeacherDocumentRepository>();
         services.AddScoped<ITeacherAssignmentRepository, TeacherAssignmentRepository>();
         services.AddScoped<ITeacherCareerRepository, TeacherCareerRepository>();

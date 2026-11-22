@@ -1,0 +1,65 @@
+<div class="tr-wrap">
+  <h1>Analíticos</h1>
+  <p class="intro">Elija al alumno, revise sus datos y materias, complete libro matriz, folio y los datos de cada acta, y luego imprímalo o guárdelo como PDF.</p>
+
+  <div *ngIf="successMsg" class="msg msg--success" role="status"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+  <div class="layout">
+    <mat-card class="picker">
+      <mat-form-field appearance="outline">
+        <mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="careerId" (selectionChange)="loadStudents()">
+          <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Buscar alumno</mat-label>
+        <input matInput [(ngModel)]="search" placeholder="Nombre, legajo o DNI">
+      </mat-form-field>
+      <button type="button" class="student" *ngFor="let s of visibleStudents"
+        [class.active]="transcript?.student?.studentId === s.id" (click)="open(s)">
+        {{ s.fullName }} <small>{{ s.legajoNumber }}</small>
+      </button>
+    </mat-card>
+
+    <mat-card class="detail" *ngIf="transcript as t">
+      <div class="loading" *ngIf="isLoading"><mat-spinner diameter="32"></mat-spinner></div>
+      <div class="head">
+        <div>
+          <h2>{{ t.student.lastName }}, {{ t.student.firstName }}</h2>
+          <p>DNI {{ t.student.dni || '—' }} · CUIL {{ t.student.cuil || '—' }} · Legajo {{ t.student.legajoNumber }} · {{ t.student.status }}</p>
+          <p>{{ t.student.careerName }} · {{ t.student.studyPlanName || 'Sin plan' }} · Ingreso {{ t.student.admissionYear || '—' }}{{ t.student.graduatedOn ? ' · Egreso ' + (t.student.graduatedOn | date:'dd/MM/yyyy') : '' }}</p>
+        </div>
+        <div class="registry">
+          <mat-form-field appearance="outline"><mat-label>Libro matriz</mat-label><input matInput [(ngModel)]="registryBook" maxlength="30"></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Folio</mat-label><input matInput [(ngModel)]="registryFolio" maxlength="30"></mat-form-field>
+        </div>
+      </div>
+
+      <table class="courses">
+        <thead><tr><th>Materia</th><th>Período</th><th>Condición</th><th>Nota</th><th>Fecha</th><th>Libro del acta</th><th>Folio</th></tr></thead>
+        <tbody>
+          <ng-container *ngFor="let year of years">
+            <tr class="year"><td colspan="7">{{ year }}.º año</td></tr>
+            <tr *ngFor="let c of coursesOfYear(year)" [class.approved]="c.finalGrade != null">
+              <td>{{ c.courseName }}</td><td>{{ c.period }}</td><td>{{ c.condition }}</td>
+              <td class="n">{{ c.finalGrade ?? '—' }}</td><td>{{ c.approvedOn ? (c.approvedOn | date:'dd/MM/yyyy') : '—' }}</td>
+              <ng-container *ngIf="c.examTableId as id; else noAct">
+                <td><input class="act" [(ngModel)]="acts[id].book" maxlength="30" aria-label="Libro del acta"></td>
+                <td><input class="act" [(ngModel)]="acts[id].folio" maxlength="30" aria-label="Folio del acta"></td>
+              </ng-container>
+              <ng-template #noAct><td>—</td><td>—</td></ng-template>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+      <p class="summary">Aprobadas: {{ t.approvedCount }} de {{ t.courses.length }} · Promedio: {{ t.average ?? '—' }}</p>
+      <p class="hint">Libro y folio del acta son de la mesa de examen: se guardan para todos los alumnos de esa mesa.</p>
+      <div class="actions">
+        <button mat-raised-button color="primary" type="button" [disabled]="saving" (click)="save()"><mat-icon>save</mat-icon> Guardar datos</button>
+        <button mat-stroked-button type="button" (click)="print()"><mat-icon>print</mat-icon> Imprimir / PDF</button>
+      </div>
+    </mat-card>
+  </div>
+</div>

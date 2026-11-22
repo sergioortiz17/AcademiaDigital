@@ -46,6 +46,11 @@ describe('Evaluation setup without manual weights', () => {
     expect(close).not.toHaveBeenCalled();
   });
 
+  it('requires four instances for annual courses', () => {
+    component.evaluations = component.evaluations.filter(e => e.name !== 'IEFI');
+    expect(component.validationMessage).toContain('al menos 4');
+  });
+
   it('requires at least one regular instance', () => {
     component.evaluations.forEach(e => (e.isRecovery = true));
     expect(component.validationMessage).toContain('al menos una instancia');

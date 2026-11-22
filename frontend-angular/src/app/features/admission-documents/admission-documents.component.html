@@ -5,9 +5,16 @@
     Administración los revisa y le avisa si falta algo.
   </p>
 
-  <a *ngIf="preEnrollmentUrl" class="pre-enrollment-link" [href]="preEnrollmentUrl" target="_blank" rel="noopener">
-    <mat-icon>open_in_new</mat-icon> Ir a la prematriculación del ministerio
-  </a>
+  <mat-card class="pre-enrollment">
+    <mat-icon>info</mat-icon>
+    <div>
+      <p><strong>¿Es ingresante?</strong> La prematrícula se hace en el sistema del Ministerio de Educación de Córdoba
+        (Sistema de Gestión de Estudiantes, con su usuario CiDi). Sin la prematrícula, el instituto no puede matricularlo.</p>
+      <a *ngIf="preEnrollmentUrl" mat-stroked-button color="primary" [href]="preEnrollmentUrl" target="_blank" rel="noopener">
+        <mat-icon>open_in_new</mat-icon> Ir a la prematriculación
+      </a>
+    </div>
+  </mat-card>
 
   <div *ngIf="successMsg" class="msg msg--success" role="status"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
   <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>

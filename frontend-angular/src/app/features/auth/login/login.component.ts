@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -10,6 +10,18 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { catchError } from 'rxjs/internal/operators/catchError';
 import { Observable } from 'rxjs';
 import { CurrentTenant, DEFAULT_TENANT_SLUG, TenantService } from '../../../core/services/tenant.service';
+import { environment } from '../../../../environments/environment';
+
+/** API mínima de Google Identity Services que usa la pantalla. */
+interface GoogleIdentityApi {
+  accounts: { id: {
+    initialize(options: { client_id: string; callback: (response: { credential: string }) => void; ux_mode?: string }): void;
+    renderButton(element: HTMLElement, options: Record<string, unknown>): void;
+    cancel(): void;
+  } };
+}
+
+const GOOGLE_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +29,12 @@ import { CurrentTenant, DEFAULT_TENANT_SLUG, TenantService } from '../../../core
   styleUrls: ['./login.component.scss'],
   standalone: false
 })
-export class LoginComponent {
+export class LoginComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('googleButton') googleButton?: ElementRef<HTMLDivElement>;
+  /** Página del Ministerio para prematricularse (vacío = solo se muestra la explicación). */
+  readonly preEnrollmentUrl = environment.preEnrollmentUrl;
+  /** Hay Client ID configurado: se muestra "Continuar con Google". */
+  googleEnabled = false;
   readonly tenant$: Observable<CurrentTenant | null>;
   readonly defaultTenantSlug = DEFAULT_TENANT_SLUG;
   loginForm: FormGroup;
@@ -31,7 +48,8 @@ export class LoginComponent {
     private readonly store: Store,
     private readonly router: Router,
     private readonly changeDetectorRef: ChangeDetectorRef,
-    private readonly tenantService: TenantService
+    private readonly tenantService: TenantService,
+    private readonly zone: NgZone
   ) {
     this.tenant$ = this.tenantService.tenant$;
     this.loginForm = this.fb.group({
@@ -61,6 +79,72 @@ export class LoginComponent {
     }
   }
 
+  ngAfterViewInit(): void {
+    this.authService.getGoogleConfig().pipe(catchError(() => EMPTY)).subscribe(({ clientId }) => {
+      if (!clientId) return;
+      this.googleEnabled = true;
+      this.changeDetectorRef.detectChanges();
+      this.loadGoogleScript().then(google => {
+        if (!google || !this.googleButton) return;
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: response => this.zone.run(() => this.onGoogleCredential(response.credential))
+        });
+        google.accounts.id.renderButton(this.googleButton.nativeElement, {
+          theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular', locale: 'es', width: 320
+        });
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    (window as unknown as { google?: GoogleIdentityApi }).google?.accounts.id.cancel();
+  }
+
+  private loadGoogleScript(): Promise<GoogleIdentityApi | null> {
+    const existing = (window as unknown as { google?: GoogleIdentityApi }).google;
+    if (existing?.accounts?.id) return Promise.resolve(existing);
+    return new Promise(resolve => {
+      const script = document.createElement('script');
+      script.src = GOOGLE_SCRIPT_URL;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve((window as unknown as { google?: GoogleIdentityApi }).google ?? null);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+  }
+
+  private onGoogleCredential(credential: string): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.authService.loginWithGoogle(credential).pipe(
+      catchError((error: HttpErrorResponse) => {
+        this.errorMessage = error.status === 404
+          ? (error.error?.msg || 'No hay una cuenta registrada con ese correo de Google.')
+          : this.getLoginErrorMessage(error);
+        this.changeDetectorRef.detectChanges();
+        return EMPTY;
+      }),
+      finalize(() => {
+        this.isLoading = false;
+        this.changeDetectorRef.detectChanges();
+      })
+    ).subscribe(response => this.completeLogin(response));
+  }
+
+  private completeLogin(response: { success?: boolean; token?: string; user?: any; msg?: string }): boolean {
+    if (!response.success || !response.token) {
+      this.errorMessage = response.msg || 'No se pudo iniciar sesión. Intentá nuevamente.';
+      return false;
+    }
+    localStorage.setItem('academia-account', JSON.stringify({ token: response.token, user: response.user }));
+    const user = { ...response.user, role: response.user?.role ?? null };
+    this.store.dispatch(accountInitialize({ isLoggedIn: true, user, token: response.token }));
+    this.router.navigate(['/app/dashboard/default']);
+    return true;
+  }
+
   onSubmit(): void {
     if (this.loginForm.invalid) { this.loginForm.markAllAsTouched(); return; }
     this.isLoading = true;
@@ -79,15 +163,12 @@ export class LoginComponent {
     ).subscribe({
       next: (response) => {
         if (response.success && response.token) {
-          localStorage.setItem('academia-account', JSON.stringify({ token: response.token, user: response.user }));
           if (rememberMe) {
             localStorage.setItem('remember-user',JSON.stringify({email}));
           } else {
             localStorage.removeItem('remember-user');
           }
-          const user = { ...response.user, role: response.user?.role ?? null };
-          this.store.dispatch(accountInitialize({ isLoggedIn: true, user, token: response.token }));
-          this.router.navigate(['/app/dashboard/default']);
+          this.completeLogin(response);
         } else {
           this.errorMessage = response.msg || 'El correo electrónico y/o contraseña ingresados no son correctos.';
         }

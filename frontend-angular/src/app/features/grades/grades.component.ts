@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import * as ExcelJS from 'exceljs';
 import { asyncScheduler, forkJoin, Observable, observeOn } from 'rxjs';
 import { selectUserRole } from '../../store/account/account.selectors';
+import { hasPermission } from '../../core/auth/permissions';
 import { UserRole } from '../../store/account/account.actions';
 import { CareerService, Career, CareerDivision, StudyPlanCourse } from '../../core/services/career.service';
 import { TeacherService, TeacherAssignment } from '../../core/services/teacher.service';
@@ -14,6 +15,7 @@ import { GradebookExam, Gradebook, GradebookService, GradebookDetail, GradebookE
 import { EvaluationSetupDialogComponent, EvaluationSetupDialogData } from './evaluation-setup-dialog/evaluation-setup-dialog.component';
 import { GradebookEvaluationLayoutInput } from '../../core/services/gradebook.service';
 import { courseDisplayName, mostFrequentId } from '../../core/utils/academic-labels';
+import { downloadExcel, normalizeHeader, readExcelRows } from '../../core/utils/excel';
 import { GradebookActionDialogComponent } from './gradebook-action-dialog.component';
 
 interface EditableGrade {
@@ -138,6 +140,8 @@ const CAREER_YEAR_LABELS: Record<number, string> = {
 export class GradesComponent implements OnInit {
   UserRole = UserRole;
   userRole: UserRole | null = null;
+  /** Admin o personal con permiso sobre el área (ManageGrades): ve y gestiona como Administración. */
+  get staffView(): boolean { return hasPermission(this.userRole, 'ManageGrades'); }
 
   careers: Career[] = [];
   selectedCareerId: number | null = null;
@@ -204,7 +208,7 @@ export class GradesComponent implements OnInit {
       this.userRole = role as UserRole;
       if (this.userRole === UserRole.Profesor) {
         this.loadMyAssignments();
-      } else if (this.userRole === UserRole.Admin) {
+      } else if (this.staffView) {
         this.loadAllTeachingPositions();
       } else if (this.userRole === UserRole.Alumno) {
         this.loadMyGrades();
@@ -264,7 +268,8 @@ export class GradesComponent implements OnInit {
       divisionCode: position.divisionCode,
       divisionName: position.divisionName,
       academicYear: position.academicYear,
-      semester: position.semester
+      semester: position.semester,
+      isAnnual: position.isAnnual
     };
   }
 
@@ -333,6 +338,23 @@ export class GradesComponent implements OnInit {
     return grade.score == null ? '' : String(grade.score).replace('.', ',');
   }
 
+  /**
+   * Nuevo esquema: el recuperatorio n.º k se habilita cuando el alumno desaprobó (4 o menos) o
+   * estuvo ausente en al menos k instancias. Si ya tiene nota cargada, se deja editar igual.
+   */
+  isRecoveryEnabled(row: EditableRow, evaluation: GradebookEvaluation): boolean {
+    if (!evaluation.isRecovery) return true;
+    const grade = row.editableGrades[evaluation.id];
+    if (grade?.score != null || grade?.isAbsent || grade?.invalidText != null) return true;
+    const recoveries = this.evaluationGroups.map(g => g.evaluation).filter(e => e.isRecovery);
+    const position = recoveries.findIndex(e => e.id === evaluation.id) + 1;
+    const failed = this.evaluationGroups.map(g => g.evaluation).filter(e => !e.isRecovery).filter(e => {
+      const g = row.editableGrades[e.id];
+      return g?.isAbsent || (g?.score != null && g.score / e.maximumScore * 10 <= 4);
+    }).length;
+    return failed >= position;
+  }
+
   isGradeInvalid(row: EditableRow, evaluationId: number): boolean {
     return row.editableGrades[evaluationId]?.invalidText != null;
   }
@@ -396,7 +418,7 @@ export class GradesComponent implements OnInit {
         assignment.courseId === course.courseId && assignment.divisionId === this.selectedDivisionId
       );
 
-      if (this.userRole === UserRole.Admin && sections.length === 0) {
+      if (this.staffView && sections.length === 0) {
         options.push({
           key: `course-${course.courseId}`,
           courseId: course.courseId,
@@ -430,7 +452,7 @@ export class GradesComponent implements OnInit {
   get professorDivisions(): GradeDivisionOption[] {
     if (this.selectedCareerYear == null) return [];
 
-    if (this.userRole === UserRole.Admin) {
+    if (this.staffView) {
       return this.careerDivisions
         .filter(division => division.yearNumber === this.selectedCareerYear)
         .map(division => ({
@@ -528,7 +550,7 @@ export class GradesComponent implements OnInit {
       return;
     }
 
-    if (this.userRole === UserRole.Admin) {
+    if (this.staffView) {
       this.careerService.getDivisions(careerId).subscribe({
         next: divisions => {
           if (this.selectedCareerId !== careerId) return;
@@ -741,7 +763,8 @@ export class GradesComponent implements OnInit {
 
     const dialogRef = this.dialog.open(EvaluationSetupDialogComponent, {
       width: '600px',
-      disableClose: true
+      disableClose: true,
+      data: { isAnnual: assignment.isAnnual ?? true } as EvaluationSetupDialogData
     });
 
     dialogRef.afterClosed().pipe(observeOn(asyncScheduler)).subscribe((evaluations) => {
@@ -808,7 +831,11 @@ export class GradesComponent implements OnInit {
       width: '760px',
       maxWidth: '95vw',
       disableClose: true,
-      data: { evaluations: this.detail.evaluations, evaluationIdsWithGrades: [...withGrades] } as EvaluationSetupDialogData
+      data: {
+        evaluations: this.detail.evaluations,
+        evaluationIdsWithGrades: [...withGrades],
+        isAnnual: this.selectedAssignment?.isAnnual ?? true
+      } as EvaluationSetupDialogData
     });
     dialogRef.afterClosed().pipe(observeOn(asyncScheduler)).subscribe((layout: GradebookEvaluationLayoutInput[] | null) => {
       if (!layout) return;
@@ -831,6 +858,73 @@ export class GradesComponent implements OnInit {
         }
       });
     });
+  }
+
+  // --- Importar notas desde Excel ---
+  importSummary = '';
+
+  /** Plantilla con los alumnos de la planilla y una columna por instancia. */
+  async downloadGradesTemplate(): Promise<void> {
+    if (!this.detail) return;
+    const evaluations = this.evaluationGroups.map(group => group.evaluation);
+    const g = this.detail.gradebook;
+    await downloadExcel(`notas_${g.courseName}_${g.divisionName}.xlsx`, 'Notas',
+      `${g.courseName} · ${g.divisionName} · ${g.academicYear} — complete las notas (A = ausente)`,
+      [
+        { header: 'Legajo', value: (r: EditableRow) => r.legajoNumber, width: 12 },
+        { header: 'DNI', value: (r: EditableRow) => r.dni, width: 12 },
+        { header: 'Alumno', value: (r: EditableRow) => r.studentName, width: 28 },
+        ...evaluations.map(ev => ({ header: ev.name, value: (r: EditableRow) => this.gradeText(r, ev.id), width: 14 }))
+      ], this.rows);
+  }
+
+  /** Carga en la planilla las notas del Excel (no guarda: el docente revisa y toca Guardar). */
+  async importGrades(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !this.detail || !this.canEdit) return;
+    this.errorMsg = '';
+    this.importSummary = '';
+    try {
+      const { headers, rows } = await readExcelRows(file, ['legajo', 'dni', 'alumno']);
+      const col = (names: string[]) => headers.findIndex(h => names.includes(normalizeHeader(h)));
+      const legajoCol = col(['legajo']);
+      const dniCol = col(['dni', 'documento']);
+      if (legajoCol < 0 && dniCol < 0) {
+        this.errorMsg = 'El Excel necesita una columna Legajo o DNI para reconocer a cada alumno. Use la plantilla.';
+        this.cdr.detectChanges();
+        return;
+      }
+      const evaluationCols = this.evaluationGroups
+        .map(group => ({ evaluation: group.evaluation, index: col([normalizeHeader(group.evaluation.name)]) }))
+        .filter(item => item.index >= 0);
+      if (evaluationCols.length === 0) {
+        this.errorMsg = 'Ninguna columna del Excel coincide con las instancias de la planilla.';
+        this.cdr.detectChanges();
+        return;
+      }
+      const byLegajo = new Map(this.rows.map(r => [String(r.legajoNumber ?? '').trim(), r]));
+      const byDni = new Map(this.rows.map(r => [String(r.dni ?? '').replace(/\D/g, ''), r]));
+      let loaded = 0;
+      const unknown: number[] = [];
+      for (const { rowNumber, cells } of rows) {
+        const student = (legajoCol >= 0 ? byLegajo.get((cells[legajoCol] ?? '').trim()) : undefined)
+          ?? (dniCol >= 0 ? byDni.get((cells[dniCol] ?? '').replace(/\D/g, '')) : undefined);
+        if (!student) { unknown.push(rowNumber); continue; }
+        for (const { evaluation, index } of evaluationCols) {
+          const text = (cells[index] ?? '').trim();
+          if (!text) continue;
+          this.updateGradeText(student, evaluation, text);
+          loaded++;
+        }
+      }
+      this.importSummary = `Se cargaron ${loaded} nota(s) del Excel. Revíselas y toque Guardar.`
+        + (unknown.length ? ` Filas sin alumno en la planilla: ${unknown.join(', ')}.` : '')
+        + (this.invalidGradeCount ? ` ${this.invalidGradeCount} nota(s) inválidas quedaron en rojo.` : '');
+    } catch {
+      this.errorMsg = 'No se pudo leer el archivo. Debe ser un Excel (.xlsx).';
+    }
+    this.cdr.detectChanges();
   }
 
   updateGradeText(row: EditableRow, evaluation: GradebookEvaluation, text: string): void {
@@ -928,7 +1022,7 @@ export class GradesComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    const isAdmin = this.userRole === UserRole.Admin;
+    const isAdmin = this.staffView;
     const dialogRef = this.dialog.open(GradebookActionDialogComponent, {
       width: '480px',
       disableClose: true,
@@ -1043,7 +1137,7 @@ export class GradesComponent implements OnInit {
 
   reopenGradebook(): void {
     const gradebookId = this.detail?.gradebook.id;
-    if (this.userRole !== UserRole.Admin || gradebookId == null || this.isTransitioning) return;
+    if (!this.staffView || gradebookId == null || this.isTransitioning) return;
 
     this.isTransitioning = true;
     const dialogRef = this.dialog.open(GradebookActionDialogComponent, {
@@ -1078,7 +1172,7 @@ export class GradesComponent implements OnInit {
     enableEditing = false
   ): void {
     const gradebookId = this.detail?.gradebook.id;
-    if (this.userRole !== UserRole.Admin || gradebookId == null || this.isTransitioning) return;
+    if (!this.staffView || gradebookId == null || this.isTransitioning) return;
 
     this.isTransitioning = true;
     const dialogRef = this.dialog.open(GradebookActionDialogComponent, {

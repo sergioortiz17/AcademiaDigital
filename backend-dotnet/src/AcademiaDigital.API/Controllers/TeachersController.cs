@@ -22,19 +22,21 @@ public sealed class TeachersController(
     AssignCoursesToTeacherHandler assignCoursesHandler,
     EndTeacherAssignmentCommandHandler endAssignmentHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageTeachers;
+
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] bool includeInactive = false, CancellationToken ct = default)
     {
-        var guard = RequireAdmin();
-        if (guard is not null) return guard;
+        if (CurrentUserId is null) return Unauthorized();
+        if (!AcademiaDigital.Domain.Services.RolePermissions.IsStaff(CurrentUserRole)) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await listHandler.Handle(new GetTeachersQuery(includeInactive), ct));
     }
 
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get(long id, CancellationToken ct)
     {
-        var guard = RequireAdmin();
-        if (guard is not null) return guard;
+        if (CurrentUserId is null) return Unauthorized();
+        if (!AcademiaDigital.Domain.Services.RolePermissions.IsStaff(CurrentUserRole)) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await getHandler.Handle(new GetTeacherByIdQuery(id), ct));
     }
 
@@ -195,7 +197,7 @@ public sealed class TeachersController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }

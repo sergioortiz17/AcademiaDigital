@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { CertificatesService, CertificateRequest, CERTIFICATE_TYPES } from '../../core/services/certificates.service';
 import { PersonNameLookupService } from '../../core/services/person-name-lookup.service';
 import { selectUserRole } from '../../store/account/account.selectors';
+import { hasPermission } from '../../core/auth/permissions';
 import { UserRole } from '../../store/account/account.actions';
 
 @Component({
@@ -26,6 +27,8 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   certificateTypes = CERTIFICATE_TYPES;
   UserRole = UserRole;
   userRole: UserRole | null = null;
+  /** Admin o personal con permiso sobre el área (ManageCertificates): ve y gestiona como Administración. */
+  get staffView(): boolean { return hasPermission(this.userRole, 'ManageCertificates'); }
   showMyRequests = false;
 
   // Admin filters
@@ -43,7 +46,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   displayedColumnsAdmin  = ['username', 'certificateType', 'status', 'createdAt', 'actions'];
 
   get displayedColumns() {
-    return this.userRole === UserRole.Admin
+    return this.staffView
       ? this.displayedColumnsAdmin
       : this.displayedColumnsAlumno;
   }
@@ -111,7 +114,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.select(selectUserRole).pipe(take(1)).subscribe(role => {
       this.userRole = role as UserRole;
-      if (this.userRole === UserRole.Admin) {
+      if (this.staffView) {
         this.loadRequests();
       }
     });
@@ -135,7 +138,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
 
   onStatusFilter(status: string | null): void {
     this.selectedStatus = status;
-    if (this.userRole === UserRole.Admin) {
+    if (this.staffView) {
         this.loadRequests();
     }
     else {
@@ -148,11 +151,11 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMsg = '';
 
-    const obs = this.userRole === UserRole.Admin
+    const obs = this.staffView
       ? this.certificatesService.getAllCertificates(this.searchTerm, this.selectedStatus)
       : this.certificatesService.getMyCertificates();
 
-    const names$ = this.userRole === UserRole.Admin
+    const names$ = this.staffView
       ? this.personNames.getNamesByUserId().pipe(catchError(() => of(null)))
       : of(null);
 
@@ -163,7 +166,7 @@ export class CertificatesComponent implements OnInit, OnDestroy {
            displayName: names?.get(request.userId) || request.username || ''
          }));
          this.applyFilters();
-         if (this.userRole === UserRole.Admin && !names) {
+         if (this.staffView && !names) {
            this.errorMsg = 'No se pudieron consultar todos los nombres completos; se muestran los nombres de usuario disponibles.';
          }
          this.isLoading = false;

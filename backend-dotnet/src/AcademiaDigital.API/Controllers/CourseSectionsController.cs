@@ -14,6 +14,8 @@ public sealed class CourseSectionsController(
     UpdateCourseSectionCommandHandler updateHandler,
     DeactivateCourseSectionCommandHandler deactivateHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageCareers;
+
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] int? academicYear,
@@ -22,8 +24,8 @@ public sealed class CourseSectionsController(
         [FromQuery] bool includeInactive = false,
         CancellationToken ct = default)
     {
-        var guard = RequireAdmin();
-        if (guard is not null) return guard;
+        if (CurrentUserId is null) return Unauthorized();
+        if (!AcademiaDigital.Domain.Services.RolePermissions.IsStaff(CurrentUserRole)) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await listHandler.Handle(
             new GetCourseSectionsQuery(academicYear, semester, isVacant, includeInactive), ct));
     }
@@ -31,8 +33,8 @@ public sealed class CourseSectionsController(
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id, CancellationToken ct)
     {
-        var guard = RequireAdmin();
-        if (guard is not null) return guard;
+        if (CurrentUserId is null) return Unauthorized();
+        if (!AcademiaDigital.Domain.Services.RolePermissions.IsStaff(CurrentUserRole)) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await getHandler.Handle(new GetCourseSectionByIdQuery(id), ct));
     }
 
@@ -74,7 +76,7 @@ public sealed class CourseSectionsController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }
