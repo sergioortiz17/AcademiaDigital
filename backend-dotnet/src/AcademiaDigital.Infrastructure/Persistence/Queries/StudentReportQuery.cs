@@ -45,9 +45,10 @@ public sealed class StudentReportQuery(AppDbContext db) : IStudentReportQuery
             .Select(s => new
             {
                 s.LegajoNumber, s.User.LastName, s.User.Username, s.User.Dni, s.User.Cuil, s.User.Gender, s.User.BirthDate,
-                s.User.Email, s.User.PhoneCode, s.User.Phone, s.AddressLine, s.City, s.Province, s.PostalCode,
+                s.User.Email, s.User.PhoneCode, s.User.Phone, s.User.AddressLine, s.User.City, s.User.Province, s.User.PostalCode,
+                s.User.DocumentType, s.User.AlternatePhone, s.User.Neighborhood, s.User.District, s.User.Country,
                 CareerName = s.Career.Name, s.Status, s.User.DateJoined, s.User.RegistrationStatus, s.EnrollmentDate, s.GraduatedOn,
-                s.EmergencyContactName, s.EmergencyContactPhone, s.HealthInsurance, s.RegistryBook, s.RegistryFolio
+                s.User.EmergencyContactName, s.User.EmergencyContactPhone, s.User.HealthInsurance, s.RegistryBook, s.RegistryFolio
             })
             .ToListAsync(ct);
 
@@ -62,7 +63,8 @@ public sealed class StudentReportQuery(AppDbContext db) : IStudentReportQuery
             DateOnly.FromDateTime(r.DateJoined),
             r.RegistrationStatus == RegistrationStatus.Pending ? null : DateOnly.FromDateTime(r.EnrollmentDate),
             r.GraduatedOn, r.EmergencyContactName, r.EmergencyContactPhone, r.HealthInsurance,
-            r.RegistryBook, r.RegistryFolio)).ToArray();
+            r.RegistryBook, r.RegistryFolio,
+            r.DocumentType ?? (r.Dni is null ? null : "DNI"), r.AlternatePhone, r.Neighborhood, r.District, r.Country)).ToArray();
     }
 
     private static string StatusLabel(StudentStatus status) => status switch

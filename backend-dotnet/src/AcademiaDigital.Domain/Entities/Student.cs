@@ -8,15 +8,7 @@ public class Student
     public string LegajoNumber { get; set; } = string.Empty;
     public DateTime EnrollmentDate { get; set; } = DateTime.UtcNow;
     public StudentStatus Status { get; set; } = StudentStatus.Regular;
-    public string? AddressLine { get; set; }
-    public string? City { get; set; }
-    public string? Province { get; set; }
-    public string? PostalCode { get; set; }
-    public string? EmergencyContactName { get; set; }
-    public string? EmergencyContactRelationship { get; set; }
-    public string? EmergencyContactPhone { get; set; }
-    /// <summary>Obra social o prepaga (texto libre).</summary>
-    public string? HealthInsurance { get; set; }
+    // Domicilio, contacto de emergencia y obra social están en User (los carga cada usuario).
     /// <summary>Fecha de egreso (la carga Administración al marcarlo egresado).</summary>
     public DateOnly? GraduatedOn { get; set; }
     /// <summary>Libro matriz y folio donde está registrado el alumno (para el analítico).</summary>

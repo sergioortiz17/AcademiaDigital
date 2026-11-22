@@ -41,7 +41,12 @@ public sealed record StudentReportRow(
     string? EmergencyContactPhone,
     string? HealthInsurance,
     string? RegistryBook,
-    string? RegistryFolio);
+    string? RegistryFolio,
+    string? DocumentType = null,
+    string? AlternatePhone = null,
+    string? Neighborhood = null,
+    string? District = null,
+    string? Country = null);
 
 /// <summary>Listados de alumnos y aspirantes para exportar a Excel.</summary>
 public interface IStudentReportQuery

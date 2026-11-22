@@ -67,7 +67,7 @@ public sealed class TranscriptService(AppDbContext db) : ITranscriptService
         return new TranscriptDto(
             new TranscriptStudent(s.Id, u.LastName, u.Username, u.Dni, u.Cuil, u.Gender,
                 u.BirthDate.HasValue ? DateOnly.FromDateTime(u.BirthDate.Value) : null,
-                s.AddressLine, s.City, s.Province,
+                u.AddressLine, u.City, u.Province,
                 string.IsNullOrEmpty(u.Phone) ? null : $"{u.PhoneCode} {u.Phone}".Trim(), u.Email,
                 s.LegajoNumber, s.RegistryBook, s.RegistryFolio, StatusLabel(s.Status), plan?.AdmissionYear,
                 s.GraduatedOn, s.Career.Name, plan?.Name),

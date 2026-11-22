@@ -59,6 +59,8 @@
 .auth-card {
   width: 100%;
   min-width: 31.9rem;
+  // Ancho fijo como antes: sin tope, el texto de "¿Es ingresante?" estiraba la tarjeta.
+  max-width: 31.9rem;
   /*height: 44.56rem;*/
   border-radius: 45px !important;
   padding: 2rem;  

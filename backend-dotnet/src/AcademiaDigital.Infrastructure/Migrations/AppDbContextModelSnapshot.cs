@@ -2545,34 +2545,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AddressLine")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("address_line");
-
                     b.Property<int>("CareerId")
                         .HasColumnType("integer")
                         .HasColumnName("career_id");
-
-                    b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("city");
-
-                    b.Property<string>("EmergencyContactName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("emergency_contact_name");
-
-                    b.Property<string>("EmergencyContactPhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("emergency_contact_phone");
-
-                    b.Property<string>("EmergencyContactRelationship")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("emergency_contact_relationship");
 
                     b.Property<DateTime>("EnrollmentDate")
                         .HasColumnType("timestamp with time zone")
@@ -2582,26 +2557,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("date")
                         .HasColumnName("graduated_on");
 
-                    b.Property<string>("HealthInsurance")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("health_insurance");
-
                     b.Property<string>("LegajoNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("legajo_number");
-
-                    b.Property<string>("PostalCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("postal_code");
-
-                    b.Property<string>("Province")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("province");
 
                     b.Property<string>("RegistryBook")
                         .HasMaxLength(30)
@@ -3221,16 +3181,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AddressLine")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("address_line");
-
-                    b.Property<string>("City")
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)")
-                        .HasColumnName("city");
-
                     b.Property<DateTime?>("DeactivatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deactivated_at");
@@ -3249,31 +3199,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("department");
 
-                    b.Property<string>("EmergencyContactName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("emergency_contact_name");
-
-                    b.Property<string>("EmergencyContactPhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("emergency_contact_phone");
-
-                    b.Property<string>("EmergencyContactRelationship")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("emergency_contact_relationship");
-
                     b.Property<string>("EmployeeNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("employee_number");
-
-                    b.Property<string>("HealthInsurance")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("health_insurance");
 
                     b.Property<DateTime>("HireDate")
                         .HasColumnType("timestamp with time zone")
@@ -3288,16 +3218,6 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text")
                         .HasColumnName("PhoneNumber");
-
-                    b.Property<string>("PostalCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("postal_code");
-
-                    b.Property<string>("Province")
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)")
-                        .HasColumnName("province");
 
                     b.Property<string>("SpecializationArea")
                         .HasMaxLength(200)
@@ -3563,6 +3483,16 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("AddressLine")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("address_line");
+
+                    b.Property<string>("AlternatePhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("alternate_phone");
+
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("approved_at");
@@ -3575,6 +3505,16 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("birth_date");
 
+                    b.Property<string>("City")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("country");
+
                     b.Property<string>("Cuil")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
@@ -3584,16 +3524,41 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_joined");
 
+                    b.Property<string>("District")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("district");
+
                     b.Property<string>("Dni")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("dni");
+
+                    b.Property<string>("DocumentType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("document_type");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)")
                         .HasColumnName("email");
+
+                    b.Property<string>("EmergencyContactName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("emergency_contact_name");
+
+                    b.Property<string>("EmergencyContactPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("emergency_contact_phone");
+
+                    b.Property<string>("EmergencyContactRelationship")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("emergency_contact_relationship");
 
                     b.Property<int>("FailedLoginAttempts")
                         .ValueGeneratedOnAdd()
@@ -3605,6 +3570,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasMaxLength(1)
                         .HasColumnType("character varying(1)")
                         .HasColumnName("gender");
+
+                    b.Property<string>("HealthInsurance")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("health_insurance");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -3621,6 +3591,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("locked_until");
 
+                    b.Property<string>("Neighborhood")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("neighborhood");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -3636,6 +3611,16 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("phone_code");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<string>("Province")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("province");
 
                     b.Property<int>("RegistrationStatus")
                         .HasColumnType("integer")

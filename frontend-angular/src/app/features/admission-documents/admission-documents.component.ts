@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import {
   AdmissionDocumentsService,
   DocumentRequirement,
@@ -14,6 +15,17 @@ interface RequirementRow {
   latest: StudentDocument | null;
 }
 
+/** Archivo elegido o documento enviado que se muestra en pantalla antes de enviar o al tocar "Ver". */
+interface Preview {
+  name: string;
+  sizeLabel: string;
+  url: string;
+  safeUrl: SafeResourceUrl;
+  isPdf: boolean;
+  /** Solo en el archivo elegido: lo que se envía al tocar "Enviar". */
+  file?: File;
+}
+
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
@@ -24,7 +36,7 @@ const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
   styleUrls: ['./admission-documents.component.scss'],
   standalone: false
 })
-export class AdmissionDocumentsComponent implements OnInit {
+export class AdmissionDocumentsComponent implements OnInit, OnDestroy {
   rows: RequirementRow[] = [];
   isLoading = true;
   uploadingId: number | null = null;
@@ -33,10 +45,21 @@ export class AdmissionDocumentsComponent implements OnInit {
   readonly preEnrollmentUrl = environment.preEnrollmentUrl;
   readonly statusLabel = documentStatusLabel;
 
+  /** Archivo elegido por requisito, todavía sin enviar (con su vista previa). */
+  pending: Record<number, Preview> = {};
+  /** Documento ya enviado que se está viendo, por requisito. */
+  viewing: Record<number, Preview> = {};
+  loadingViewId: number | null = null;
+
   constructor(
     private readonly service: AdmissionDocumentsService,
+    private readonly sanitizer: DomSanitizer,
     private readonly cdr: ChangeDetectorRef
   ) {}
+
+  ngOnDestroy(): void {
+    [...Object.values(this.pending), ...Object.values(this.viewing)].forEach(p => URL.revokeObjectURL(p.url));
+  }
 
   ngOnInit(): void {
     this.load();
@@ -72,6 +95,7 @@ export class AdmissionDocumentsComponent implements OnInit {
     return row.latest?.status !== 'Approved';
   }
 
+  /** Elegir un archivo no lo envía: muestra la vista previa y espera "Enviar". */
   onFileSelected(row: RequirementRow, input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
@@ -85,10 +109,27 @@ export class AdmissionDocumentsComponent implements OnInit {
       this.errorMsg = 'El archivo debe pesar hasta 10 MB.';
       return;
     }
+    this.cancelPending(row);
+    this.closeView(row);
+    this.pending[row.requirement.id] = { ...this.preview(file, file.name), file };
+    this.cdr.markForCheck();
+  }
+
+  cancelPending(row: RequirementRow): void {
+    const current = this.pending[row.requirement.id];
+    if (current) URL.revokeObjectURL(current.url);
+    delete this.pending[row.requirement.id];
+  }
+
+  send(row: RequirementRow): void {
+    const file = this.pending[row.requirement.id]?.file;
+    if (!file || this.uploadingId !== null) return;
     this.uploadingId = row.requirement.id;
+    this.errorMsg = '';
     this.service.upload(row.requirement.id, file).subscribe({
       next: () => {
         this.uploadingId = null;
+        this.cancelPending(row);
         this.successMsg = `"${row.requirement.name}" se envió. Administración lo va a revisar.`;
         this.load();
         setTimeout(() => { this.successMsg = ''; this.cdr.markForCheck(); }, 5000);
@@ -99,6 +140,46 @@ export class AdmissionDocumentsComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  /** Muestra en pantalla el documento ya enviado (o lo oculta si ya se estaba viendo). */
+  toggleView(row: RequirementRow): void {
+    const doc = row.latest;
+    if (!doc) return;
+    if (this.viewing[row.requirement.id]) { this.closeView(row); return; }
+    this.loadingViewId = row.requirement.id;
+    this.service.downloadMine(doc.id).subscribe({
+      next: blob => {
+        this.loadingViewId = null;
+        const typed = blob.type ? blob : new Blob([blob], { type: doc.contentType });
+        this.viewing[row.requirement.id] = this.preview(typed, doc.originalFileName);
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.loadingViewId = null;
+        this.errorMsg = err?.message || 'No se pudo abrir el archivo.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  closeView(row: RequirementRow): void {
+    const current = this.viewing[row.requirement.id];
+    if (current) URL.revokeObjectURL(current.url);
+    delete this.viewing[row.requirement.id];
+  }
+
+  private preview(blob: Blob, name: string): Preview {
+    const url = URL.createObjectURL(blob);
+    const kb = blob.size / 1024;
+    return {
+      name,
+      sizeLabel: kb >= 1024 ? `${(kb / 1024).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(kb))} KB`,
+      url,
+      // Es un blob local creado en este navegador a partir del archivo del propio usuario.
+      safeUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url),
+      isPdf: blob.type === 'application/pdf'
+    };
   }
 
   download(document: StudentDocument): void {

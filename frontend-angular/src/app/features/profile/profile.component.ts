@@ -27,7 +27,7 @@ export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
   profileSaving = false;
 
-  /** Datos de contacto: solo para alumnos y docentes (el Admin no tiene ficha). */
+  /** Documento, domicilio y contacto: los carga cualquier rol (son los datos de las planillas). */
   contactForm: FormGroup;
   hasContactInfo = false;
   contactSaving = false;
@@ -41,6 +41,19 @@ export class ProfileComponent implements OnInit {
   hideConfirmPassword = true;
 
   maxBirthDate = new Date();
+
+  readonly documentTypes = [
+    { value: 'DNI', label: 'DNI' },
+    { value: 'LC', label: 'Libreta cívica' },
+    { value: 'LE', label: 'Libreta de enrolamiento' },
+    { value: 'CI', label: 'Cédula de identidad' },
+    { value: 'PAS', label: 'Pasaporte' }
+  ];
+
+  /** El legajo académico solo se muestra al alumno. */
+  get isStudent(): boolean {
+    return this.profile?.role === UserRole.Alumno;
+  }
 
   constructor(
     private readonly fb: FormBuilder,
@@ -61,9 +74,14 @@ export class ProfileComponent implements OnInit {
     }, { validators: phoneLengthValidator });
 
     this.contactForm = this.fb.group({
-      addressLine: ['', Validators.maxLength(255)],
-      city: ['', Validators.maxLength(100)],
-      province: ['', Validators.maxLength(100)],
+      documentType: ['DNI'],
+      alternatePhone: ['', Validators.pattern(/^\+?[\d\s-]{6,20}$/)],
+      addressLine: ['', Validators.maxLength(300)],
+      neighborhood: ['', Validators.maxLength(120)],
+      city: ['', Validators.maxLength(120)],
+      district: ['', Validators.maxLength(120)],
+      province: ['', Validators.maxLength(120)],
+      country: ['', Validators.maxLength(100)],
       postalCode: ['', Validators.maxLength(20)],
       emergencyContactName: ['', Validators.maxLength(200)],
       emergencyContactRelationship: ['', Validators.maxLength(100)],
@@ -125,10 +143,9 @@ export class ProfileComponent implements OnInit {
   }
 
   private loadContactInfo(): void {
-    if (this.profile?.role !== UserRole.Alumno && this.profile?.role !== UserRole.Profesor) return;
     this.userService.getContactInfo().pipe(catchError(() => of(null))).subscribe(info => {
       this.hasContactInfo = info != null;
-      if (info) this.contactForm.patchValue(mapNulls(info));
+      if (info) this.contactForm.patchValue({ ...mapNulls(info), documentType: info.documentType || 'DNI' });
       this.contactForm.markAsPristine();
       this.cdr.detectChanges();
     });
@@ -157,7 +174,7 @@ export class ProfileComponent implements OnInit {
     this.userService.updateContactInfo(payload).subscribe({
       next: saved => {
         this.contactSaving = false;
-        this.contactForm.patchValue(mapNulls(saved));
+        this.contactForm.patchValue({ ...mapNulls(saved), documentType: saved.documentType || 'DNI' });
         this.contactForm.markAsPristine();
         void Swal.fire({ icon: 'success', titleText: 'Datos de contacto guardados', confirmButtonText: 'Aceptar' });
         this.cdr.detectChanges();

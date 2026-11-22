@@ -5,48 +5,31 @@ namespace AcademiaDigital.Infrastructure.Persistence.Repositories;
 
 public sealed class ProfileContactRepository(AppDbContext db) : IProfileContactRepository
 {
-    public async Task<ProfileContactInfo?> GetAsync(long userId, CancellationToken ct = default)
-    {
-        var student = await db.Students.AsNoTracking().Where(s => s.UserId == userId)
-            .Select(s => new ProfileContactInfo(s.AddressLine, s.City, s.Province, s.PostalCode,
-                s.EmergencyContactName, s.EmergencyContactRelationship, s.EmergencyContactPhone, s.HealthInsurance))
+    public Task<ProfileContactInfo?> GetAsync(long userId, CancellationToken ct = default)
+        => db.Users.AsNoTracking().Where(u => u.Id == userId)
+            .Select(u => new ProfileContactInfo(u.DocumentType, u.AlternatePhone, u.AddressLine, u.Neighborhood,
+                u.City, u.District, u.Province, u.Country, u.PostalCode, u.EmergencyContactName,
+                u.EmergencyContactRelationship, u.EmergencyContactPhone, u.HealthInsurance))
             .FirstOrDefaultAsync(ct);
-        if (student is not null) return student;
-        return await db.Teachers.AsNoTracking().Where(t => t.UserId == userId)
-            .Select(t => new ProfileContactInfo(t.AddressLine, t.City, t.Province, t.PostalCode,
-                t.EmergencyContactName, t.EmergencyContactRelationship, t.EmergencyContactPhone, t.HealthInsurance))
-            .FirstOrDefaultAsync(ct);
-    }
 
     public async Task<bool> SaveAsync(long userId, ProfileContactInfo info, CancellationToken ct = default)
     {
-        // Entidad rastreada sin navegaciones: SaveChanges actualiza solo las columnas modificadas.
-        var student = await db.Students.FirstOrDefaultAsync(s => s.UserId == userId, ct);
-        if (student is not null)
-        {
-            student.AddressLine = info.AddressLine;
-            student.City = info.City;
-            student.Province = info.Province;
-            student.PostalCode = info.PostalCode;
-            student.EmergencyContactName = info.EmergencyContactName;
-            student.EmergencyContactRelationship = info.EmergencyContactRelationship;
-            student.EmergencyContactPhone = info.EmergencyContactPhone;
-            student.HealthInsurance = info.HealthInsurance;
-            student.UpdatedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(ct);
-            return true;
-        }
-
-        var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.UserId == userId, ct);
-        if (teacher is null) return false;
-        teacher.AddressLine = info.AddressLine;
-        teacher.City = info.City;
-        teacher.Province = info.Province;
-        teacher.PostalCode = info.PostalCode;
-        teacher.EmergencyContactName = info.EmergencyContactName;
-        teacher.EmergencyContactRelationship = info.EmergencyContactRelationship;
-        teacher.EmergencyContactPhone = info.EmergencyContactPhone;
-        teacher.HealthInsurance = info.HealthInsurance;
+        // Entidad rastreada: SaveChanges actualiza solo las columnas modificadas.
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null) return false;
+        user.DocumentType = info.DocumentType;
+        user.AlternatePhone = info.AlternatePhone;
+        user.AddressLine = info.AddressLine;
+        user.Neighborhood = info.Neighborhood;
+        user.City = info.City;
+        user.District = info.District;
+        user.Province = info.Province;
+        user.Country = info.Country;
+        user.PostalCode = info.PostalCode;
+        user.EmergencyContactName = info.EmergencyContactName;
+        user.EmergencyContactRelationship = info.EmergencyContactRelationship;
+        user.EmergencyContactPhone = info.EmergencyContactPhone;
+        user.HealthInsurance = info.HealthInsurance;
         await db.SaveChangesAsync(ct);
         return true;
     }

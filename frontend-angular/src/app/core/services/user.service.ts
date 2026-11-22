@@ -5,9 +5,14 @@ import { environment } from '../../../environments/environment';
 
 /** Domicilio, contacto de emergencia y obra social (solo alumnos y docentes). */
 export interface ProfileContactInfo {
+  documentType: string | null;
+  alternatePhone: string | null;
   addressLine: string | null;
+  neighborhood: string | null;
   city: string | null;
+  district: string | null;
   province: string | null;
+  country: string | null;
   postalCode: string | null;
   emergencyContactName: string | null;
   emergencyContactRelationship: string | null;

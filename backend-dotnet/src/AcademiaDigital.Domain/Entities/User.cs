@@ -15,6 +15,26 @@ public class User
     public DateTime? BirthDate { get; set; }
     public string? PhoneCode { get; set; }
     public string? Phone { get; set; }
+
+    // Datos personales y de contacto que cada usuario carga desde su perfil, sea cual sea su rol.
+    // Son los que piden las planillas del instituto (base de estudiantes y listado de contactos).
+    /// <summary>Tipo de documento: DNI, LC, LE, CI o PAS. Por defecto DNI.</summary>
+    public string? DocumentType { get; set; }
+    /// <summary>Segundo teléfono (fijo o celular), texto libre.</summary>
+    public string? AlternatePhone { get; set; }
+    public string? AddressLine { get; set; }
+    public string? Neighborhood { get; set; }
+    public string? City { get; set; }
+    /// <summary>Departamento de la provincia (por ejemplo, Capital, Río Segundo).</summary>
+    public string? District { get; set; }
+    public string? Province { get; set; }
+    public string? Country { get; set; }
+    public string? PostalCode { get; set; }
+    public string? EmergencyContactName { get; set; }
+    public string? EmergencyContactRelationship { get; set; }
+    public string? EmergencyContactPhone { get; set; }
+    /// <summary>Obra social o prepaga (texto libre).</summary>
+    public string? HealthInsurance { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime DateJoined { get; set; } = DateTime.UtcNow;
     public UserRole Role { get; set; } = UserRole.Alumno;

@@ -166,6 +166,10 @@ mat-card-actions {
   grid-column: span 3;
 }
 
+.field-group-6 {
+  grid-column: span 6;
+}
+
 .phone-group {
   display: flex;
   gap: 0.5rem;
@@ -286,7 +290,8 @@ mat-card-actions {
   }
 
   .field-group-3,
-  .field-group-4 {
+  .field-group-4,
+  .field-group-6 {
     grid-column: span 1;
   }
 
