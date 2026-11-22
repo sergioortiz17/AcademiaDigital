@@ -96,7 +96,8 @@ public sealed class CertificatesController(
     public async Task<IActionResult> GetMyIssuedCertificates(CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole != UserRole.Alumno) return StatusCode(StatusCodes.Status403Forbidden);
+        // Alumnos y docentes ven sus propios certificados emitidos (el docente pide la constancia de actividad).
+        if (CurrentUserRole is not (UserRole.Alumno or UserRole.Profesor)) return StatusCode(StatusCodes.Status403Forbidden);
         return Ok(await historyHandler.Handle(new GetCertificateHistoryQuery(
             CurrentUserId.Value, false), ct));
     }
@@ -114,7 +115,8 @@ public sealed class CertificatesController(
     public async Task<IActionResult> Download(Guid publicId, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole is not (UserRole.Admin or UserRole.Alumno))
+        // El handler verifica que el certificado sea del usuario (salvo Admin).
+        if (CurrentUserRole is not (UserRole.Admin or UserRole.Alumno or UserRole.Profesor))
             return StatusCode(StatusCodes.Status403Forbidden);
         var file = await downloadHandler.Handle(new DownloadCertificateQuery(
             publicId, CurrentUserId.Value, CurrentUserRole == UserRole.Admin), ct);

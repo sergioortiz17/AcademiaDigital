@@ -99,6 +99,9 @@
                 {{ ev.modality }}
               </span>
             </div>
+            <button mat-icon-button class="btn-edit-event" *ngIf="canEditEvent(ev)" (click)="editEvent(ev)" matTooltip="Editar evento">
+              <mat-icon>edit</mat-icon>
+            </button>
             <button mat-icon-button class="btn-delete-event" *ngIf="canDeleteEvent(ev)" (click)="deleteEvent(ev)" matTooltip="Eliminar evento">
               <mat-icon>delete_outline</mat-icon>
             </button>

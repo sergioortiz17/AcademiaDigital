@@ -222,7 +222,7 @@ public sealed class DownloadCertificateQueryHandler(
         var issuance = await repository.FindIssuanceByPublicIdAsync(query.PublicId, ct)
             ?? throw new KeyNotFoundException("Certificado emitido no encontrado.");
         if (!query.IsAdmin && issuance.CertificateRequest.UserId != query.ActorUserId)
-            throw new ForbiddenException("El certificado pertenece a otro alumno.");
+            throw new ForbiddenException("El certificado pertenece a otro usuario.");
         if (issuance.Status != CertificateIssuanceStatus.Ready || string.IsNullOrWhiteSpace(issuance.StorageKey))
             throw new InvalidOperationException("El certificado no está listo para descargar.");
         var stored = await fileStorage.ReadAsync(

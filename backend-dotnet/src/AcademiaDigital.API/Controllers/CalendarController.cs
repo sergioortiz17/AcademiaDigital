@@ -75,8 +75,10 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
     [HttpGet("my-sections")]
     public async Task<IActionResult> GetMySections(CancellationToken ct)
     {
-        if (CurrentUserRole is not UserRole.Profesor || CurrentUserId is not { } uid)
-            return Forbid();
+        if (CurrentUserId is not { } uid) return Unauthorized();
+        // Solo el docente tiene materias propias; para el resto la lista está vacía.
+        if (CurrentUserRole is not UserRole.Profesor)
+            return Ok(new { success = true, data = Array.Empty<object>() });
 
         var teacherId = await db.Teachers
             .Where(t => t.UserId == uid)
@@ -110,7 +112,7 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
 
         if (uid is null) return Unauthorized();
         if (role is not (UserRole.Admin or UserRole.Profesor))
-            return Forbid();
+            return Denied("Solo administración y docentes pueden crear eventos.");
 
         if (string.IsNullOrWhiteSpace(req.Title))
             return BadRequest(new { success = false, msg = "El título es requerido." });
@@ -194,9 +196,9 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
         if (ev is null) return NotFound(new { success = false, msg = "Evento no encontrado." });
 
         if (role == UserRole.Profesor && ev.CreatedByUserId != uid.Value)
-            return Forbid();
+            return Denied("Solo puede modificar los eventos que creó.");
         if (role is not (UserRole.Admin or UserRole.Profesor))
-            return Forbid();
+            return Denied("No tiene permiso para modificar eventos.");
 
         if (!string.IsNullOrWhiteSpace(req.Title)) ev.Title = req.Title.Trim();
         ev.Description = req.Description?.Trim();
@@ -222,14 +224,18 @@ public class CalendarController(AppDbContext db) : ApiControllerBase
         if (ev is null) return NotFound(new { success = false, msg = "Evento no encontrado." });
 
         if (role == UserRole.Profesor && ev.CreatedByUserId != uid.Value)
-            return Forbid();
+            return Denied("Solo puede modificar los eventos que creó.");
         if (role is not (UserRole.Admin or UserRole.Profesor))
-            return Forbid();
+            return Denied("No tiene permiso para modificar eventos.");
 
         db.AcademicEvents.Remove(ev);
         await db.SaveChangesAsync(ct);
         return Ok(new { success = true });
     }
+
+    /// <summary>403 con mensaje legible (Forbid() requiere un esquema de autenticación y falla).</summary>
+    private ObjectResult Denied(string message)
+        => StatusCode(StatusCodes.Status403Forbidden, new { success = false, msg = message });
 
     [HttpGet("upcoming")]
     public async Task<IActionResult> GetUpcoming(CancellationToken ct)

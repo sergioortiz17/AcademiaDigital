@@ -1,6 +1,6 @@
 <div class="dialog-header">
   <mat-icon>event</mat-icon>
-  <span>Nuevo evento</span>
+  <span>{{ isEdit ? 'Editar evento' : 'Nuevo evento' }}</span>
 </div>
 
 <div class="dialog-body">
@@ -47,7 +47,7 @@
   </div>
 
   <!-- Solo profesores: selector de comision -->
-  <ng-container *ngIf="isProfesor">
+  <ng-container *ngIf="isProfesor && !isEdit">
     <mat-form-field appearance="outline" class="full-width" *ngIf="!loadingSections">
       <mat-label>Comision / Materia</mat-label>
       <mat-select [(ngModel)]="courseSectionId" required>
@@ -64,5 +64,5 @@
 
 <div class="dialog-actions">
   <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
-  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear evento</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">{{ isEdit ? 'Guardar cambios' : 'Crear evento' }}</button>
 </div>
