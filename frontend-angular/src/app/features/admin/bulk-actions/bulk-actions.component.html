@@ -1,10 +1,10 @@
 <div class="bulk-wrap">
-  <h1>Acciones masivas</h1>
+  <h1>{{ mode === 'enroll' ? 'Inscribir una división en sus materias' : 'Egresos' }}</h1>
   <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}
     <button mat-icon-button type="button" (click)="errorMsg = ''" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
   </div>
 
-  <mat-card class="card">
+  <mat-card class="card" *ngIf="mode === 'graduate'">
     <h2><mat-icon>school</mat-icon> Marcar egresados</h2>
     <p class="intro">Elija la carrera, marque los alumnos y registre la fecha de egreso y el acto administrativo (por ejemplo, la resolución).</p>
     <div class="row">
@@ -56,8 +56,7 @@
     </ng-container>
   </mat-card>
 
-  <mat-card class="card">
-    <h2><mat-icon>playlist_add_check</mat-icon> Inscribir una división en sus materias</h2>
+  <mat-card class="card" *ngIf="mode === 'enroll'">
     <p class="intro">Inscribe de una vez a todos los alumnos asignados a la división en las materias del plan de su año y cuatrimestre.</p>
     <div class="row">
       <mat-form-field appearance="outline">

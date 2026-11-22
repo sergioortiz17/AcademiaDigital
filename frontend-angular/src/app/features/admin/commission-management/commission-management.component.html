@@ -19,6 +19,17 @@
 
       <span class="spacer"></span>
 
+      <a mat-stroked-button routerLink="/app/admin/student-commission-assignment">
+        <mat-icon>group_add</mat-icon>
+        Asignar alumnos
+      </a>
+      <a mat-stroked-button [disabled]="!selectedCareerId" routerLink="/app/admin/bulk-actions"
+        [queryParams]="{ accion: 'inscribir-division', careerId: selectedCareerId }"
+        matTooltip="Inscribe a todos los alumnos de una división en las materias de su año">
+        <mat-icon>playlist_add_check</mat-icon>
+        Inscribir en materias
+      </a>
+
       <button mat-raised-button color="primary" [disabled]="!selectedCareerId" (click)="openCreateDialog()">
         <mat-icon>add</mat-icon>
         Nueva división
