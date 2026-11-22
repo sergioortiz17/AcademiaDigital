@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { AdminService, ApplicantStatus, ApplicantSummary } from '../../../core/services/admin.service';
 import { UserRole } from '../../../store/account/account.actions';
+import { ROLE_LABELS } from '../../../core/auth/permissions';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 /**
@@ -95,7 +96,7 @@ export class ApplicantsManagementComponent implements OnInit, OnDestroy {
   }
 
   getRoleLabel(role: number): string {
-    return role === UserRole.Profesor ? 'Profesor' : role === UserRole.Admin ? 'Admin' : 'Alumno';
+    return ROLE_LABELS[role as UserRole] ?? 'Alumno';
   }
 
   onStatusChange(status: ApplicantStatus): void {

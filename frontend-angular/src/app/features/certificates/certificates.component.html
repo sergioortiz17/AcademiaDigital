@@ -4,7 +4,7 @@
       Certificados
     </div>
   <!-- <p *ngIf="userRole === UserRole.Alumno">Solicitá certificados académicos y revisá el estado de tus pedidos.</p>
-     <p *ngIf="userRole === UserRole.Admin">Todas las solicitudes de certificados del sistema.</p> -->
+     <p *ngIf="staffView">Todas las solicitudes de certificados del sistema.</p> -->
     <a *ngIf="(userRole === UserRole.Alumno || userRole === UserRole.Profesor) && !showMyRequests" class="my-requests-link" (click)="openMyRequests()">
         Ver mis solicitudes
     </a>
@@ -301,7 +301,7 @@
 <!-- ===================== -->
 <!-- VISTA ADMIN -->
 <!-- ===================== -->
-<ng-container *ngIf="userRole === UserRole.Admin">
+<ng-container *ngIf="staffView">
     <mat-card class="table-card">
         <mat-card-content>
             <!-- Pills -->

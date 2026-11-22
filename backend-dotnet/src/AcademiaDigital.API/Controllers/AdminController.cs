@@ -16,20 +16,29 @@ public class AdminController(
     ApproveApplicantsUseCase approveApplicantsUseCase,
     ImportApplicantsUseCase importApplicantsUseCase) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageUsers;
+
     // POST /api/v1/admin/applicants/import — filas leídas del Excel de prematriculados
     [HttpPost("applicants/import")]
     public async Task<IActionResult> ImportApplicants([FromBody] ImportApplicantsRequest request, CancellationToken ct)
     {
-        var guard = RequireAdmin(); if (guard != null) return guard;
+        var guard = RequireStudentsArea(); if (guard != null) return guard;
         var result = await importApplicantsUseCase.ExecuteAsync(request.Rows.Select(r => new ApplicantImportRow(
             r.RowNumber, r.Dni, r.LastName, r.FirstName, r.Email, r.CareerCode)).ToArray(), ct);
         return Ok(new { success = true, result.Created, result.Failed });
     }
 
+    private IActionResult RequireStudentsArea()
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
+        if (!Can(Permission.ManageStudents)) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Sin permiso."));
+        return null!;
+    }
+
     private IActionResult RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("Not authenticated."));
-        if (CurrentUserRole != UserRole.Admin) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
+        if (!IsStaff) return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Admin only."));
         return null!;
     }
 
@@ -76,7 +85,7 @@ public class AdminController(
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
-        var guard = RequireAdmin(); if (guard != null) return guard;
+        var guard = RequireStudentsArea(); if (guard != null) return guard;
         var approved = string.Equals(status, "approved", StringComparison.OrdinalIgnoreCase);
         var result = await getApplicantsUseCase.ExecuteAsync(search, role, approved, page, pageSize, ct);
         return Ok(new { success = true, result.Items, result.Total, result.Page, result.PageSize });
@@ -86,7 +95,7 @@ public class AdminController(
     [HttpPost("applicants/approve")]
     public async Task<IActionResult> ApproveApplicants([FromBody] ApproveApplicantsRequest request, CancellationToken ct)
     {
-        var guard = RequireAdmin(); if (guard != null) return guard;
+        var guard = RequireStudentsArea(); if (guard != null) return guard;
         var result = await approveApplicantsUseCase.ExecuteAsync(CurrentUserId!.Value, request.UserIds, ct);
         return Ok(new { success = true, result.ApprovedIds, result.Skipped });
     }

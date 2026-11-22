@@ -8,6 +8,8 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/admin")]
 public sealed class TranscriptsController(ITranscriptService transcripts) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     [HttpGet("transcripts/{studentId:long}")]
     public async Task<IActionResult> Get(long studentId, CancellationToken ct)
     {
@@ -36,7 +38,7 @@ public sealed class TranscriptsController(ITranscriptService transcripts) : ApiC
     private IActionResult? Admin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 }
 

@@ -4,6 +4,7 @@ import { Store } from '@ngrx/store';
 import * as ExcelJS from 'exceljs';
 import { asyncScheduler, forkJoin, Observable, observeOn } from 'rxjs';
 import { selectUserRole } from '../../store/account/account.selectors';
+import { hasPermission } from '../../core/auth/permissions';
 import { UserRole } from '../../store/account/account.actions';
 import { CareerService, Career, CareerDivision, StudyPlanCourse } from '../../core/services/career.service';
 import { TeacherService, TeacherAssignment } from '../../core/services/teacher.service';
@@ -139,6 +140,8 @@ const CAREER_YEAR_LABELS: Record<number, string> = {
 export class GradesComponent implements OnInit {
   UserRole = UserRole;
   userRole: UserRole | null = null;
+  /** Admin o personal con permiso sobre el área (ManageGrades): ve y gestiona como Administración. */
+  get staffView(): boolean { return hasPermission(this.userRole, 'ManageGrades'); }
 
   careers: Career[] = [];
   selectedCareerId: number | null = null;
@@ -205,7 +208,7 @@ export class GradesComponent implements OnInit {
       this.userRole = role as UserRole;
       if (this.userRole === UserRole.Profesor) {
         this.loadMyAssignments();
-      } else if (this.userRole === UserRole.Admin) {
+      } else if (this.staffView) {
         this.loadAllTeachingPositions();
       } else if (this.userRole === UserRole.Alumno) {
         this.loadMyGrades();
@@ -415,7 +418,7 @@ export class GradesComponent implements OnInit {
         assignment.courseId === course.courseId && assignment.divisionId === this.selectedDivisionId
       );
 
-      if (this.userRole === UserRole.Admin && sections.length === 0) {
+      if (this.staffView && sections.length === 0) {
         options.push({
           key: `course-${course.courseId}`,
           courseId: course.courseId,
@@ -449,7 +452,7 @@ export class GradesComponent implements OnInit {
   get professorDivisions(): GradeDivisionOption[] {
     if (this.selectedCareerYear == null) return [];
 
-    if (this.userRole === UserRole.Admin) {
+    if (this.staffView) {
       return this.careerDivisions
         .filter(division => division.yearNumber === this.selectedCareerYear)
         .map(division => ({
@@ -547,7 +550,7 @@ export class GradesComponent implements OnInit {
       return;
     }
 
-    if (this.userRole === UserRole.Admin) {
+    if (this.staffView) {
       this.careerService.getDivisions(careerId).subscribe({
         next: divisions => {
           if (this.selectedCareerId !== careerId) return;
@@ -1019,7 +1022,7 @@ export class GradesComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    const isAdmin = this.userRole === UserRole.Admin;
+    const isAdmin = this.staffView;
     const dialogRef = this.dialog.open(GradebookActionDialogComponent, {
       width: '480px',
       disableClose: true,
@@ -1134,7 +1137,7 @@ export class GradesComponent implements OnInit {
 
   reopenGradebook(): void {
     const gradebookId = this.detail?.gradebook.id;
-    if (this.userRole !== UserRole.Admin || gradebookId == null || this.isTransitioning) return;
+    if (!this.staffView || gradebookId == null || this.isTransitioning) return;
 
     this.isTransitioning = true;
     const dialogRef = this.dialog.open(GradebookActionDialogComponent, {
@@ -1169,7 +1172,7 @@ export class GradesComponent implements OnInit {
     enableEditing = false
   ): void {
     const gradebookId = this.detail?.gradebook.id;
-    if (this.userRole !== UserRole.Admin || gradebookId == null || this.isTransitioning) return;
+    if (!this.staffView || gradebookId == null || this.isTransitioning) return;
 
     this.isTransitioning = true;
     const dialogRef = this.dialog.open(GradebookActionDialogComponent, {

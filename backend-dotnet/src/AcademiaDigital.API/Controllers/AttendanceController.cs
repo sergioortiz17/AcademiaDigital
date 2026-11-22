@@ -19,6 +19,8 @@ public sealed class AttendanceController(
     GetMyAttendanceSummaryQueryHandler mySummaryHandler,
     ExportAttendanceSessionQueryHandler exportHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageAttendance;
+
     [HttpGet("sessions")]
     public async Task<IActionResult> ListSessions(
         [FromQuery] int? academicYear,
@@ -31,7 +33,7 @@ public sealed class AttendanceController(
         if (guard is not null) return guard;
         return Ok(await listHandler.Handle(new GetAttendanceSessionsQuery(
             academicYear, courseId, commissionId,
-            CurrentUserId!.Value, CurrentUserRole == UserRole.Admin, courseSectionId), ct));
+            CurrentUserId!.Value, IsStaff, courseSectionId), ct));
     }
 
     [HttpGet("sessions/{id:long}")]
@@ -40,7 +42,7 @@ public sealed class AttendanceController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await getHandler.Handle(new GetAttendanceSessionQuery(
-            id, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            id, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpPost("sessions")]
@@ -60,7 +62,7 @@ public sealed class AttendanceController(
             request.Scope,
             request.Units,
             CurrentUserId!.Value,
-            CurrentUserRole == UserRole.Admin), ct);
+            IsStaff), ct);
         return StatusCode(StatusCodes.Status201Created, created);
     }
 
@@ -77,7 +79,7 @@ public sealed class AttendanceController(
             request.Records.Select(record => new AttendanceRecordInput(
                 record.EnrollmentId, record.Status, record.Notes)).ToArray(),
             CurrentUserId!.Value,
-            CurrentUserRole == UserRole.Admin), ct));
+            IsStaff), ct));
     }
 
     [HttpPost("sessions/{id:long}/close")]
@@ -86,7 +88,7 @@ public sealed class AttendanceController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await closeHandler.Handle(new CloseAttendanceSessionCommand(
-            id, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            id, CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpPost("sessions/{id:long}/reopen")]
@@ -129,7 +131,7 @@ public sealed class AttendanceController(
         if (guard is not null) return guard;
         return Ok(await studentSummaryHandler.Handle(new GetStudentAttendanceSummaryQuery(
             studentId, courseId, commissionId,
-            CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            CurrentUserId!.Value, IsStaff), ct));
     }
 
     [HttpGet("me/summary")]
@@ -153,14 +155,14 @@ public sealed class AttendanceController(
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         var report = await exportHandler.Handle(new ExportAttendanceSessionQuery(
-            id, format, CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct);
+            id, format, CurrentUserId!.Value, IsStaff), ct);
         return File(report.Content, report.ContentType, report.FileName);
     }
 
     private IActionResult? RequireAdminOrProfessor()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole is UserRole.Admin or UserRole.Profesor
+        return IsStaff || CurrentUserRole == UserRole.Profesor
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }
@@ -168,7 +170,7 @@ public sealed class AttendanceController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin
+        return IsStaff
             ? null
             : StatusCode(StatusCodes.Status403Forbidden);
     }

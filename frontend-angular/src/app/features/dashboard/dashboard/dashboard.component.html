@@ -59,7 +59,7 @@
     </div>
 
     <!-- ADMIN -->
-    <div class="quick-access-grid" *ngIf="role === UserRole.Admin">
+    <div class="quick-access-grid" *ngIf="isStaffRole(role)">
       <a mat-card routerLink="/app/admin/users" class="quick-card quick-card--teal">
         <mat-icon>manage_accounts</mat-icon>
         <span>Gestión de Usuarios</span>

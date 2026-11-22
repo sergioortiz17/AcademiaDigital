@@ -9,6 +9,8 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/admin/bulk")]
 public sealed class BulkActionsController(IBulkStudentActionsService service) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     // POST /api/v1/admin/bulk/graduate — { studentIds, graduatedOn, reason }
     [HttpPost("graduate")]
     public async Task<IActionResult> Graduate([FromBody] BulkGraduateRequest request, CancellationToken ct)
@@ -28,7 +30,7 @@ public sealed class BulkActionsController(IBulkStudentActionsService service) : 
     private IActionResult? Admin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 }
 

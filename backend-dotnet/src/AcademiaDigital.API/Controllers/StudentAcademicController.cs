@@ -14,6 +14,8 @@ public class StudentAcademicController(
     AssignStudentStudyPlanCommandHandler assignStudyPlanHandler,
     IStudentManagementService studentManagement) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ViewStudents;
+
     [HttpGet("eligible-courses")]
     public async Task<IActionResult> GetEligibleCourses(long studentId, [FromQuery] int? careerId, CancellationToken ct)
     {
@@ -57,13 +59,13 @@ public class StudentAcademicController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 
     private async Task<IActionResult?> RequireReaderAsync(long studentId, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole == UserRole.Admin || await studentManagement.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
+        if (IsStaff || await studentManagement.IsOwnerAsync(studentId, CurrentUserId.Value, ct))
             return null;
         return StatusCode(StatusCodes.Status403Forbidden);
     }

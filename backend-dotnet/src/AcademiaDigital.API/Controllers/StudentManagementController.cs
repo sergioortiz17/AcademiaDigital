@@ -8,6 +8,8 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/students/{studentId:long}")]
 public class StudentManagementController(IStudentManagementService service) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageStudents;
+
     [HttpPatch("status")]
     public async Task<IActionResult> ChangeStatus(long studentId, ChangeStudentStatusRequest request, CancellationToken ct)
     { var g = Admin(); if (g is not null) return g; return Ok(await service.ChangeStatusAsync(studentId, request.Status, request.Reason, CurrentUserId!.Value, ct)); }
@@ -84,12 +86,12 @@ public class StudentManagementController(IStudentManagementService service) : Ap
     private IActionResult? Admin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
     private async Task<IActionResult?> Reader(long studentId, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized();
-        if (CurrentUserRole == UserRole.Admin || await service.IsOwnerAsync(studentId, CurrentUserId.Value, ct)) return null;
+        if (IsStaff || await service.IsOwnerAsync(studentId, CurrentUserId.Value, ct)) return null;
         return StatusCode(StatusCodes.Status403Forbidden);
     }
 }

@@ -13,6 +13,8 @@ public class StudyPlanCoursesController(
     RemoveCourseFromStudyPlanCommandHandler removeCourseHandler,
     SetCourseApprovalRuleCommandHandler setApprovalRuleHandler) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageCareers;
+
     [HttpGet]
     public async Task<IActionResult> GetByStudyPlan(int studyPlanId, CancellationToken ct)
         => Ok(await getCoursesHandler.Handle(new GetStudyPlanCoursesQuery(studyPlanId), ct));
@@ -72,7 +74,7 @@ public class StudyPlanCoursesController(
     private IActionResult? RequireAdmin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 
     private ObjectResult BadRequestProblem(string detail) => Problem(detail: detail, statusCode: StatusCodes.Status400BadRequest);

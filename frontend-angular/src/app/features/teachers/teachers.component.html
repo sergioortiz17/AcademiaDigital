@@ -7,7 +7,7 @@
       class="tab-button"
       [class.active]="activeTab === 'assignments'"
       (click)="changeTab('assignments')">
-      {{ userRole === UserRole.Admin ? 'Comisiones' : 'Comisiones asignadas' }}
+      {{ staffView ? 'Comisiones' : 'Comisiones asignadas' }}
     </button>
 
     <button
@@ -62,7 +62,7 @@
         </small>
       </div>
 
-      <mat-icon *ngIf="userRole === UserRole.Admin" class="edit-cell" aria-label="Editar comisión">edit</mat-icon>
+      <mat-icon *ngIf="staffView" class="edit-cell" aria-label="Editar comisión">edit</mat-icon>
     </div>
 
     <!-- PESTAÑA 1: COMISIONES ASIGNADAS     -->
@@ -103,7 +103,7 @@
             </tr>
 
             <tr *ngIf="!isLoading && !isStudyPlanLoading && filteredAssignments.length === 0">
-              <td [attr.colspan]="userRole === UserRole.Admin ? 10 : 9" class="empty-cell">
+              <td [attr.colspan]="staffView ? 10 : 9" class="empty-cell">
                 No se encontraron asignaciones para los filtros seleccionados.
               </td>
             </tr>

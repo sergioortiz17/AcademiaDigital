@@ -11,13 +11,15 @@ namespace AcademiaDigital.API.Controllers;
 public class DivisionsController(
     IStudentManagementService service, AssignDivisionToStudentsHandler assignStudents) : ApiControllerBase
 {
+    protected override Permission? Area => Permission.ManageCareers;
+
     [HttpGet]
     public async Task<IActionResult> List(int careerId, [FromQuery] int? academicYear, CancellationToken ct)
-    { var g = Admin(); if (g is not null) return g; return Ok(await service.GetDivisionsAsync(careerId, academicYear, ct)); }
+    { var g = Staff(); if (g is not null) return g; return Ok(await service.GetDivisionsAsync(careerId, academicYear, ct)); }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int careerId, int id, CancellationToken ct)
-    { var g = Admin(); if (g is not null) return g; var x = (await service.GetDivisionsAsync(careerId, null, ct)).SingleOrDefault(c => c.Id == id); return x is null ? NotFound() : Ok(x); }
+    { var g = Staff(); if (g is not null) return g; var x = (await service.GetDivisionsAsync(careerId, null, ct)).SingleOrDefault(c => c.Id == id); return x is null ? NotFound() : Ok(x); }
 
     [HttpPost]
     public async Task<IActionResult> Create(int careerId, UpsertDivisionRequest request, CancellationToken ct)
@@ -36,15 +38,22 @@ public class DivisionsController(
     [HttpPost("{id:int}/students")]
     public async Task<IActionResult> AssignStudents(int careerId, int id, AssignStudentsToDivisionRequest request, CancellationToken ct)
     {
-        var g = Admin(); if (g is not null) return g;
+        if (CurrentUserId is null) return Unauthorized();
+        if (!Can(Permission.ManageStudents)) return StatusCode(StatusCodes.Status403Forbidden);
         var result = await assignStudents.Handle(careerId, id, request.StudentIds, request.Reason, CurrentUserId!.Value, ct);
         return Ok(new { success = true, result.Assigned, result.Failed });
+    }
+
+    private IActionResult? Staff()
+    {
+        if (CurrentUserId is null) return Unauthorized();
+        return AcademiaDigital.Domain.Services.RolePermissions.IsStaff(CurrentUserRole) ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 
     private IActionResult? Admin()
     {
         if (CurrentUserId is null) return Unauthorized();
-        return CurrentUserRole == UserRole.Admin ? null : StatusCode(StatusCodes.Status403Forbidden);
+        return IsStaff ? null : StatusCode(StatusCodes.Status403Forbidden);
     }
 }
 

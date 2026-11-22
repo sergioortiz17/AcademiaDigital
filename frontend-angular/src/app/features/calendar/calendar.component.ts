@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { CalendarService, CalendarEvent, CreateEventRequest } from '../../core/services/calendar.service';
 import { selectUserRole, selectUser } from '../../store/account/account.selectors';
 import { UserModel, UserRole } from '../../store/account/account.actions';
+import { hasPermission } from '../../core/auth/permissions';
 import { CreateEventDialogComponent, CreateEventDialogData } from './create-event-dialog/create-event-dialog.component';
 
 interface CalendarDay {
@@ -38,6 +39,10 @@ export class CalendarComponent implements OnInit {
   error = '';
 
   userRole: UserRole | null = null;
+
+  /** Admin o personal con permiso sobre el área (ManageCalendar): ve y gestiona como Administración. */
+
+  get staffView(): boolean { return hasPermission(this.userRole, 'ManageCalendar'); }
   user: UserModel | null = null;
   UserRole = UserRole;
 
@@ -62,7 +67,7 @@ export class CalendarComponent implements OnInit {
   }
 
   get canCreateEvents(): boolean {
-    return this.userRole === UserRole.Admin || this.userRole === UserRole.Profesor;
+    return this.staffView || this.userRole === UserRole.Profesor;
   }
 
   get monthLabel(): string {
@@ -127,7 +132,7 @@ export class CalendarComponent implements OnInit {
 
   canDeleteEvent(ev: CalendarEvent): boolean {
     if (ev.isHoliday) return false;
-    if (this.userRole === UserRole.Admin) return true;
+    if (this.staffView) return true;
     if (this.userRole === UserRole.Profesor && ev.createdByUserId === Number(this.user?._id)) return true;
     return false;
   }
