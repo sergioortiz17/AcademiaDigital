@@ -9,7 +9,7 @@ export interface CommissionFormDialogData {
   presetAcademicYear?: number | null;
   presetYearNumber?: number | null;
   presetShift?: string | null;
-  /** Sedes activas para elegir dónde se dicta la división. */
+  /** Escuelas activas para elegir dónde se dicta la división. */
   campuses?: Campus[];
 }
 
@@ -56,7 +56,7 @@ export class CommissionFormDialogComponent {
   ) {
     this.isEdit = !!data.commission;
     this.campuses = data.campuses ?? [];
-    // Con una sola sede, la división nueva queda en esa sede.
+    // Con una sola escuela, la división nueva queda en esa escuela.
     if (!data.commission && this.campuses.length === 1) this.campusId = this.campuses[0].id;
     if (data.commission) {
       this.code = data.commission.code;

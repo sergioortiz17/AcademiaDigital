@@ -32,10 +32,10 @@ export class GradebookManagementComponent implements OnInit, OnDestroy {
   // Emite al destruirse el componente para cancelar las subscripciones HTTP en vuelo
   // (evita que un 401 tardío de una request sin cancelar expulse al usuario tras navegar).
   private readonly destroy$ = new Subject<void>();
-  // Carrera/Sede/Año decorativos (sin datos reales del backend), consistentes con el mockup.
+  // Carrera/Escuela/Año: filtros visuales del mockup (no filtran la lista). Las escuelas son las reales.
   careers: Career[] = [];
   selectedCareerId: number | null = null;
-  sedes = ['Sede Centro', 'Sede Norte'];
+  sedes: string[] = [];
   selectedSede: string | null = null;
   planYears = [
     { value: 1, label: 'Primero' },
@@ -66,6 +66,10 @@ export class GradebookManagementComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.careerService.getCampuses().pipe(takeUntil(this.destroy$)).subscribe({
+      next: campuses => { this.sedes = campuses.map(c => c.name); this.cdr.markForCheck(); },
+      error: () => { this.sedes = []; }
+    });
     this.careerService.getCareers().pipe(takeUntil(this.destroy$)).subscribe(careers => {
       this.careers = careers;
       this.selectedCareerId = careers[0]?.id ?? null;

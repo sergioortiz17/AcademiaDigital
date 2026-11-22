@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AcademiaDigital.API.Controllers;
 
-/// <summary>Sedes (escuelas) del instituto. Las ve el personal; las administra quien gestiona carreras.</summary>
+/// <summary>Escuelas (sedes) del instituto. Las ve el personal; las administra quien gestiona carreras.</summary>
 [Route("api/v1/campuses")]
 public class CampusesController(IStudentManagementService service) : ApiControllerBase
 {

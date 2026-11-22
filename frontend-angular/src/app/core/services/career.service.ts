@@ -48,12 +48,12 @@ export interface CareerDivision {
   yearNumber: number;
   shift: string;
   isActive: boolean;
-  /** Sede donde se dicta; null en divisiones anteriores a las sedes. */
+  /** Escuela donde se dicta; null en divisiones anteriores a las escuelas. */
   campusId?: number | null;
   campusName?: string | null;
 }
 
-/** Sede (escuela) del instituto. */
+/** Escuela (escuela) del instituto. */
 export interface Campus {
   id: number;
   name: string;

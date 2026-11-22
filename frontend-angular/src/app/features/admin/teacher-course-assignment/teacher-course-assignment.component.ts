@@ -42,7 +42,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
   readonly positionTypes = POSITION_TYPES;
 
   campuses: Campus[] = [];
-  /** Sede elegida; null = todas las sedes. */
+  /** Escuela elegida; null = todas las escuelas. */
   campusId: number | null = null;
   careers: Career[] = [];
   careerId: number | null = null;
@@ -54,7 +54,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
   private allDivisions: CareerDivision[] = [];
   years: YearGroup[] = [];
   private allSections: TeachingPosition[] = [];
-  /** Comisiones de la sede elegida (o de todas). */
+  /** Comisiones de la escuela elegida (o de todas). */
   private sections: TeachingPosition[] = [];
 
   /** Docentes pendientes por materia (courseId). */
@@ -158,7 +158,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     this.applyCampusFilter();
   }
 
-  /** Divisiones activas de la carrera en la sede elegida. */
+  /** Divisiones activas de la carrera en la escuela elegida. */
   private get campusDivisions(): CareerDivision[] {
     return this.campusId == null ? this.allDivisions : this.allDivisions.filter(d => d.campusId === this.campusId);
   }

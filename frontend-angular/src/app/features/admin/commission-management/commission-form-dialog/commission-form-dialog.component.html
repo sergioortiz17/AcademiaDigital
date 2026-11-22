@@ -29,12 +29,12 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Sede</mat-label>
+      <mat-label>Escuela</mat-label>
       <mat-select [(ngModel)]="campusId">
-        <mat-option [value]="null">Sin sede</mat-option>
+        <mat-option [value]="null">Sin escuela</mat-option>
         <mat-option *ngFor="let c of campuses" [value]="c.id">{{ c.name }}</mat-option>
       </mat-select>
-      <mat-hint *ngIf="campuses.length === 0">Las sedes se cargan en Gestión de Carreras.</mat-hint>
+      <mat-hint *ngIf="campuses.length === 0">Las escuelas se cargan en Agregar escuelas.</mat-hint>
     </mat-form-field>
 
     <mat-form-field appearance="outline">

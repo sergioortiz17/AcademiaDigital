@@ -508,7 +508,7 @@ export class AttendanceComponent implements OnInit {
         ['Materia', assignment.courseName],
         ['Carrera', selectedCareer?.name ?? ''],
         ['Turno', ''],
-        ['Sede', ''],
+        ['Escuela', ''],
         ['Instituto', 'Instituto Técnico Superior Córdoba']
       ];
 

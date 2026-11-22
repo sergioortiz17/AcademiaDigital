@@ -205,7 +205,7 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         item.Code = code; item.Name = name; item.AcademicYear = r.AcademicYear;
         item.YearNumber = r.YearNumber; item.Shift = Shifts.Single(x => x.Equals(r.Shift, StringComparison.OrdinalIgnoreCase));
         if (r.CampusId.HasValue && !await db.Campuses.AnyAsync(x => x.Id == r.CampusId && x.IsActive, ct))
-            throw new ArgumentException("La sede no existe o está dada de baja.");
+            throw new ArgumentException("La escuela no existe o está dada de baja.");
         item.CampusId = r.CampusId;
         await db.SaveChangesAsync(ct);
         var campusName = item.CampusId.HasValue
@@ -485,13 +485,13 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
     public async Task<CampusDto> SaveCampusAsync(int? id, UpsertCampusRequest r, CancellationToken ct)
     {
         var name = r.Name.Trim();
-        if (name.Length == 0) throw new ArgumentException("El nombre de la sede es obligatorio.");
+        if (name.Length == 0) throw new ArgumentException("El nombre de la escuela es obligatorio.");
         Campus item;
         if (id.HasValue) item = await db.Campuses.SingleOrDefaultAsync(x => x.Id == id, ct)
-            ?? throw new KeyNotFoundException("Sede no encontrada.");
+            ?? throw new KeyNotFoundException("Escuela no encontrada.");
         else { item = new Campus(); db.Campuses.Add(item); }
         if (await db.Campuses.AnyAsync(x => x.Id != item.Id && x.Name.ToLower() == name.ToLower(), ct))
-            throw new InvalidOperationException("Ya existe una sede con ese nombre.");
+            throw new InvalidOperationException("Ya existe una escuela con ese nombre.");
         item.Name = name;
         item.Address = string.IsNullOrWhiteSpace(r.Address) ? null : r.Address.Trim();
         item.IsActive = true;
@@ -502,9 +502,9 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
     public async Task DisableCampusAsync(int id, CancellationToken ct)
     {
         var item = await db.Campuses.SingleOrDefaultAsync(x => x.Id == id, ct)
-            ?? throw new KeyNotFoundException("Sede no encontrada.");
+            ?? throw new KeyNotFoundException("Escuela no encontrada.");
         if (await db.Divisions.AnyAsync(x => x.CampusId == id && x.IsActive, ct))
-            throw new InvalidOperationException("La sede tiene divisiones activas: cámbielas de sede o délas de baja primero.");
+            throw new InvalidOperationException("La escuela tiene divisiones activas: cámbielas de escuela o délas de baja primero.");
         item.IsActive = false;
         await db.SaveChangesAsync(ct);
     }

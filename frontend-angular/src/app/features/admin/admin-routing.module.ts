@@ -19,6 +19,7 @@ import { GradebookManagementComponent } from './gradebook-management/gradebook-m
 import { StudentsConditionComponent } from './students-condition/students-condition.component';
 import { ApprovalRulesComponent } from './approval-rules/approval-rules.component';
 import { CareerManagementComponent } from './career-management/career-management.component';
+import { CampusManagementComponent } from './campus-management/campus-management.component';
 import { StudentCommissionAssignmentComponent } from './student-commission-assignment/student-commission-assignment.component';
 import { CommissionManagementComponent } from './commission-management/commission-management.component';
 import { RoleGuard } from '../../core/guards/role.guard';
@@ -126,6 +127,12 @@ const routes: Routes = [
     component: CareerManagementComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin], permission: 'ManageCareers' }
+  },
+  {
+    path: 'schools',
+    component: CampusManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin], permission: 'ManageCareers', schoolsPage: true }
   },
   {
     path: 'student-commission-assignment',
