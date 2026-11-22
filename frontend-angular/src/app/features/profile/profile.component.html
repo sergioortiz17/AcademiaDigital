@@ -64,28 +64,24 @@
             <label class="field-label">Teléfono de contacto *</label>
             <div class="phone-group">
               <mat-form-field appearance="fill" class="custom-field">
-                <input matInput formControlName="phoneCode" inputmode="numeric" placeholder="Cod.Area">
+                <input matInput formControlName="phoneCode" inputmode="numeric" maxlength="4"
+                  placeholder="Cód. de área" aria-label="Código de área (sin 0)">
               </mat-form-field>
               <mat-form-field appearance="fill" class="custom-field">
-                <input matInput formControlName="phone" inputmode="numeric">
-                <mat-error *ngIf="profileForm.get('phone')?.hasError('required')">El teléfono es obligatorio</mat-error>
+                <input matInput formControlName="phone" inputmode="numeric" maxlength="8"
+                  placeholder="Número (sin 15)" aria-label="Número de teléfono (sin 15)">
               </mat-form-field>
             </div>
-        </div>
-        <div *ngIf="student" class="field-group field-group-4">
-            <label class="field-label">Tel contacto de emergencia</label>
-            <mat-form-field appearance="fill" class="custom-field">
-              <input matInput type="tel" formControlName="emergencyContactPhone" maxlength="30" autocomplete="tel">
-              <mat-error *ngIf="profileForm.get('emergencyContactPhone')?.hasError('maxlength')">Máximo 30 caracteres.</mat-error>
-            </mat-form-field>
+            <small class="field-hint" [class.field-hint--error]="phoneErrorText">
+              {{ phoneErrorText || 'Sin 0 ni 15: código de área y número suman 10 dígitos (por ejemplo 351 y 5551234).' }}
+            </small>
         </div>
 
         <div class="field-group field-group-3">
-            <label class="field-label">CUIL (XX.XXXXXXXX.X) *</label>
+            <label class="field-label">CUIL (XX-XXXXXXXX-X)</label>
             <mat-form-field appearance="fill" class="custom-field">
-              <input matInput formControlName="cuil" inputmode="numeric" placeholder="Ej: 20-12345678-9" />
-              <mat-error *ngIf="profileForm.get('cuil')?.hasError('required')">El CUIL es obligatorio</mat-error>
-        <!-- <mat-error *ngIf="profileForm.get('cuil')?.hasError('pattern')">El CUIL debe tener el formato XX-XXXXXXXX-X</mat-error> -->
+              <input matInput formControlName="cuil" inputmode="numeric" maxlength="13" placeholder="Ej: 20-12345678-9" />
+              <mat-error *ngIf="profileForm.get('cuil')?.hasError('pattern')">El CUIL tiene 11 dígitos, con el formato XX-XXXXXXXX-X.</mat-error>
             </mat-form-field>
         </div>
         
@@ -119,6 +115,77 @@
       </form>
     </mat-card-content>
   </mat-card> 
+
+  <!-- =============================================
+       DATOS DE CONTACTO (alumno y docente)
+  ============================================= -->
+  <mat-card class="profile-card" *ngIf="hasContactInfo">
+    <div class="section-badge">
+      <mat-icon>contact_emergency</mat-icon>
+      <span>Datos de contacto</span>
+    </div>
+    <mat-card-content>
+      <form [formGroup]="contactForm">
+        <div class="profile-grid">
+          <div class="field-group field-group-4">
+            <label class="field-label">Domicilio</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="addressLine" maxlength="255" autocomplete="street-address">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Ciudad</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="city" maxlength="100" autocomplete="address-level2">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Provincia</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="province" maxlength="100" autocomplete="address-level1">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Código postal</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="postalCode" maxlength="20" autocomplete="postal-code">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Contacto de emergencia</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="emergencyContactName" maxlength="200" placeholder="Nombre y apellido">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Vínculo</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="emergencyContactRelationship" maxlength="100" placeholder="Ej: madre, pareja">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Teléfono de emergencia</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput type="tel" formControlName="emergencyContactPhone" maxlength="20" autocomplete="tel">
+              <mat-error *ngIf="contactForm.get('emergencyContactPhone')?.hasError('pattern')">Solo números, espacios y guiones (6 a 15 dígitos).</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Obra social</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="healthInsurance" maxlength="150" placeholder="Ej: OSDE, IOSFA, ninguna">
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="save-area">
+          <button type="button" class="save-btn" (click)="saveContact()" [disabled]="contactSaving || contactForm.pristine">
+            <mat-spinner *ngIf="contactSaving" diameter="18" class="btn-spinner"></mat-spinner>
+            <span>{{ contactSaving ? 'Guardando...' : 'Guardar datos de contacto' }}</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
 
   <!-- =============================================
        CAMBIAR CONTRASEÑA

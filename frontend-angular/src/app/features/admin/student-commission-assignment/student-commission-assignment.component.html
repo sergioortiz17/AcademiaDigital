@@ -2,7 +2,9 @@
   <h1>Asignar división a alumnos</h1>
   <p class="subtitle">
     Elige la carrera y la división, marca los alumnos y asígnalos de una vez. El plan de estudios,
-    el año académico y el año del plan se toman del plan vigente de cada alumno y de la división.
+    el año académico y el año de la carrera se toman del plan vigente de cada alumno y de la división.
+    La inscripción a materias no asigna la división: un mismo año puede tener varias divisiones
+    (por ejemplo, una por turno), y aquí se decide en cuál cursa cada alumno.
   </p>
 
   <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>

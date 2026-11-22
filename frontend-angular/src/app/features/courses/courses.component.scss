@@ -10,6 +10,9 @@
 }
 
 .plan-container {
+  /* Delante de la pestaña (como en Figma): tapa su borde inferior y muestra las esquinas redondeadas. */
+  position: relative;
+  z-index: 2;
   min-width: 0;
   padding: 42px 20px 20px;
   border: 2px solid #3b84d9;
@@ -21,7 +24,7 @@
   position: absolute;
   top: -35px;
   left: 0;
-  z-index: 1;
+  z-index: 0;
   padding: 16px 32px;
   border-radius: 14px 14px 0 0;
   background: #4b94d9;

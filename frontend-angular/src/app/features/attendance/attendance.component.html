@@ -86,7 +86,7 @@
             <tr
               *ngFor="let row of filteredRows"
               [class.selected-row]="selectedEnrollmentId === row.enrollmentId"
-              (click)="selectStudent(row)">
+              (click)="selectStudent(row)" (focusin)="selectStudent(row)">
               <td class="student-col">{{ row.studentName }}</td>
               <td *ngFor="let s of visibleSessions" class="day-col status-cell" (click)="$event.stopPropagation()">
                 <ng-container *ngIf="row.cells[s.id] as cell; else noCell">

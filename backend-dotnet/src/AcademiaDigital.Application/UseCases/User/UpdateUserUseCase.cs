@@ -1,6 +1,7 @@
 using AcademiaDigital.Application.UseCases.Authentication;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
+using AcademiaDigital.Domain.Services;
 
 namespace AcademiaDigital.Application.UseCases.User;
 
@@ -19,10 +20,15 @@ public class UpdateUserUseCase(IUserRepository userRepository)
         if (cmd.LastName is not null) user.LastName = cmd.LastName.Trim();
         if (cmd.Dni is not null) user.Dni = cmd.Dni.Trim();
         if (cmd.Gender is not null) user.Gender = cmd.Gender.Trim();
-        if (cmd.Cuil is not null) user.Cuil = cmd.Cuil.Trim();
+        if (cmd.Cuil is not null) user.Cuil = ContactFormatPolicy.NormalizeCuil(cmd.Cuil);
         if (cmd.BirthDate is not null) user.BirthDate = cmd.BirthDate;
-        if (cmd.PhoneCode is not null) user.PhoneCode = cmd.PhoneCode.Trim();
-        if (cmd.Phone is not null) user.Phone = cmd.Phone.Trim();
+        if (cmd.PhoneCode is not null || cmd.Phone is not null)
+        {
+            var (areaCode, number) = ContactFormatPolicy.NormalizePhone(
+                cmd.PhoneCode ?? user.PhoneCode, cmd.Phone ?? user.Phone);
+            user.PhoneCode = areaCode;
+            user.Phone = number;
+        }
 
         var updated = await userRepository.UpdateAsync(user, ct);
 

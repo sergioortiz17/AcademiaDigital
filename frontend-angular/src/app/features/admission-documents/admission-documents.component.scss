@@ -1,0 +1,91 @@
+.admission-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+
+  h1 { color: #0d4f86; margin: 0 0 8px; }
+}
+
+.intro { color: #536575; margin: 0 0 12px; }
+
+.pre-enrollment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+
+  &--success { background: #eff8f1; color: #23683c; }
+  &--error { background: #fff3f0; color: #9d3222; }
+}
+
+.loading, .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  color: #6b7a88;
+}
+
+.progress { font-weight: 600; color: #20384e; }
+
+.requirement {
+  margin-bottom: 12px;
+  padding: 16px;
+
+  h2 { font-size: 1.05rem; margin: 0; }
+}
+
+.requirement-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.optional { font-weight: 400; color: #6b7a88; font-size: 0.9rem; }
+.description { margin: 4px 0 0; color: #536575; font-size: 0.9rem; }
+
+.status-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #eef1f4;
+  color: #536575;
+
+  &--submitted { background: #fff4e0; color: #8a5a00; }
+  &--approved { background: #e6f4ea; color: #1e6b34; }
+  &--rejected { background: #fdecea; color: #b71c1c; }
+}
+
+.document {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sent-at { color: #6b7a88; font-size: 0.85rem; }
+
+.observation {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: #b71c1c;
+}
+
+.actions { margin-top: 12px; }

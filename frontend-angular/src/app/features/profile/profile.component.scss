@@ -355,3 +355,13 @@ mat-card-actions {
     width: 100%;
   }
 }
+.field-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #6b7a88;
+}
+
+.field-hint--error {
+  color: #c62828;
+}
