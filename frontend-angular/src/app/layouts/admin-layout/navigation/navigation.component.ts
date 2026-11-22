@@ -44,7 +44,7 @@ const MENU_PROFESOR: MenuItem[] = [
 
 /**
  * Menú de Administración: los mismos ítems y nombres de siempre, agrupados en desplegables por tema
- * (1.15.1). Las URL y los permisos son los de cada pantalla.
+ * (1.16.0). Las URL y los permisos son los de cada pantalla.
  */
 const MENU_ADMIN: MenuItem[] = [
   { id: 'dashboard', title: 'Inicio', url: '/app/dashboard/default', icon: 'home' },

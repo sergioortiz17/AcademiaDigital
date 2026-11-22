@@ -4,7 +4,9 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
-## [1.15.1] - 2026-11-22
+## [1.16.0] - 2026-11-22
+
+Escuelas, cupos libres en Comisiones, inscripción ya enviada visible para el alumno y mejoras en Asignar materia. También corrige el menú de Administración de la 1.15.0.
 
 ### Agregado
 
