@@ -10,7 +10,8 @@ public sealed class ProfileContactUseCaseTests
     private readonly IProfileContactRepository repository = Substitute.For<IProfileContactRepository>();
 
     private static ProfileContactInfo Info(string? phone = "351 555-1234", string? insurance = " OSDE ")
-        => new(" Calle 1 ", "Córdoba", "Córdoba", "5000", "Ana", "Madre", phone, insurance);
+        => new(" dni ", "351 444-5555", " Calle 1 ", "Centro", "Córdoba", "Capital", "Córdoba", "Argentina", "5000",
+            "Ana", "Madre", phone, insurance);
 
     [Fact]
     public async Task Saves_trimmed_values_and_blank_as_null()
@@ -22,7 +23,17 @@ public sealed class ProfileContactUseCaseTests
 
         Assert.Equal("Calle 1", saved.AddressLine);
         Assert.Equal("OSDE", saved.HealthInsurance);
+        Assert.Equal("DNI", saved.DocumentType);
+        Assert.Equal("Capital", saved.District);
         Assert.Null(saved.PostalCode);
+    }
+
+    [Fact]
+    public async Task Rejects_an_unknown_document_type_or_an_invalid_second_phone()
+    {
+        var useCase = new ProfileContactUseCase(repository);
+        await Assert.ThrowsAsync<ArgumentException>(() => useCase.SaveAsync(7, Info() with { DocumentType = "XYZ" }, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<ArgumentException>(() => useCase.SaveAsync(7, Info() with { AlternatePhone = "abc" }, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -34,11 +45,11 @@ public sealed class ProfileContactUseCaseTests
     }
 
     [Fact]
-    public async Task Accounts_without_a_student_or_teacher_profile_are_rejected()
+    public async Task Any_role_can_save_and_a_missing_user_is_not_found()
     {
         repository.SaveAsync(7, Arg.Any<ProfileContactInfo>(), Arg.Any<CancellationToken>()).Returns(false);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             new ProfileContactUseCase(repository).SaveAsync(7, Info(), TestContext.Current.CancellationToken));
     }
 }

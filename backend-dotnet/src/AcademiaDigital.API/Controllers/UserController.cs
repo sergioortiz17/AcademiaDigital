@@ -10,7 +10,7 @@ public class UserController(
     UpdateUserUseCase updateUserUseCase,
     ProfileContactUseCase profileContactUseCase) : ApiControllerBase
 {
-    // GET /api/v1/users/profile/contact  [alumno o docente] — null si la cuenta no tiene ficha
+    // GET /api/v1/users/profile/contact  [cualquier rol]
     [HttpGet("profile/contact")]
     public async Task<IActionResult> GetContact(CancellationToken ct)
     {
@@ -18,13 +18,14 @@ public class UserController(
         return Ok(await profileContactUseCase.GetAsync(CurrentUserId.Value, ct));
     }
 
-    // PUT /api/v1/users/profile/contact  [alumno o docente]
+    // PUT /api/v1/users/profile/contact  [cualquier rol]
     [HttpPut("profile/contact")]
     public async Task<IActionResult> SaveContact([FromBody] ProfileContactRequest request, CancellationToken ct)
     {
         if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("User is not logged on."));
         return Ok(await profileContactUseCase.SaveAsync(CurrentUserId.Value, new AcademiaDigital.Domain.Interfaces.Repositories.ProfileContactInfo(
-            request.AddressLine, request.City, request.Province, request.PostalCode,
+            request.DocumentType, request.AlternatePhone, request.AddressLine, request.Neighborhood,
+            request.City, request.District, request.Province, request.Country, request.PostalCode,
             request.EmergencyContactName, request.EmergencyContactRelationship, request.EmergencyContactPhone,
             request.HealthInsurance), ct));
     }
@@ -124,9 +125,14 @@ public record UpdateProfileRequest(
     string? Phone);
 
 public record ProfileContactRequest(
+    string? DocumentType,
+    string? AlternatePhone,
     string? AddressLine,
+    string? Neighborhood,
     string? City,
+    string? District,
     string? Province,
+    string? Country,
     string? PostalCode,
     string? EmergencyContactName,
     string? EmergencyContactRelationship,

@@ -90,15 +90,13 @@ public sealed class CreateStudentCommandHandler(
                 CareerId = career.Id,
                 LegajoNumber = legajo,
                 EnrollmentDate = request.EnrollmentDate ?? DateTime.UtcNow,
-                Status = status,
-                AddressLine = request.AddressLine?.Trim(),
-                City = request.City?.Trim(),
-                Province = request.Province?.Trim(),
-                PostalCode = request.PostalCode?.Trim(),
-                EmergencyContactName = request.EmergencyContactName?.Trim(),
-                EmergencyContactRelationship = request.EmergencyContactRelationship?.Trim(),
-                EmergencyContactPhone = request.EmergencyContactPhone?.Trim()
+                Status = status
             }, transactionCt);
+
+            // El domicilio y el contacto de emergencia viven en la cuenta: solo se completan los
+            // que vienen en la solicitud, para no borrar lo que el alumno ya cargó en su perfil.
+            if (ApplyContact(user, request))
+                await userRepository.UpdateAsync(user, transactionCt);
 
             var studentCareer = await studentCareerRepository.CreateAsync(new StudentCareer
             {
@@ -135,6 +133,25 @@ public sealed class CreateStudentCommandHandler(
         createdStudent.User = user;
         createdStudent.Career = career;
         return await StudentDtoMapper.MapAsync(createdStudent, studentCareerRepository, studentAcademicRepository, ct);
+    }
+
+    private static bool ApplyContact(Domain.Entities.User user, CreateStudentRequest request)
+    {
+        var changed = false;
+        void Set(string? value, Action<string> apply)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            apply(value.Trim());
+            changed = true;
+        }
+        Set(request.AddressLine, v => user.AddressLine = v);
+        Set(request.City, v => user.City = v);
+        Set(request.Province, v => user.Province = v);
+        Set(request.PostalCode, v => user.PostalCode = v);
+        Set(request.EmergencyContactName, v => user.EmergencyContactName = v);
+        Set(request.EmergencyContactRelationship, v => user.EmergencyContactRelationship = v);
+        Set(request.EmergencyContactPhone, v => user.EmergencyContactPhone = v);
+        return changed;
     }
 }
 

@@ -61,10 +61,12 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         if (await db.Students.AnyAsync(x => x.Id != id && x.LegajoNumber == legajo, ct))
             throw new InvalidOperationException("El número de legajo ya existe.");
         student.LegajoNumber = legajo;
-        student.AddressLine = Clean(r.AddressLine); student.City = Clean(r.City); student.Province = Clean(r.Province);
-        student.PostalCode = Clean(r.PostalCode); student.EmergencyContactName = Clean(r.EmergencyContactName);
-        student.EmergencyContactRelationship = Clean(r.EmergencyContactRelationship);
-        student.EmergencyContactPhone = Clean(r.EmergencyContactPhone); student.UpdatedAt = DateTime.UtcNow;
+        // El domicilio y el contacto de emergencia están en la cuenta del usuario.
+        var u = student.User;
+        u.AddressLine = Clean(r.AddressLine); u.City = Clean(r.City); u.Province = Clean(r.Province);
+        u.PostalCode = Clean(r.PostalCode); u.EmergencyContactName = Clean(r.EmergencyContactName);
+        u.EmergencyContactRelationship = Clean(r.EmergencyContactRelationship);
+        u.EmergencyContactPhone = Clean(r.EmergencyContactPhone); student.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
         var assignment = await db.StudentAcademicAssignments.AsNoTracking().Include(x => x.Division)
             .SingleOrDefaultAsync(x => x.StudentId == id && x.IsCurrent && x.CareerId == x.Student.CareerId, ct);
@@ -73,9 +75,9 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
 
     public async Task UpdateEmergencyContactPhoneAsync(long id, string? phone, CancellationToken ct)
     {
-        var student = await db.Students.SingleOrDefaultAsync(x => x.Id == id, ct)
+        var student = await db.Students.Include(x => x.User).SingleOrDefaultAsync(x => x.Id == id, ct)
             ?? throw new KeyNotFoundException("Alumno no encontrado.");
-        student.EmergencyContactPhone = Clean(phone);
+        student.User.EmergencyContactPhone = Clean(phone);
         student.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
     }
@@ -130,8 +132,8 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
             new { s.Id, s.LegajoNumber, Status = s.Status.ToString(), s.EnrollmentDate },
             new { Dni = s.User.Dni, FirstName = s.User.Username, s.User.LastName, s.User.Email, s.User.Cuil, s.User.BirthDate,
                 Phone = $"{s.User.PhoneCode}{s.User.Phone}" },
-            new { s.AddressLine, s.City, s.Province, s.PostalCode },
-            new { Name = s.EmergencyContactName, Relationship = s.EmergencyContactRelationship, Phone = s.EmergencyContactPhone },
+            new { s.User.AddressLine, s.User.Neighborhood, s.User.City, s.User.District, s.User.Province, s.User.Country, s.User.PostalCode },
+            new { Name = s.User.EmergencyContactName, Relationship = s.User.EmergencyContactRelationship, Phone = s.User.EmergencyContactPhone },
             assignment is null ? null : Map(assignment),
             new { Required = required, Approved = approved, Pending = Math.Max(0, required - approved) },
             scholarships.Where(x => x.Status == StudentScholarshipStatus.Granted).ToList(), custom);

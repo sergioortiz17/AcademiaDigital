@@ -38,6 +38,11 @@ export interface StudentReportRow {
   healthInsurance: string | null;
   registryBook: string | null;
   registryFolio: string | null;
+  documentType: string | null;
+  alternatePhone: string | null;
+  neighborhood: string | null;
+  district: string | null;
+  country: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

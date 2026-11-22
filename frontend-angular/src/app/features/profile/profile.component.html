@@ -24,24 +24,25 @@
 
       <div class="profile-grid">
       <!-- EMAIL Y DNI — solo lectura -->
-        <div class="field-group field-group-3">
+        <div class="field-group" [ngClass]="isStudent ? 'field-group-3' : 'field-group-6'">
           <label class="field-label">Correo electrónico *</label>
           <mat-form-field appearance="fill" class="custom-field">
             <input matInput [value]="profile?.email" readonly>
           </mat-form-field>
         </div>
-        <div class="field-group field-group-3">
-          <label class="field-label">DNI *</label>
+        <div class="field-group" [ngClass]="isStudent ? 'field-group-3' : 'field-group-6'">
+          <label class="field-label">N° de documento *</label>
           <mat-form-field appearance="fill" class="custom-field">
             <input matInput [value]="profile?.dni" readonly>
           </mat-form-field>
         </div>
       <!-- <mat-divider class="section-divider"></mat-divider> -->
-        <div class="field-group field-group-3">
+        <!-- El legajo académico solo se muestra al alumno. El legajo docente lo ve Administración. -->
+        <div class="field-group field-group-3" *ngIf="isStudent">
           <label class="field-label">Legajo</label>
           <mat-form-field appearance="fill" class="custom-field">
             <input matInput readonly [value]="student?.legajoNumber ?? ''">
-          </mat-form-field> 
+          </mat-form-field>
         </div>
 
         <div class="field-group field-group-4">
@@ -117,7 +118,8 @@
   </mat-card> 
 
   <!-- =============================================
-       DATOS DE CONTACTO (alumno y docente)
+       DOCUMENTO, DOMICILIO Y CONTACTO (todos los roles)
+       Son los datos que piden las planillas del instituto.
   ============================================= -->
   <mat-card class="profile-card" *ngIf="hasContactInfo">
     <div class="section-badge">
@@ -128,21 +130,36 @@
       <form [formGroup]="contactForm">
         <div class="profile-grid">
           <div class="field-group field-group-4">
+            <label class="field-label">Tipo de documento</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <mat-select formControlName="documentType">
+                <mat-option *ngFor="let type of documentTypes" [value]="type.value">{{ type.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Otro teléfono (fijo o celular)</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput type="tel" formControlName="alternatePhone" maxlength="20" autocomplete="tel">
+              <mat-error *ngIf="contactForm.get('alternatePhone')?.hasError('pattern')">Solo números, espacios y guiones (6 a 15 dígitos).</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-6">
+            <label class="field-label">Obra social</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="healthInsurance" maxlength="150" placeholder="Ej: OSDE, IOSFA, ninguna">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-6">
             <label class="field-label">Domicilio</label>
             <mat-form-field appearance="fill" class="custom-field">
-              <input matInput formControlName="addressLine" maxlength="255" autocomplete="street-address">
+              <input matInput formControlName="addressLine" maxlength="300" autocomplete="street-address" placeholder="Calle, número, piso y depto.">
             </mat-form-field>
           </div>
           <div class="field-group field-group-4">
-            <label class="field-label">Ciudad</label>
+            <label class="field-label">Barrio</label>
             <mat-form-field appearance="fill" class="custom-field">
-              <input matInput formControlName="city" maxlength="100" autocomplete="address-level2">
-            </mat-form-field>
-          </div>
-          <div class="field-group field-group-4">
-            <label class="field-label">Provincia</label>
-            <mat-form-field appearance="fill" class="custom-field">
-              <input matInput formControlName="province" maxlength="100" autocomplete="address-level1">
+              <input matInput formControlName="neighborhood" maxlength="120">
             </mat-form-field>
           </div>
           <div class="field-group field-group-4">
@@ -152,28 +169,46 @@
             </mat-form-field>
           </div>
           <div class="field-group field-group-4">
+            <label class="field-label">Ciudad o pueblo</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="city" maxlength="120" autocomplete="address-level2">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Departamento</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="district" maxlength="120" placeholder="Ej: Capital, Río Segundo">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">Provincia</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="province" maxlength="120" autocomplete="address-level1">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-4">
+            <label class="field-label">País</label>
+            <mat-form-field appearance="fill" class="custom-field">
+              <input matInput formControlName="country" maxlength="100" autocomplete="country-name">
+            </mat-form-field>
+          </div>
+          <div class="field-group field-group-3">
             <label class="field-label">Contacto de emergencia</label>
             <mat-form-field appearance="fill" class="custom-field">
               <input matInput formControlName="emergencyContactName" maxlength="200" placeholder="Nombre y apellido">
             </mat-form-field>
           </div>
-          <div class="field-group field-group-4">
+          <div class="field-group field-group-3">
             <label class="field-label">Vínculo</label>
             <mat-form-field appearance="fill" class="custom-field">
               <input matInput formControlName="emergencyContactRelationship" maxlength="100" placeholder="Ej: madre, pareja">
             </mat-form-field>
           </div>
-          <div class="field-group field-group-4">
+          <div class="field-group field-group-3">
             <label class="field-label">Teléfono de emergencia</label>
             <mat-form-field appearance="fill" class="custom-field">
               <input matInput type="tel" formControlName="emergencyContactPhone" maxlength="20" autocomplete="tel">
               <mat-error *ngIf="contactForm.get('emergencyContactPhone')?.hasError('pattern')">Solo números, espacios y guiones (6 a 15 dígitos).</mat-error>
-            </mat-form-field>
-          </div>
-          <div class="field-group field-group-4">
-            <label class="field-label">Obra social</label>
-            <mat-form-field appearance="fill" class="custom-field">
-              <input matInput formControlName="healthInsurance" maxlength="150" placeholder="Ej: OSDE, IOSFA, ninguna">
             </mat-form-field>
           </div>
         </div>

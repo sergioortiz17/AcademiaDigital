@@ -106,18 +106,24 @@ public sealed class CreateTeacherCommandHandler(
         {
             UserId = user.Id,
             IsActive = true
-        }, command.EmployeeNumber, command.Department, command.SpecializationArea, command.HireDate,
+        }, user, command.EmployeeNumber, command.Department, command.SpecializationArea, command.HireDate,
             command.PhoneNumber, command.AddressLine, command.City, command.Province, command.PostalCode,
             command.EmergencyContactName, command.EmergencyContactRelationship, command.EmergencyContactPhone,
             employeeNumber);
 
         var created = await teacherRepository.CreateAsync(teacher, ct);
+        await userRepository.UpdateAsync(user, ct);
         created.User = user;
         return TeacherDtoMapper.Map(created);
     }
 
+    /// <summary>
+    /// Aplica el legajo docente. El domicilio y el contacto de emergencia se guardan en la cuenta
+    /// del usuario (los mismos datos que el docente edita desde su perfil).
+    /// </summary>
     internal static Teacher ApplyProfile(
         Teacher teacher,
+        Domain.Entities.User user,
         string employeeNumber,
         string? department,
         string? specializationArea,
@@ -137,13 +143,13 @@ public sealed class CreateTeacherCommandHandler(
         teacher.SpecializationArea = Clean(specializationArea);
         teacher.HireDate = hireDate.Date;
         teacher.PhoneNumber = Clean(phoneNumber);
-        teacher.AddressLine = Clean(addressLine);
-        teacher.City = Clean(city);
-        teacher.Province = Clean(province);
-        teacher.PostalCode = Clean(postalCode);
-        teacher.EmergencyContactName = Clean(emergencyContactName);
-        teacher.EmergencyContactRelationship = Clean(emergencyContactRelationship);
-        teacher.EmergencyContactPhone = Clean(emergencyContactPhone);
+        user.AddressLine = Clean(addressLine);
+        user.City = Clean(city);
+        user.Province = Clean(province);
+        user.PostalCode = Clean(postalCode);
+        user.EmergencyContactName = Clean(emergencyContactName);
+        user.EmergencyContactRelationship = Clean(emergencyContactRelationship);
+        user.EmergencyContactPhone = Clean(emergencyContactPhone);
         return teacher;
     }
 
@@ -152,6 +158,7 @@ public sealed class CreateTeacherCommandHandler(
 
 public sealed class UpdateTeacherCommandHandler(
     ITeacherRepository repository,
+    IUserRepository userRepository,
     TeacherProfilePolicy policy,
     TimeProvider timeProvider)
 {
@@ -166,11 +173,14 @@ public sealed class UpdateTeacherCommandHandler(
             throw new TeacherAlreadyExistsException("employee number");
 
         CreateTeacherCommandHandler.ApplyProfile(
-            teacher, command.EmployeeNumber, command.Department, command.SpecializationArea, command.HireDate,
+            teacher, teacher.User, command.EmployeeNumber, command.Department, command.SpecializationArea, command.HireDate,
             command.PhoneNumber, command.AddressLine, command.City, command.Province, command.PostalCode,
             command.EmergencyContactName, command.EmergencyContactRelationship, command.EmergencyContactPhone,
             employeeNumber);
+        var user = teacher.User;
         var updated = await repository.UpdateAsync(teacher, ct);
+        await userRepository.UpdateAsync(user, ct);
+        updated.User = user;
         return TeacherDtoMapper.Map(updated);
     }
 }
@@ -209,13 +219,13 @@ internal static class TeacherDtoMapper
         teacher.HireDate,
         teacher.IsActive,
         teacher.PhoneNumber,
-        teacher.AddressLine,
-        teacher.City,
-        teacher.Province,
-        teacher.PostalCode,
-        teacher.EmergencyContactName,
-        teacher.EmergencyContactRelationship,
-        teacher.EmergencyContactPhone,
+        teacher.User.AddressLine,
+        teacher.User.City,
+        teacher.User.Province,
+        teacher.User.PostalCode,
+        teacher.User.EmergencyContactName,
+        teacher.User.EmergencyContactRelationship,
+        teacher.User.EmergencyContactPhone,
         teacher.DeactivatedAt,
         teacher.DeactivatedByUserId,
         teacher.DeactivationReason);

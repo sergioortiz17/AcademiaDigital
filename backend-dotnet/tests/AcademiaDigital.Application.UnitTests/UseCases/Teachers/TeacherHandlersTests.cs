@@ -37,7 +37,10 @@ public sealed class TeacherHandlersTests
         Assert.Equal("Engineering", result.Department);
         Assert.True(navigationWasEmptyAtPersistence);
         await teachers.Received(1).CreateAsync(
-            Arg.Is<Teacher>(teacher => teacher.UserId == user.Id && teacher.City == "Rosario"),
+            Arg.Is<Teacher>(teacher => teacher.UserId == user.Id),
+            Arg.Any<CancellationToken>());
+        // El domicilio se guarda en la cuenta del usuario.
+        await users.Received(1).UpdateAsync(Arg.Is<User>(u => u.Id == user.Id && u.City == "Rosario"),
             Arg.Any<CancellationToken>());
     }
 
@@ -77,7 +80,7 @@ public sealed class TeacherHandlersTests
         teachers.FindByEmployeeNumberAsync("DOC-001", Arg.Any<CancellationToken>())
             .Returns(TeacherProfile(21));
         var handler = new UpdateTeacherCommandHandler(
-            teachers, new TeacherProfilePolicy(), new FixedTimeProvider(Now));
+            teachers, Substitute.For<IUserRepository>(), new TeacherProfilePolicy(), new FixedTimeProvider(Now));
         var command = new UpdateTeacherCommand(
             20, "doc-001", null, null, new DateTime(2020, 1, 1), null,
             null, null, null, null, null, null, null);

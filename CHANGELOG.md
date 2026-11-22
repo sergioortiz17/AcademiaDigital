@@ -4,6 +4,18 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.13.0] - 2026-11-22
+
+### Agregado
+
+- **Perfil**: todos los roles (también Secretaría, Coordinación, Preceptoría, Cooperadora y Admin) cargan sus datos de contacto, con lo que piden las planillas del instituto: tipo de documento, otro teléfono (fijo o celular), domicilio, barrio, ciudad o pueblo, departamento, provincia, país, código postal, contacto de emergencia y obra social.
+- **Reportes**: el Excel de alumnos suma las columnas Tipo doc., Otro teléfono, Barrio, Departamento y País.
+
+### Cambiado
+
+- **Perfil**: el legajo solo se muestra al alumno. El docente y el personal ya no ven ese campo; el legajo docente lo sigue viendo Administración en Docentes.
+- **Datos de contacto**: se guardan en la cuenta del usuario y no en la ficha de alumno o docente. La migración `MoveContactDataToUsers` copia lo ya cargado antes de borrar las columnas viejas.
+
 ## [1.12.1] - 2026-11-22
 
 ### Cambiado

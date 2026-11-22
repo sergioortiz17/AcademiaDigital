@@ -9,15 +9,7 @@ public class Teacher
     public DateTime HireDate { get; set; }
     public bool IsActive { get; set; } = true;
     public string? PhoneNumber { get; set; }
-    public string? AddressLine { get; set; }
-    public string? City { get; set; }
-    public string? Province { get; set; }
-    public string? PostalCode { get; set; }
-    public string? EmergencyContactName { get; set; }
-    public string? EmergencyContactRelationship { get; set; }
-    public string? EmergencyContactPhone { get; set; }
-    /// <summary>Obra social o prepaga (texto libre).</summary>
-    public string? HealthInsurance { get; set; }
+    // Domicilio, contacto de emergencia y obra social están en User (los carga cada usuario).
     public DateTime? DeactivatedAt { get; set; }
     public long? DeactivatedByUserId { get; set; }
     public string? DeactivationReason { get; set; }
