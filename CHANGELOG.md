@@ -4,6 +4,16 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.15.0] - 2026-11-22
+
+### Cambiado
+
+- **Menú de Administración**: reorganizado según el recorrido del alumno, con secciones de título fijo: Admisión, Personas, Cursado, Exámenes, Trámites y egreso, Configuración y Herramientas. Cada ítem tiene un ícono distinto. Las URL y los permisos no cambiaron; los roles de gestión con permisos recortados ven solo las secciones que les corresponden. Los menús de alumno y docente no cambiaron.
+- **Nombres**: "Gestión de Inscripciones" pasa a "Períodos de inscripción"; "Requisitos de ingreso" (bandeja de revisión) a "Documentación de ingreso"; "Listado de docentes" a "Docentes"; "Asignar materia" a "Asignación docente"; "Armar mesas automáticas" a "Mesas de examen"; "Formulario de inscripción" a "Formulario de mesas"; "Peticiones" a "Solicitudes de certificados"; "Acciones masivas" a "Egresos"; "Gestión de Carreras" a "Carreras"; "Reportes y Excel" a "Reportes"; "Gestión de Usuarios" a "Usuarios y permisos"; "Calendario" a "Calendario académico". El título de cada página coincide con su nombre en el menú; en Calendario y Certificados, que comparten pantalla con alumno y docente, el título nuevo lo ve solo el personal.
+- **Divisiones**: botones "Asignar alumnos" (la pantalla que antes era "Asignar división a alumnos") e "Inscribir en materias" (inscribe una división en las materias de su año, con la carrera ya elegida). "Asignaciones" sale del menú de Administración: repetía en modo lectura lo que muestran Comisiones y Plan de estudios (el docente la sigue viendo como "Mis asignaciones").
+- **Egresos**: la pantalla muestra solo el egreso; la inscripción por división se abre desde Divisiones.
+- **Períodos de inscripción**: el botón principal dice "Abrir período de inscripción"; "Cerrar" pasa a "Cerrar inscripción" (con confirmación) y "Activar" a "Reabrir inscripción"; "Eliminar período" se movió a un menú aparte (⋮), lejos de "Cerrar inscripción"; los botones de ícono tienen texto de ayuda ("Estadísticas", "Editar"); el estado ("Abierto"/"Cerrado") es una etiqueta que ya no parece botón, y el contador de "Ver inscriptos" es neutro en vez de rojo.
+
 ## [1.14.0] - 2026-11-22
 
 ### Agregado
