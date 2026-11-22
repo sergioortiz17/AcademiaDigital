@@ -1,0 +1,105 @@
+name: Tests unitarios
+
+# Corre en cada push (a cualquier rama) y a mano desde la pestaña Actions.
+# Los resultados también aparecen en la PR, porque la PR muestra los checks de su último commit.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version:
+    name: Versión consistente
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar /VERSION contra frontend, backend y Finance
+        run: bash tools/version.sh check
+
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restaurar
+        run: dotnet restore backend-dotnet/AcademiaDigital.sln
+
+      - name: Compilar
+        run: dotnet build backend-dotnet/AcademiaDigital.sln --no-restore --configuration Release
+
+      - name: Tests de dominio
+        run: >-
+          dotnet test backend-dotnet/tests/AcademiaDigital.Domain.UnitTests/AcademiaDigital.Domain.UnitTests.csproj
+          --no-build --configuration Release --logger "trx;LogFileName=domain.trx" --results-directory test-results
+
+      - name: Tests de aplicación
+        run: >-
+          dotnet test backend-dotnet/tests/AcademiaDigital.Application.UnitTests/AcademiaDigital.Application.UnitTests.csproj
+          --no-build --configuration Release --logger "trx;LogFileName=application.trx" --results-directory test-results
+
+      - name: Tests de arquitectura
+        run: >-
+          dotnet test backend-dotnet/tests/AcademiaDigital.ArchitectureTests/AcademiaDigital.ArchitectureTests.csproj
+          --no-build --configuration Release --logger "trx;LogFileName=architecture.trx" --results-directory test-results
+
+      - name: Subir resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: test-results
+          if-no-files-found: ignore
+
+  finance:
+    name: Finance (.NET)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Finance todavía no tiene proyecto de tests: se verifica que compile.
+      - name: Compilar
+        run: dotnet build services/AcademiaDigital.Finance/src/AcademiaDigital.Finance.API/AcademiaDigital.Finance.API.csproj --configuration Release
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend-angular
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend-angular/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tests unitarios (Vitest)
+        run: npx ng test --watch=false
+
+      - name: Build de producción
+        run: npx ng build --configuration production

@@ -4,11 +4,10 @@
 </div>
 
 <div class="dialog-body">
-  <p class="hint">Definí las instancias de esta planilla. Los pesos de las <strong>instancias regulares</strong> deben sumar 100%. Las <strong>recuperaciones</strong> no llevan peso: cubren por nota la instancia desaprobada más baja.</p>
+  <p class="hint">Defina las instancias de esta planilla. Todas las <strong>instancias regulares</strong> valen lo mismo en el promedio. Las <strong>recuperaciones</strong> no suman al promedio: reemplazan la nota de la instancia desaprobada más baja.</p>
 
   <div class="evaluation-row evaluation-row--header">
     <span>Nombre</span>
-    <span>Peso %</span>
     <span>Nota máx.</span>
     <span>Recup.</span>
     <span></span>
@@ -19,12 +18,9 @@
       <input matInput [(ngModel)]="e.name" maxlength="150" placeholder="Ej: 1era Instancia">
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <input matInput type="number" min="0" max="100" step="0.01" [(ngModel)]="e.weightPercentage" [disabled]="e.isRecovery">
-    </mat-form-field>
-    <mat-form-field appearance="outline">
       <input matInput type="number" min="0.01" max="100" step="0.01" [(ngModel)]="e.maximumScore">
     </mat-form-field>
-    <mat-checkbox [(ngModel)]="e.isRecovery" (change)="onRecoveryToggle(e)"
+    <mat-checkbox [(ngModel)]="e.isRecovery" (change)="onRecoveryToggle()"
       matTooltip="Marca esta evaluación como recuperación (sin peso propio)"></mat-checkbox>
     <button mat-icon-button color="warn" [disabled]="evaluations.length <= 1" (click)="removeEvaluation(i)">
       <mat-icon>delete</mat-icon>
@@ -35,8 +31,8 @@
     <mat-icon>add</mat-icon> Agregar instancia
   </button>
 
-  <div class="weight-summary" [class.weight-summary--error]="totalWeight !== 100">
-    Suma de pesos (instancias regulares): {{ totalWeight }}%
+  <div class="weight-summary" [class.weight-summary--error]="!isValid">
+    {{ validationMessage ?? summary }}
   </div>
 </div>
 

@@ -322,14 +322,18 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
         this.resetForm();
         this.isSubmitting = false;
         this.successMsg = '';
+        this.errorMsg = '';
         this.loadPeriods();
-        // Chequeo inmediato: avisar en el momento si el período recién abierto ya tiene faltantes.
-        if (res?.data?.id) this.checkCoverageNow(res.data);
+        // Chequeo inmediato: confirma la apertura y avisa en el momento si ya faltan divisiones.
+        if (res?.data?.id) this.checkCoverageNow(res.data, true);
+        else Swal.fire({ icon: 'success', titleText: 'Período abierto', text: 'El período de inscripción quedó activo.' });
         this.cdr.detectChanges();
       },
       error: err => {
-        this.errorMsg = err.error?.msg || err.error?.title || 'No se pudo abrir el período.';
+        // El error se muestra en un diálogo y el formulario queda cargado para reintentar.
+        const message = err.error?.msg || err.error?.title || 'No se pudo abrir el período.';
         this.isSubmitting = false;
+        Swal.fire({ icon: 'error', titleText: 'No se pudo abrir el período', text: message });
         this.cdr.detectChanges();
       }
     });
@@ -405,24 +409,33 @@ activatePeriod(period: EnrollmentPeriodDto): void {
    * Chequeo inmediato al abrir/activar: consulta la cobertura y, si faltan comisiones, muestra un
    * aviso puntual en el momento (además del banner persistente por período).
    */
-private checkCoverageNow(period: EnrollmentPeriodDto): void {
-  this.enrollmentService.getCommissionCoverage(period.id).subscribe({
+private checkCoverageNow(period: EnrollmentPeriodDto, confirmWhenComplete = false): void {
+  this.enrollmentService.getCommissionCoverage(period.id).pipe(timeout(8000)).subscribe({
     next: res => {
-      this.coverageByPeriod[period.id] = res.data.gaps;
-      if (res.data.gaps.length > 0) {
-        const detalle = res.data.gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
-        const mensajeAdvertencia = `Faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos van a quedar sin división hasta que las crees o los asignes a mano.`;
-        
+      const gaps = res?.data?.gaps ?? [];
+      this.coverageByPeriod[period.id] = gaps;
+      if (gaps.length > 0) {
+        const detalle = gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
         Swal.fire({
-          title: 'Atención: Cobertura incompleta',
-          text: mensajeAdvertencia,
           icon: 'warning',
+          titleText: 'Faltan divisiones',
+          text: `El período quedó activo, pero faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos quedarán sin división hasta que se creen o se asignen a mano.`,
           confirmButtonText: 'Entendido'
         });
+      } else if (confirmWhenComplete) {
+        Swal.fire({ icon: 'success', titleText: 'Período abierto', text: 'El período de inscripción quedó activo.' });
       }
       this.cdr.detectChanges();
     },
-    error: () => { /* best-effort */ }
+    error: () => {
+      // La apertura ya se hizo: solo falló la verificación de divisiones.
+      if (!confirmWhenComplete) return;
+      Swal.fire({
+        icon: 'warning',
+        titleText: 'Período abierto',
+        text: 'El período quedó activo, pero no se pudo verificar si faltan divisiones. Revíselo en la lista de períodos.'
+      });
+    }
   });
 }
 
