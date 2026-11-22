@@ -28,6 +28,8 @@ public interface IStudentManagementService
     Task DisableRequirementAsync(int id, CancellationToken ct);
     Task<IReadOnlyList<StudentDocumentDto>> GetDocumentsAsync(long studentId, CancellationToken ct);
     Task<StudentDocumentDto> AddDocumentAsync(long studentId, CreateStudentDocumentRequest request, CancellationToken ct);
+    /// <summary>Documentos de todos los alumnos para que Administración los revise (por defecto, los enviados).</summary>
+    Task<IReadOnlyList<StudentDocumentReviewItemDto>> GetDocumentsForReviewAsync(StudentDocumentStatus? status, CancellationToken ct);
     Task<StudentDocumentDto> ReviewDocumentAsync(long studentId, long documentId, ReviewStudentDocumentRequest request, long actorId, CancellationToken ct);
     Task DeleteDocumentAsync(long studentId, long documentId, CancellationToken ct);
     Task<IReadOnlyList<DocumentRequirementDto>> GetPendingDocumentsAsync(long studentId, CancellationToken ct);

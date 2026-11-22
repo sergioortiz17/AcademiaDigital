@@ -17,7 +17,8 @@ public sealed class GradebooksController(
     CloseGradebookCommandHandler closeHandler,
     ReopenGradebookCommandHandler reopenHandler,
     GetMyGradesQueryHandler myGradesHandler,
-    GetSectionStudentsQueryHandler sectionStudentsHandler) : ApiControllerBase
+    GetSectionStudentsQueryHandler sectionStudentsHandler,
+    UpdateGradebookEvaluationsCommandHandler evaluationsHandler) : ApiControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(
@@ -86,7 +87,21 @@ public sealed class GradebooksController(
         return Ok(await gradesHandler.Handle(new SaveGradeEntriesCommand(
             id,
             request.Grades.Select(item => new GradeEntryInput(
-                item.EvaluationId, item.EnrollmentId, item.Score, item.Notes)).ToArray(),
+                item.EvaluationId, item.EnrollmentId, item.Score, item.Notes, item.IsAbsent)).ToArray(),
+            CurrentUserId!.Value,
+            CurrentUserRole == UserRole.Admin), ct));
+    }
+
+    /// <summary>Edita las instancias de una planilla en borrador (formato de la planilla).</summary>
+    [HttpPut("{id:long}/evaluations")]
+    public async Task<IActionResult> UpdateEvaluations(long id, [FromBody] UpdateGradebookEvaluationsRequest request, CancellationToken ct)
+    {
+        var guard = RequireAdminOrProfessor();
+        if (guard is not null) return guard;
+        return Ok(await evaluationsHandler.Handle(new UpdateGradebookEvaluationsCommand(
+            id,
+            request.Evaluations.Select(item => new GradebookEvaluationLayoutInput(
+                item.Id, item.Name, item.MaximumScore, item.IsRecovery, item.EvaluationDate)).ToArray(),
             CurrentUserId!.Value,
             CurrentUserRole == UserRole.Admin), ct));
     }
@@ -166,6 +181,15 @@ public sealed record SaveGradeEntryRequest(
     [Range(1, long.MaxValue)] long EvaluationId,
     [Range(1, long.MaxValue)] long EnrollmentId,
     [Range(typeof(decimal), "0", "100")] decimal Score,
-    [StringLength(500)] string? Notes);
+    [StringLength(500)] string? Notes,
+    bool IsAbsent = false);
+public sealed record UpdateGradebookEvaluationsRequest(
+    [Required, MinLength(1), MaxLength(20)] IReadOnlyList<GradebookEvaluationLayoutRequest> Evaluations);
+public sealed record GradebookEvaluationLayoutRequest(
+    long? Id,
+    [Required, StringLength(150, MinimumLength = 1)] string Name,
+    [Range(typeof(decimal), "0.01", "100")] decimal MaximumScore,
+    bool IsRecovery,
+    DateOnly? EvaluationDate);
 public sealed record ReopenGradebookRequest(
     [Required, StringLength(1000, MinimumLength = 3)] string Reason);

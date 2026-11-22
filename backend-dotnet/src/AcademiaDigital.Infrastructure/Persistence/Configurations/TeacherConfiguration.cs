@@ -26,6 +26,7 @@ public class TeacherConfiguration : IEntityTypeConfiguration<Teacher>
         builder.Property(t => t.EmergencyContactName).HasColumnName("emergency_contact_name").HasMaxLength(200);
         builder.Property(t => t.EmergencyContactRelationship).HasColumnName("emergency_contact_relationship").HasMaxLength(100);
         builder.Property(t => t.EmergencyContactPhone).HasColumnName("emergency_contact_phone").HasMaxLength(30);
+        builder.Property(t => t.HealthInsurance).HasColumnName("health_insurance").HasMaxLength(150);
         builder.Property(t => t.DeactivatedAt).HasColumnName("deactivated_at");
         builder.Property(t => t.DeactivatedByUserId).HasColumnName("deactivated_by_user_id");
         builder.Property(t => t.DeactivationReason).HasColumnName("deactivation_reason").HasMaxLength(500);

@@ -77,6 +77,65 @@ public sealed class GradebookHandlersTests
     }
 
     [Fact]
+    public async Task Editing_the_layout_renames_adds_and_redistributes_weights()
+    {
+        var repository = Substitute.For<IGradebookRepository>();
+        var gradebook = Gradebook();
+        repository.FindForUpdateAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        repository.FindAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        repository.GetRosterAsync(gradebook, Arg.Any<CancellationToken>()).Returns([Roster()]);
+        var handler = new UpdateGradebookEvaluationsCommandHandler(repository, new GradebookPolicy(), new ImmediateUnitOfWork());
+
+        await handler.Handle(new UpdateGradebookEvaluationsCommand(10,
+            [
+                new(101, "Proyecto", 10m, false, new DateOnly(2027, 5, 2)),
+                new(100, "Parcial", 10m, false, null),
+                new(null, "Recuperatorio", 10m, true, null)
+            ], 99, true), TestContext.Current.CancellationToken);
+
+        var ordered = gradebook.Evaluations.OrderBy(item => item.DisplayOrder).ToArray();
+        Assert.Equal(["Proyecto", "Parcial", "Recuperatorio"], ordered.Select(item => item.Name));
+        Assert.Equal([50m, 50m, 0m], ordered.Select(item => item.WeightPercentage));
+        Assert.Equal(new DateOnly(2027, 5, 2), ordered[0].EvaluationDate);
+    }
+
+    [Fact]
+    public async Task Editing_the_layout_cannot_remove_an_instance_with_grades()
+    {
+        var repository = Substitute.For<IGradebookRepository>();
+        var gradebook = Gradebook();
+        gradebook.GradeRevisions = [new GradeEntryRevision { EvaluationId = 101, EnrollmentId = 30, IsCurrent = true, Score = 7m }];
+        repository.FindForUpdateAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        var handler = new UpdateGradebookEvaluationsCommandHandler(repository, new GradebookPolicy(), new ImmediateUnitOfWork());
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new UpdateGradebookEvaluationsCommand(10, [new(100, "Partial", 10m, false, null)], 99, true),
+            TestContext.Current.CancellationToken));
+
+        Assert.Contains("Project", error.Message);
+    }
+
+    [Fact]
+    public async Task Absent_students_are_saved_with_score_zero()
+    {
+        var repository = Substitute.For<IGradebookRepository>();
+        var gradebook = Gradebook();
+        repository.FindForUpdateAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        repository.FindAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        repository.GetRosterAsync(gradebook, Arg.Any<CancellationToken>()).Returns([Roster()]);
+        var handler = new SaveGradeEntriesCommandHandler(
+            repository, new GradebookPolicy(), new ImmediateUnitOfWork(), new FixedTimeProvider(Now));
+
+        await handler.Handle(new SaveGradeEntriesCommand(10,
+            [new GradeEntryInput(100, 30, 55m, null, IsAbsent: true)], 99, true),
+            TestContext.Current.CancellationToken);
+
+        await repository.Received(1).SaveGradeRevisionsAsync(
+            Arg.Is<IReadOnlyList<GradeEntryRevision>>(items => items.Single().IsAbsent && items.Single().Score == 0m),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Professor_cannot_create_gradebook_outside_current_assignment()
     {
         var positions = Substitute.For<ICourseSectionRepository>();

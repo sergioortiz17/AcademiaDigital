@@ -26,6 +26,7 @@ public class StudentConfiguration : IEntityTypeConfiguration<Student>
         builder.Property(s => s.EmergencyContactName).HasColumnName("emergency_contact_name").HasMaxLength(200);
         builder.Property(s => s.EmergencyContactRelationship).HasColumnName("emergency_contact_relationship").HasMaxLength(100);
         builder.Property(s => s.EmergencyContactPhone).HasColumnName("emergency_contact_phone").HasMaxLength(30);
+        builder.Property(s => s.HealthInsurance).HasColumnName("health_insurance").HasMaxLength(150);
         builder.Property(s => s.UpdatedAt).HasColumnName("updated_at");
 
         builder.HasOne(s => s.User)

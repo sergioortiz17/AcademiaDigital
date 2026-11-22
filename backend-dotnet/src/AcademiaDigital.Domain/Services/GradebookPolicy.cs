@@ -64,6 +64,23 @@ public sealed class GradebookPolicy
             throw new ArgumentException("Los pesos de las instancias regulares deben sumar exactamente cien por ciento.");
     }
 
+    /// <summary>
+    /// Reparte el 100% en partes iguales entre las instancias regulares (dos decimales); los
+    /// centésimos que sobran van a las primeras para que la suma dé 100 exacto. Las recuperaciones quedan en 0.
+    /// </summary>
+    public static void DistributeEqualWeights(IEnumerable<GradebookEvaluation> evaluations)
+    {
+        var ordered = evaluations.OrderBy(item => item.DisplayOrder).ToArray();
+        var regular = ordered.Where(item => !item.IsRecovery).ToArray();
+        foreach (var recovery in ordered.Where(item => item.IsRecovery)) recovery.WeightPercentage = 0m;
+        if (regular.Length == 0) return;
+        const int totalCents = 10000;
+        var baseCents = totalCents / regular.Length;
+        var remainder = totalCents - baseCents * regular.Length;
+        for (var i = 0; i < regular.Length; i++)
+            regular[i].WeightPercentage = (baseCents + (i < remainder ? 1 : 0)) / 100m;
+    }
+
     public void EnsureEditable(Gradebook gradebook)
     {
         if (gradebook.Status != GradebookStatus.Draft)

@@ -52,6 +52,7 @@ public sealed class GradebookEvaluationConfiguration : IEntityTypeConfiguration<
         builder.Property(item => item.MaximumScore).HasColumnName("maximum_score").HasPrecision(5, 2);
         builder.Property(item => item.DisplayOrder).HasColumnName("display_order");
         builder.Property(item => item.IsRecovery).HasColumnName("is_recovery").HasDefaultValue(false);
+        builder.Property(item => item.EvaluationDate).HasColumnName("evaluation_date");
         builder.HasIndex(item => new { item.GradebookId, item.Name }).IsUnique();
         builder.HasIndex(item => new { item.GradebookId, item.DisplayOrder }).IsUnique();
         builder.HasOne(item => item.Gradebook).WithMany(item => item.Evaluations).HasForeignKey(item => item.GradebookId).OnDelete(DeleteBehavior.Cascade);
@@ -74,6 +75,7 @@ public sealed class GradeEntryRevisionConfiguration : IEntityTypeConfiguration<G
         builder.Property(item => item.IsCurrent).HasColumnName("is_current");
         builder.Property(item => item.Score).HasColumnName("score").HasPrecision(5, 2);
         builder.Property(item => item.Notes).HasColumnName("notes").HasMaxLength(500);
+        builder.Property(item => item.IsAbsent).HasColumnName("is_absent").HasDefaultValue(false);
         builder.Property(item => item.CreatedAt).HasColumnName("created_at");
         builder.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
         builder.HasIndex(item => new { item.EvaluationId, item.EnrollmentId, item.Version }).IsUnique();

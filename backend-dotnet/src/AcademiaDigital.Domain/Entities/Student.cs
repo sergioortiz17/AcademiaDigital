@@ -15,6 +15,8 @@ public class Student
     public string? EmergencyContactName { get; set; }
     public string? EmergencyContactRelationship { get; set; }
     public string? EmergencyContactPhone { get; set; }
+    /// <summary>Obra social o prepaga (texto libre).</summary>
+    public string? HealthInsurance { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public long UserId { get; set; }

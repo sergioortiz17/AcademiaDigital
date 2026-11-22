@@ -19,6 +19,7 @@ public sealed record DocumentRequirementDto(int Id, string Code, string Name, st
 public sealed record StudentDocumentDto(long Id, long StudentId, int DocumentRequirementId, string RequirementName,
     string FileUrl, string OriginalFileName, string ContentType, long FileSizeBytes, StudentDocumentStatus Status,
     DateTime SubmittedAt, DateTime? ReviewedAt, string? Observation);
+public sealed record StudentDocumentReviewItemDto(StudentDocumentDto Document, string StudentName, string LegajoNumber, string? Dni);
 public sealed record ScholarshipDto(int Id, string Code, string Name, string? Description, bool IsActive);
 public sealed record StudentScholarshipDto(long Id, long StudentId, int ScholarshipId, string ScholarshipName,
     int AcademicYear, StudentScholarshipStatus Status, DateTime? GrantedAt, DateOnly? ValidFrom, DateOnly? ValidTo, string? Notes);

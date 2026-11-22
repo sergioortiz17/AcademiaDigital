@@ -243,4 +243,21 @@ public sealed class GradebookPolicyTests
         => new() { Name = name, WeightPercentage = weight, MaximumScore = 10m };
     private static GradebookEvaluation Recovery(string name)
         => new() { Name = name, WeightPercentage = 0m, MaximumScore = 10m, IsRecovery = true };
+
+    [Fact]
+    public void Equal_weights_add_up_to_exactly_one_hundred_and_skip_recoveries()
+    {
+        var evaluations = new[]
+        {
+            new GradebookEvaluation { Name = "1", DisplayOrder = 1 },
+            new GradebookEvaluation { Name = "R", DisplayOrder = 2, IsRecovery = true, WeightPercentage = 50m },
+            new GradebookEvaluation { Name = "2", DisplayOrder = 3 },
+            new GradebookEvaluation { Name = "3", DisplayOrder = 4 }
+        };
+
+        GradebookPolicy.DistributeEqualWeights(evaluations);
+
+        Assert.Equal([33.34m, 0m, 33.33m, 33.33m], evaluations.Select(item => item.WeightPercentage));
+        Assert.Equal(100m, evaluations.Sum(item => item.WeightPercentage));
+    }
 }
