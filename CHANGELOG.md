@@ -17,6 +17,8 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 - **Asignar materia** (Administración → Docentes): pantalla nueva con arrastrar y soltar. Se elige la carrera y el ciclo; los docentes aparecen como píldoras (con la cantidad de comisiones que ya tienen) y las materias de todos los años como cuadros, cada uno con un desplegable de sus comisiones. Se sueltan los docentes sobre las materias, al tocar una materia se elige la división y el cargo de cada uno, y nada se escribe en la base hasta tocar "Guardar cambios" ("Descartar" deshace lo movido). Funciona con mouse y en pantallas táctiles.
 - **Comisiones** (Administración → Docentes): cada fila se despliega con la flecha y muestra los alumnos inscriptos en esa comisión (nombre, legajo y DNI) y cuántos son frente al cupo.
 - **Cargar asistencia**: el mes se muestra en castellano ("Noviembre 2026"); antes el selector del navegador lo mostraba en inglés.
+- **Inscripción a materias**: la carrera del alumno queda elegida al entrar (la de su plan de estudios), sin tener que buscarla en el desplegable. Después de inscribirse, la carrera se conserva y las materias pedidas aparecen como inscriptas.
+- **Inscripción a materias**: el botón "Solicitar inscripción" flota abajo de la pantalla mientras se recorre la lista y muestra cuántas materias hay tildadas, por ejemplo "Solicitar inscripción (3)".
 - **Archivos**: el tamaño máximo de los documentos que se suben (inscripción y legajo docente) pasa de 10 MB a 5 MB: alcanza para un PDF escaneado o una foto de celular y cuida la memoria del servidor.
 
 ### Corregido

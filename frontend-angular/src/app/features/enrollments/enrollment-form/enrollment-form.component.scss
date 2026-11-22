@@ -262,6 +262,14 @@ mat-form-field{
   justify-content: center;
   align-items: center;
   margin-top: 20px;
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  pointer-events: none;
+  .save-btn { pointer-events: auto; box-shadow: 0 6px 18px rgba(15, 79, 146, .3); }
+  // Deshabilitado: opaco, para que no se mezcle con la lista que pasa por debajo.
+  .save-btn:disabled { background: #e3e8ee; color: #7a8896; }
+  .save-btn:not(:disabled) { background-color: #ffd86a; color: #0f4f92; }
 }
 
 .save-btn {

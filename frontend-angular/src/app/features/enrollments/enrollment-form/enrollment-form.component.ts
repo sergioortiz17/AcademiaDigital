@@ -5,6 +5,8 @@ import { SubjectService } from '../../../core/services/subject.service';
 import { EnrollmentService, EnrollmentPeriodDto } from '../../../core/services/enrollment. service';
 import { EnrollmentSuccessDialogComponent } from './enrollment-success-dialog.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { EligibleCourse, StudentService } from '../../../core/services/student.service';
 
 export interface Career {
@@ -102,13 +104,30 @@ export class EnrollmentFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.careerService.getCareers().subscribe({
-      next: data => {
-        this.careers = data;
+    // La carrera del alumno se elige sola al entrar: la de su plan de estudios, o la única que haya.
+    forkJoin({
+      careers: this.careerService.getCareers(),
+      myCareerId: this.studentService.getMyAcademicProgress().pipe(
+        map(progress => progress.careerId),
+        catchError(() => of(null))
+      )
+    }).subscribe({
+      next: ({ careers, myCareerId }) => {
+        this.careers = careers;
+        const preselected = careers.find(c => c.id === myCareerId) ?? (careers.length === 1 ? careers[0] : null);
+        if (preselected) {
+          this.selectedCareer = preselected.id;
+          this.onCareerChange();
+        }
         this.cdr.detectChanges();
       },
       error: err => console.error(err)
     });
+  }
+
+  /** Materias tildadas en todos los años, para el botón flotante. */
+  get selectedCount(): number {
+    return Object.values(this.selectedSubjectsByYear).reduce((total, list) => total + list.length, 0);
   }
 
   onCareerChange(): void {
@@ -277,7 +296,11 @@ export class EnrollmentFormComponent implements OnInit {
       studyPlanCourseIds
     }).subscribe({
       next: () => {
+        const careerId = this.selectedCareer;
         this.resetForm();
+        // Conserva la carrera y recarga las materias: las recién pedidas ya figuran como inscriptas.
+        this.selectedCareer = careerId;
+        this.onCareerChange();
         this.isSubmitting = false;
         this.cdr.detectChanges();
         this.dialog.open(EnrollmentSuccessDialogComponent, {
