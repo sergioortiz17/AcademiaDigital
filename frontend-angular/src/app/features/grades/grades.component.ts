@@ -277,9 +277,19 @@ export class GradesComponent implements OnInit {
     return this.assignments.find(a => a.courseSectionId === this.selectedTeachingPositionId);
   }
 
-  /** Las notas se pueden escribir apenas se abre una planilla en borrador (sin tocar el lápiz). */
+  /**
+   * Las notas se cargan durante todo el ciclo (borrador, enviada, aprobada o publicada) y la
+   * planilla conserva su estado. Solo una planilla cerrada queda bloqueada.
+   */
   get canEdit(): boolean {
-    return this.detail?.gradebook.status === 'Draft';
+    return !!this.detail && this.detail.gradebook.status !== 'Closed';
+  }
+
+  /** Texto del botón de envío: la primera vez "Enviar"; después, "Reenviar". */
+  get submitLabel(): string {
+    const again = this.detail?.gradebook.status !== 'Draft';
+    if (this.staffView) return again ? 'Reenviar planilla' : 'Enviar planilla';
+    return again ? 'Reenviar a Secretaría' : 'Enviar a Secretaría';
   }
 
   readonly gradeOptions = GRADE_OPTIONS;
@@ -366,7 +376,7 @@ export class GradesComponent implements OnInit {
   }
 
   get canEditGradebook(): boolean {
-    return this.detail?.gradebook.status === 'Draft';
+    return this.canEdit;
   }
 
   get filteredRows(): EditableRow[] {
@@ -975,6 +985,9 @@ export class GradesComponent implements OnInit {
             notes: grade.notes.trim() || null,
             isAbsent: grade.isAbsent ?? false
           });
+        } else if (grade?.updatedAt != null) {
+          // Tenía nota guardada y el docente vació la celda: se borra.
+          grades.push({ evaluationId: evaluation.id, enrollmentId: row.enrollmentId, score: 0, clear: true });
         }
       }
     }
@@ -1028,9 +1041,9 @@ export class GradesComponent implements OnInit {
       disableClose: true,
       data: {
         confirmation: isAdmin
-          ? '¿Enviar la planilla? Ya no vas a poder editarla salvo que la reabran.'
-          : '¿Enviar la planilla a Secretaría? Ya no vas a poder editarla salvo que la reabran.',
-        confirmLabel: 'Enviar planilla'
+          ? '¿Enviar la planilla? Se pueden seguir cargando notas y volver a enviarla.'
+          : '¿Enviar la planilla a Secretaría? Va a poder seguir cargando notas y volver a enviarla.',
+        confirmLabel: this.submitLabel
       }
     });
 
@@ -1045,61 +1058,17 @@ export class GradesComponent implements OnInit {
         this.isSubmitting = false;
         return;
       }
-      const gradebookId = this.detail.gradebook.id;
       this.errorMsg = '';
-      const missingGrades = this.fillMissingGrades();
-      if (missingGrades.length === 0) {
-        this.sendGradebook(gradebookId, isAdmin);
-        return;
-      }
-
-      this.gradebookService.saveGrades(gradebookId, missingGrades).subscribe({
-        next: detail => {
-          this.detail = detail;
-          this.rows = detail.students.map(student => this.toEditableRow(student));
-          this.selectedStudent = this.rows.find(row => row.enrollmentId === this.selectedStudent?.enrollmentId) ?? this.rows[0] ?? null;
-          this.sendGradebook(gradebookId, isAdmin);
-        },
-        error: err => {
-          this.isSubmitting = false;
-          this.errorMsg = this.readErrorMessage(err, 'No se pudieron completar las notas vacías con cero.');
-          this.cdr.detectChanges();
-        }
-      });
+      // Envío parcial: las celdas vacías NO se completan con 0 (eso dejaba alumnos libres por error).
+      this.sendGradebook(this.detail.gradebook.id, isAdmin);
     });
-  }
-
-  private fillMissingGrades(): SaveGradeEntryInput[] {
-    if (!this.detail) return [];
-
-    const missingGrades: SaveGradeEntryInput[] = [];
-    for (const row of this.rows) {
-      for (const evaluation of this.detail.evaluations) {
-        const existingGrade = row.editableGrades[evaluation.id];
-        if (existingGrade?.score != null) continue;
-
-        row.editableGrades[evaluation.id] = {
-          evaluationId: evaluation.id,
-          score: 0,
-          notes: existingGrade?.notes ?? '',
-          updatedAt: existingGrade?.updatedAt ?? null
-        };
-        missingGrades.push({
-          evaluationId: evaluation.id,
-          enrollmentId: row.enrollmentId,
-          score: 0,
-          notes: existingGrade?.notes.trim() || null
-        });
-      }
-    }
-    return missingGrades;
   }
 
   private sendGradebook(gradebookId: number, isAdmin: boolean): void {
     this.gradebookService.submitGradebook(gradebookId).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.successMsg = isAdmin ? 'Planilla enviada.' : 'Planilla enviada a Secretaría.';
+        this.successMsg = isAdmin ? 'Planilla enviada.' : 'Planilla enviada a Secretaría. Puede seguir cargando notas.';
         this.loadDetail(gradebookId);
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
       },

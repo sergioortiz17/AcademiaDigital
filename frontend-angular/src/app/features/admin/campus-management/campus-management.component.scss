@@ -1,0 +1,23 @@
+.campus-card { margin-top: 16px; h2 { margin: 0; font-size: 1.15rem; } }
+.hint { margin: 4px 0 12px; color: #536575; }
+.msg {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 10px 14px; border-radius: 6px;
+  &--success { background: #eff8f1; color: #23683c; }
+  &--error { background: #fff3f0; color: #9d3222; }
+}
+.campus-form {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  mat-form-field { min-width: 220px; }
+  .address { flex: 1; }
+}
+.campus-list {
+  list-style: none; margin: 0; padding: 0;
+  li { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-bottom: 1px solid #e5ebf0; }
+  li.inactive { opacity: .55; }
+  li.empty { color: #6b7a88; border: 0; }
+  mat-icon { color: #31536e; }
+}
+.campus-name { font-weight: 600; min-width: 160px; }
+.campus-address { flex: 1; color: #536575; }
+.status { font-size: .8rem; color: #9d3222; }
+@media (max-width: 600px) { .campus-form mat-form-field { min-width: 0; width: 100%; } }

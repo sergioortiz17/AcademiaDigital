@@ -26,7 +26,7 @@ interface Preview {
   file?: File;
 }
 
-const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 /** "Requisitos de ingreso": el alumno sube el analítico y los demás documentos que pide la institución. */
@@ -106,7 +106,7 @@ export class AdmissionDocumentsComponent implements OnInit, OnDestroy {
       return;
     }
     if (file.size > MAX_SIZE_BYTES) {
-      this.errorMsg = 'El archivo debe pesar hasta 10 MB.';
+      this.errorMsg = 'El archivo debe pesar hasta 5 MB.';
       return;
     }
     this.cancelPending(row);

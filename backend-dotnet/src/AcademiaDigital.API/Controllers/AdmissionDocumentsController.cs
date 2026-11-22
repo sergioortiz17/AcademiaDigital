@@ -37,7 +37,7 @@ public sealed class AdmissionDocumentsController(
         if (file is null || file.Length == 0)
             return BadRequest(new { success = false, msg = "Seleccione un archivo PDF, JPG o PNG." });
         if (file.Length > UploadedDocumentPolicy.MaximumFileSizeBytes)
-            return BadRequest(new { success = false, msg = "El archivo debe pesar hasta 10 MB." });
+            return BadRequest(new { success = false, msg = "El archivo debe pesar hasta 5 MB." });
         using var buffer = new MemoryStream();
         await file.CopyToAsync(buffer, ct);
         var created = await useCase.UploadMineAsync(CurrentUserId.Value, requirementId, file.FileName, buffer.ToArray(), ct);

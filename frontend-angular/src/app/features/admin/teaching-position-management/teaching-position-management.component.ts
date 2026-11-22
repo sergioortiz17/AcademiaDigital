@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TeachingPositionService, TeachingPosition, SaveTeachingPositionRequest } from '../../../core/services/teaching-position.service';
+import { GradebookService, SectionStudent } from '../../../core/services/gradebook.service';
 import { TeachingPositionFormDialogComponent } from './teaching-position-form-dialog/teaching-position-form-dialog.component';
 
 @Component({
@@ -18,19 +19,53 @@ export class TeachingPositionManagementComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
 
-  displayedColumns = ['course', 'year', 'type', 'maxStudents', 'teacher', 'status', 'actions'];
+  displayedColumns = ['expand', 'course', 'year', 'type', 'maxStudents', 'teacher', 'status', 'actions'];
+
+  /** Comisión desplegada y alumnos ya cargados por comisión (se piden al desplegar). */
+  expandedId: number | null = null;
+  studentsBySection: Record<number, SectionStudent[] | 'loading' | 'error'> = {};
 
   constructor(
     private readonly teachingPositionService: TeachingPositionService,
+    private readonly gradebookService: GradebookService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef
   ) {}
+
+  /** Despliega o comprime la fila; la primera vez trae los alumnos inscriptos en la comisión. */
+  toggleStudents(position: TeachingPosition): void {
+    this.expandedId = this.expandedId === position.id ? null : position.id;
+    this.cdr.markForCheck();
+    if (this.expandedId == null || Array.isArray(this.studentsBySection[position.id])) return;
+    this.studentsBySection[position.id] = 'loading';
+    this.gradebookService.getSectionStudents(position.id).subscribe({
+      next: students => {
+        this.studentsBySection[position.id] = [...students].sort((a, b) => a.studentName.localeCompare(b.studentName, 'es'));
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.studentsBySection[position.id] = 'error';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  studentsOf(position: TeachingPosition): SectionStudent[] {
+    const value = this.studentsBySection[position.id];
+    return Array.isArray(value) ? value : [];
+  }
+
+  studentsState(position: TeachingPosition): 'loading' | 'error' | 'ready' {
+    const value = this.studentsBySection[position.id];
+    return Array.isArray(value) ? 'ready' : (value ?? 'loading');
+  }
 
   ngOnInit(): void {
     this.loadPositions();
   }
 
   loadPositions(): void {
+    this.studentsBySection = {};
     this.isLoading = true;
     this.errorMsg = '';
     this.teachingPositionService.getTeachingPositions({

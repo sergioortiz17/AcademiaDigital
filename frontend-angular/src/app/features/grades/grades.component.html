@@ -107,7 +107,7 @@
             {{ statusLabel(d.gradebook.status) }}
           </span>
           <span class="status-note" *ngIf="!canEditGradebook">
-            La planilla ya no se puede editar en este estado.
+            La planilla está cerrada. Para modificarla, Secretaría debe reabrirla.
           </span>
           <button *ngIf="staffView && d.gradebook.status === 'Submitted'" mat-stroked-button type="button" [disabled]="isTransitioning" (click)="approveGradebook()">
             <mat-icon>task_alt</mat-icon>
@@ -125,7 +125,7 @@
             <mat-icon>edit</mat-icon>
             Editar otra vez
           </button>
-          <!-- Solo en borrador: las notas ya se editan directo; el lápiz edita el formato (instancias y fechas). -->
+          <!-- Mientras no esté cerrada: las notas se editan directo; el lápiz edita el formato (instancias y fechas). -->
           <button class="edit-gradebook-button" type="button" aria-label="Editar instancias de la planilla"
             matTooltip="Editar instancias y fechas" *ngIf="canEditGradebook" [disabled]="isSaving" (click)="openEditLayout()">
             <mat-icon>edit</mat-icon>
@@ -246,7 +246,7 @@
 
             <button mat-stroked-button *ngIf="canEdit" [disabled]="isSubmitting || isTransitioning" (click)="submitGradebook()">
               <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-              <span *ngIf="!isSubmitting">{{ staffView ? 'Enviar planilla' : 'Enviar al coordinador/a' }}</span>
+              <span *ngIf="!isSubmitting">{{ submitLabel }}</span>
             </button>
           </div>
         </div>

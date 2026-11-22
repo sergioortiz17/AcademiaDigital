@@ -189,16 +189,24 @@ public sealed class GradebookPolicyTests
         Assert.True(result.Average >= 6m);
     }
 
+    [Theory]
+    [InlineData(GradebookStatus.Draft)]
+    [InlineData(GradebookStatus.Submitted)]
+    [InlineData(GradebookStatus.Approved)]
+    [InlineData(GradebookStatus.Published)]
+    public void Gradebook_stays_editable_until_it_is_closed(GradebookStatus status)
+        => policy.EnsureEditable(new Gradebook { Status = status });
+
     [Fact]
-    public void Approved_gradebook_is_immutable_until_reopened()
+    public void Closed_gradebook_is_immutable_until_reopened()
     {
-        var gradebook = new Gradebook { Status = GradebookStatus.Approved };
+        var gradebook = new Gradebook { Status = GradebookStatus.Closed };
         Assert.Throws<InvalidOperationException>(() => policy.EnsureEditable(gradebook));
         policy.EnsureCanReopen(gradebook, "Authorized correction");
     }
 
     [Fact]
-    public void Submission_requires_every_regular_instance_grade()
+    public void Partial_submission_is_allowed_but_closing_requires_every_regular_grade()
     {
         var gradebook = new Gradebook
         {
@@ -210,7 +218,8 @@ public sealed class GradebookPolicyTests
             ],
             GradeRevisions = [new GradeEntryRevision { EvaluationId = 1, EnrollmentId = 1, IsCurrent = true }]
         };
-        Assert.Throws<InvalidOperationException>(() => policy.EnsureCanSubmit(gradebook, 1));
+        policy.EnsureCanSubmit(gradebook, 1);
+        Assert.Throws<InvalidOperationException>(() => policy.EnsureGradesComplete(gradebook, 1));
     }
 
     [Fact]
@@ -235,8 +244,9 @@ public sealed class GradebookPolicyTests
                 new GradeEntryRevision { EvaluationId = 3, EnrollmentId = 1, IsCurrent = true, Score = 9m }
             ]
         };
-        // No lanza: las recuperaciones vacías no bloquean el envío.
+        // No lanza: las recuperaciones vacías no bloquean el envío ni el cierre.
         policy.EnsureCanSubmit(gradebook, 1);
+        policy.EnsureGradesComplete(gradebook, 1);
     }
 
     private static GradebookEvaluation Evaluation(string name, decimal weight)

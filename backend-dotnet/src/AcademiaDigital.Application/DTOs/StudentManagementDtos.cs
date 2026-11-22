@@ -11,7 +11,9 @@ public sealed record StudentRecordDto(object Student, object PersonalData, objec
     IReadOnlyDictionary<string, object?> CustomFields);
 public sealed record StatusHistoryDto(long Id, StudentStatus PreviousStatus, StudentStatus NewStatus, string Reason,
     DateTime ChangedAt, long ChangedByUserId);
-public sealed record DivisionDto(int Id, int CareerId, string Code, string Name, int AcademicYear, int YearNumber, string Shift, bool IsActive);
+public sealed record DivisionDto(int Id, int CareerId, string Code, string Name, int AcademicYear, int YearNumber, string Shift, bool IsActive,
+    int? CampusId = null, string? CampusName = null);
+public sealed record CampusDto(int Id, string Name, string? Address, bool IsActive);
 public sealed record AcademicAssignmentDto(long Id, long StudentId, int CareerId, int StudyPlanId, int? DivisionId,
     string? DivisionName, int AcademicYear, int YearNumber, DateTime StartedAt, DateTime? EndedAt, bool IsCurrent, string? Reason);
 public sealed record DocumentRequirementDto(int Id, string Code, string Name, string? Description, int? CareerId,
@@ -43,7 +45,8 @@ public sealed record ChangeStudentStatusRequest(StudentStatus Status, [Required,
 public sealed record DeleteStudentRequest([Required, MaxLength(500)] string Reason);
 public sealed record UpsertDivisionRequest([Required, MaxLength(30)] string Code,
     [Required, MaxLength(100)] string Name, [Range(2000, 2100)] int AcademicYear,
-    [Range(1, 20)] int YearNumber, [Required] string Shift);
+    [Range(1, 20)] int YearNumber, [Required] string Shift, int? CampusId = null);
+public sealed record UpsertCampusRequest([Required, MaxLength(100)] string Name, [MaxLength(200)] string? Address);
 public sealed record CreateAcademicAssignmentRequest(int CareerId, int StudyPlanId, int DivisionId,
     [Range(2000, 2100)] int AcademicYear, [Range(1, 20)] int YearNumber, string? Reason);
 public sealed record UpsertDocumentRequirementRequest([Required, MaxLength(30)] string Code,

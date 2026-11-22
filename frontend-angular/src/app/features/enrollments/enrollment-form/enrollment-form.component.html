@@ -149,11 +149,12 @@
   Se enviará una copia de tus respuestas por correo electrónico a la dirección que has proporcionado.
 </div>
 
+<!-- Flotante: queda visible abajo mientras se recorre la lista de materias. -->
 <div class="submit-section">
   <button mat-raised-button class="save-btn"
     (click)="submitEnrollment()"
     [disabled]="!canSubmit() || isSubmitting">
     <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-    <span *ngIf="!isSubmitting">Solicitar inscripción</span>
+    <span *ngIf="!isSubmitting">Solicitar inscripción{{ selectedCount ? ' (' + selectedCount + ')' : '' }}</span>
   </button>
 </div>

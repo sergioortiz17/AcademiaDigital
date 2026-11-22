@@ -89,7 +89,7 @@ public sealed class GradebooksController(
         return Ok(await gradesHandler.Handle(new SaveGradeEntriesCommand(
             id,
             request.Grades.Select(item => new GradeEntryInput(
-                item.EvaluationId, item.EnrollmentId, item.Score, item.Notes, item.IsAbsent)).ToArray(),
+                item.EvaluationId, item.EnrollmentId, item.Score, item.Notes, item.IsAbsent, item.Clear)).ToArray(),
             CurrentUserId!.Value,
             IsStaff), ct));
     }
@@ -184,7 +184,8 @@ public sealed record SaveGradeEntryRequest(
     [Range(1, long.MaxValue)] long EnrollmentId,
     [Range(typeof(decimal), "0", "100")] decimal Score,
     [StringLength(500)] string? Notes,
-    bool IsAbsent = false);
+    bool IsAbsent = false,
+    bool Clear = false);
 public sealed record UpdateGradebookEvaluationsRequest(
     [Required, MinLength(1), MaxLength(20)] IReadOnlyList<GradebookEvaluationLayoutRequest> Evaluations);
 public sealed record GradebookEvaluationLayoutRequest(

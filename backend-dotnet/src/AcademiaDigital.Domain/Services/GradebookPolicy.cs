@@ -95,10 +95,15 @@ public sealed class GradebookPolicy
             regular[i].WeightPercentage = (baseCents + (i < remainder ? 1 : 0)) / 100m;
     }
 
+    /// <summary>
+    /// El docente carga notas durante todo el ciclo (enviada, aprobada o publicada): la planilla
+    /// conserva su estado y cada cambio queda en el historial de revisiones. Solo una planilla
+    /// cerrada, cuya condición final ya se aplicó, no se edita (Secretaría puede reabrirla).
+    /// </summary>
     public void EnsureEditable(Gradebook gradebook)
     {
-        if (gradebook.Status != GradebookStatus.Draft)
-            throw new InvalidOperationException("Solo una planilla en borrador puede editarse.");
+        if (gradebook.Status == GradebookStatus.Closed)
+            throw new InvalidOperationException("La planilla está cerrada. Secretaría debe reabrirla para modificarla.");
     }
 
     public void EnsureScoreIsValid(GradebookEvaluation evaluation, decimal score)
@@ -107,25 +112,36 @@ public sealed class GradebookPolicy
             throw new ArgumentException($"El puntaje de '{evaluation.Name}' debe estar entre 0 y {evaluation.MaximumScore:0.##}.");
     }
 
+    /// <summary>
+    /// El envío puede ser parcial: el docente avisa a Secretaría a medida que carga instancias y
+    /// puede reenviar. Las notas completas se exigen recién al cerrar (<see cref="EnsureCanClose"/>).
+    /// </summary>
     public void EnsureCanSubmit(Gradebook gradebook, int rosterCount)
     {
         EnsureEditable(gradebook);
         if (rosterCount == 0)
             throw new InvalidOperationException("Una planilla sin estudiantes inscriptos no puede enviarse.");
+        if (!gradebook.Evaluations.Any(e => !e.IsRecovery))
+            throw new InvalidOperationException("La planilla no tiene instancias regulares configuradas.");
+    }
 
+    /// <summary>
+    /// Para cerrar, cada alumno necesita nota (o ausente) en todas las instancias regulares: al
+    /// cerrar se aplica la condición final. Las recuperaciones siguen siendo opcionales.
+    /// </summary>
+    public void EnsureGradesComplete(Gradebook gradebook, int rosterCount)
+    {
         var regularEvaluationIds = gradebook.Evaluations.Where(e => !e.IsRecovery).Select(e => e.Id).ToHashSet();
         if (regularEvaluationIds.Count == 0)
             throw new InvalidOperationException("La planilla no tiene instancias regulares configuradas.");
-
-        // Basta con que cada alumno tenga nota en TODAS las instancias regulares. Las recuperaciones
-        // son opcionales: quien aprobó sus instancias no necesita cargarlas para poder enviar.
         var currentRegular = gradebook.GradeRevisions
             .Where(item => item.IsCurrent && regularEvaluationIds.Contains(item.EvaluationId))
             .Select(item => (item.EvaluationId, item.EnrollmentId))
             .Distinct()
             .Count();
         if (currentRegular != rosterCount * regularEvaluationIds.Count)
-            throw new InvalidOperationException("Cada estudiante inscripto requiere una nota en todas las instancias regulares antes del envío.");
+            throw new InvalidOperationException(
+                "Para cerrar la planilla, cada estudiante necesita nota (o ausente) en todas las instancias regulares.");
     }
 
     public void EnsureCanApprove(Gradebook gradebook)

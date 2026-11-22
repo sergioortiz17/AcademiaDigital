@@ -163,6 +163,19 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task ClearCurrentGradesAsync(long gradebookId, IReadOnlyList<(long EvaluationId, long EnrollmentId)> grades, CancellationToken ct = default)
+    {
+        foreach (var (evaluationId, enrollmentId) in grades)
+        {
+            var current = await db.GradeEntryRevisions
+                .Where(item => item.GradebookId == gradebookId && item.EvaluationId == evaluationId
+                    && item.EnrollmentId == enrollmentId && item.IsCurrent)
+                .ToListAsync(ct);
+            foreach (var revision in current) revision.IsCurrent = false;
+        }
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task SaveAsync(Gradebook gradebook, CancellationToken ct = default)
         => _ = await db.SaveChangesAsync(ct);
 

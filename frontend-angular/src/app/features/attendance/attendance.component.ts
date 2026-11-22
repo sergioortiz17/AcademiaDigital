@@ -14,12 +14,21 @@ import {
   translateAttendanceError
 } from '../../core/services/attendance.service';
 import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
+import { GradebookService, SectionStudent } from '../../core/services/gradebook.service';
 import { courseDisplayName, mostFrequentId } from '../../core/utils/academic-labels';
 
 interface EditableCell {
   recordId: number | null;
   status: AttendanceRecordStatus | null;
+  /** Estado guardado en el servidor, para saber qué cambió. */
+  saved: AttendanceRecordStatus | null;
 }
+
+/** Orden al tocar una celda: vacía → Presente → Ausente → Tarde → vacía. */
+const CYCLE: (AttendanceRecordStatus | null)[] = [null, 'Present', 'Absent', 'Late'];
+const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
+  'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 interface StudentRow {
   enrollmentId: number;
@@ -45,6 +54,8 @@ export class AttendanceComponent implements OnInit {
   selectedTeachingPositionId: number | null = null;
 
   allSessions: AttendanceSession[] = [];
+  /** Nómina de la comisión: los alumnos se ven aunque todavía no haya días cargados. */
+  roster: SectionStudent[] = [];
   rows: StudentRow[] = [];
   currentMonth = new Date();
   searchTerm = '';
@@ -60,6 +71,7 @@ export class AttendanceComponent implements OnInit {
     private readonly careerService: CareerService,
     private readonly teacherService: TeacherService,
     private readonly attendanceService: AttendanceService,
+    private readonly gradebookService: GradebookService,
     private readonly dialog: MatDialog,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -150,8 +162,105 @@ export class AttendanceComponent implements OnInit {
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
   }
 
+  /** Día de la semana de la columna (Lun, Mar...). */
+  weekday(dateStr: string): string {
+    return WEEKDAYS[parseDateOnly(dateStr).getDay()];
+  }
+
   monthLabel(): string {
-    return this.currentMonth.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    return `${MONTHS[this.currentMonth.getMonth()]} ${this.currentMonth.getFullYear()}`;
+  }
+
+  /** Letra que se muestra en la celda. */
+  statusLetter(status: AttendanceRecordStatus | null): string {
+    switch (status) {
+      case 'Present': return 'P';
+      case 'Absent': return 'A';
+      case 'Late': return 'T';
+      case 'Justified': return 'J';
+      default: return '';
+    }
+  }
+
+  statusTitle(status: AttendanceRecordStatus | null): string {
+    switch (status) {
+      case 'Present': return 'Presente (tocar para cambiar)';
+      case 'Absent': return 'Ausente (tocar para cambiar)';
+      case 'Late': return 'Tarde (tocar para cambiar)';
+      case 'Justified': return 'Justificada';
+      default: return 'Sin cargar (tocar para marcar presente)';
+    }
+  }
+
+  /** Un toque rota el estado: vacía → P → A → T → vacía. Las justificadas no se tocan. */
+  cycle(row: StudentRow, session: AttendanceSession): void {
+    if (!this.isSessionEditable(session)) return;
+    const cell = this.cellFor(row, session);
+    if (cell.status === 'Justified') return;
+    // Una celda ya guardada no vuelve a vacía (el servidor no borra registros): rota entre P, A y T.
+    const options = cell.saved != null ? CYCLE.filter(status => status != null) : CYCLE;
+    cell.status = options[(options.indexOf(cell.status) + 1) % options.length];
+    this.selectStudent(row);
+  }
+
+  /** Marca presentes a todos los que todavía no tienen estado en ese día. */
+  markAllPresent(session: AttendanceSession, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.isSessionEditable(session)) return;
+    for (const row of this.rows) {
+      const cell = this.cellFor(row, session);
+      if (cell.status == null) cell.status = 'Present';
+    }
+    this.cdr.markForCheck();
+  }
+
+  private cellFor(row: StudentRow, session: AttendanceSession): EditableCell {
+    return row.cells[session.id] ??= { recordId: null, status: null, saved: null };
+  }
+
+  /** Celdas modificadas y sin guardar (en cualquier mes). */
+  get pendingChanges(): number {
+    let count = 0;
+    for (const row of this.rows)
+      for (const cell of Object.values(row.cells))
+        if (cell.status !== cell.saved) count++;
+    return count;
+  }
+
+  /** "Hoy" crea el día de clase de hoy con un toque (día completo). */
+  get todayExists(): boolean {
+    const today = this.todayDateOnly();
+    return this.allSessions.some(s => s.sessionDate.slice(0, 10) === today);
+  }
+
+  addToday(): void {
+    const assignment = this.selectedAssignment;
+    if (!assignment || this.isCreating) return;
+    if (this.todayExists) { this.showError('El día de hoy ya está cargado.'); return; }
+    this.isCreating = true;
+    this.attendanceService.createSession({
+      courseSectionId: assignment.courseSectionId,
+      sessionDate: this.todayDateOnly(),
+      scope: 'FullDay',
+      units: 1
+    }).subscribe({
+      next: () => {
+        this.isCreating = false;
+        this.currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        this.successMsg = 'Día de hoy agregado. Toque cada celda para marcar P, A o T.';
+        this.loadSessions();
+        setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+      },
+      error: (err) => {
+        this.isCreating = false;
+        this.showError(translateAttendanceError(err.message, 'Error al crear el día.'));
+      }
+    });
+  }
+
+  private todayDateOnly(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   isSessionEditable(session: AttendanceSession): boolean {
@@ -175,12 +284,17 @@ export class AttendanceComponent implements OnInit {
     this.isLoading = true;
     this.errorMsg = '';
     // Por comisión: la misma materia en otro cuatrimestre o división tiene su propia asistencia.
-    this.attendanceService.getSessions({
-      courseSectionId: assignment.courseSectionId,
-      academicYear: assignment.academicYear
+    forkJoin({
+      sessions: this.attendanceService.getSessions({
+        courseSectionId: assignment.courseSectionId,
+        academicYear: assignment.academicYear
+      }),
+      roster: this.gradebookService.getSectionStudents(assignment.courseSectionId)
+        .pipe(catchError(() => of([] as SectionStudent[])))
     }).subscribe({
-      next: (sessions) => {
+      next: ({ sessions, roster }) => {
         this.allSessions = sessions;
+        this.roster = roster;
         this.loadAllDetails();
       },
       error: (err) => {
@@ -192,7 +306,8 @@ export class AttendanceComponent implements OnInit {
 
   private loadAllDetails(): void {
     if (this.allSessions.length === 0) {
-      this.rows = [];
+      this.rows = this.rosterRows();
+      this.selectedEnrollmentId = this.rows[0]?.enrollmentId ?? null;
       this.isLoading = false;
       this.cdr.detectChanges();
       return;
@@ -203,7 +318,7 @@ export class AttendanceComponent implements OnInit {
     );
 
     forkJoin(calls).subscribe(details => {
-      const rowsByEnrollment = new Map<number, StudentRow>();
+      const rowsByEnrollment = new Map<number, StudentRow>(this.rosterRows().map(row => [row.enrollmentId, row]));
 
       details.forEach((detail, index) => {
         if (!detail) return;
@@ -221,7 +336,7 @@ export class AttendanceComponent implements OnInit {
             };
             rowsByEnrollment.set(record.enrollmentId, row);
           }
-          row.cells[sessionId] = { recordId: record.id, status: record.status };
+          row.cells[sessionId] = { recordId: record.id, status: record.status, saved: record.status };
         }
       });
 
@@ -232,22 +347,18 @@ export class AttendanceComponent implements OnInit {
     });
   }
 
+  private rosterRows(): StudentRow[] {
+    return this.roster
+      .map(student => ({ ...student, cells: {} as Record<number, EditableCell> }))
+      .sort((a, b) => a.studentName.localeCompare(b.studentName));
+  }
+
   prevMonth(): void {
     this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
   }
 
   nextMonth(): void {
     this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
-  }
-
-  /** Elegir mes y año directamente (input type="month" devuelve "AAAA-MM"). */
-  get monthValue(): string {
-    return `${this.currentMonth.getFullYear()}-${String(this.currentMonth.getMonth() + 1).padStart(2, '0')}`;
-  }
-
-  set monthValue(value: string) {
-    const [year, month] = (value ?? '').split('-').map(Number);
-    if (year && month) this.currentMonth = new Date(year, month - 1, 1);
   }
 
   selectStudent(row: StudentRow): void {
@@ -314,13 +425,14 @@ export class AttendanceComponent implements OnInit {
   saveAll(): void {
     if (this.isSaving) return;
 
-    const requests = this.visibleSessions
+    // Se guardan los días con cambios de cualquier mes (no solo el que está a la vista).
+    const requests = this.allSessions
       .filter(session => this.isSessionEditable(session))
       .map(session => {
         const records: SaveAttendanceRecordInput[] = [];
         for (const row of this.rows) {
           const cell = row.cells[session.id];
-          if (cell?.status != null) {
+          if (cell?.status != null && cell.status !== 'Justified' && cell.status !== cell.saved) {
             records.push({ enrollmentId: row.enrollmentId, status: cell.status });
           }
         }
@@ -329,7 +441,7 @@ export class AttendanceComponent implements OnInit {
       .filter(item => item.records.length > 0);
 
     if (requests.length === 0) {
-      this.showError('No hay cambios para guardar en este mes.');
+      this.showError('No hay cambios para guardar.');
       return;
     }
 

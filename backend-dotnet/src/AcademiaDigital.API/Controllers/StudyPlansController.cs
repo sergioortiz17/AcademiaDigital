@@ -66,7 +66,7 @@ public class StudyPlansController(
     }
 
     [HttpPost("import")]
-    [RequestSizeLimit(10_000_000)]
+    [RequestSizeLimit(6 * 1024 * 1024)] // igual que client_max_body_size del nginx del frontend
     public async Task<IActionResult> Import(int careerId, [FromForm] ImportStudyPlanCsvRequest request, CancellationToken ct)
     {
         await using var stream = request.File.OpenReadStream();
@@ -99,7 +99,7 @@ public class StudyPlansController(
     }
 
     [HttpPost("{studyPlanId:int}/diff-preview")]
-    [RequestSizeLimit(10_000_000)]
+    [RequestSizeLimit(6 * 1024 * 1024)] // igual que client_max_body_size del nginx del frontend
     public async Task<IActionResult> DiffPreview(int careerId, int studyPlanId, [FromForm] DiffPreviewCsvRequest request, CancellationToken ct)
     {
         await using var stream = request.File.OpenReadStream();

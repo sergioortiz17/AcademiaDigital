@@ -48,6 +48,17 @@ export interface CareerDivision {
   yearNumber: number;
   shift: string;
   isActive: boolean;
+  /** Sede donde se dicta; null en divisiones anteriores a las sedes. */
+  campusId?: number | null;
+  campusName?: string | null;
+}
+
+/** Sede (escuela) del instituto. */
+export interface Campus {
+  id: number;
+  name: string;
+  address: string | null;
+  isActive: boolean;
 }
 
 export interface StudyPlanCourse {
@@ -139,6 +150,20 @@ export class CareerService {
 
   getStudyPlans(careerId: number): Observable<StudyPlan[]> {
     return this.http.get<StudyPlan[]>(`${this.baseURL}v1/careers/${careerId}/study-plans`);
+  }
+
+  getCampuses(includeInactive = false): Observable<Campus[]> {
+    return this.http.get<Campus[]>(`${this.baseURL}v1/campuses`, { params: { includeInactive } });
+  }
+
+  saveCampus(id: number | null, request: { name: string; address: string | null }): Observable<Campus> {
+    return id == null
+      ? this.http.post<Campus>(`${this.baseURL}v1/campuses`, request)
+      : this.http.put<Campus>(`${this.baseURL}v1/campuses/${id}`, request);
+  }
+
+  deactivateCampus(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseURL}v1/campuses/${id}`);
   }
 
   getDivisions(careerId: number): Observable<CareerDivision[]> {

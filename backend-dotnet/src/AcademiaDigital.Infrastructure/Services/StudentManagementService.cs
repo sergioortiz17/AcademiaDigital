@@ -184,7 +184,8 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         var q = db.Divisions.AsNoTracking().Where(x => x.CareerId == careerId && x.IsActive);
         if (year.HasValue) q = q.Where(x => x.AcademicYear == year);
         return await q.OrderByDescending(x => x.AcademicYear).ThenBy(x => x.Code).Select(x =>
-            new DivisionDto(x.Id, x.CareerId, x.Code, x.Name, x.AcademicYear, x.YearNumber, x.Shift, x.IsActive)).ToListAsync(ct);
+            new DivisionDto(x.Id, x.CareerId, x.Code, x.Name, x.AcademicYear, x.YearNumber, x.Shift, x.IsActive,
+                x.CampusId, x.Campus != null ? x.Campus.Name : null)).ToListAsync(ct);
     }
 
     public async Task<DivisionDto> SaveDivisionAsync(int careerId, int? id, UpsertDivisionRequest r, CancellationToken ct)
@@ -203,7 +204,13 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
             x.AcademicYear == r.AcademicYear && x.Name == name, ct)) throw new InvalidOperationException("El nombre de la comisión ya existe para esta carrera y año.");
         item.Code = code; item.Name = name; item.AcademicYear = r.AcademicYear;
         item.YearNumber = r.YearNumber; item.Shift = Shifts.Single(x => x.Equals(r.Shift, StringComparison.OrdinalIgnoreCase));
-        await db.SaveChangesAsync(ct); return Map(item);
+        if (r.CampusId.HasValue && !await db.Campuses.AnyAsync(x => x.Id == r.CampusId && x.IsActive, ct))
+            throw new ArgumentException("La sede no existe o está dada de baja.");
+        item.CampusId = r.CampusId;
+        await db.SaveChangesAsync(ct);
+        var campusName = item.CampusId.HasValue
+            ? await db.Campuses.Where(x => x.Id == item.CampusId).Select(x => x.Name).SingleAsync(ct) : null;
+        return Map(item) with { CampusName = campusName };
     }
 
     public async Task DisableDivisionAsync(int careerId, int id, CancellationToken ct)
@@ -466,7 +473,41 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         $"{s.User.Username} {s.User.LastName}".Trim(), s.LegajoNumber, s.Status, s.CareerId, s.Career.Name,
         a?.AcademicYear, a?.YearNumber, a?.DivisionId, a?.Division?.Name);
     private static StatusHistoryDto Map(StudentStatusHistory x) => new(x.Id, x.PreviousStatus, x.NewStatus, x.Reason, x.ChangedAt, x.ChangedByUserId);
-    private static DivisionDto Map(Division x) => new(x.Id, x.CareerId, x.Code, x.Name, x.AcademicYear, x.YearNumber, x.Shift, x.IsActive);
+    private static DivisionDto Map(Division x) => new(x.Id, x.CareerId, x.Code, x.Name, x.AcademicYear, x.YearNumber, x.Shift, x.IsActive, x.CampusId);
+
+    public async Task<IReadOnlyList<CampusDto>> GetCampusesAsync(bool includeInactive, CancellationToken ct)
+    {
+        var q = db.Campuses.AsNoTracking();
+        if (!includeInactive) q = q.Where(x => x.IsActive);
+        return await q.OrderBy(x => x.Name).Select(x => new CampusDto(x.Id, x.Name, x.Address, x.IsActive)).ToListAsync(ct);
+    }
+
+    public async Task<CampusDto> SaveCampusAsync(int? id, UpsertCampusRequest r, CancellationToken ct)
+    {
+        var name = r.Name.Trim();
+        if (name.Length == 0) throw new ArgumentException("El nombre de la sede es obligatorio.");
+        Campus item;
+        if (id.HasValue) item = await db.Campuses.SingleOrDefaultAsync(x => x.Id == id, ct)
+            ?? throw new KeyNotFoundException("Sede no encontrada.");
+        else { item = new Campus(); db.Campuses.Add(item); }
+        if (await db.Campuses.AnyAsync(x => x.Id != item.Id && x.Name.ToLower() == name.ToLower(), ct))
+            throw new InvalidOperationException("Ya existe una sede con ese nombre.");
+        item.Name = name;
+        item.Address = string.IsNullOrWhiteSpace(r.Address) ? null : r.Address.Trim();
+        item.IsActive = true;
+        await db.SaveChangesAsync(ct);
+        return new CampusDto(item.Id, item.Name, item.Address, item.IsActive);
+    }
+
+    public async Task DisableCampusAsync(int id, CancellationToken ct)
+    {
+        var item = await db.Campuses.SingleOrDefaultAsync(x => x.Id == id, ct)
+            ?? throw new KeyNotFoundException("Sede no encontrada.");
+        if (await db.Divisions.AnyAsync(x => x.CampusId == id && x.IsActive, ct))
+            throw new InvalidOperationException("La sede tiene divisiones activas: cámbielas de sede o délas de baja primero.");
+        item.IsActive = false;
+        await db.SaveChangesAsync(ct);
+    }
     private static AcademicAssignmentDto Map(StudentAcademicAssignment x) => new(x.Id, x.StudentId, x.CareerId, x.StudyPlanId,
         x.DivisionId, x.Division?.Name, x.AcademicYear, x.YearNumber, x.StartedAt, x.EndedAt, x.IsCurrent, x.Reason);
     private static DocumentRequirementDto Map(DocumentRequirement x) => new(x.Id, x.Code, x.Name, x.Description, x.CareerId, x.IsRequired, x.IsActive, x.ValidFrom, x.ValidTo);

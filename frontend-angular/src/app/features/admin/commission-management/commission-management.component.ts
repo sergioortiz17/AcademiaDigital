@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { Career, CareerService } from '../../../core/services/career.service';
+import { Campus, Career, CareerService } from '../../../core/services/career.service';
 import { Commission, CommissionService, UpsertCommissionRequest } from '../../../core/services/commission.service';
 import { CommissionFormDialogComponent, CommissionFormDialogData } from './commission-form-dialog/commission-form-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
@@ -27,6 +27,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 export class CommissionManagementComponent implements OnInit {
   careers: Career[] = [];
   commissions: Commission[] = [];
+  campuses: Campus[] = [];
 
   selectedCareerId: number | null = null;
   private presetAcademicYear: number | null = null;
@@ -35,7 +36,7 @@ export class CommissionManagementComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
 
-  displayedColumns = ['code', 'name', 'academicYear', 'yearNumber', 'shift', 'isActive', 'actions'];
+  displayedColumns = ['code', 'name', 'campus', 'academicYear', 'yearNumber', 'shift', 'isActive', 'actions'];
 
   constructor(
     private readonly careerService: CareerService,
@@ -51,6 +52,11 @@ export class CommissionManagementComponent implements OnInit {
     const academicYear = qp.get('academicYear');
     if (careerId) this.selectedCareerId = Number(careerId);
     if (academicYear) this.presetAcademicYear = Number(academicYear);
+
+    this.careerService.getCampuses().subscribe({
+      next: campuses => { this.campuses = campuses; this.cdr.detectChanges(); },
+      error: () => { this.campuses = []; }
+    });
 
     this.careerService.getCareers().subscribe({
       next: (careers) => {
@@ -92,7 +98,7 @@ export class CommissionManagementComponent implements OnInit {
 
   openCreateDialog(): void {
     if (!this.selectedCareerId) return;
-    const data: CommissionFormDialogData = { commission: null, presetAcademicYear: this.presetAcademicYear };
+    const data: CommissionFormDialogData = { commission: null, presetAcademicYear: this.presetAcademicYear, campuses: this.campuses };
     const dialogRef = this.dialog.open(CommissionFormDialogComponent, {
       width: '520px', maxWidth: '95vw', disableClose: true, data
     });
@@ -107,7 +113,7 @@ export class CommissionManagementComponent implements OnInit {
 
   openEditDialog(commission: Commission): void {
     if (!this.selectedCareerId) return;
-    const data: CommissionFormDialogData = { commission };
+    const data: CommissionFormDialogData = { commission, campuses: this.campuses };
     const dialogRef = this.dialog.open(CommissionFormDialogComponent, {
       width: '520px', maxWidth: '95vw', disableClose: true, data
     });

@@ -4,7 +4,7 @@ namespace AcademiaDigital.Domain.Services;
 
 public sealed class TeacherDocumentPolicy
 {
-    private const long MaximumFileSizeBytes = 10 * 1024 * 1024;
+    private const long MaximumFileSizeBytes = 5 * 1024 * 1024;
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "application/pdf",
@@ -41,7 +41,7 @@ public sealed class TeacherDocumentPolicy
         if (!AllowedContentTypes.Contains(contentType.Trim()))
             throw new ArgumentException("El tipo de contenido debe ser PDF, JPEG o PNG.");
         if (fileSizeBytes is <= 0 or > MaximumFileSizeBytes)
-            throw new ArgumentException("El tamaño del archivo debe estar entre 1 byte y 10 MB.");
+            throw new ArgumentException("El tamaño del archivo debe estar entre 1 byte y 5 MB.");
         if (validUntil.HasValue && validUntil.Value < today)
             throw new ArgumentException("La validez del documento no puede finalizar en el pasado.");
     }

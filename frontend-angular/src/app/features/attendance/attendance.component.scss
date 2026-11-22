@@ -185,30 +185,6 @@
   margin-left: 2px;
 }
 
-.status-cell select {
-  border: 1px solid rgba(0, 0, 0, .15);
-  border-radius: 6px;
-  padding: 2px 4px;
-  font-size: .85rem;
-  font-weight: 600;
-  text-align: center;
-  width: 48px;
-
-  &:disabled {
-    background: #f5f5f5;
-    color: rgba(0, 0, 0, .4);
-  }
-}
-
-.justified-badge {
-  font-size: .78rem;
-  font-weight: 700;
-  color: #6a1b9a;
-  background: #f3e5f5;
-  border-radius: 10px;
-  padding: 2px 8px;
-}
-
 .empty-state {
   text-align: center;
   padding: 2.5rem;
@@ -360,21 +336,48 @@
   }
 }
 
-.month-picker {
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-weight: 600;
-  text-transform: capitalize;
+.month-label {
   min-width: 150px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.day-name { display: block; font-size: .7rem; font-weight: 500; opacity: .75; }
+
+.all-present-btn {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 2px !important;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.empty-days { margin: 8px 0 0; padding: 12px; border-radius: 8px; background: #f4f7fa; color: #536575; text-align: center; }
+
+// Celda de asistencia: un toque rota P → A → T.
+.mark {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 30px;
+  border: 1px solid #d5dde4;
+  border-radius: 6px;
+  background: #fff;
+  color: #9aa8b4;
+  font: inherit;
+  font-weight: 700;
   cursor: pointer;
 
-  &::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-  }
+  &--present { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+  &--absent { background: #ffebee; border-color: #ef9a9a; color: #c62828; }
+  &--late { background: #fff8e1; border-color: #ffe082; color: #a66b00; }
+  &--justified { background: #f3e5f5; border-color: #ce93d8; color: #6a1b9a; }
+  &--changed { box-shadow: 0 0 0 2px #1e88e5; }
+  &:disabled { cursor: default; opacity: .7; }
 }
+
+.status-legend .mark { width: 22px; height: 20px; font-size: .75rem; cursor: default; }
 
 .status-legend {
   margin: 0 0 8px;

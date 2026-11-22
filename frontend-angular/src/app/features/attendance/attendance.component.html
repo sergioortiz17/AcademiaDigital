@@ -34,7 +34,7 @@
         <button mat-icon-button (click)="prevMonth()" matTooltip="Mes anterior">
           <mat-icon>chevron_left</mat-icon>
         </button>
-        <input type="month" class="month-picker" [(ngModel)]="monthValue" aria-label="Mes y año" matTooltip="Elegir mes y año">
+        <span class="month-label">{{ monthLabel() }}</span>
         <button mat-icon-button (click)="nextMonth()" matTooltip="Mes siguiente">
           <mat-icon>chevron_right</mat-icon>
         </button>
@@ -45,10 +45,22 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
-      <button mat-raised-button color="primary" [disabled]="!selectedTeachingPositionId || isCreating" (click)="openNewSessionDialog()">
-        <mat-icon>add</mat-icon>
-        Nuevo día
-      </button>
+      <div class="toolbar-actions">
+        <button mat-stroked-button [disabled]="!selectedTeachingPositionId || isCreating || todayExists" (click)="addToday()"
+          [matTooltip]="todayExists ? 'El día de hoy ya está cargado' : 'Agregar la clase de hoy'">
+          <mat-icon>today</mat-icon>
+          Hoy
+        </button>
+        <button mat-stroked-button [disabled]="!selectedTeachingPositionId || isCreating" (click)="openNewSessionDialog()"
+          matTooltip="Otra fecha o clase por horas">
+          <mat-icon>add</mat-icon>
+          Nuevo día
+        </button>
+        <button mat-raised-button color="primary" [disabled]="isSaving || pendingChanges === 0" (click)="saveAll()">
+          <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
+          <span *ngIf="!isSaving">Guardar{{ pendingChanges ? ' (' + pendingChanges + ')' : '' }}</span>
+        </button>
+      </div>
     </div>
 
     <div class="loading-overlay" *ngIf="isLoading">
@@ -57,18 +69,25 @@
 
     <ng-container *ngIf="!isLoading">
 
-      <p class="status-legend" *ngIf="visibleSessions.length > 0">
-        <strong>P</strong> Presente · <strong>T</strong> Tarde (cuenta media asistencia) ·
-        <strong>A</strong> Ausente · <strong>J</strong> Justificada · <mat-icon inline>lock</mat-icon> día cerrado
+      <p class="status-legend" *ngIf="rows.length > 0">
+        Toque una celda para marcar: <span class="mark mark--present">P</span> Presente →
+        <span class="mark mark--absent">A</span> Ausente → <span class="mark mark--late">T</span> Tarde (media asistencia).
+        <mat-icon inline>done_all</mat-icon> marca presentes a todos los que faltan cargar ese día ·
+        <span class="mark mark--justified">J</span> Justificada · <mat-icon inline>lock</mat-icon> día cerrado
       </p>
 
-      <div class="table-wrap" *ngIf="visibleSessions.length > 0">
+      <div class="table-wrap" *ngIf="rows.length > 0">
         <table class="attendance-table">
           <thead>
             <tr>
               <th class="student-col">Alumno</th>
               <th *ngFor="let s of visibleSessions" class="day-col">
+                <span class="day-name">{{ weekday(s.sessionDate) }}</span>
                 {{ formatDay(s.sessionDate) }}
+                <button *ngIf="isSessionEditable(s)" mat-icon-button class="all-present-btn"
+                  matTooltip="Todos presentes" (click)="markAllPresent(s, $event)">
+                  <mat-icon>done_all</mat-icon>
+                </button>
                 <button
                   *ngIf="s.status === 'Open'"
                   mat-icon-button
@@ -89,19 +108,13 @@
               (click)="selectStudent(row)" (focusin)="selectStudent(row)">
               <td class="student-col">{{ row.studentName }}</td>
               <td *ngFor="let s of visibleSessions" class="day-col status-cell" (click)="$event.stopPropagation()">
-                <ng-container *ngIf="row.cells[s.id] as cell; else noCell">
-                  <span *ngIf="cell.status === 'Justified'" class="justified-badge">J</span>
-                  <select
-                    *ngIf="cell.status !== 'Justified'"
-                    [disabled]="!isSessionEditable(s)"
-                    [(ngModel)]="cell.status">
-                    <option [ngValue]="null">—</option>
-                    <option value="Present" title="Presente">P</option>
-                    <option value="Late" title="Tarde">T</option>
-                    <option value="Absent" title="Ausente">A</option>
-                  </select>
-                </ng-container>
-                <ng-template #noCell>—</ng-template>
+                <button type="button" class="mark"
+                  [ngClass]="'mark--' + (row.cells[s.id]?.status ?? 'empty').toLowerCase()"
+                  [class.mark--changed]="row.cells[s.id] && row.cells[s.id].status !== row.cells[s.id].saved"
+                  [disabled]="!isSessionEditable(s) || row.cells[s.id]?.status === 'Justified'"
+                  [attr.aria-label]="row.studentName + ', ' + formatDay(s.sessionDate) + ': ' + statusTitle(row.cells[s.id]?.status ?? null)"
+                  [title]="statusTitle(row.cells[s.id]?.status ?? null)"
+                  (click)="cycle(row, s)">{{ statusLetter(row.cells[s.id]?.status ?? null) || '·' }}</button>
               </td>
               <td class="avg-col">
                 <span *ngIf="attendancePercentage(row) !== null">{{ attendancePercentage(row) }}%</span>
@@ -112,9 +125,14 @@
         </table>
       </div>
 
-      <div class="empty-state" *ngIf="visibleSessions.length === 0">
-        <mat-icon>event_busy</mat-icon>
-        <p>No hay días cargados para este mes. Use "Nuevo día" para empezar a tomar asistencia.</p>
+      <p class="empty-days" *ngIf="rows.length > 0 && visibleSessions.length === 0">
+        No hay días cargados en {{ monthLabel() }}. Toque <strong>Hoy</strong> para tomar asistencia de la clase de hoy,
+        o <strong>Nuevo día</strong> para otra fecha.
+      </p>
+
+      <div class="empty-state" *ngIf="rows.length === 0">
+        <mat-icon>group_off</mat-icon>
+        <p>No hay alumnos inscriptos en esta materia.</p>
       </div>
 
       <div class="student-detail" *ngIf="selectedRow as s">
@@ -130,10 +148,6 @@
             <mat-icon>file_download</mat-icon>
           </button>
 
-          <button mat-raised-button color="primary" [disabled]="isSaving" (click)="saveAll()">
-            <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
-            <span *ngIf="!isSaving">Guardar</span>
-          </button>
         </div>
       </div>
 
