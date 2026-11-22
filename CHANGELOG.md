@@ -12,6 +12,9 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 - **Calificaciones**: el botón de envío está siempre visible mientras la planilla no esté cerrada; si ya se envió, dice "Reenviar a Secretaría" y actualiza la fecha del último envío.
 - **Calificaciones**: se puede enviar la planilla con instancias sin nota (envío parcial). La nota completa (o ausente) en todas las instancias regulares se exige recién al cerrar.
 - **Calificaciones**: vaciar una celda que tenía nota y guardar borra esa nota.
+- **Cargar asistencia**: es una matriz con los alumnos de la materia en la primera columna (se ven aunque todavía no haya días cargados) y los días de clase del mes como columnas, con el día de la semana. Cada celda es un botón: un toque rota entre Presente, Ausente y Tarde, con colores. Cada día tiene "Todos presentes" para marcar P a los que faltan cargar.
+- **Cargar asistencia**: botón "Hoy" para agregar la clase del día con un toque ("Nuevo día" queda para otras fechas o clases por horas) y "Guardar" siempre visible arriba, con la cantidad de cambios sin guardar. Se guardan los cambios de cualquier mes.
+- **Cargar asistencia**: el mes se muestra en castellano ("Noviembre 2026"); antes el selector del navegador lo mostraba en inglés.
 
 ### Corregido
 
