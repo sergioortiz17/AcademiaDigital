@@ -4,6 +4,23 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.15.1] - 2026-11-22
+
+### Agregado
+
+- **Agregar escuelas**: ítem nuevo del menú de Administración con su pantalla para crear, editar y dar de baja escuelas, y los pasos para usarlas (asignar cada división a su escuela y elegirla en Asignar materia). La sección de escuelas sigue también en Gestión de Carreras.
+- **Comisiones**: la columna Estado muestra los cupos libres de cada comisión con docente ("29 cupos libres", o "Sin cupos" si está llena) en lugar de "Ocupado". Las comisiones sin docente siguen diciendo "Vacante". Los inscriptos se cuentan igual que en el desplegable de alumnos de la comisión.
+
+### Cambiado
+
+- **Escuelas**: lo que se llamaba "Sede" ahora se llama "Escuela" en todas las pantallas y mensajes (Divisiones, Asignar materia, Gestión de Carreras y el filtro de planillas, que ahora muestra las escuelas reales en lugar de valores de ejemplo).
+
+### Corregido
+
+- **Menú de Administración**: la 1.15.0 había quitado ítems ("Asignaciones" y "Asignar división a alumnos"), había renombrado otros ("Gestión de Inscripciones", "Gestión de Usuarios", "Gestión de Carreras", "Acciones masivas", "Requisitos de ingreso", entre otros) y había reemplazado los desplegables por secciones fijas. Vuelven todos los ítems con su nombre de antes, agrupados en desplegables: Admisión (Aspirantes, Requisitos de ingreso, Gestión de Inscripciones), Alumnos (Alumnos, Asignar división a alumnos, Analíticos, Acciones masivas), Docentes (Listado de docentes, Comisiones, Divisiones, Asignar materia, Asignaciones), Registros Académicos, Certificados y Mesa de examen. El desplegable de la página actual se abre solo. Los títulos de las páginas vuelven a ser los de antes.
+- **Acciones masivas**: vuelve a mostrar el egreso y la inscripción por división en la misma pantalla. Desde el botón "Inscribir en materias" de Divisiones sigue abriendo solo la inscripción, con la carrera elegida.
+- **Gestión de Inscripciones**: vuelven el título y el botón "Activar inscripción". Se mantienen las mejoras de la 1.15.0: confirmación al cerrar, "Eliminar período" en un menú aparte y estado como etiqueta.
+
 ## [1.15.0] - 2026-11-22
 
 ### Cambiado
