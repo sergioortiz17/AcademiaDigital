@@ -10,6 +10,10 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 - **Requisitos de ingreso**: elegir un archivo ya no lo envía. Se muestra una vista previa (PDF o imagen, con nombre y tamaño) y se envía recién al tocar "Enviar"; "Cancelar" lo descarta. El documento ya enviado se puede ver en pantalla con "Ver", además de descargarlo.
 
+### Corregido
+
+- **Inicio de sesión**: la tarjeta del formulario se había ensanchado por el texto de "¿Es ingresante?"; vuelve a su ancho anterior.
+
 ## [1.12.0] - 2026-11-22
 
 Cambios grandes de la reunión con Secretaría y login con Google.
