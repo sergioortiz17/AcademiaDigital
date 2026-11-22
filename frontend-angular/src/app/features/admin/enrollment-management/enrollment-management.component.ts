@@ -341,13 +341,13 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
 
 closePeriod(period: EnrollmentPeriodDto): void {
   Swal.fire({
-    title: 'Cerrar período',
-    text: `¿Cerrar el período de inscripción de ${period.careerName}?`,
+    title: 'Cerrar inscripción',
+    text: `¿Cerrar la inscripción de ${period.careerName}? Los alumnos ya no podrán inscribirse en este período.`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Sí, cerrar',
+    confirmButtonText: 'Sí, cerrar inscripción',
     cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
@@ -377,13 +377,13 @@ closePeriod(period: EnrollmentPeriodDto): void {
 
 activatePeriod(period: EnrollmentPeriodDto): void {
   Swal.fire({
-    title: 'Reactivar período',
-    text: `¿Reactivar el período de inscripción de ${period.careerName}?`,
+    title: 'Reabrir inscripción',
+    text: `¿Reabrir la inscripción de ${period.careerName}?`,
     icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#aaa',
-    confirmButtonText: 'Sí, activar',
+    confirmButtonText: 'Sí, reabrir',
     cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {

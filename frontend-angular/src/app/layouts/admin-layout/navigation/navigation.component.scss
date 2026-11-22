@@ -101,3 +101,11 @@ summary::-webkit-details-marker { display: none; }
 @media (pointer: coarse) {
   .nav-row { height: nav.$touch-height; }
 }
+
+// Títulos de sección del menú de Administración: fijos, no desplegables.
+.nav-section-label {
+  padding: 14px nav.$inset 4px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  opacity: .7;
+}

@@ -1,9 +1,9 @@
 <div class="em-container">
   <div class="em-header">
-    <h2>Gestión de Inscripciones</h2>
+    <h1>Períodos de inscripción</h1>
     <button mat-raised-button color="primary" (click)="showOpenForm = !showOpenForm">
       <mat-icon>add</mat-icon>
-      Activar inscripción
+      Abrir período de inscripción
     </button>
   </div>
 
@@ -68,7 +68,7 @@
               [disabled]="!canOpen() || isSubmitting"
               (click)="submitOpen()">
         <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-        <span *ngIf="!isSubmitting">Activar</span>
+        <span *ngIf="!isSubmitting">Abrir período</span>
       </button>
     </mat-card-actions>
   </mat-card>
@@ -97,9 +97,10 @@
           </div>
         </div>
         <div class="period-actions">
-          <mat-chip [ngClass]="p.isActive ? 'chip-active' : 'chip-closed'">
-            {{ p.isActive ? 'Activo' : 'Cerrado' }}
-          </mat-chip>
+          <!-- Estado: badge informativo, no es un botón. -->
+          <span class="status-badge" [ngClass]="p.isActive ? 'chip-active' : 'chip-closed'">
+            {{ p.isActive ? 'Abierto' : 'Cerrado' }}
+          </span>
           <button mat-stroked-button (click)="viewStudents(p)" class="students-btn">
             <mat-icon>group</mat-icon>
             Ver inscriptos
@@ -107,21 +108,28 @@
               {{ p.enrolledMorning + p.enrolledAfternoon + p.enrolledEvening }}
             </span>
           </button>
-          <button mat-icon-button matTooltip="Ver reportes" (click)="viewReports(p)">
+          <button mat-icon-button matTooltip="Estadísticas" aria-label="Estadísticas" (click)="viewReports(p)">
             <mat-icon>bar_chart</mat-icon>
           </button>
-          <button mat-icon-button matTooltip="Editar cupos" (click)="startEdit(p)">
+          <button mat-icon-button matTooltip="Editar" aria-label="Editar" (click)="startEdit(p)">
             <mat-icon>edit</mat-icon>
           </button>
           <button mat-stroked-button color="warn" *ngIf="p.isActive" (click)="closePeriod(p)">
-            Cerrar
+            Cerrar inscripción
           </button>
           <button mat-stroked-button color="primary" *ngIf="!p.isActive" (click)="activatePeriod(p)">
-            Activar
+            Reabrir inscripción
           </button>
-          <button mat-icon-button color="warn" matTooltip="Eliminar período" (click)="deletePeriod(p)">
-            <mat-icon>delete</mat-icon>
+          <!-- Eliminar queda en un menú aparte, lejos de "Cerrar inscripción". -->
+          <button mat-icon-button [matMenuTriggerFor]="periodMenu" matTooltip="Más acciones" aria-label="Más acciones">
+            <mat-icon>more_vert</mat-icon>
           </button>
+          <mat-menu #periodMenu="matMenu" xPosition="before">
+            <button mat-menu-item class="danger-item" (click)="deletePeriod(p)">
+              <mat-icon color="warn">delete</mat-icon>
+              <span>Eliminar período</span>
+            </button>
+          </mat-menu>
         </div>
       </div>
 
@@ -139,8 +147,8 @@
 
         <div class="coverage-body" *ngIf="isWarningExpanded(p.id)">
           <div class="coverage-text">
-            Los alumnos que se inscriban en estos turnos van a quedar sin división hasta que las crees o los asignes a mano.
-            Podés crear cada una acá mismo, sin salir de esta pantalla:
+            Los alumnos que se inscriban en estos turnos van a quedar sin división hasta que se creen o se los asigne a mano.
+            Se puede crear cada una acá mismo, sin salir de esta pantalla:
             <ul class="coverage-gaps">
               <li *ngFor="let g of gapsFor(p.id)">
                 <span>{{ g.yearNumber }}° año — Turno {{ shiftLabel(g.shift) }}</span>
@@ -167,7 +175,7 @@
             </button>
             <button mat-button class="coverage-nav-btn" (click)="goToCreateCommission(p)" matTooltip="Ir a la pantalla de divisiones">
               <mat-icon>open_in_new</mat-icon>
-              Gestionar divisiones
+              Ir a Divisiones
             </button>
           </div>
         </div>

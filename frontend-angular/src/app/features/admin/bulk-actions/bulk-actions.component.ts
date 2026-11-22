@@ -1,10 +1,14 @@
+import { ActivatedRoute } from '@angular/router';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
 import { Career, CareerDivision, CareerService } from '../../../core/services/career.service';
 import { StudentListItem, StudentService } from '../../../core/services/student.service';
 import { BulkActionsService, BulkEnrollResult, BulkGraduateResult } from '../../../core/services/bulk-actions.service';
 
-/** Acciones masivas: egresar alumnos con fecha e inscribir una división en las materias de su año. */
+/**
+ * Egresos (menú Trámites y egreso) e inscripción de una división en las materias de su año (botón
+ * "Inscribir en materias" de Divisiones, con ?accion=inscribir-division&careerId=). Misma ruta, dos modos.
+ */
 @Component({
   selector: 'app-bulk-actions',
   templateUrl: './bulk-actions.component.html',
@@ -40,12 +44,23 @@ export class BulkActionsComponent implements OnInit {
     private readonly careerService: CareerService,
     private readonly studentService: StudentService,
     private readonly bulk: BulkActionsService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly route: ActivatedRoute
   ) {}
 
+  /** 'graduate' desde el menú (Egresos); 'enroll' desde el botón de Divisiones. */
+  mode: 'graduate' | 'enroll' = 'graduate';
+
   ngOnInit(): void {
+    const query = this.route.snapshot.queryParamMap;
+    this.mode = query.get('accion') === 'inscribir-division' ? 'enroll' : 'graduate';
+    const presetCareerId = Number(query.get('careerId')) || null;
     this.careerService.getCareers().subscribe(careers => {
       this.careers = careers;
+      if (this.mode === 'enroll' && presetCareerId && careers.some(c => c.id === presetCareerId)) {
+        this.enrollCareerId = presetCareerId;
+        this.loadDivisions();
+      }
       this.cdr.markForCheck();
     });
   }

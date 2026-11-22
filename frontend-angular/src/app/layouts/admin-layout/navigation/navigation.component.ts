@@ -12,6 +12,8 @@ export interface MenuItem {
   url?: string;
   icon?: string;
   children?: MenuItem[];
+  /** Sección con título fijo (no desplegable): sus hijos se muestran siempre, con ícono. */
+  section?: boolean;
 }
 
 const MENU_ALUMNO: MenuItem[] = [
@@ -41,45 +43,48 @@ const MENU_PROFESOR: MenuItem[] = [
   //cambiar por Registro
 ];
 
+/**
+ * Menú de Administración, ordenado según el recorrido del alumno (ingresa → cursa → rinde → egresa),
+ * con la configuración y las herramientas al final. Las secciones tienen título fijo. Las URL y los
+ * permisos no cambiaron con la reorganización de la 1.15.0; cada ítem tiene un ícono distinto.
+ */
 const MENU_ADMIN: MenuItem[] = [
-  { id: 'dashboard',   title: 'Inicio',            url: '/app/dashboard/default', icon: 'home' },
-  { id: 'courses',     title: 'Plan de estudios',   url: '/app/courses',           icon: 'book' },
-  { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
-  { id: 'teachers',    title: 'Docentes',           icon: 'group',
-    children: [
-      { id: 'teacher-list', permission: 'ManageTeachers',       title: 'Listado de docentes', url: '/app/admin/teachers', icon: '' },
-      { id: 'teaching-positions', permission: 'ManageCareers', title: 'Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
-      { id: 'commissions', permission: 'ManageCareers',        title: 'Divisiones', url: '/app/admin/commissions',      icon: '' },
-      { id: 'teacher-courses', permission: 'ManageTeachers',    title: 'Asignar materia', url: '/app/admin/teacher-courses', icon: '' },
-      { id: 'student-commission', permission: 'ManageStudents', title: 'Asignar división a alumnos', url: '/app/admin/student-commission-assignment', icon: '' }
-    ]
-  },
-  { id: 'registros',   title: 'Registros Académicos', icon: 'assignment_ind',
-    children: [
-      { id: 'attendance', permission: 'ManageAttendance', title: 'Asistencias', url: '/app/admin/attendance', icon: '' },
-      { id: 'gradebooks-shared', permission: 'ManageGrades', title: 'Calificaciones', url: '/app/grades', icon: '' }
-    ]
-  },
-  { id: 'my-assignments', permission: 'ManageTeachers', title: 'Asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
-  { id: 'certificates', permission: 'ManageCertificates', title: 'Certificados',      url: '/app/certificates',      icon: 'fact_check',
-    children: [
-      { id: 'certificate-requests', permission: 'ManageCertificates', title: 'Peticiones',url: '/app/certificates',icon: '' }
-    ]
-  },
-  { id: 'admin-exam-form', title: 'Mesa de examen', icon: 'event_note', children: [
-    { id: 'exam-form', permission: 'ManageExams', title: 'Formulario de inscripción', url: '/app/admin/exam-form' },
-    { id: 'exam-schedule', permission: 'ManageExams', title: 'Armar mesas automáticas', url: '/app/admin/exam-schedule' }
+  { id: 'dashboard', title: 'Inicio', url: '/app/dashboard/default', icon: 'home' },
+  { id: 'calendar', title: 'Calendario académico', url: '/app/calendar', icon: 'calendar_month' },
+  { id: 'sec-admission', title: 'Admisión', section: true, children: [
+    { id: 'applicants', permission: 'ManageStudents', title: 'Aspirantes', url: '/app/admin/applicants', icon: 'person_add' },
+    { id: 'student-documents', permission: 'ManageStudents', title: 'Documentación de ingreso', url: '/app/admin/student-documents', icon: 'folder_shared' },
+    { id: 'admin-enrollments', permission: 'ManageEnrollments', title: 'Períodos de inscripción', url: '/app/admin/enrollments', icon: 'how_to_reg' }
   ] },
-  { id: 'admin-enrollments', permission: 'ManageEnrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
-  { id: 'students', permission: 'ManageGrades',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
-  { id: 'applicants', permission: 'ManageStudents',  title: 'Aspirantes',         url: '/app/admin/applicants', icon: 'person_add' },
-  { id: 'student-documents', permission: 'ManageStudents', title: 'Requisitos de ingreso', url: '/app/admin/student-documents', icon: 'folder_shared' },
-  { id: 'transcripts', permission: 'ManageStudents', title: 'Analíticos',         url: '/app/admin/transcripts', icon: 'history_edu' },
-  { id: 'bulk-actions', permission: 'ManageStudents', title: 'Acciones masivas',  url: '/app/admin/bulk-actions', icon: 'library_add_check' },
-  { id: 'reports', permission: 'ViewReports',     title: 'Reportes y Excel',   url: '/app/admin/reports',     icon: 'table_view' },
-  { id: 'users', permission: 'ManageUsers',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
-  { id: 'careers-admin', permission: 'ManageCareers', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
-  { id: 'approval-rules', permission: 'ManageCareers', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' },
+  { id: 'sec-people', title: 'Personas', section: true, children: [
+    { id: 'students', permission: 'ManageGrades', title: 'Alumnos', url: '/app/admin/students-condition', icon: 'groups' },
+    { id: 'teacher-list', permission: 'ManageTeachers', title: 'Docentes', url: '/app/admin/teachers', icon: 'co_present' }
+  ] },
+  { id: 'sec-courses', title: 'Cursado', section: true, children: [
+    { id: 'courses', title: 'Plan de estudios', url: '/app/courses', icon: 'menu_book' },
+    { id: 'commissions', permission: 'ManageCareers', title: 'Divisiones', url: '/app/admin/commissions', icon: 'workspaces' },
+    { id: 'teaching-positions', permission: 'ManageCareers', title: 'Comisiones', url: '/app/admin/teaching-positions', icon: 'class' },
+    { id: 'teacher-courses', permission: 'ManageTeachers', title: 'Asignación docente', url: '/app/admin/teacher-courses', icon: 'assignment_ind' },
+    { id: 'attendance', permission: 'ManageAttendance', title: 'Asistencias', url: '/app/admin/attendance', icon: 'fact_check' },
+    { id: 'gradebooks-shared', permission: 'ManageGrades', title: 'Calificaciones', url: '/app/grades', icon: 'grade' }
+  ] },
+  { id: 'sec-exams', title: 'Exámenes', section: true, children: [
+    { id: 'exam-schedule', permission: 'ManageExams', title: 'Mesas de examen', url: '/app/admin/exam-schedule', icon: 'event_note' },
+    { id: 'exam-form', permission: 'ManageExams', title: 'Formulario de mesas', url: '/app/admin/exam-form', icon: 'edit_note' }
+  ] },
+  { id: 'sec-paperwork', title: 'Trámites y egreso', section: true, children: [
+    { id: 'certificate-requests', permission: 'ManageCertificates', title: 'Solicitudes de certificados', url: '/app/certificates', icon: 'military_tech' },
+    { id: 'transcripts', permission: 'ManageStudents', title: 'Analíticos', url: '/app/admin/transcripts', icon: 'history_edu' },
+    { id: 'bulk-actions', permission: 'ManageStudents', title: 'Egresos', url: '/app/admin/bulk-actions', icon: 'workspace_premium' }
+  ] },
+  { id: 'sec-config', title: 'Configuración', section: true, children: [
+    { id: 'careers-admin', permission: 'ManageCareers', title: 'Carreras', url: '/app/admin/careers', icon: 'school' },
+    { id: 'approval-rules', permission: 'ManageCareers', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' }
+  ] },
+  { id: 'sec-tools', title: 'Herramientas', section: true, children: [
+    { id: 'reports', permission: 'ViewReports', title: 'Reportes', url: '/app/admin/reports', icon: 'table_view' },
+    { id: 'users', permission: 'ManageUsers', title: 'Usuarios y permisos', url: '/app/admin/users', icon: 'manage_accounts' }
+  ] }
 ];
 
 /** Menú de Administración recortado a las áreas del rol (secretaría, coordinación, etc.). */
