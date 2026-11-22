@@ -286,6 +286,11 @@ builder.Services.AddRateLimiter(options =>
     options.AddClientErrorsPolicy();
     options.AddPasswordResetPolicy();
 
+    // Login con Google: freno a pruebas masivas de tokens desde una misma IP.
+    options.AddPolicy("GoogleLogin", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(5), QueueLimit = 0 }));
+
     // API de plataforma (alta de instituciones): freno a la fuerza bruta de la clave de operador.
     options.AddPolicy("PlatformAdmin", httpContext => RateLimitPartition.GetFixedWindowLimiter(
         httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",

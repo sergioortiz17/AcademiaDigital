@@ -45,6 +45,16 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseURL}v1/users/login`, credentials);
   }
 
+  /** Client ID de Google (vacío = el botón "Continuar con Google" no se muestra). */
+  getGoogleConfig(): Observable<{ clientId: string }> {
+    return this.http.get<{ clientId: string }>(`${this.baseURL}v1/users/login/google/config`);
+  }
+
+  /** Inicia sesión con el token que devuelve Google; solo para cuentas que ya existen con ese correo. */
+  loginWithGoogle(credential: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseURL}v1/users/login/google`, { credential });
+  }
+
   register(credentials: RegisterCredentials): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(`${this.baseURL}v1/users/register`, credentials);
   }

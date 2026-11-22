@@ -60,6 +60,12 @@
             {{ isLoading ? ('common.loading' | translate) : ('auth.signIn' | translate) }}
           </button>
         </div>
+        <!-- Iniciar sesión con Google: solo para cuentas que ya existen con ese correo -->
+        <div class="google-login" [hidden]="!googleEnabled">
+          <span class="google-divider">o</span>
+          <div #googleButton class="google-button"></div>
+        </div>
+
         <a class="forgot-password" [routerLink]="['/auth/forgot-password']">
             ¿Olvidaste tu contraseña?
         </a>

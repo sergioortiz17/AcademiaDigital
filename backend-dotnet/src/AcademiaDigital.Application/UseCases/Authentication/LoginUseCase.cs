@@ -1,3 +1,4 @@
+using AcademiaDigital.Application.Interfaces;
 using AcademiaDigital.Domain.Enums;
 using AcademiaDigital.Domain.Exceptions;
 using AcademiaDigital.Domain.Interfaces.Repositories;
@@ -8,7 +9,8 @@ namespace AcademiaDigital.Application.UseCases.Authentication;
 public class LoginUseCase(
     IUserRepository userRepository,
     ISessionRepository sessionRepository,
-    ITokenService tokenService)
+    ITokenService tokenService,
+    IGoogleIdentityVerifier? googleVerifier = null)
 {
     private const int MaxFailedAttempts = 5;
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
@@ -49,6 +51,35 @@ public class LoginUseCase(
         if (user.FailedLoginAttempts > 0 || user.LockedUntil is not null)
             await userRepository.ResetLoginFailuresAsync(user.Id, ct);
 
+        return await IssueSessionAsync(user, ct);
+    }
+
+    /// <summary>
+    /// Inicio de sesión con Google: solo para cuentas que ya existen con ese correo (no crea
+    /// cuentas). Google confirma que la persona es dueña del correo; las mismas reglas de alta,
+    /// cuenta activa y bloqueo que con contraseña.
+    /// </summary>
+    public async Task<LoginResult> ExecuteWithGoogleAsync(string idToken, CancellationToken ct = default)
+    {
+        if (googleVerifier is null || string.IsNullOrWhiteSpace(googleVerifier.ClientId))
+            throw new InvalidOperationException("El inicio de sesión con Google no está habilitado.");
+        var identity = await googleVerifier.VerifyAsync(idToken, ct);
+        if (identity is null || !identity.EmailVerified)
+            throw new InvalidCredentialsException();
+
+        var user = await userRepository.FindByEmailAsync(identity.Email.Trim(), ct)
+            ?? throw new GoogleAccountNotRegisteredException(identity.Email);
+        if (user.LockedUntil is DateTime lockedUntil && lockedUntil > DateTime.UtcNow)
+            throw new AccountLockedException(lockedUntil);
+        if (user.RegistrationStatus == RegistrationStatus.Pending)
+            throw new PendingApprovalException();
+        if (!user.IsActive)
+            throw new InactiveUserException();
+        return await IssueSessionAsync(user, ct);
+    }
+
+    private async Task<LoginResult> IssueSessionAsync(Domain.Entities.User user, CancellationToken ct)
+    {
         var session = await sessionRepository.FindByUserAsync(user.Id, ct);
         string token;
 
@@ -84,3 +115,7 @@ public class LoginUseCase(
 
 public record LoginResult(bool Success, string Token, UserDto User);
 public record UserDto(long Id, string Username, string LastName, string? Dni, string Email, UserRole Role);
+
+/// <summary>El correo de Google no corresponde a ninguna cuenta de la institución.</summary>
+public sealed class GoogleAccountNotRegisteredException(string email)
+    : Exception($"No hay una cuenta registrada con {email}. Regístrese o pida el alta a Administración.");

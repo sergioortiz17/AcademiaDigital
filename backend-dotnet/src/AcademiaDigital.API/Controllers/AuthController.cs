@@ -43,6 +43,28 @@ public class AuthController(
         });
     }
 
+    // GET /api/v1/users/login/google/config — Client ID público para mostrar el botón (vacío = desactivado)
+    [HttpGet("login/google/config")]
+    public IActionResult GoogleConfig([FromServices] IGoogleIdentityVerifier verifier)
+        => Ok(new { clientId = verifier.ClientId });
+
+    // POST /api/v1/users/login/google — { credential } que devuelve Google Identity Services
+    [HttpPost("login/google")]
+    [EnableRateLimiting("GoogleLogin")]
+    public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleLoginRequest request, CancellationToken ct)
+    {
+        var result = await loginUseCase.ExecuteWithGoogleAsync(request.Credential, ct);
+        audit.LoginSucceeded(result.User.Id, (int)result.User.Role,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            Request.Headers.UserAgent.ToString());
+        return Ok(new
+        {
+            success = result.Success,
+            token = result.Token,
+            user = new { _id = result.User.Id, result.User.Username, result.User.LastName, result.User.Dni, result.User.Email, role = (int)result.User.Role }
+        });
+    }
+
     // POST /api/v1/users/register
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
@@ -149,3 +171,5 @@ public record ForgotPasswordRequest(
 public record ResetPasswordRequest(
     [Required] string ResetToken,
     [Required][MinLength(8)] string NewPassword);
+
+public sealed record GoogleLoginRequest([Required, StringLength(4096, MinimumLength = 20)] string Credential);
