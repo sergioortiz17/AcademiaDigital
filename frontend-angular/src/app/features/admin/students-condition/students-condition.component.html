@@ -12,8 +12,10 @@
       <div class="toolbar">
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Materia</mat-label>
-          <mat-select [(ngModel)]="selectedGradebookId" (selectionChange)="onGradebookChange()">
-            <mat-option *ngFor="let g of gradebooks" [value]="g.id">{{ gradebookLabel(g) }}</mat-option>
+          <mat-select [(ngModel)]="selectedKey" (selectionChange)="onGradebookChange()">
+            <mat-option *ngFor="let o of subjectOptions" [value]="o.key">
+              {{ o.label }}<span *ngIf="o.gradebookId == null" class="no-gradebook"> · sin planilla</span>
+            </mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -44,17 +46,21 @@
         <mat-spinner diameter="40"></mat-spinner>
       </div>
 
-      <div class="empty-state" *ngIf="!isLoading && gradebooks.length === 0">
+      <div class="empty-state" *ngIf="!isLoading && subjectOptions.length === 0">
         <mat-icon>menu_book</mat-icon>
-        <p>No hay materias con planilla disponibles para tu usuario.</p>
+        <p>No tienes materias asignadas todavía.</p>
       </div>
 
-      <div class="empty-state" *ngIf="!isLoading && gradebooks.length > 0 && selectedGradebookId == null">
+      <div class="empty-state" *ngIf="!isLoading && subjectOptions.length > 0 && selectedKey == null">
         <mat-icon>filter_list</mat-icon>
         <p>Elegí una materia para ver la condición de sus alumnos.</p>
       </div>
 
-      <ng-container *ngIf="!isLoading && loadedOnce && selectedGradebookId != null">
+      <ng-container *ngIf="!isLoading && loadedOnce && selectedKey != null">
+        <div *ngIf="selectedGradebookId == null" class="msg msg--info">
+          <mat-icon>info</mat-icon>
+          Esta materia todavía no tiene planilla de notas. La condición de cada alumno aparece cuando se cargan las notas.
+        </div>
         <div class="table-wrap">
           <table class="students-table">
             <thead>
@@ -121,7 +127,7 @@
 
           <div class="empty-state" *ngIf="filteredStudents.length === 0">
             <mat-icon>group_off</mat-icon>
-            <p>No hay alumnos que coincidan.</p>
+            <p>{{ students.length === 0 ? 'No hay alumnos inscriptos en esta comisión.' : 'No hay alumnos que coincidan.' }}</p>
           </div>
         </div>
       </ng-container>

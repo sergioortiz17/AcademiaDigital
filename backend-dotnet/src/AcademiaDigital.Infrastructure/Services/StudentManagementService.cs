@@ -291,6 +291,15 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
             OriginalFileName = r.OriginalFileName.Trim(), ContentType = r.ContentType, FileSizeBytes = r.FileSizeBytes };
         db.StudentDocuments.Add(x); await db.SaveChangesAsync(ct); x.DocumentRequirement = req; return Map(x);
     }
+    public async Task<IReadOnlyList<StudentDocumentReviewItemDto>> GetDocumentsForReviewAsync(StudentDocumentStatus? status, CancellationToken ct)
+    {
+        var query = db.StudentDocuments.AsNoTracking().Include(x => x.DocumentRequirement).Include(x => x.Student).ThenInclude(s => s.User)
+            .Where(x => x.Status != StudentDocumentStatus.Expired);
+        if (status.HasValue) query = query.Where(x => x.Status == status.Value);
+        var items = await query.OrderBy(x => x.SubmittedAt).Take(500).ToListAsync(ct);
+        return items.Select(x => new StudentDocumentReviewItemDto(Map(x),
+            $"{x.Student.User.Username} {x.Student.User.LastName}".Trim(), x.Student.LegajoNumber, x.Student.User.Dni)).ToList();
+    }
     public async Task<StudentDocumentDto> ReviewDocumentAsync(long studentId, long documentId, ReviewStudentDocumentRequest r, long actorId, CancellationToken ct)
     {
         var x = await db.StudentDocuments.Include(y => y.DocumentRequirement).SingleOrDefaultAsync(y => y.Id == documentId && y.StudentId == studentId, ct)

@@ -15,7 +15,7 @@
       class="tab-button"
       [class.active]="activeTab === 'subjects'"
       (click)="changeTab('subjects')">
-      Consulta de materias
+      Materias del plan
     </button>
   </div>
 
@@ -27,12 +27,6 @@
     </div>
 
     <div class="filters-row career-filters">
-      <div class="search-box">
-        <label for="assignment-career">Buscar por materia:</label>
-        <input type="text" [(ngModel)]="searchTerm" aria-label="Buscar por materia">
-        <mat-icon>search</mat-icon>
-      </div>
-        
       <div class="filter-field">
         <label for="assignment-career">Carrera:</label>
         <select id="assignment-career" [(ngModel)]="selectedCareerId" (ngModelChange)="onCareerChange($event)">
@@ -43,6 +37,12 @@
             {{ career.name }}
           </option>
         </select>
+      </div>
+
+      <div class="search-box">
+        <label for="assignment-search">Buscar por materia:</label>
+        <input id="assignment-search" type="text" [(ngModel)]="searchTerm" aria-label="Buscar por materia">
+        <mat-icon>search</mat-icon>
       </div>
 
       <div class="filter-field">
@@ -115,6 +115,11 @@
 
     <!-- PESTAÑA 2: CONSULTA DE MATERIAS    -->
     <div *ngIf="activeTab === 'subjects'" class="tab-content">
+      <p class="tab-help">
+        {{ userRole === UserRole.Profesor
+          ? 'Las materias del plan de estudios que usted tiene asignadas, con su año y cuatrimestre.'
+          : 'Todas las materias del plan de estudios vigente de la carrera, con su año y cuatrimestre.' }}
+      </p>
       <div class="table-container" *ngIf="selectedCareerId != null">
 
         <div class="loading-overlay" *ngIf="isStudyPlanLoading">

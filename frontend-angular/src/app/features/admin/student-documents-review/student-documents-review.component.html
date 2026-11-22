@@ -1,0 +1,63 @@
+<div class="review-wrap">
+  <h1>Requisitos de ingreso</h1>
+  <p class="intro">Documentos que subieron los alumnos (analítico y otros). Apruébelos o rechácelos indicando el motivo.</p>
+
+  <div class="filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select [(ngModel)]="status" (selectionChange)="load()">
+        <mat-option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="search">
+      <mat-label>Buscar por nombre, legajo o DNI</mat-label>
+      <input matInput [(ngModel)]="searchTerm">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+  <div class="loading" *ngIf="isLoading"><mat-spinner diameter="40"></mat-spinner></div>
+
+  <div class="table-wrap" *ngIf="!isLoading && filteredItems.length > 0">
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>Alumno</th>
+          <th>Legajo</th>
+          <th>Documento</th>
+          <th>Enviado</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredItems">
+          <td>{{ item.studentName }}<small *ngIf="item.dni"> · DNI {{ item.dni }}</small></td>
+          <td>{{ item.legajoNumber || '—' }}</td>
+          <td>
+            <button mat-button type="button" (click)="download(item)" matTooltip="Descargar archivo">
+              <mat-icon>description</mat-icon> {{ item.document.requirementName }}
+            </button>
+          </td>
+          <td>{{ item.document.submittedAt | date:'dd/MM/yyyy' }}</td>
+          <td>
+            {{ statusLabel(item.document.status) }}
+            <small class="observation" *ngIf="item.document.observation">{{ item.document.observation }}</small>
+          </td>
+          <td class="actions">
+            <ng-container *ngIf="item.document.status === 'Submitted'">
+              <button mat-stroked-button color="primary" type="button" [disabled]="processingId !== null" (click)="approve(item)">Aprobar</button>
+              <button mat-stroked-button color="warn" type="button" [disabled]="processingId !== null" (click)="reject(item)">Rechazar</button>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty" *ngIf="!isLoading && filteredItems.length === 0">
+    <mat-icon>inbox</mat-icon>
+    <p>No hay documentos {{ status === 'Submitted' ? 'para revisar' : 'con ese estado' }}.</p>
+  </div>
+</div>

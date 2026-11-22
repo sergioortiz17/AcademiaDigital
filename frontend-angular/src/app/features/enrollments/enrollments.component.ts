@@ -46,9 +46,13 @@ export class EnrollmentsComponent {
   }
 
   printEnrollment(item: MyEnrollmentPeriodDto): void {
-    const courseList = item.courseNames.map(c => `<li>${c}</li>`).join('');
+    const esc = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, ch => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[ch]);
+    const courseList = item.courseNames.map(c => `<li>${esc(c)}</li>`).join('');
+    // Sin charset declarado el navegador lee el archivo como Latin-1 y rompe tildes y eñes.
     const html = `
-      <!DOCTYPE html><html><head>
+      <!DOCTYPE html><html lang="es"><head>
+      <meta charset="utf-8">
       <title>Constancia de inscripción</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 32px; max-width: 700px; margin: 0 auto; }
@@ -61,7 +65,7 @@ export class EnrollmentsComponent {
       <h3>Constancia de Inscripción</h3>
       <div class="meta">
         <p><strong>Año académico:</strong> ${item.academicYear} — ${this.semesterLabel(item.semester)}</p>
-        <p><strong>Turno:</strong> ${item.shift ?? '-'}</p>
+        <p><strong>Turno:</strong> ${esc(item.shift ?? '-')}</p>
         <p><strong>Fecha de inscripción:</strong> ${new Date(item.enrollmentDate).toLocaleDateString('es-AR')}</p>
       </div>
       <p><strong>Materias inscriptas:</strong></p>
@@ -69,7 +73,7 @@ export class EnrollmentsComponent {
       <div class="footer">Documento generado el ${new Date().toLocaleDateString('es-AR')}</div>
       </body></html>`;
 
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, '_blank');
     if (win) {

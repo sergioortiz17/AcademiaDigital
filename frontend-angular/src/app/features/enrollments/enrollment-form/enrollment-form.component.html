@@ -105,8 +105,9 @@
             <span class="semester-badge" [ngClass]="course.isAnnual ? 'badge-annual' : 'badge-quarter'">
               {{ semesterLabel(course) }}
             </span>
-            <span *ngIf="!isTildable(course)" class="block-hint">
-              Correlativa no regularizada o aprobada
+            <span *ngIf="!isTildable(course)" class="block-hint"
+              [class.block-hint--done]="course.eligibilityStatus === 'AlreadyEnrolled' || course.eligibilityStatus === 'AlreadyApproved'">
+              {{ blockReason(course) }}
             </span>
           </span>
           <mat-checkbox

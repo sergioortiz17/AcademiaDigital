@@ -81,17 +81,27 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
         return (await Details().SingleAsync(item => item.Id == gradebook.Id, ct), true);
     }
 
-    public async Task<IReadOnlyList<GradebookRosterRow>> GetRosterAsync(Gradebook gradebook, CancellationToken ct = default)
-        => await db.Enrollments.AsNoTracking()
-            .Where(enrollment => enrollment.CourseId == gradebook.CourseSection.CourseId
-                && enrollment.AcademicYear == gradebook.CourseSection.AcademicYear
-                && enrollment.Semester == gradebook.CourseSection.Semester
+    public Task<IReadOnlyList<GradebookRosterRow>> GetRosterAsync(Gradebook gradebook, CancellationToken ct = default)
+        => GetSectionRosterAsync(gradebook.CourseSection, ct);
+
+    public async Task<IReadOnlyList<GradebookRosterRow>> GetSectionRosterAsync(CourseSection section, CancellationToken ct = default)
+    {
+        // Valores locales: EF los parametriza en vez de traducir la navegación.
+        var sectionId = section.Id;
+        var courseId = section.CourseId;
+        var academicYear = section.AcademicYear;
+        var semester = section.Semester;
+        var divisionId = section.DivisionId;
+        return await db.Enrollments.AsNoTracking()
+            .Where(enrollment => enrollment.CourseId == courseId
+                && enrollment.AcademicYear == academicYear
+                && enrollment.Semester == semester
                 && enrollment.Status != EnrollmentStatus.Withdrawn
-                && (enrollment.CourseSectionId == gradebook.CourseSectionId
+                && (enrollment.CourseSectionId == sectionId
                     || (enrollment.CourseSectionId == null && db.StudentAcademicAssignments.Any(assignment =>
                         assignment.StudentCareerId == enrollment.StudentCareerId
-                        && assignment.DivisionId == gradebook.CourseSection.DivisionId
-                        && assignment.AcademicYear == gradebook.CourseSection.AcademicYear))))
+                        && assignment.DivisionId == divisionId
+                        && assignment.AcademicYear == academicYear))))
             .OrderBy(enrollment => enrollment.Student.User.LastName)
             .ThenBy(enrollment => enrollment.Student.User.Username)
             .Select(enrollment => new GradebookRosterRow(
@@ -101,6 +111,7 @@ public sealed class GradebookRepository(AppDbContext db) : IGradebookRepository
                 enrollment.Student.LegajoNumber,
                 enrollment.Student.User.Dni ?? string.Empty))
             .ToArrayAsync(ct);
+    }
 
     public async Task<IReadOnlyList<GradebookExamResultRow>> GetLatestExamResultsAsync(
         int courseId, int academicYear, IReadOnlyCollection<long> enrollmentIds, CancellationToken ct = default)

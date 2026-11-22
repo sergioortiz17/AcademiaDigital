@@ -41,6 +41,8 @@ public sealed class GradebookEvaluation
     // Marca una evaluación como recuperación: no es una instancia regular. No lleva peso propio;
     // por valor reemplaza a la instancia regular desaprobada más baja al calcular la condición.
     public bool IsRecovery { get; set; }
+    /// <summary>Fecha en que se tomó la instancia (la carga el docente; opcional).</summary>
+    public DateOnly? EvaluationDate { get; set; }
     public ICollection<GradeEntryRevision> GradeRevisions { get; set; } = [];
 }
 
@@ -58,6 +60,8 @@ public sealed class GradeEntryRevision
     public int Version { get; set; }
     public bool IsCurrent { get; set; } = true;
     public decimal Score { get; set; }
+    /// <summary>El alumno no se presentó: cuenta como nota 0 para calcular la condición.</summary>
+    public bool IsAbsent { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public long CreatedByUserId { get; set; }

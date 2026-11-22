@@ -13,6 +13,12 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
             && assignment.StartedOn <= onDate
             && (!assignment.EndedOn.HasValue || assignment.EndedOn.Value >= onDate), ct);
 
+    public async Task<DateOnly?> GetTeacherAssignmentStartAsync(long userId, int teachingPositionId, CancellationToken ct = default)
+        => await db.TeacherAssignments.AsNoTracking()
+            .Where(assignment => assignment.Teacher.UserId == userId && assignment.CourseSectionId == teachingPositionId)
+            .Select(assignment => (DateOnly?)assignment.StartedOn)
+            .MinAsync(ct);
+
     public Task<bool> CanTeacherManageSessionAsync(long userId, long sessionId, CancellationToken ct = default)
         => db.AttendanceSessions.AsNoTracking().AnyAsync(session => session.Id == sessionId
             && db.TeacherAssignments.Any(assignment =>
@@ -43,9 +49,11 @@ public sealed class AttendanceRepository(AppDbContext db) : IAttendanceRepositor
         int? courseId,
         int? commissionId,
         long? teacherUserId,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        int? courseSectionId = null)
     {
         var query = Details();
+        if (courseSectionId.HasValue) query = query.Where(session => session.CourseSectionId == courseSectionId);
         if (academicYear.HasValue) query = query.Where(session => session.CourseSection.AcademicYear == academicYear);
         if (courseId.HasValue) query = query.Where(session => session.CourseSection.CourseId == courseId);
         if (commissionId.HasValue) query = query.Where(session => session.CourseSection.DivisionId == commissionId);

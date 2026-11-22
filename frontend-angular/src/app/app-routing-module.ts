@@ -59,6 +59,10 @@ const routes: Routes = [
         loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule)
       },
       {
+        path: 'admission-documents',
+        loadChildren: () => import('./features/admission-documents/admission-documents.module').then(m => m.AdmissionDocumentsModule)
+      },
+      {
         path: 'admin',
         loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule)
       },

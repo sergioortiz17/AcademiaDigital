@@ -1,0 +1,58 @@
+<div class="admission-wrap">
+  <h1>Requisitos de ingreso</h1>
+  <p class="intro">
+    Suba aquí el analítico y los demás documentos que pide la institución (PDF, JPG o PNG de hasta 10 MB).
+    Administración los revisa y le avisa si falta algo.
+  </p>
+
+  <a *ngIf="preEnrollmentUrl" class="pre-enrollment-link" [href]="preEnrollmentUrl" target="_blank" rel="noopener">
+    <mat-icon>open_in_new</mat-icon> Ir a la prematriculación del ministerio
+  </a>
+
+  <div *ngIf="successMsg" class="msg msg--success" role="status"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+
+  <div class="loading" *ngIf="isLoading"><mat-spinner diameter="40"></mat-spinner></div>
+
+  <ng-container *ngIf="!isLoading">
+    <p class="progress" *ngIf="rows.length > 0">{{ approvedCount }} de {{ rows.length }} requisito(s) aprobados.</p>
+
+    <div class="empty" *ngIf="rows.length === 0">
+      <mat-icon>inventory_2</mat-icon>
+      <p>Administración todavía no cargó requisitos de ingreso para su carrera.</p>
+    </div>
+
+    <mat-card class="requirement" *ngFor="let row of rows">
+      <div class="requirement-head">
+        <div>
+          <h2>{{ row.requirement.name }} <span class="optional" *ngIf="!row.requirement.isRequired">(opcional)</span></h2>
+          <p class="description" *ngIf="row.requirement.description">{{ row.requirement.description }}</p>
+        </div>
+        <span class="status-chip" [ngClass]="'status-chip--' + (row.latest?.status ?? 'pending').toLowerCase()">
+          {{ statusLabel(row.latest?.status) }}
+        </span>
+      </div>
+
+      <div class="document" *ngIf="row.latest as doc">
+        <button mat-button type="button" (click)="download(doc)">
+          <mat-icon>description</mat-icon> {{ doc.originalFileName }}
+        </button>
+        <span class="sent-at">Enviado el {{ doc.submittedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        <p class="observation" *ngIf="doc.status === 'Rejected' && doc.observation">
+          <mat-icon>feedback</mat-icon> Motivo del rechazo: {{ doc.observation }}
+        </p>
+      </div>
+
+      <div class="actions" *ngIf="canUpload(row)">
+        <input #fileInput type="file" hidden accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+          (change)="onFileSelected(row, fileInput)">
+        <button mat-raised-button color="primary" type="button" [disabled]="uploadingId !== null" (click)="fileInput.click()">
+          <mat-spinner diameter="18" *ngIf="uploadingId === row.requirement.id"></mat-spinner>
+          <ng-container *ngIf="uploadingId !== row.requirement.id">
+            <mat-icon>upload_file</mat-icon> {{ row.latest ? 'Reemplazar archivo' : 'Subir archivo' }}
+          </ng-container>
+        </button>
+      </div>
+    </mat-card>
+  </ng-container>
+</div>

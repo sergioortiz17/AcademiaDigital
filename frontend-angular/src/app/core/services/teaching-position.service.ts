@@ -21,6 +21,11 @@ export interface TeachingPosition {
   teacherName: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Datos de la división, para filtrar por carrera, año de la carrera y turno. */
+  careerId?: number | null;
+  yearNumber?: number | null;
+  shift?: string | null;
+  isAnnual?: boolean;
 }
 
 export interface TeachingPositionFilters {

@@ -7,7 +7,11 @@ using AcademiaDigital.Domain.Services;
 namespace AcademiaDigital.Application.UseCases.Grades;
 
 public sealed record GradebookEvaluationInput(string Name, decimal WeightPercentage, decimal MaximumScore = 10m, bool IsRecovery = false);
-public sealed record GradeEntryInput(long EvaluationId, long EnrollmentId, decimal Score, string? Notes);
+public sealed record GradeEntryInput(long EvaluationId, long EnrollmentId, decimal Score, string? Notes, bool IsAbsent = false);
+/// <summary>Instancia de la planilla al editar su formato: sin Id es nueva; las que faltan se eliminan.</summary>
+public sealed record GradebookEvaluationLayoutInput(long? Id, string Name, decimal MaximumScore, bool IsRecovery, DateOnly? EvaluationDate);
+public sealed record UpdateGradebookEvaluationsCommand(
+    long GradebookId, IReadOnlyList<GradebookEvaluationLayoutInput> Evaluations, long ActorUserId, bool IsAdmin);
 public sealed record GetGradebooksQuery(int? AcademicYear, int? CourseId, int? DivisionId, long ActorUserId, bool IsAdmin);
 public sealed record GetGradebookQuery(long GradebookId, long ActorUserId, bool IsAdmin);
 public sealed record CreateGradebookCommand(
@@ -23,9 +27,11 @@ public sealed record PublishGradebookCommand(long GradebookId, long ActorUserId)
 public sealed record CloseGradebookCommand(long GradebookId, long ActorUserId);
 public sealed record ReopenGradebookCommand(long GradebookId, string Reason, long ActorUserId);
 public sealed record GetMyGradesQuery(long UserId, int? CourseId);
+public sealed record GetSectionStudentsQuery(int CourseSectionId, long ActorUserId, bool IsAdmin);
+public sealed record SectionStudentDto(long EnrollmentId, long StudentId, string StudentName, string LegajoNumber, string Dni);
 
-public sealed record GradebookEvaluationDto(long Id, string Name, decimal WeightPercentage, decimal MaximumScore, int DisplayOrder, bool IsRecovery);
-public sealed record GradeEntryDto(long? RevisionId, long EvaluationId, decimal? Score, int? Version, string? Notes, DateTime? UpdatedAt);
+public sealed record GradebookEvaluationDto(long Id, string Name, decimal WeightPercentage, decimal MaximumScore, int DisplayOrder, bool IsRecovery, DateOnly? EvaluationDate = null);
+public sealed record GradeEntryDto(long? RevisionId, long EvaluationId, decimal? Score, int? Version, string? Notes, DateTime? UpdatedAt, bool IsAbsent = false);
 public sealed record GradebookStudentDto(
     long EnrollmentId,
     long StudentId,
@@ -100,6 +106,27 @@ public sealed class GetGradebookQueryHandler(IGradebookRepository repository, Gr
     }
 }
 
+/// <summary>
+/// Alumnos de una comisión aunque todavía no tenga planilla de notas, para que el docente vea
+/// el listado apenas se le asigna la materia.
+/// </summary>
+public sealed class GetSectionStudentsQueryHandler(
+    ICourseSectionRepository positionRepository,
+    IGradebookRepository gradebookRepository)
+{
+    public async Task<IReadOnlyList<SectionStudentDto>> Handle(GetSectionStudentsQuery query, CancellationToken ct = default)
+    {
+        var position = await positionRepository.FindByIdAsync(query.CourseSectionId, ct)
+            ?? throw new KeyNotFoundException("Comisión no encontrada.");
+        if (!query.IsAdmin && !await gradebookRepository.CanTeacherManagePositionAsync(
+                query.ActorUserId, position.Id, ct))
+            throw new ForbiddenException("El docente no está asignado a esta materia y comisión.");
+        var roster = await gradebookRepository.GetSectionRosterAsync(position, ct);
+        return roster.Select(row => new SectionStudentDto(
+            row.EnrollmentId, row.StudentId, row.StudentName, row.LegajoNumber, row.Dni)).ToArray();
+    }
+}
+
 public sealed class CreateGradebookCommandHandler(
     ICourseSectionRepository positionRepository,
     IGradebookRepository gradebookRepository,
@@ -164,7 +191,9 @@ public sealed class SaveGradeEntriesCommandHandler(
                 throw new ArgumentException("Todas las notas deben pertenecer a la nómina de la planilla.");
             if (command.Grades.Any(item => !evaluations.ContainsKey(item.EvaluationId)))
                 throw new ArgumentException("Todas las notas deben pertenecer a una evaluación configurada.");
-            foreach (var input in command.Grades) policy.EnsureScoreIsValid(evaluations[input.EvaluationId], input.Score);
+            // Ausente se guarda como 0: así cuenta como instancia desaprobada al calcular la condición.
+            foreach (var input in command.Grades.Where(item => !item.IsAbsent))
+                policy.EnsureScoreIsValid(evaluations[input.EvaluationId], input.Score);
             var now = timeProvider.GetUtcNow().UtcDateTime;
             await repository.SaveGradeRevisionsAsync(command.Grades.Select(input => new GradeEntryRevision
             {
@@ -173,11 +202,70 @@ public sealed class SaveGradeEntriesCommandHandler(
                 EnrollmentId = input.EnrollmentId,
                 StudentId = rosterByEnrollment[input.EnrollmentId].StudentId,
                 IsCurrent = true,
-                Score = input.Score,
+                Score = input.IsAbsent ? 0m : input.Score,
+                IsAbsent = input.IsAbsent,
                 Notes = string.IsNullOrWhiteSpace(input.Notes) ? null : input.Notes.Trim(),
                 CreatedAt = now,
                 CreatedByUserId = command.ActorUserId
             }).ToArray(), transactionCt);
+            return true;
+        }, ct);
+        return await GradebookMapper.LoadDetail(repository, policy, command.GradebookId, ct);
+    }
+}
+
+/// <summary>
+/// Edita el formato de una planilla en borrador: nombre, nota máxima, recuperación y fecha de cada
+/// instancia; agrega y quita instancias (solo las que no tienen notas). Los pesos se reparten en partes iguales.
+/// </summary>
+public sealed class UpdateGradebookEvaluationsCommandHandler(
+    IGradebookRepository repository,
+    GradebookPolicy policy,
+    IUnitOfWork unitOfWork)
+{
+    public async Task<GradebookDetailDto> Handle(UpdateGradebookEvaluationsCommand command, CancellationToken ct = default)
+    {
+        if (command.Evaluations.Count == 0) throw new ArgumentException("La planilla necesita al menos una instancia.");
+        var requestedIds = command.Evaluations.Where(item => item.Id.HasValue).Select(item => item.Id!.Value).ToArray();
+        if (requestedIds.Distinct().Count() != requestedIds.Length)
+            throw new ArgumentException("Una instancia no puede aparecer dos veces.");
+
+        await unitOfWork.ExecuteInSerializableTransactionAsync(async transactionCt =>
+        {
+            await GradebookAuthorization.EnsureCanManage(repository, command.GradebookId, command.ActorUserId, command.IsAdmin, transactionCt);
+            var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
+                ?? throw new KeyNotFoundException("Planilla no encontrada.");
+            policy.EnsureEditable(gradebook);
+
+            var existing = gradebook.Evaluations.ToDictionary(item => item.Id);
+            if (requestedIds.Any(id => !existing.ContainsKey(id)))
+                throw new ArgumentException("Una de las instancias no pertenece a esta planilla.");
+            var removed = existing.Values.Where(item => !requestedIds.Contains(item.Id)).ToArray();
+            var withGrades = removed.Where(item => gradebook.GradeRevisions.Any(revision => revision.EvaluationId == item.Id)).ToArray();
+            if (withGrades.Length > 0)
+                throw new InvalidOperationException(
+                    $"No se puede quitar '{withGrades[0].Name}' porque ya tiene notas cargadas.");
+
+            // El orden se guarda en dos pasos: el índice único (planilla, orden) no admite intercambios en un solo paso.
+            var offset = existing.Count + command.Evaluations.Count + 1;
+            foreach (var item in existing.Values) item.DisplayOrder += offset;
+            foreach (var item in removed) gradebook.Evaluations.Remove(item);
+            await repository.SaveAsync(gradebook, transactionCt);
+
+            var order = 1;
+            foreach (var input in command.Evaluations)
+            {
+                var evaluation = input.Id.HasValue ? existing[input.Id.Value] : new GradebookEvaluation();
+                evaluation.Name = input.Name.Trim();
+                evaluation.MaximumScore = input.MaximumScore;
+                evaluation.IsRecovery = input.IsRecovery;
+                evaluation.EvaluationDate = input.EvaluationDate;
+                evaluation.DisplayOrder = order++;
+                if (!input.Id.HasValue) gradebook.Evaluations.Add(evaluation);
+            }
+            GradebookPolicy.DistributeEqualWeights(gradebook.Evaluations);
+            policy.ValidateEvaluations(gradebook.Evaluations.ToArray());
+            await repository.SaveAsync(gradebook, transactionCt);
             return true;
         }, ct);
         return await GradebookMapper.LoadDetail(repository, policy, command.GradebookId, ct);
@@ -479,8 +567,8 @@ internal static class GradebookMapper
         }).ToArray();
 
     private static GradebookEvaluationDto MapEvaluation(GradebookEvaluation item)
-        => new(item.Id, item.Name, item.WeightPercentage, item.MaximumScore, item.DisplayOrder, item.IsRecovery);
+        => new(item.Id, item.Name, item.WeightPercentage, item.MaximumScore, item.DisplayOrder, item.IsRecovery, item.EvaluationDate);
 
     private static GradeEntryDto MapGrade(GradeEntryRevision item)
-        => new(item.Id, item.EvaluationId, item.Score, item.Version, item.Notes, item.CreatedAt);
+        => new(item.Id, item.EvaluationId, item.Score, item.Version, item.Notes, item.CreatedAt, item.IsAbsent);
 }

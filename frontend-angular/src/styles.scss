@@ -546,3 +546,49 @@ html, body {
     min-height: 44px;
   }
 }
+
+/* ===== Calificaciones (fuera del componente para no pasar el presupuesto de 8 kB por estilo) ===== */
+.grades-wrap {
+  // !important: los estilos del componente llevan atributos de Angular y son más específicos.
+  .grades-table .score-col--invalid input {
+    border-color: #c62828 !important;
+    background: #fdecea !important;
+    color: #b71c1c !important;
+  }
+
+  .grades-help {
+    margin: 8px 0 0;
+    font-size: 0.85rem;
+    color: #536575;
+  }
+
+  .grades-help--error {
+    margin-left: 8px;
+    color: #c62828;
+    font-weight: 600;
+  }
+}
+
+/* Celular: filtros de Calificaciones en una columna y el buscador a todo el ancho. */
+@media (max-width: 600px) {
+  body .grades-wrap .toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  body .grades-wrap .filter-label {
+    padding-top: 8px;
+    font-size: 16px;
+  }
+
+  body .grades-wrap .search-control {
+    grid-column: auto;
+    width: 100%;
+    padding-top: 8px;
+  }
+
+  body .grades-wrap .gradebook-caption {
+    font-size: 16px;
+    padding-left: 0;
+  }
+}

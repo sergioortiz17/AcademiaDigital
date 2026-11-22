@@ -13,6 +13,8 @@ public interface IAttendanceRepository
 {
     Task<bool> CanTeacherManagePositionAsync(long userId, int teachingPositionId, DateOnly onDate, CancellationToken ct = default);
     Task<bool> CanTeacherManageSessionAsync(long userId, long sessionId, CancellationToken ct = default);
+    /// <summary>Fecha de inicio más temprana del docente en la comisión (null si nunca estuvo asignado).</summary>
+    Task<DateOnly?> GetTeacherAssignmentStartAsync(long userId, int teachingPositionId, CancellationToken ct = default);
     Task<bool> CanTeacherViewStudentAsync(
         long userId,
         long studentId,
@@ -24,7 +26,8 @@ public interface IAttendanceRepository
         int? courseId,
         int? commissionId,
         long? teacherUserId,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        int? courseSectionId = null);
     Task<AttendanceSession?> FindSessionAsync(long sessionId, CancellationToken ct = default);
     Task<AttendanceSession?> FindSessionForUpdateAsync(long sessionId, CancellationToken ct = default);
     Task<(AttendanceSession Session, bool Created)> CreateIdempotentAsync(AttendanceSession session, CancellationToken ct = default);

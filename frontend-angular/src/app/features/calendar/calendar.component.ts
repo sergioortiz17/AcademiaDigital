@@ -132,6 +132,30 @@ export class CalendarComponent implements OnInit {
     return false;
   }
 
+  /** Mismas reglas que el backend: Admin edita todo; el docente, solo lo que creó. */
+  canEditEvent(ev: CalendarEvent): boolean {
+    return ev.id > 0 && this.canDeleteEvent(ev);
+  }
+
+  editEvent(ev: CalendarEvent): void {
+    if (!this.canEditEvent(ev) || !this.userRole) return;
+    const dialogRef = this.dialog.open(CreateEventDialogComponent, {
+      panelClass: 'custom-dialog',
+      data: { role: this.userRole, event: ev } as CreateEventDialogData
+    });
+    dialogRef.afterClosed().subscribe((result: CreateEventRequest | null) => {
+      if (!result) return;
+      this.calendarService.updateEvent(ev.id, result).subscribe({
+        next: () => {
+          this.snackBar.open('Evento actualizado', 'OK', { duration: 3000 });
+          this.selectedDay = null;
+          this.loadMonth();
+        },
+        error: err => this.snackBar.open(err?.message || 'No se pudo actualizar el evento', 'OK', { duration: 4000 })
+      });
+    });
+  }
+
   openCreateDialog(preselectedDate?: string): void {
     if (!this.canCreateEvents || !this.userRole) return;
 

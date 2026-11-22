@@ -7,8 +7,28 @@ namespace AcademiaDigital.API.Controllers;
 [Route("api/v1/users")]
 public class UserController(
     GetProfileUseCase getProfileUseCase,
-    UpdateUserUseCase updateUserUseCase) : ApiControllerBase
+    UpdateUserUseCase updateUserUseCase,
+    ProfileContactUseCase profileContactUseCase) : ApiControllerBase
 {
+    // GET /api/v1/users/profile/contact  [alumno o docente] — null si la cuenta no tiene ficha
+    [HttpGet("profile/contact")]
+    public async Task<IActionResult> GetContact(CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("User is not logged on."));
+        return Ok(await profileContactUseCase.GetAsync(CurrentUserId.Value, ct));
+    }
+
+    // PUT /api/v1/users/profile/contact  [alumno o docente]
+    [HttpPut("profile/contact")]
+    public async Task<IActionResult> SaveContact([FromBody] ProfileContactRequest request, CancellationToken ct)
+    {
+        if (CurrentUserId is null) return Unauthorized(ApiResponse.Fail("User is not logged on."));
+        return Ok(await profileContactUseCase.SaveAsync(CurrentUserId.Value, new AcademiaDigital.Domain.Interfaces.Repositories.ProfileContactInfo(
+            request.AddressLine, request.City, request.Province, request.PostalCode,
+            request.EmergencyContactName, request.EmergencyContactRelationship, request.EmergencyContactPhone,
+            request.HealthInsurance), ct));
+    }
+
     // GET /api/v1/users/profile  [requiere sesión activa]
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile(CancellationToken ct)
@@ -102,6 +122,16 @@ public record UpdateProfileRequest(
     DateTime? BirthDate,
     string? PhoneCode,
     string? Phone);
+
+public record ProfileContactRequest(
+    string? AddressLine,
+    string? City,
+    string? Province,
+    string? PostalCode,
+    string? EmergencyContactName,
+    string? EmergencyContactRelationship,
+    string? EmergencyContactPhone,
+    string? HealthInsurance);
 
 public record UpdateUserRequest(
     long? UserId,

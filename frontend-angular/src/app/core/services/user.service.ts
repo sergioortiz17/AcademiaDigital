@@ -3,6 +3,18 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+/** Domicilio, contacto de emergencia y obra social (solo alumnos y docentes). */
+export interface ProfileContactInfo {
+  addressLine: string | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelationship: string | null;
+  emergencyContactPhone: string | null;
+  healthInsurance: string | null;
+}
+
 export interface ProfileData {
   success: boolean;
   id: number;
@@ -41,6 +53,15 @@ export class UserService {
 
   updateProfile(data: UpdateProfilePayload): Observable<ProfileData> {
     return this.http.put<ProfileData>(`${this.baseURL}v1/users/profile`, data);
+  }
+
+  /** null si la cuenta no tiene ficha de alumno ni de docente (por ejemplo, Admin). */
+  getContactInfo(): Observable<ProfileContactInfo | null> {
+    return this.http.get<ProfileContactInfo | null>(`${this.baseURL}v1/users/profile/contact`);
+  }
+
+  updateContactInfo(data: ProfileContactInfo): Observable<ProfileContactInfo> {
+    return this.http.put<ProfileContactInfo>(`${this.baseURL}v1/users/profile/contact`, data);
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<{ success: boolean; msg: string }> {

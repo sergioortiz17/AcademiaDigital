@@ -51,7 +51,7 @@
           <mat-form-field appearance="outline" class="filter-field">
             <mat-select id="teacher-course" aria-label="Materia" [(ngModel)]="selectedCourseKey" [disabled]="selectedDivisionId == null || professorCourses.length === 0" (selectionChange)="onCourseChange()">
               <mat-option *ngFor="let course of professorCourses; trackBy: trackProfessorCourse" [value]="course.key">
-                {{ course.courseCode }} · {{ course.courseName }} · {{ course.isAnnual ? 'Anual' : course.semester + '° cuatrimestre' }}{{ course.section ? ' · ' + course.section.academicYear : ' · Sin sección docente' }}
+                {{ professorCourseLabel(course) }}
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="selectedDivisionId == null">Elegí una división para ver las materias.</mat-hint>
@@ -125,7 +125,9 @@
             <mat-icon>edit</mat-icon>
             Editar otra vez
           </button>
-          <button class="edit-gradebook-button" type="button" aria-label="Editar planilla" title="Editar planilla" *ngIf="userRole !== UserRole.Admin || d.gradebook.status === 'Draft'" [disabled]="!canEditGradebook || editingEnabled" (click)="enableEditing()">
+          <!-- Solo en borrador: las notas ya se editan directo; el lápiz edita el formato (instancias y fechas). -->
+          <button class="edit-gradebook-button" type="button" aria-label="Editar instancias de la planilla"
+            matTooltip="Editar instancias y fechas" *ngIf="canEditGradebook" [disabled]="isSaving" (click)="openEditLayout()">
             <mat-icon>edit</mat-icon>
           </button>
         </div>
@@ -158,15 +160,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let row of filteredRows" [class.selected-row]="selectedStudent?.enrollmentId === row.enrollmentId" (click)="selectStudent(row)">
+              <tr *ngFor="let row of filteredRows" [class.selected-row]="selectedStudent?.enrollmentId === row.enrollmentId"
+                (click)="selectStudent(row)" (focusin)="selectStudent(row)">
                 <td class="student-col">{{ row.studentName }}</td>
                 <ng-container *ngFor="let group of evaluationGroups; trackBy: trackEvaluationGroup">
                   <ng-container *ngIf="group.evaluation as ev">
-                  <td class="date-col">
-                    {{ row.editableGrades[ev.id]?.updatedAt ? (row.editableGrades[ev.id]?.updatedAt | date:'dd/MM/yy') : '—' }}
-                  </td>
-                  <td class="score-col" (click)="$event.stopPropagation()">
-                    <input type="number" min="0" [max]="ev.maximumScore" step="0.01" [disabled]="!canEdit || isSubmitting" [ngModel]="row.editableGrades[ev.id]?.score" (ngModelChange)="updateGradeScore(row, ev.id, $event)">
+                  <td class="date-col">{{ evaluationDateLabel(ev) }}</td>
+                  <td class="score-col" [class.score-col--invalid]="isGradeInvalid(row, ev.id)">
+                    <input type="text" inputmode="decimal" list="grade-options" autocomplete="off"
+                      [attr.aria-label]="'Nota de ' + row.studentName + ' en ' + group.label"
+                      [title]="gradeHint(row, ev)"
+                      [disabled]="!canEdit || isSubmitting"
+                      [ngModel]="gradeText(row, ev.id)" (ngModelChange)="updateGradeText(row, ev, $event)">
                   </td>
                   </ng-container>
                 </ng-container>
@@ -197,6 +202,15 @@
             <p>No hay alumnos que coincidan con la búsqueda.</p>
           </div>
         </div>
+
+        <!-- Desplegable de notas: se puede elegir o escribir (también con coma, por ejemplo 7,5). -->
+        <datalist id="grade-options">
+          <option *ngFor="let option of gradeOptions" [value]="option">{{ option === 'A' ? 'Ausente' : option }}</option>
+        </datalist>
+        <p class="grades-help" *ngIf="canEdit">
+          Escriba la nota o elíjala de la lista (admite decimales con coma, por ejemplo 7,5). Use <strong>A</strong> si el alumno estuvo ausente.
+          <span *ngIf="invalidGradeCount > 0" class="grades-help--error">{{ invalidGradeCount }} nota(s) inválidas, marcadas en rojo.</span>
+        </p>
 
         <div class="student-detail" *ngIf="selectedStudent as s">
           <div class="detail-info">
@@ -291,8 +305,8 @@
                 <td class="student-col">{{ row.courseName }}</td>
                 <ng-container *ngFor="let group of studentEvaluationGroups; trackBy: trackEvaluationGroup">
                   <ng-container *ngIf="myGradeForEvaluation(row, group) as grade; else emptyStudentEvaluation">
-                    <td class="date-col">{{ grade.updatedAt ? (grade.updatedAt | date:'dd/MM/yy') : '—' }}</td>
-                    <td class="score-col">{{ grade.score ?? '—' }}</td>
+                    <td class="date-col">{{ grade.date }}</td>
+                    <td class="score-col">{{ grade.score }}</td>
                   </ng-container>
                   <ng-template #emptyStudentEvaluation><td></td><td></td></ng-template>
                 </ng-container>

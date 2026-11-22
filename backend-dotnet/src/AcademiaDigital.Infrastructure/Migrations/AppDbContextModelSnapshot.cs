@@ -2183,6 +2183,12 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("gradebook_id");
 
+                    b.Property<bool>("IsAbsent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_absent");
+
                     b.Property<bool>("IsCurrent")
                         .HasColumnType("boolean")
                         .HasColumnName("is_current");
@@ -2324,6 +2330,10 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("integer")
                         .HasColumnName("display_order");
+
+                    b.Property<DateOnly?>("EvaluationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("evaluation_date");
 
                     b.Property<long>("GradebookId")
                         .HasColumnType("bigint")
@@ -2557,6 +2567,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<DateTime>("EnrollmentDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("enrollment_date");
+
+                    b.Property<string>("HealthInsurance")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("health_insurance");
 
                     b.Property<string>("LegajoNumber")
                         .IsRequired()
@@ -3230,6 +3245,11 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("employee_number");
+
+                    b.Property<string>("HealthInsurance")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("health_insurance");
 
                     b.Property<DateTime>("HireDate")
                         .HasColumnType("timestamp with time zone")

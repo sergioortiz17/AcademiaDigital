@@ -49,11 +49,13 @@ export function toApiError(res: HttpErrorResponse): ApiError {
   const body = res.error;
   const fieldErrors = extractFieldErrors(body);
 
+  // Si hay errores por campo, son más útiles que el título genérico de validación
+  // ("Se produjo uno o más errores de validación").
   const message =
+    (fieldErrors.length > 0 ? [...new Set(fieldErrors)].join(' ') : undefined) ??
     firstString(body?.msg) ??
     firstString(body?.detail) ??
     firstString(body?.title) ??
-    fieldErrors[0] ??
     (typeof body === 'string' && body.trim() ? body : undefined) ??
     STATUS_MESSAGES[res.status] ??
     'Ocurrió un error inesperado.';

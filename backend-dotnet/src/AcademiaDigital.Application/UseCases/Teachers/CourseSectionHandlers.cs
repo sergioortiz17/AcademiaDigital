@@ -56,7 +56,11 @@ public sealed record CourseSectionDto(
     DateTime UpdatedAt,
     DateTime? DeactivatedAt,
     long? DeactivatedByUserId,
-    string? DeactivationReason);
+    string? DeactivationReason,
+    int? CareerId = null,
+    int? YearNumber = null,
+    string? Shift = null,
+    bool IsAnnual = false);
 
 public sealed class GetCourseSectionsQueryHandler(ICourseSectionRepository repository)
 {
@@ -238,5 +242,9 @@ internal static class CourseSectionMapper
         position.UpdatedAt,
         position.DeactivatedAt,
         position.DeactivatedByUserId,
-        position.DeactivationReason);
+        position.DeactivationReason,
+        division?.CareerId,
+        division?.YearNumber,
+        division?.Shift,
+        position.IsAnnual);
 }

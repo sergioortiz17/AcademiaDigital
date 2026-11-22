@@ -1,7 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EvaluationSetupDialogComponent } from './evaluation-setup-dialog.component';
+import { EvaluationSetupDialogComponent, distributeWeights } from './evaluation-setup-dialog.component';
 
-describe('Evaluation recovery weight', () => {
+describe('distributeWeights', () => {
+  it('splits 100% evenly and always adds up to exactly 100', () => {
+    expect(distributeWeights(4)).toEqual([25, 25, 25, 25]);
+    expect(distributeWeights(3)).toEqual([33.34, 33.33, 33.33]);
+    for (let n = 1; n <= 20; n++) {
+      const cents = distributeWeights(n).reduce((sum, w) => sum + Math.round(w * 100), 0);
+      expect(cents).toBe(10000);
+    }
+  });
+});
+
+describe('Evaluation setup without manual weights', () => {
   let component: EvaluationSetupDialogComponent;
   let close: ReturnType<typeof vi.fn>;
 
@@ -14,48 +25,29 @@ describe('Evaluation recovery weight', () => {
     );
   });
 
-  function toggle(index: number, recovery: boolean): void {
-    const evaluation = component.evaluations[index];
-    evaluation.isRecovery = recovery;
-    component.onRecoveryToggle(evaluation);
-  }
-
-  it('restores the original weight and valid total after unchecking recovery', () => {
-    toggle(0, true);
-    expect(component.evaluations[0].weightPercentage).toBe(0);
-    expect(component.totalWeight).toBe(66);
-    expect(component.isValid).toBe(false);
-    toggle(0, false);
-    expect(component.evaluations[0].weightPercentage).toBe(34);
-    expect(component.totalWeight).toBe(100);
-    expect(component.isValid).toBe(true);
+  it('gives recoveries no weight and splits the rest evenly', () => {
     component.confirm();
-    expect(close).toHaveBeenCalledWith(expect.arrayContaining([
-      expect.objectContaining({ weightPercentage: 34, isRecovery: false })
-    ]));
+    const sent = close.mock.calls[0][0] as { name: string; weightPercentage: number; isRecovery: boolean }[];
+    expect(sent.filter(e => e.isRecovery).every(e => e.weightPercentage === 0)).toBe(true);
+    expect(sent.filter(e => !e.isRecovery).map(e => e.weightPercentage)).toEqual([25, 25, 25, 25]);
   });
 
-  it('restores the latest edited value through repeated toggles', () => {
-    component.evaluations[0].weightPercentage = 25.5;
-    toggle(0, true);
-    toggle(0, false);
-    expect(component.evaluations[0].weightPercentage).toBe(25.5);
-    component.evaluations[0].weightPercentage = 40;
-    toggle(0, true);
-    toggle(0, false);
-    expect(component.evaluations[0].weightPercentage).toBe(40);
+  it('redistributes when an instance becomes a recovery', () => {
+    component.evaluations[0].isRecovery = true;
+    component.onRecoveryToggle();
+    expect(component.weights.filter(w => w > 0)).toEqual([33.34, 33.33, 33.33]);
   });
 
-  it('keeps weights associated with their row when another row is removed', () => {
-    toggle(1, true);
-    component.removeEvaluation(0);
-    toggle(0, false);
-    expect(component.evaluations[0].weightPercentage).toBe(33);
-  });
-
-  it('does not invent a previous weight for default recovery rows', () => {
-    toggle(3, false);
-    expect(component.evaluations[3].weightPercentage).toBe(0);
+  it('rejects duplicated names with a clear message', () => {
+    component.evaluations[1].name = '1era instancia';
     expect(component.isValid).toBe(false);
+    expect(component.validationMessage).toContain('mismo nombre');
+    component.confirm();
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  it('requires at least one regular instance', () => {
+    component.evaluations.forEach(e => (e.isRecovery = true));
+    expect(component.validationMessage).toContain('al menos una instancia');
   });
 });

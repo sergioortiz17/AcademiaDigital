@@ -14,6 +14,7 @@ import {
 } from '../../../core/services/attendance.service';
 import { ReopenSessionDialogComponent } from './reopen-session-dialog/reopen-session-dialog.component';
 import { JustifyAttendanceDialogComponent, JustifyAttendanceDialogResult } from './justify-attendance-dialog/justify-attendance-dialog.component';
+import { courseDisplayName } from '../../../core/utils/academic-labels';
 
 interface ReadonlyCell {
   recordId: number | null;
@@ -42,8 +43,8 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   careers: Career[] = [];
   selectedCareerId: number | null = null;
-  sedes = ['Sede Centro', 'Sede Norte'];
-  selectedSede: string | null = null;
+  // No hay sedes cargadas en el sistema: se filtra por turno, que sí tienen las divisiones.
+  selectedShift: string | null = null;
   planYears = [
     { value: 1, label: 'Primero' },
     { value: 2, label: 'Segundo' },
@@ -100,6 +101,45 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
     this.errorMsg = message;
     this.cdr.detectChanges();
     setTimeout(() => { this.errorMsg = ''; this.cdr.detectChanges(); }, 6000);
+  }
+
+  get shifts(): string[] {
+    return [...new Set(this.positions.map(p => p.shift).filter((s): s is string => !!s))].sort();
+  }
+
+  /** Comisiones que cumplen los filtros de carrera, año de la carrera y turno. */
+  get filteredPositions(): TeachingPosition[] {
+    return this.positions
+      .filter(p => this.selectedCareerId == null || p.careerId == null || p.careerId === this.selectedCareerId)
+      .filter(p => this.selectedPlanYear == null || p.yearNumber === this.selectedPlanYear)
+      .filter(p => this.selectedShift == null || p.shift === this.selectedShift)
+      .sort((a, b) => this.positionLabel(a).localeCompare(this.positionLabel(b), 'es'));
+  }
+
+  positionLabel(p: TeachingPosition): string {
+    const division = p.divisionName ? ` — ${p.divisionName}` : '';
+    return `${courseDisplayName(p.courseName, p.semester, p.isAnnual)}${division}`;
+  }
+
+  /** Si la materia elegida queda fuera de los filtros, se limpia la selección. */
+  onFiltersChange(): void {
+    if (this.selectedTeachingPositionId != null
+      && !this.filteredPositions.some(p => p.id === this.selectedTeachingPositionId)) {
+      this.selectedTeachingPositionId = null;
+      this.allSessions = [];
+      this.rows = [];
+      this.selectedEnrollmentId = null;
+    }
+    this.cdr.markForCheck();
+  }
+
+  get monthValue(): string {
+    return `${this.currentMonth.getFullYear()}-${String(this.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  set monthValue(value: string) {
+    const [year, month] = (value ?? '').split('-').map(Number);
+    if (year && month) this.currentMonth = new Date(year, month - 1, 1);
   }
 
   get selectedPosition(): TeachingPosition | undefined {
@@ -164,8 +204,7 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMsg = '';
     this.attendanceService.getSessions({
-      courseId: position.courseId,
-      divisionId: position.divisionId ?? undefined,
+      courseSectionId: position.id,
       academicYear: position.academicYear
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (sessions) => {
@@ -231,6 +270,7 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
 
   selectStudent(row: StudentRow): void {
     this.selectedEnrollmentId = row.enrollmentId;
+    this.cdr.markForCheck();
   }
 
   attendancePercentage(row: StudentRow): number | null {
@@ -318,7 +358,7 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
       lines.push([row.studentName, row.legajoNumber, ...cells, `${this.attendancePercentage(row) ?? ''}%`].join(','));
     }
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

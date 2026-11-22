@@ -12,6 +12,8 @@ export interface GradebookEvaluation {
   maximumScore: number;
   displayOrder: number;
   isRecovery: boolean;
+  /** Fecha en que se tomó la instancia (AAAA-MM-DD). */
+  evaluationDate?: string | null;
 }
 
 export interface GradeEntry {
@@ -21,6 +23,8 @@ export interface GradeEntry {
   version: number | null;
   notes: string | null;
   updatedAt: string | null;
+  /** El alumno estuvo ausente en la instancia (se guarda como 0). */
+  isAbsent?: boolean;
 }
 
 export interface GradebookStudent {
@@ -33,6 +37,14 @@ export interface GradebookStudent {
   average: number | null;
   resultStatus: string | null;
   latestExam: GradebookExam | null;
+}
+
+export interface SectionStudent {
+  enrollmentId: number;
+  studentId: number;
+  studentName: string;
+  legajoNumber: string;
+  dni: string;
 }
 
 export interface GradebookExam {
@@ -105,6 +117,16 @@ export interface SaveGradeEntryInput {
   enrollmentId: number;
   score: number;
   notes?: string | null;
+  isAbsent?: boolean;
+}
+
+/** Instancia al editar el formato de la planilla: sin id es nueva; las que no se envían se quitan. */
+export interface GradebookEvaluationLayoutInput {
+  id: number | null;
+  name: string;
+  maximumScore: number;
+  isRecovery: boolean;
+  evaluationDate: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -123,6 +145,11 @@ export class GradebookService {
     return this.http.get<Gradebook[]>(`${this.base}v1/gradebooks`, { params });
   }
 
+  /** Alumnos de una comisión aunque todavía no tenga planilla de notas. */
+  getSectionStudents(sectionId: number): Observable<SectionStudent[]> {
+    return this.http.get<SectionStudent[]>(`${this.base}v1/gradebooks/sections/${sectionId}/students`);
+  }
+
   getGradebook(id: number): Observable<GradebookDetail> {
     return this.http.get<GradebookDetail>(`${this.base}v1/gradebooks/${id}`);
   }
@@ -139,8 +166,9 @@ export class GradebookService {
     return this.http.put<GradebookDetail>(`${this.base}v1/gradebooks/${gradebookId}/grades`, { grades });
   }
 
-  addEvaluation(gradebookId: number, evaluation: CreateGradebookEvaluationInput): Observable<GradebookEvaluation> {
-    return this.http.post<GradebookEvaluation>(`${this.base}v1/gradebooks/${gradebookId}/evaluations`, evaluation);
+  /** Edita las instancias de una planilla en borrador; los pesos los reparte el servidor. */
+  updateEvaluations(gradebookId: number, evaluations: GradebookEvaluationLayoutInput[]): Observable<GradebookDetail> {
+    return this.http.put<GradebookDetail>(`${this.base}v1/gradebooks/${gradebookId}/evaluations`, { evaluations });
   }
 
   submitGradebook(id: number): Observable<Gradebook> {

@@ -116,7 +116,7 @@ export class StudyPlanImportComponent implements OnInit {
       '2,ENF-02,Morfofisiología Humana,1,1,FE,80,true,',
       '3,ENF-03,Práctica Profesionalizante I,1,2,PP,40,true,ENF-01;ENF-02'
     ];
-    const blob = new Blob([sampleRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + sampleRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;

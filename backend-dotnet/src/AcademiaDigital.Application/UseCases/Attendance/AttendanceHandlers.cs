@@ -11,7 +11,8 @@ public sealed record GetAttendanceSessionsQuery(
     int? CourseId,
     int? DivisionId,
     long ActorUserId,
-    bool IsAdmin);
+    bool IsAdmin,
+    int? CourseSectionId = null);
 public sealed record GetAttendanceSessionQuery(long SessionId, long ActorUserId, bool IsAdmin);
 public sealed record CreateAttendanceSessionCommand(
     string IdempotencyKey,
@@ -137,7 +138,8 @@ public sealed class GetAttendanceSessionsQueryHandler(IAttendanceRepository repo
                 query.CourseId,
                 query.DivisionId,
                 query.IsAdmin ? null : query.ActorUserId,
-                ct))
+                ct,
+                query.CourseSectionId))
             .Select(AttendanceMapper.MapSession)
             .ToArray();
 }
@@ -393,8 +395,15 @@ internal static class AttendanceAuthorization
         bool isAdmin,
         CancellationToken ct)
     {
-        if (!isAdmin && !await repository.CanTeacherManagePositionAsync(actorUserId, positionId, onDate, ct))
-            throw new ForbiddenException("El docente no está asignado a esta materia y comisión.");
+        if (isAdmin || await repository.CanTeacherManagePositionAsync(actorUserId, positionId, onDate, ct))
+            return;
+        // Si el docente sí está asignado pero desde una fecha posterior, se lo dice con la fecha.
+        var start = await repository.GetTeacherAssignmentStartAsync(actorUserId, positionId, ct);
+        if (start.HasValue && onDate < start.Value)
+            throw new ForbiddenException(
+                $"Solo puede cargar asistencia desde el inicio de su asignación ({start.Value:dd/MM/yyyy}). " +
+                "Si dictó clases antes, pida a Administración que corrija la fecha de inicio.");
+        throw new ForbiddenException("El docente no está asignado a esta materia y comisión.");
     }
 
     public static async Task EnsureCanManageSession(

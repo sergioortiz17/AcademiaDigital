@@ -13,7 +13,8 @@ export interface MenuItem {
 
 const MENU_ALUMNO: MenuItem[] = [
   { id: 'dashboard',    title: 'Inicio',         url: '/app/dashboard/default', icon: 'home' },
-  { id: 'courses',      title: 'Carreras',        url: '/app/courses',           icon: 'book' },
+  { id: 'courses',      title: 'Plan de estudios', url: '/app/courses',          icon: 'book' },
+  { id: 'admission-documents', title: 'Requisitos de ingreso', url: '/app/admission-documents', icon: 'upload_file' },
   { id: 'enrollments', title: 'Inscripciones', icon: 'assignment', children: [
     { id: 'course-enrollments', title: 'Insc. Materias', url: '/app/enrollments' },
     { id: 'exam-enrollments', title: 'Mesa de examen', url: '/app/enrollments/exam' }
@@ -29,7 +30,7 @@ const MENU_PROFESOR: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',          url: '/app/dashboard/default', icon: 'home' },
   { id: 'grades',      title: 'Cargar Calificaciones', url: '/app/grades',      icon: 'grade' },
   { id: 'attendance',  title: 'Cargar Asistencia', url: '/app/attendance',      icon: 'fact_check' },
-  { id: 'courses',     title: 'Carreras',         url: '/app/courses',           icon: 'book' },
+  { id: 'courses',     title: 'Plan de estudios', url: '/app/courses',           icon: 'book' },
   { id: 'calendar',    title: 'Calendario',       url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'certificates', title: 'Certificados',    url: '/app/certificates',      icon: 'military_tech' },
   { id: 'my-assignments', title: 'Mis asignaciones', url: '/app/teachers',       icon: 'assignment_ind' },
@@ -39,11 +40,11 @@ const MENU_PROFESOR: MenuItem[] = [
 
 const MENU_ADMIN: MenuItem[] = [
   { id: 'dashboard',   title: 'Inicio',            url: '/app/dashboard/default', icon: 'home' },
-  { id: 'courses',     title: 'Carreras',           url: '/app/courses',           icon: 'book' },
+  { id: 'courses',     title: 'Plan de estudios',   url: '/app/courses',           icon: 'book' },
   { id: 'calendar',    title: 'Calendario',         url: '/app/calendar',          icon: 'calendar_month' },
   { id: 'teachers',    title: 'Docentes',           icon: 'group',
     children: [
-      { id: 'teacher-list',       title: 'Legajos', url: '/app/admin/teachers',           icon: '' },
+      { id: 'teacher-list',       title: 'Listado de docentes', url: '/app/admin/teachers', icon: '' },
       { id: 'teaching-positions', title: 'Comisiones',  url: '/app/admin/teaching-positions',  icon: '' },
       { id: 'commissions',        title: 'Divisiones', url: '/app/admin/commissions',      icon: '' },
       { id: 'teacher-courses',    title: 'Asignar materia', url: '/app/admin/teacher-courses', icon: '' },
@@ -66,6 +67,7 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'admin-enrollments', title: 'Gestión de Inscripciones', url: '/app/admin/enrollments', icon: 'how_to_reg' },
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'applicants',  title: 'Aspirantes',         url: '/app/admin/applicants', icon: 'person_add' },
+  { id: 'student-documents', title: 'Requisitos de ingreso', url: '/app/admin/student-documents', icon: 'folder_shared' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
   { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },
   { id: 'approval-rules', title: 'Reglas de aprobación', url: '/app/admin/approval-rules', icon: 'rule' },

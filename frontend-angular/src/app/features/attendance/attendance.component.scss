@@ -359,3 +359,29 @@
     gap: 8px;
   }
 }
+
+.month-picker {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-transform: capitalize;
+  min-width: 150px;
+  cursor: pointer;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+}
+
+.status-legend {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #536575;
+
+  mat-icon {
+    vertical-align: middle;
+  }
+}

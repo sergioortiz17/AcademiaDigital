@@ -138,6 +138,8 @@ export interface AttendanceSessionFilters {
   academicYear?: number;
   courseId?: number;
   divisionId?: number;
+  /** La comisión exacta: separa, por ejemplo, la misma materia en 1.er y 2.º cuatrimestre. */
+  courseSectionId?: number;
 }
 
 export interface CreateAttendanceSessionRequest {
@@ -165,7 +167,9 @@ export class AttendanceService {
     let params = new HttpParams();
     if (filters.academicYear != null) params = params.set('academicYear', filters.academicYear);
     if (filters.courseId != null) params = params.set('courseId', filters.courseId);
-    if (filters.divisionId != null) params = params.set('divisionId', filters.divisionId);
+    // La API conserva `commissionId` como nombre público del filtro de división.
+    if (filters.divisionId != null) params = params.set('commissionId', filters.divisionId);
+    if (filters.courseSectionId != null) params = params.set('courseSectionId', filters.courseSectionId);
     return this.http.get<AttendanceSession[]>(`${this.base}v1/attendance/sessions`, { params });
   }
 

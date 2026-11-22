@@ -70,6 +70,10 @@ export interface TeacherAssignment {
   endedByUserId: number | null;
   createdAt: string;
   endedAt: string | null;
+  /** Carrera de la división de la comisión (null si la comisión no tiene división). */
+  careerId?: number | null;
+  /** La comisión dura todo el año (si no, es del cuatrimestre `semester`). */
+  isAnnual?: boolean;
 }
 
 export interface AssignCoursesRequest {

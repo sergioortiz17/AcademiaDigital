@@ -22,7 +22,7 @@
       </a>
       <a mat-card routerLink="/app/courses" class="quick-card quick-card--indigo">
         <mat-icon>menu_book</mat-icon>
-        <span>Carreras</span>
+        <span>Plan de estudios</span>
       </a>
       <a mat-card routerLink="/app/calendar" class="quick-card quick-card--amber">
         <mat-icon>calendar_today</mat-icon>
@@ -38,7 +38,7 @@
     <div class="quick-access-grid" *ngIf="role === UserRole.Profesor">
       <a mat-card routerLink="/app/grades" class="quick-card quick-card--teal">
         <mat-icon>grade</mat-icon>
-        <span>Cargar Notas</span>
+        <span>Cargar calificaciones</span>
       </a>
       <a mat-card routerLink="/app/enrollments" class="quick-card quick-card--blue">
         <mat-icon>assignment</mat-icon>
@@ -46,7 +46,7 @@
       </a>
       <a mat-card routerLink="/app/courses" class="quick-card quick-card--indigo">
         <mat-icon>menu_book</mat-icon>
-        <span>Carreras</span>
+        <span>Plan de estudios</span>
       </a>
       <a mat-card routerLink="/app/calendar" class="quick-card quick-card--amber">
         <mat-icon>calendar_today</mat-icon>
@@ -62,7 +62,7 @@
     <div class="quick-access-grid" *ngIf="role === UserRole.Admin">
       <a mat-card routerLink="/app/admin/users" class="quick-card quick-card--teal">
         <mat-icon>manage_accounts</mat-icon>
-        <span>Gestion de Usuarios</span>
+        <span>Gestión de Usuarios</span>
       </a>
       <a mat-card routerLink="/app/certificates" class="quick-card quick-card--blue">
         <mat-icon>military_tech</mat-icon>
@@ -100,7 +100,7 @@
 
     <mat-card class="alerts-card">
       <div class="alerts-header">
-        <h2>Proximos Eventos</h2>
+        <h2>Próximos eventos</h2>
         <mat-icon>notifications</mat-icon>
       </div>
       <mat-card-content class="alerts-content">
@@ -116,7 +116,7 @@
             </div>
           </div>
 
-          <p class="no-events" *ngIf="upcomingEvents.length === 0">No hay eventos proximos</p>
+          <p class="no-events" *ngIf="upcomingEvents.length === 0">No hay eventos próximos</p>
         </ng-container>
       </mat-card-content>
 

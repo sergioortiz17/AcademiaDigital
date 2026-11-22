@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { selectUser, selectUserRole } from '../../../store/account/account.selectors';
@@ -11,7 +11,7 @@ import { CalendarService, CalendarEvent } from '../../../core/services/calendar.
   styleUrls: ['./dashboard.component.scss'],
   standalone: false
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   today: Date = new Date();
   user$: Observable<UserModel | null>;
   userRole$: Observable<UserRole | null>;
@@ -31,7 +31,9 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private readonly store: Store,
-    private readonly calendarService: CalendarService
+    private readonly calendarService: CalendarService,
+    // La app no usa Zone.js: hay que avisar a Angular cuando llegan datos o avanza el carrusel.
+    private readonly cdr: ChangeDetectorRef
   ) {
     this.user$ = this.store.select(selectUser);
     this.userRole$ = this.store.select(selectUserRole) as Observable<UserRole | null>;
@@ -42,9 +44,14 @@ export class DashboardComponent implements OnInit {
     this.loadUpcomingEvents();
   }
 
+  ngOnDestroy(): void {
+    clearInterval(this.slideInterval);
+  }
+
   startCarousel(): void {
     this.slideInterval = setInterval(() => {
       this.activeSlide = (this.activeSlide + 1) % this.carouselItems.length;
+      this.cdr.markForCheck();
     }, 4000);
   }
 
@@ -79,10 +86,14 @@ export class DashboardComponent implements OnInit {
     this.loadingEvents = true;
     this.calendarService.getUpcoming().subscribe({
       next: res => {
-        this.upcomingEvents = res.data;
+        this.upcomingEvents = res?.data ?? [];
         this.loadingEvents = false;
+        this.cdr.markForCheck();
       },
-      error: () => this.loadingEvents = false
+      error: () => {
+        this.loadingEvents = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 }

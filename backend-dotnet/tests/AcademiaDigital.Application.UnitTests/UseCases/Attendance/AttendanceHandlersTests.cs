@@ -62,6 +62,27 @@ public sealed class AttendanceHandlersTests
     }
 
     [Fact]
+    public async Task Professor_is_told_the_assignment_start_date_when_the_day_is_earlier()
+    {
+        var positions = Substitute.For<ICourseSectionRepository>();
+        var attendance = Substitute.For<IAttendanceRepository>();
+        positions.FindByIdAsync(5, Arg.Any<CancellationToken>()).Returns(Position());
+        attendance.CanTeacherManagePositionAsync(88, 5, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(false);
+        attendance.GetTeacherAssignmentStartAsync(88, 5, Arg.Any<CancellationToken>())
+            .Returns(new DateOnly(2027, 3, 11));
+        var handler = new CreateAttendanceSessionCommandHandler(
+            positions, attendance, new AttendancePolicy(), new ImmediateUnitOfWork(),
+            new FixedTimeProvider(Now));
+
+        var error = await Assert.ThrowsAsync<ForbiddenException>(() => handler.Handle(new CreateAttendanceSessionCommand(
+            "attendance-request-003", 5, new DateOnly(2027, 3, 10),
+            new TimeOnly(8, 0), new TimeOnly(10, 0), AttendanceScope.ClassHour, 2, 88, false),
+            TestContext.Current.CancellationToken));
+
+        Assert.Contains("11/03/2027", error.Message);
+    }
+
+    [Fact]
     public async Task Bulk_load_rejects_an_enrollment_outside_the_session_roster()
     {
         var attendance = Substitute.For<IAttendanceRepository>();

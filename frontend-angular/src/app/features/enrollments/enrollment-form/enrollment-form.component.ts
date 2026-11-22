@@ -227,6 +227,16 @@ export class EnrollmentFormComponent implements OnInit {
     }
   }
 
+  /** Por qué no se puede tildar la materia: ya inscripta, ya aprobada o correlativa pendiente. */
+  blockReason(course: Subject): string {
+    switch (course.eligibilityStatus) {
+      case 'AlreadyEnrolled': return 'Ya está inscripto en esta materia';
+      case 'AlreadyApproved': return 'Materia aprobada';
+      case 'BlockedByStrictPrerequisite': return 'Correlativa no regularizada o aprobada';
+      default: return 'No disponible para inscripción';
+    }
+  }
+
   isTildable(course: Subject): boolean {
     return course.eligibilityStatus === 'Eligible' || course.eligibilityStatus === 'EligibleWithWarning';
   }

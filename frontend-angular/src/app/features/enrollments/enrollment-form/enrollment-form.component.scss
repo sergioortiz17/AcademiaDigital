@@ -388,6 +388,10 @@ mat-form-field{
   font-style: italic;
 }
 
+.subject-row .block-hint--done {
+  color: #2e7d32;
+}
+
 @media (max-width: 600px) {
     .enrollment-card {
         margin-top: 20px;
