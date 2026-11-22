@@ -24,13 +24,14 @@ public sealed class AttendanceController(
         [FromQuery] int? academicYear,
         [FromQuery] int? courseId,
         [FromQuery] int? commissionId,
+        [FromQuery] int? courseSectionId,
         CancellationToken ct = default)
     {
         var guard = RequireAdminOrProfessor();
         if (guard is not null) return guard;
         return Ok(await listHandler.Handle(new GetAttendanceSessionsQuery(
             academicYear, courseId, commissionId,
-            CurrentUserId!.Value, CurrentUserRole == UserRole.Admin), ct));
+            CurrentUserId!.Value, CurrentUserRole == UserRole.Admin, courseSectionId), ct));
     }
 
     [HttpGet("sessions/{id:long}")]

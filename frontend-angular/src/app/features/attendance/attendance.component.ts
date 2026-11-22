@@ -14,6 +14,7 @@ import {
   translateAttendanceError
 } from '../../core/services/attendance.service';
 import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
+import { courseDisplayName, mostFrequentId } from '../../core/utils/academic-labels';
 
 interface EditableCell {
   recordId: number | null;
@@ -36,7 +37,7 @@ interface StudentRow {
   standalone: false
 })
 export class AttendanceComponent implements OnInit {
-  // Carrera decorativo, consistente con Calificaciones.
+  // La carrera filtra las materias del docente; al entrar queda elegida la de sus comisiones.
   careers: Career[] = [];
   selectedCareerId: number | null = null;
 
@@ -64,25 +65,51 @@ export class AttendanceComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.careerService.getCareers().subscribe(careers => {
-      this.careers = careers;
-      this.selectedCareerId = careers[0]?.id ?? null;
-      this.cdr.detectChanges();
-    });
-
-    this.teacherService.getMyAssignments(false).subscribe({
-      next: (assignments) => {
+    forkJoin({
+      careers: this.careerService.getCareers().pipe(catchError(() => of([] as Career[]))),
+      assignments: this.teacherService.getMyAssignments(false)
+    }).subscribe({
+      next: ({ careers, assignments }) => {
+        this.careers = careers;
         this.assignments = assignments;
-        if (assignments.length === 1) {
-          this.selectedTeachingPositionId = assignments[0].courseSectionId;
-          this.onPositionChange();
-        }
+        // Carrera del docente (la de la mayoría de sus comisiones); si no se sabe, la primera.
+        this.selectedCareerId = mostFrequentId(assignments.map(a => a.careerId)) ?? careers[0]?.id ?? null;
+        this.selectFirstAssignment();
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.showError(err.message || 'No se pudieron cargar tus materias asignadas.');
       }
     });
+  }
+
+  /** Materias del docente en la carrera elegida (las comisiones sin carrera se muestran siempre). */
+  get careerAssignments(): TeacherAssignment[] {
+    return this.assignments
+      .filter(a => this.selectedCareerId == null || a.careerId == null || a.careerId === this.selectedCareerId)
+      .sort((a, b) => this.assignmentLabel(a).localeCompare(this.assignmentLabel(b), 'es'));
+  }
+
+  assignmentLabel(a: TeacherAssignment): string {
+    const division = a.divisionName ? ` — ${a.divisionName}` : '';
+    return `${courseDisplayName(a.courseName, a.semester, a.isAnnual)}${division}`;
+  }
+
+  onCareerChange(): void {
+    if (!this.careerAssignments.some(a => a.courseSectionId === this.selectedTeachingPositionId)) {
+      this.selectedTeachingPositionId = null;
+      this.allSessions = [];
+      this.rows = [];
+      this.selectFirstAssignment();
+    }
+  }
+
+  /** Al entrar el docente ya ve su primera materia, sin tener que elegirla. */
+  private selectFirstAssignment(): void {
+    const first = this.careerAssignments[0];
+    if (!first || this.selectedTeachingPositionId != null) return;
+    this.selectedTeachingPositionId = first.courseSectionId;
+    this.onPositionChange();
   }
 
   private showError(message: string): void {
@@ -145,9 +172,9 @@ export class AttendanceComponent implements OnInit {
 
     this.isLoading = true;
     this.errorMsg = '';
+    // Por comisión: la misma materia en otro cuatrimestre o división tiene su propia asistencia.
     this.attendanceService.getSessions({
-      courseId: assignment.courseId,
-      divisionId: assignment.divisionId ?? undefined,
+      courseSectionId: assignment.courseSectionId,
       academicYear: assignment.academicYear
     }).subscribe({
       next: (sessions) => {
@@ -211,8 +238,19 @@ export class AttendanceComponent implements OnInit {
     this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
   }
 
+  /** Elegir mes y año directamente (input type="month" devuelve "AAAA-MM"). */
+  get monthValue(): string {
+    return `${this.currentMonth.getFullYear()}-${String(this.currentMonth.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  set monthValue(value: string) {
+    const [year, month] = (value ?? '').split('-').map(Number);
+    if (year && month) this.currentMonth = new Date(year, month - 1, 1);
+  }
+
   selectStudent(row: StudentRow): void {
     this.selectedEnrollmentId = row.enrollmentId;
+    this.cdr.markForCheck();
   }
 
   attendancePercentage(row: StudentRow): number | null {
@@ -236,7 +274,7 @@ export class AttendanceComponent implements OnInit {
     const dialogRef = this.dialog.open(NewSessionDialogComponent, {
       width: '480px',
       disableClose: true,
-      data: { courseSectionId: assignment.courseSectionId }
+      data: { courseSectionId: assignment.courseSectionId, assignmentStartedOn: assignment.startedOn }
     });
 
     dialogRef.afterClosed().subscribe((request) => {

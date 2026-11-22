@@ -44,7 +44,8 @@ public sealed record TeacherAssignmentDto(
     long? EndedByUserId,
     DateTime CreatedAt,
     DateTime? EndedAt,
-    int? CareerId = null);
+    int? CareerId = null,
+    bool IsAnnual = false);
 
 public sealed class GetTeacherAssignmentsQueryHandler(
     ITeacherRepository teacherRepository,
@@ -171,5 +172,6 @@ internal static class TeacherAssignmentMapper
         assignment.EndedByUserId,
         assignment.CreatedAt,
         assignment.EndedAt,
-        assignment.CourseSection.Division?.CareerId);
+        assignment.CourseSection.Division?.CareerId,
+        assignment.CourseSection.IsAnnual);
 }

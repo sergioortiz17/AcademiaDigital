@@ -261,3 +261,24 @@
 
   mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
+
+.month-picker {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  min-width: 150px;
+  cursor: pointer;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+}
+
+.status-legend {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #536575;
+}

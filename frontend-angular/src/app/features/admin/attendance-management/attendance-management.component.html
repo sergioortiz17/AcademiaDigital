@@ -12,40 +12,35 @@
     <div class="filters-row">
       <mat-form-field appearance="outline" class="filter-field filter-field--small">
         <mat-label>Carrera</mat-label>
-        <mat-select [(ngModel)]="selectedCareerId">
+        <mat-select [(ngModel)]="selectedCareerId" (selectionChange)="onFiltersChange()">
           <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field filter-field--small">
-        <mat-label>Sede</mat-label>
-        <mat-select [(ngModel)]="selectedSede">
-          <mat-option *ngFor="let s of sedes" [value]="s">{{ s }}</mat-option>
+        <mat-label>Año de la carrera</mat-label>
+        <mat-select [(ngModel)]="selectedPlanYear" (selectionChange)="onFiltersChange()">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let y of planYears" [value]="y.value">{{ y.label }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field filter-field--small">
-        <mat-label>Año</mat-label>
-        <mat-select [(ngModel)]="selectedPlanYear">
-          <mat-select-trigger>
-            <mat-chip-set *ngIf="selectedPlanYear">
-              <mat-chip removable (removed)="selectedPlanYear = null">
-                {{ planYears[selectedPlanYear - 1]?.label }}
-                <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
-              </mat-chip>
-            </mat-chip-set>
-          </mat-select-trigger>
-          <mat-option *ngFor="let y of planYears" [value]="y.value">{{ y.label }}</mat-option>
+        <mat-label>Turno</mat-label>
+        <mat-select [(ngModel)]="selectedShift" (selectionChange)="onFiltersChange()">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let s of shifts" [value]="s">{{ s }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Materia</mat-label>
         <mat-select [(ngModel)]="selectedTeachingPositionId" (selectionChange)="onPositionChange()">
-          <mat-option *ngFor="let p of positions" [value]="p.id">
-            {{ p.courseName }} — {{ p.divisionName }}{{ p.divisionCode ? ' [' + p.divisionCode + ']' : '' }} ({{ p.academicYear }})
+          <mat-option *ngFor="let p of filteredPositions" [value]="p.id">
+            {{ positionLabel(p) }} ({{ p.academicYear }})
           </mat-option>
         </mat-select>
+        <mat-hint *ngIf="positions.length > 0 && filteredPositions.length === 0">No hay materias con esos filtros.</mat-hint>
       </mat-form-field>
     </div>
 
@@ -54,7 +49,7 @@
         <button mat-icon-button (click)="prevMonth()" matTooltip="Mes anterior">
           <mat-icon>chevron_left</mat-icon>
         </button>
-        <span class="month-label">{{ monthLabel() }}</span>
+        <input type="month" class="month-picker" [(ngModel)]="monthValue" aria-label="Mes y año" matTooltip="Elegir mes y año">
         <button mat-icon-button (click)="nextMonth()" matTooltip="Mes siguiente">
           <mat-icon>chevron_right</mat-icon>
         </button>
@@ -71,6 +66,10 @@
     </div>
 
     <ng-container *ngIf="!isLoading">
+
+      <p class="status-legend" *ngIf="visibleSessions.length > 0">
+        <strong>P</strong> Presente · <strong>T</strong> Tarde · <strong>A</strong> Ausente · <strong>J</strong> Justificada
+      </p>
 
       <div class="table-wrap" *ngIf="visibleSessions.length > 0">
         <table class="attendance-table">
