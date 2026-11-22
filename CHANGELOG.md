@@ -4,6 +4,24 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.12.0] - 2026-11-22
+
+Cambios grandes de la reunión con Secretaría y login con Google.
+
+### Agregado
+
+- **Iniciar sesión con Google**: solo para cuentas que ya existen con ese correo (aprobadas y activas); no crea cuentas. Se activa configurando `Authentication:Google:ClientId`.
+- **Reportes y Excel**: listados de alumnos, egresados, libres, bajas y aspirantes con todas sus columnas, filtrados por carrera y fechas.
+- **Importar desde Excel**: prematriculados (quedan como aspirantes pendientes) y notas de una planilla (se cargan para revisar antes de guardar).
+- **Acciones masivas**: egresar varios alumnos con fecha y acto administrativo; inscribir a toda una división en las materias de su año y cuatrimestre.
+- **Analíticos**: datos personales y académicos con todas las materias del plan, libro matriz y folio del alumno y libro/folio del acta de cada mesa; vista para imprimir o guardar como PDF (formato provisorio).
+- **Mesas de examen automáticas**: propuesta de fechas en días hábiles sin feriados, sin dos materias del mismo año el mismo día y con correlativas antes; tribunal sugerido; se ajusta y se confirma.
+- **Roles de gestión**: Secretaría, Coordinación, Preceptoría y Cooperadora, con permisos por área (propuesta a validar con Dirección).
+
+### Cambiado
+
+- **Esquema de evaluación**: mínimo de 4 instancias en materias anuales y 2 en cuatrimestrales; formato sugerido según la materia; recuperatorios habilitados solo para quien desaprobó o faltó; condición y promedio en el panel del alumno.
+
 ## [1.11.0] - 2026-11-21
 
 Correcciones y mejoras que surgieron de las pruebas por rol (docente, estudiante y administrador) de la versión 1.10.0.
