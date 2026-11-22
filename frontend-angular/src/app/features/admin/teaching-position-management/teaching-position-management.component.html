@@ -101,8 +101,12 @@
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef>Estado</th>
           <td mat-cell *matCellDef="let p">
-            <span class="status-chip" [ngClass]="p.isVacant ? 'status-chip--vacant' : 'status-chip--occupied'">
-              {{ p.isVacant ? 'Vacante' : 'Ocupado' }}
+            <!-- Con docente: cupos libres (el docente ya se ve en su columna). Sin docente: Vacante. -->
+            <span class="status-chip status-chip--vacant" *ngIf="p.isVacant">Vacante</span>
+            <span class="status-chip" *ngIf="!p.isVacant"
+              [ngClass]="freeSeats(p) > 0 ? 'status-chip--occupied' : 'status-chip--full'"
+              [matTooltip]="(p.enrolledCount ?? 0) + ' inscripto(s) de ' + p.maxStudents">
+              {{ freeSeats(p) > 0 ? freeSeats(p) + (freeSeats(p) === 1 ? ' cupo libre' : ' cupos libres') : 'Sin cupos' }}
             </span>
             <span class="status-chip status-chip--inactive" *ngIf="!p.isActive">Inactivo</span>
           </td>

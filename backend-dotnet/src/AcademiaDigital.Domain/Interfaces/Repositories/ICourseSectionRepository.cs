@@ -26,6 +26,14 @@ public interface ICourseSectionRepository
     Task<IReadOnlyList<CourseSection>> FindActiveByCourseTermAsync(
         int courseId, int academicYear, int semester, bool isAnnual, CancellationToken ct = default);
 
+    /// <summary>
+    /// Alumnos inscriptos (no dados de baja) por comisión, con la misma regla que el listado de
+    /// alumnos de la comisión: inscripción vinculada a la comisión, o sin vincular y con el alumno
+    /// asignado a la división de la comisión en ese ciclo. Clave: id de la comisión.
+    /// </summary>
+    Task<IReadOnlyDictionary<int, int>> CountEnrolledAsync(
+        IReadOnlyCollection<CourseSection> sections, CancellationToken ct = default);
+
     Task<CourseSection> CreateAsync(CourseSection position, CancellationToken ct = default);
     Task<CourseSection> UpdateAsync(CourseSection position, CancellationToken ct = default);
     Task DeactivateAsync(CourseSection position, CancellationToken ct = default);

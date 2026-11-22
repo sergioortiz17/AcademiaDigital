@@ -26,6 +26,8 @@ export interface TeachingPosition {
   yearNumber?: number | null;
   shift?: string | null;
   isAnnual?: boolean;
+  /** Alumnos inscriptos en la comisión (para los cupos libres). */
+  enrolledCount?: number;
 }
 
 export interface TeachingPositionFilters {

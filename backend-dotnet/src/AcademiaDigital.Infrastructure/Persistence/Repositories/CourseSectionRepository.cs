@@ -88,4 +88,29 @@ public class CourseSectionRepository(AppDbContext db) : ICourseSectionRepository
             .Include(position => position.Course)
             .Include(position => position.Division)
             .Include(position => position.Teacher).ThenInclude(teacher => teacher!.User);
+
+    public async Task<IReadOnlyDictionary<int, int>> CountEnrolledAsync(
+        IReadOnlyCollection<CourseSection> sections, CancellationToken ct = default)
+    {
+        if (sections.Count == 0) return new Dictionary<int, int>();
+        var courseIds = sections.Select(s => s.CourseId).Distinct().ToArray();
+        var years = sections.Select(s => s.AcademicYear).Distinct().ToArray();
+        // Una sola consulta por tabla y el cruce en memoria (las cantidades son chicas).
+        var enrollments = await db.Enrollments.AsNoTracking()
+            .Where(e => courseIds.Contains(e.CourseId) && years.Contains(e.AcademicYear)
+                && e.Status != EnrollmentStatus.Withdrawn)
+            .Select(e => new { e.CourseId, e.AcademicYear, e.Semester, e.CourseSectionId, e.StudentCareerId })
+            .ToListAsync(ct);
+        var assignments = (await db.StudentAcademicAssignments.AsNoTracking()
+                .Where(a => years.Contains(a.AcademicYear) && a.DivisionId != null)
+                .Select(a => new { a.StudentCareerId, a.DivisionId, a.AcademicYear })
+                .ToListAsync(ct))
+            .Select(a => (a.StudentCareerId, a.DivisionId, a.AcademicYear))
+            .ToHashSet();
+        return sections.ToDictionary(section => section.Id, section => enrollments.Count(e =>
+            e.CourseId == section.CourseId && e.AcademicYear == section.AcademicYear && e.Semester == section.Semester
+            && (e.CourseSectionId == section.Id
+                || (e.CourseSectionId == null
+                    && assignments.Contains((e.StudentCareerId, section.DivisionId, section.AcademicYear))))));
+    }
 }
