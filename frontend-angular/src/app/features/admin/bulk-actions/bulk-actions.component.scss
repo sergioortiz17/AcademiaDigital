@@ -1,0 +1,13 @@
+.bulk-wrap { padding: 16px; h1 { color: #0d4f86; margin: 0 0 12px; } }
+.card { padding: 16px; margin-bottom: 16px; h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 1.15rem; color: #20384e; } }
+.intro { color: #536575; margin: 0 0 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; mat-form-field { flex: 0 1 220px; } .grow { flex: 1 1 280px; } }
+.list { max-height: 360px; overflow-y: auto; border: 1px solid #e3e8ed; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+.select-all { font-weight: 600; margin-bottom: 4px; }
+.item small { color: #6b7a88; }
+.empty { color: #6b7a88; }
+.loading { display: flex; justify-content: center; padding: 16px; }
+.result { font-weight: 600; color: #1e6b34; margin: 12px 0 4px; }
+.courses { color: #536575; margin: 0; }
+.failures { color: #9d3222; }
+.msg--error { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background: #fff3f0; color: #9d3222; margin-bottom: 12px; }

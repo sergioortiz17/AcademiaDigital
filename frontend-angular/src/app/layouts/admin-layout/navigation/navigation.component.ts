@@ -68,6 +68,7 @@ const MENU_ADMIN: MenuItem[] = [
   { id: 'students',    title: 'Alumnos',            url: '/app/admin/students-condition', icon: 'groups' },
   { id: 'applicants',  title: 'Aspirantes',         url: '/app/admin/applicants', icon: 'person_add' },
   { id: 'student-documents', title: 'Requisitos de ingreso', url: '/app/admin/student-documents', icon: 'folder_shared' },
+  { id: 'bulk-actions', title: 'Acciones masivas',  url: '/app/admin/bulk-actions', icon: 'library_add_check' },
   { id: 'reports',     title: 'Reportes y Excel',   url: '/app/admin/reports',     icon: 'table_view' },
   { id: 'users',       title: 'Gestión de Usuarios', url: '/app/admin/users',     icon: 'group' },
   { id: 'careers-admin', title: 'Gestión de Carreras', url: '/app/admin/careers',   icon: 'school' },

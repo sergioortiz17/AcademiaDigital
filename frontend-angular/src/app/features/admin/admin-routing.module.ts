@@ -10,6 +10,7 @@ import { TeacherManagementComponent } from './teacher-management/teacher-managem
 import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/teacher-course-assignment.component';
 import { StudentDocumentsReviewComponent } from './student-documents-review/student-documents-review.component';
 import { ReportsComponent } from './reports/reports.component';
+import { BulkActionsComponent } from './bulk-actions/bulk-actions.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
@@ -73,6 +74,12 @@ const routes: Routes = [
   {
     path: 'reports',
     component: ReportsComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'bulk-actions',
+    component: BulkActionsComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },
