@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Commission, UpsertCommissionRequest } from '../../../../core/services/commission.service';
+import { Campus } from '../../../../core/services/career.service';
 
 export interface CommissionFormDialogData {
   commission: Commission | null;
@@ -8,6 +9,8 @@ export interface CommissionFormDialogData {
   presetAcademicYear?: number | null;
   presetYearNumber?: number | null;
   presetShift?: string | null;
+  /** Sedes activas para elegir dónde se dicta la división. */
+  campuses?: Campus[];
 }
 
 /**
@@ -44,18 +47,24 @@ export class CommissionFormDialogComponent {
   academicYear = new Date().getFullYear();
   yearNumber = 1;
   shift = 'Mañana';
+  campusId: number | null = null;
+  campuses: Campus[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<CommissionFormDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CommissionFormDialogData
   ) {
     this.isEdit = !!data.commission;
+    this.campuses = data.campuses ?? [];
+    // Con una sola sede, la división nueva queda en esa sede.
+    if (!data.commission && this.campuses.length === 1) this.campusId = this.campuses[0].id;
     if (data.commission) {
       this.code = data.commission.code;
       this.name = data.commission.name;
       this.academicYear = data.commission.academicYear;
       this.yearNumber = data.commission.yearNumber;
       this.shift = data.commission.shift;
+      this.campusId = data.commission.campusId ?? null;
     } else if (data.presetAcademicYear) {
       this.academicYear = data.presetAcademicYear;
     }
@@ -88,7 +97,8 @@ export class CommissionFormDialogComponent {
       name: this.name.trim(),
       academicYear: this.academicYear,
       yearNumber: this.yearNumber,
-      shift: this.shift
+      shift: this.shift,
+      campusId: this.campusId
     };
     this.dialogRef.close(request);
   }

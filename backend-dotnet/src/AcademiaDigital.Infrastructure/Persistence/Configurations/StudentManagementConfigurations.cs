@@ -34,6 +34,19 @@ public class DivisionConfiguration : IEntityTypeConfiguration<Division>
         // equivocada (Parte 10 - doble mitigación con el frontend que además muestra el Code).
         b.HasIndex(x => new { x.CareerId, x.AcademicYear, x.Name }).IsUnique();
         b.HasOne(x => x.Career).WithMany().HasForeignKey(x => x.CareerId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Campus).WithMany().HasForeignKey(x => x.CampusId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class CampusConfiguration : IEntityTypeConfiguration<Campus>
+{
+    public void Configure(EntityTypeBuilder<Campus> b)
+    {
+        b.ToTable("Campuses");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+        b.Property(x => x.Address).HasMaxLength(200);
+        b.HasIndex(x => x.Name).IsUnique();
     }
 }
 

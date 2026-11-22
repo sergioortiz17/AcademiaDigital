@@ -29,6 +29,15 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
+      <mat-label>Sede</mat-label>
+      <mat-select [(ngModel)]="campusId">
+        <mat-option [value]="null">Sin sede</mat-option>
+        <mat-option *ngFor="let c of campuses" [value]="c.id">{{ c.name }}</mat-option>
+      </mat-select>
+      <mat-hint *ngIf="campuses.length === 0">Las sedes se cargan en Gestión de Carreras.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
       <mat-label>Turno</mat-label>
       <mat-select [(ngModel)]="shift">
         <mat-option *ngFor="let s of shifts" [value]="s.value">{{ s.label }}</mat-option>

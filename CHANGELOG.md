@@ -6,6 +6,12 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [1.14.0] - 2026-11-22
 
+### Agregado
+
+- **Sedes**: en Gestión de Carreras hay una sección "Sedes" para dar de alta, editar y dar de baja las escuelas del instituto (nombre y dirección). Cada división se asigna a una sede desde Docentes → Divisiones, y la tabla de divisiones muestra la sede. Una sede con divisiones activas no se puede dar de baja.
+- **Asignar materia**: desplegable "Sede" antes de la carrera. Al elegir una sede se ven solo sus divisiones y comisiones; "Todas las sedes" muestra todo. Las divisiones creadas antes de las sedes quedan "Sin sede" y se ven con "Todas las sedes".
+- **Base de datos**: migración `AddCampuses` (tabla de sedes y columna opcional de sede en las divisiones). Solo agrega; no modifica datos existentes.
+
 ### Cambiado
 
 - **Calificaciones**: el docente carga y corrige notas en cualquier estado de la planilla (borrador, enviada, aprobada o publicada) y la planilla conserva su estado; cada cambio queda en el historial de revisiones. Solo una planilla cerrada queda bloqueada (Secretaría puede reabrirla).

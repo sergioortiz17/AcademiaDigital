@@ -799,6 +799,37 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.ToTable("AttendanceSessionReopenings", (string)null);
                 });
 
+            modelBuilder.Entity("AcademiaDigital.Domain.Entities.Campus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Campuses", (string)null);
+                });
+
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Career", b =>
                 {
                     b.Property<int>("Id")
@@ -1581,6 +1612,9 @@ namespace AcademiaDigital.Infrastructure.Migrations
                     b.Property<int>("AcademicYear")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CampusId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CareerId")
                         .HasColumnType("integer");
 
@@ -1609,6 +1643,8 @@ namespace AcademiaDigital.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CampusId");
 
                     b.HasIndex("CareerId", "AcademicYear", "Code")
                         .IsUnique();
@@ -4048,11 +4084,18 @@ namespace AcademiaDigital.Infrastructure.Migrations
 
             modelBuilder.Entity("AcademiaDigital.Domain.Entities.Division", b =>
                 {
+                    b.HasOne("AcademiaDigital.Domain.Entities.Campus", "Campus")
+                        .WithMany()
+                        .HasForeignKey("CampusId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("AcademiaDigital.Domain.Entities.Career", "Career")
                         .WithMany()
                         .HasForeignKey("CareerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Campus");
 
                     b.Navigation("Career");
                 });

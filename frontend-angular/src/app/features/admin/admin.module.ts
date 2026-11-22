@@ -37,6 +37,7 @@ import { ApprovalRulesComponent } from './approval-rules/approval-rules.componen
 import { CareerCreateComponent } from './career-create/career-create.component';
 import { StudyPlanDiffComponent } from './study-plan-diff/study-plan-diff.component';
 import { CareerManagementComponent } from './career-management/career-management.component';
+import { CampusManagementComponent } from './campus-management/campus-management.component';
 import { StudentCommissionAssignmentComponent } from './student-commission-assignment/student-commission-assignment.component';
 import { CommissionManagementComponent } from './commission-management/commission-management.component';
 import { CommissionFormDialogComponent } from './commission-management/commission-form-dialog/commission-form-dialog.component';
@@ -80,6 +81,7 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
     CareerCreateComponent,
     StudyPlanDiffComponent,
     CareerManagementComponent,
+    CampusManagementComponent,
     StudentCommissionAssignmentComponent,
     CommissionManagementComponent,
     CommissionFormDialogComponent

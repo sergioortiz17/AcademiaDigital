@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { Career, CareerDivision, CareerService, StudyPlanCourse } from '../../../core/services/career.service';
+import { Campus, Career, CareerDivision, CareerService, StudyPlanCourse } from '../../../core/services/career.service';
 import { TeachingPosition, TeachingPositionService } from '../../../core/services/teaching-position.service';
 import { Teacher, TeacherService } from '../../../core/services/teacher.service';
 
@@ -41,6 +41,9 @@ interface YearGroup {
 export class TeacherCourseAssignmentComponent implements OnInit {
   readonly positionTypes = POSITION_TYPES;
 
+  campuses: Campus[] = [];
+  /** Sede elegida; null = todas las sedes. */
+  campusId: number | null = null;
   careers: Career[] = [];
   careerId: number | null = null;
   academicYear = new Date().getFullYear();
@@ -50,6 +53,8 @@ export class TeacherCourseAssignmentComponent implements OnInit {
   teacherSearch = '';
   private allDivisions: CareerDivision[] = [];
   years: YearGroup[] = [];
+  private allSections: TeachingPosition[] = [];
+  /** Comisiones de la sede elegida (o de todas). */
   private sections: TeachingPosition[] = [];
 
   /** Docentes pendientes por materia (courseId). */
@@ -74,9 +79,12 @@ export class TeacherCourseAssignmentComponent implements OnInit {
   ngOnInit(): void {
     forkJoin({
       careers: this.careerService.getCareers(),
-      teachers: this.teacherService.getTeachers()
+      teachers: this.teacherService.getTeachers(),
+      campuses: this.careerService.getCampuses().pipe(catchError(() => of([] as Campus[])))
     }).subscribe({
-      next: ({ careers, teachers }) => {
+      next: ({ careers, teachers, campuses }) => {
+        this.campuses = campuses;
+        if (campuses.length === 1) this.campusId = campuses[0].id;
         this.careers = careers.filter(c => c.isActive !== false);
         this.teachers = teachers.filter(t => t.isActive)
           .sort((a, b) => `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'es'));
@@ -143,13 +151,31 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     this.loadSections();
   }
 
+  onCampusChange(): void {
+    this.pending = {};
+    this.openCourse = null;
+    this.clearMessages();
+    this.applyCampusFilter();
+  }
+
+  /** Divisiones activas de la carrera en la sede elegida. */
+  private get campusDivisions(): CareerDivision[] {
+    return this.campusId == null ? this.allDivisions : this.allDivisions.filter(d => d.campusId === this.campusId);
+  }
+
+  private applyCampusFilter(): void {
+    const ids = new Set(this.campusDivisions.map(d => d.id));
+    this.sections = this.allSections.filter(s => s.divisionId != null && ids.has(s.divisionId));
+  }
+
   private loadSections(): void {
     this.isLoading = true;
     const divisionIds = new Set(this.allDivisions.map(d => d.id));
     this.teachingPositionService.getTeachingPositions({ academicYear: this.academicYear })
       .pipe(catchError(() => of([] as TeachingPosition[])))
       .subscribe(sections => {
-        this.sections = sections.filter(s => s.isActive && s.divisionId != null && divisionIds.has(s.divisionId));
+        this.allSections = sections.filter(s => s.isActive && s.divisionId != null && divisionIds.has(s.divisionId));
+        this.applyCampusFilter();
         this.isLoading = false;
         this.cdr.detectChanges();
       });
@@ -157,7 +183,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
 
   /** Divisiones del ciclo elegido que cursan el año de la materia. */
   divisionsFor(course: StudyPlanCourse): CareerDivision[] {
-    return this.allDivisions.filter(d => d.academicYear === this.academicYear && d.yearNumber === course.yearNumber);
+    return this.campusDivisions.filter(d => d.academicYear === this.academicYear && d.yearNumber === course.yearNumber);
   }
 
   sectionsFor(course: StudyPlanCourse): TeachingPosition[] {

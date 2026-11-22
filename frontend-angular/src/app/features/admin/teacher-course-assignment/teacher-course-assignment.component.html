@@ -1,12 +1,19 @@
 <div class="page-header">
   <h1>Asignar materia</h1>
-  <p>Arrastre cada docente hasta el cuadro de la materia. Después toque la materia para elegir la división y el cargo de cada docente, y al final use <strong>Guardar cambios</strong>.</p>
+  <p>Elija la sede y la carrera, y arrastre cada docente hasta el cuadro de la materia. Después toque la materia para elegir la división y el cargo de cada docente, y al final use <strong>Guardar cambios</strong>.</p>
 </div>
 
 <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
 <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
 <div class="filters">
+  <mat-form-field appearance="outline" class="campus-field">
+    <mat-label>Sede</mat-label>
+    <mat-select [(ngModel)]="campusId" (selectionChange)="onCampusChange()">
+      <mat-option [value]="null">Todas las sedes</mat-option>
+      <mat-option *ngFor="let c of campuses" [value]="c.id">{{ c.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
   <mat-form-field appearance="outline">
     <mat-label>Carrera</mat-label>
     <mat-select [(ngModel)]="careerId" (selectionChange)="onCareerChange()">
@@ -97,7 +104,7 @@
               <small class="row-error" *ngIf="p.error">{{ p.error }}</small>
             </div>
             <p class="muted" *ngIf="pendingFor(c).length > 0 && divisionsFor(c).length === 0">
-              No hay divisiones de {{ c.yearNumber }}° año en {{ academicYear }}. Créelas en Docentes → Divisiones.
+              No hay divisiones de {{ c.yearNumber }}° año en {{ academicYear }}{{ campusId != null ? ' en esta sede' : '' }}. Créelas en Docentes → Divisiones.
             </p>
           </div>
         </div>

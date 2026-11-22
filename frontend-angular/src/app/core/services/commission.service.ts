@@ -12,6 +12,8 @@ export interface Commission {
   yearNumber: number;
   shift: string;
   isActive: boolean;
+  campusId?: number | null;
+  campusName?: string | null;
 }
 
 export interface UpsertCommissionRequest {
@@ -20,6 +22,8 @@ export interface UpsertCommissionRequest {
   academicYear: number;
   yearNumber: number;
   shift: string;
+  /** Sede de la división; null = sin sede. */
+  campusId?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
