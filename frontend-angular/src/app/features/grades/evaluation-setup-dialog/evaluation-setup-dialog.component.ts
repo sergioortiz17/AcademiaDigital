@@ -1,11 +1,26 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { CreateGradebookEvaluationInput } from '../../../core/services/gradebook.service';
+import { Component, ChangeDetectorRef, Inject, Optional } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import {
+  CreateGradebookEvaluationInput,
+  GradebookEvaluation,
+  GradebookEvaluationLayoutInput
+} from '../../../core/services/gradebook.service';
 
 interface EditableEvaluation {
+  /** Id de una instancia existente (al editar el formato); null si es nueva. */
+  id?: number | null;
   name: string;
   maximumScore: number;
   isRecovery: boolean;
+  evaluationDate?: Date | null;
+  /** Ya tiene notas: no se puede quitar. */
+  hasGrades?: boolean;
+}
+
+/** Si viene, el diálogo edita el formato de una planilla existente en vez de crear una. */
+export interface EvaluationSetupDialogData {
+  evaluations: GradebookEvaluation[];
+  evaluationIdsWithGrades: number[];
 }
 
 const DEFAULT_EVALUATIONS: EditableEvaluation[] = [
@@ -37,11 +52,28 @@ export function distributeWeights(regularCount: number): number[] {
 })
 export class EvaluationSetupDialogComponent {
   evaluations: EditableEvaluation[] = DEFAULT_EVALUATIONS.map(e => ({ ...e }));
+  readonly isEdit: boolean;
 
   constructor(
     public dialogRef: MatDialogRef<EvaluationSetupDialogComponent>,
-    private readonly cdr: ChangeDetectorRef
-  ) {}
+    private readonly cdr: ChangeDetectorRef,
+    @Optional() @Inject(MAT_DIALOG_DATA) data?: EvaluationSetupDialogData | null
+  ) {
+    this.isEdit = !!data?.evaluations?.length;
+    if (data && this.isEdit) {
+      const withGrades = new Set(data.evaluationIdsWithGrades);
+      this.evaluations = [...data.evaluations]
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map(e => ({
+          id: e.id,
+          name: e.name,
+          maximumScore: e.maximumScore,
+          isRecovery: e.isRecovery,
+          evaluationDate: e.evaluationDate ? new Date(e.evaluationDate + 'T12:00:00') : null,
+          hasGrades: withGrades.has(e.id)
+        }));
+    }
+  }
 
   /** Peso que le toca a cada instancia (las recuperaciones no llevan peso propio). */
   get weights(): number[] {
@@ -82,11 +114,12 @@ export class EvaluationSetupDialogComponent {
 
   addEvaluation(): void {
     if (this.evaluations.length >= 20) return;
-    this.evaluations.push({ name: '', maximumScore: 10, isRecovery: false });
+    this.evaluations.push({ id: null, name: '', maximumScore: 10, isRecovery: false, evaluationDate: null });
     this.cdr.detectChanges();
   }
 
   removeEvaluation(index: number): void {
+    if (this.evaluations[index]?.hasGrades) return;
     this.evaluations.splice(index, 1);
     this.cdr.detectChanges();
   }
@@ -97,6 +130,17 @@ export class EvaluationSetupDialogComponent {
 
   confirm(): void {
     if (!this.isValid) return;
+    if (this.isEdit) {
+      const layout: GradebookEvaluationLayoutInput[] = this.evaluations.map(e => ({
+        id: e.id ?? null,
+        name: e.name.trim(),
+        maximumScore: Number(e.maximumScore),
+        isRecovery: e.isRecovery,
+        evaluationDate: e.evaluationDate ? toDateOnly(e.evaluationDate) : null
+      }));
+      this.dialogRef.close(layout);
+      return;
+    }
     const weights = this.weights;
     const result: CreateGradebookEvaluationInput[] = this.evaluations.map((e, i) => ({
       name: e.name.trim(),
@@ -106,4 +150,8 @@ export class EvaluationSetupDialogComponent {
     }));
     this.dialogRef.close(result);
   }
+}
+
+function toDateOnly(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

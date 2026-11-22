@@ -1,6 +1,6 @@
 <div class="dialog-header">
   <mat-icon>fact_check</mat-icon>
-  <span>Configurar instancias de evaluación</span>
+  <span>{{ isEdit ? 'Editar instancias de la planilla' : 'Configurar instancias de evaluación' }}</span>
 </div>
 
 <div class="dialog-body">
@@ -9,6 +9,7 @@
   <div class="evaluation-row evaluation-row--header">
     <span>Nombre</span>
     <span>Nota máx.</span>
+    <span>Fecha</span>
     <span>Recup.</span>
     <span></span>
   </div>
@@ -20,9 +21,15 @@
     <mat-form-field appearance="outline">
       <input matInput type="number" min="0.01" max="100" step="0.01" [(ngModel)]="e.maximumScore">
     </mat-form-field>
+    <mat-form-field appearance="outline">
+      <input matInput [matDatepicker]="datePicker" [(ngModel)]="e.evaluationDate" placeholder="dd/mm/aaaa">
+      <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+      <mat-datepicker #datePicker></mat-datepicker>
+    </mat-form-field>
     <mat-checkbox [(ngModel)]="e.isRecovery" (change)="onRecoveryToggle()"
       matTooltip="Marca esta evaluación como recuperación (sin peso propio)"></mat-checkbox>
-    <button mat-icon-button color="warn" [disabled]="evaluations.length <= 1" (click)="removeEvaluation(i)">
+    <button mat-icon-button color="warn" [disabled]="evaluations.length <= 1 || e.hasGrades" (click)="removeEvaluation(i)"
+      [matTooltip]="e.hasGrades ? 'Tiene notas cargadas: no se puede quitar' : 'Quitar instancia'">
       <mat-icon>delete</mat-icon>
     </button>
   </div>
@@ -38,5 +45,5 @@
 
 <div class="dialog-actions">
   <button mat-flat-button class="cancel-btn" (click)="cancel()">Cancelar</button>
-  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">Crear planilla</button>
+  <button mat-stroked-button class="confirm-btn" [disabled]="!isValid" (click)="confirm()">{{ isEdit ? 'Guardar cambios' : 'Crear planilla' }}</button>
 </div>

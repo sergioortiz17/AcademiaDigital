@@ -11,7 +11,9 @@ import { TeachingPosition, TeachingPositionService } from '../../core/services/t
 import { Student, StudentAcademicProgress, StudentExamTable, StudentService } from '../../core/services/student.service';
 import { ProfileData, UserService } from '../../core/services/user.service';
 import { GradebookExam, Gradebook, GradebookService, GradebookDetail, GradebookEvaluation, GradebookStudent, SaveGradeEntryInput, StudentPublishedGradebook } from '../../core/services/gradebook.service';
-import { EvaluationSetupDialogComponent } from './evaluation-setup-dialog/evaluation-setup-dialog.component';
+import { EvaluationSetupDialogComponent, EvaluationSetupDialogData } from './evaluation-setup-dialog/evaluation-setup-dialog.component';
+import { GradebookEvaluationLayoutInput } from '../../core/services/gradebook.service';
+import { courseDisplayName, mostFrequentId } from '../../core/utils/academic-labels';
 import { GradebookActionDialogComponent } from './gradebook-action-dialog.component';
 
 interface EditableGrade {
@@ -19,6 +21,27 @@ interface EditableGrade {
   score: number | null;
   notes: string;
   updatedAt: string | null;
+  isAbsent?: boolean;
+  /** Texto que escribió el docente cuando no es una nota válida (se marca la celda en rojo). */
+  invalidText?: string | null;
+}
+
+/** Opciones del desplegable de notas: A (ausente) y los enteros de 1 a 10. */
+export const GRADE_OPTIONS = ['A', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+/**
+ * Interpreta lo que escribe el docente en una celda: vacío, "A" (ausente) o un número con coma
+ * o punto decimal dentro del rango de la instancia.
+ */
+export function parseGradeInput(text: string, maximumScore: number):
+  { kind: 'empty' } | { kind: 'absent' } | { kind: 'score'; score: number } | { kind: 'invalid'; reason: string } {
+  const value = (text ?? '').trim();
+  if (!value) return { kind: 'empty' };
+  if (/^a(usente)?$/i.test(value)) return { kind: 'absent' };
+  if (!/^\d+([.,]\d{1,2})?$/.test(value)) return { kind: 'invalid', reason: 'Use un número (por ejemplo 7 o 7,5) o A para ausente.' };
+  const score = Number(value.replace(',', '.'));
+  if (score < 0 || score > maximumScore) return { kind: 'invalid', reason: `La nota debe estar entre 0 y ${maximumScore}.` };
+  return { kind: 'score', score };
 }
 
 interface EditableRow extends GradebookStudent {
@@ -42,6 +65,8 @@ interface ProfessorCourseOption {
 }
 
 interface GradeTeachingSection {
+  careerId?: number | null;
+  isAnnual?: boolean;
   courseSectionId: number;
   courseId: number;
   courseCode: string;
@@ -168,6 +193,7 @@ export class GradesComponent implements OnInit {
   ngOnInit(): void {
     this.careerService.getCareers().subscribe(careers => {
       this.careers = careers;
+      this.preselectTeacherCareer();
       this.cdr.detectChanges();
     }, error => {
       this.errorMsg = this.readErrorMessage(error, 'No se pudieron cargar las carreras.');
@@ -201,8 +227,11 @@ export class GradesComponent implements OnInit {
           divisionCode: assignment.divisionCode,
           divisionName: assignment.divisionName,
           academicYear: assignment.academicYear,
-          semester: assignment.semester
+          semester: assignment.semester,
+          careerId: assignment.careerId ?? null,
+          isAnnual: assignment.isAnnual
         }));
+        this.preselectTeacherCareer();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -243,8 +272,72 @@ export class GradesComponent implements OnInit {
     return this.assignments.find(a => a.courseSectionId === this.selectedTeachingPositionId);
   }
 
+  /** Las notas se pueden escribir apenas se abre una planilla en borrador (sin tocar el lápiz). */
   get canEdit(): boolean {
-    return this.detail?.gradebook.status === 'Draft' && this.editingEnabled;
+    return this.detail?.gradebook.status === 'Draft';
+  }
+
+  readonly gradeOptions = GRADE_OPTIONS;
+
+  /**
+   * El docente entra directo a su carrera, año, división y materia. Se hace una sola vez,
+   * cuando ya llegaron las carreras y sus asignaciones.
+   */
+  private autoSelectPending = true;
+
+  private preselectTeacherCareer(): void {
+    if (!this.autoSelectPending || this.userRole !== UserRole.Profesor) return;
+    if (this.careers.length === 0 || this.assignments.length === 0 || this.selectedCareerId != null) return;
+    const careerId = mostFrequentId(this.assignments.map(a => a.careerId));
+    if (careerId == null || !this.careers.some(c => c.id === careerId)) { this.autoSelectPending = false; return; }
+    this.selectedCareerId = careerId;
+    this.onCareerChange();
+  }
+
+  /** Con el plan cargado, elige el año, la división y la primera materia del docente. */
+  private preselectTeacherCourse(): void {
+    if (!this.autoSelectPending) return;
+    this.autoSelectPending = false;
+    const planYears = new Map(this.studyPlanCourses.map(c => [c.courseId, c.yearNumber]));
+    const mine = this.assignments
+      .filter(a => a.careerId === this.selectedCareerId && planYears.has(a.courseId))
+      .sort((a, b) => (planYears.get(a.courseId)! - planYears.get(b.courseId)!) || a.courseName.localeCompare(b.courseName, 'es'));
+    const first = mine[0];
+    if (!first) return;
+    this.selectedCareerYear = planYears.get(first.courseId)!;
+    this.selectedDivisionId = first.divisionId;
+    this.selectedCourseKey = `section-${first.courseSectionId}`;
+    if (this.selectedProfessorCourse) this.onCourseChange();
+  }
+
+  professorCourseLabel(course: ProfessorCourseOption): string {
+    const name = courseDisplayName(course.courseName, course.semester, course.isAnnual);
+    return course.section ? name : `${name} · Sin sección docente`;
+  }
+
+  /** Fecha de la instancia (la carga el docente al editar el formato de la planilla). */
+  evaluationDateLabel(evaluation: GradebookEvaluation): string {
+    if (!evaluation.evaluationDate) return '—';
+    const [y, m, d] = evaluation.evaluationDate.split('-');
+    return `${d}/${m}/${y.slice(2)}`;
+  }
+
+  gradeText(row: EditableRow, evaluationId: number): string {
+    const grade = row.editableGrades[evaluationId];
+    if (!grade) return '';
+    if (grade.invalidText != null) return grade.invalidText;
+    if (grade.isAbsent) return 'A';
+    return grade.score == null ? '' : String(grade.score).replace('.', ',');
+  }
+
+  isGradeInvalid(row: EditableRow, evaluationId: number): boolean {
+    return row.editableGrades[evaluationId]?.invalidText != null;
+  }
+
+  /** Celdas con valores que no son notas válidas (impiden guardar). */
+  get invalidGradeCount(): number {
+    return this.rows.reduce((total, row) =>
+      total + Object.values(row.editableGrades).filter(grade => grade.invalidText != null).length, 0);
   }
 
   get canEditGradebook(): boolean {
@@ -394,6 +487,12 @@ export class GradesComponent implements OnInit {
     const response = error as Record<string, unknown>;
     const body = response['error'];
     const details = body && typeof body === 'object' ? body as Record<string, unknown> : {};
+    // Errores de validación de ASP.NET: { title: 'Se produjo uno o más errores...', errors: { Campo: [msg] } }.
+    const validation = (details['errors'] ?? response['errors']) as Record<string, unknown> | undefined;
+    if (validation && typeof validation === 'object') {
+      const messages = Object.values(validation).flat().filter((m): m is string => typeof m === 'string');
+      if (messages.length > 0) return [...new Set(messages)].join(' ');
+    }
     const message = details['detail'] ?? details['msg'] ?? details['message'] ??
       response['detail'] ?? response['title'] ?? response['message'];
     if (typeof message === 'string' && message.trim()) return message;
@@ -460,6 +559,7 @@ export class GradesComponent implements OnInit {
             if (this.selectedCareerId !== careerId) return;
             this.studyPlanCourses = courses;
             this.isLoading = false;
+            this.preselectTeacherCourse();
             this.cdr.detectChanges();
           },
           error: err => {
@@ -624,7 +724,9 @@ export class GradesComponent implements OnInit {
         evaluationId: grade.evaluationId,
         score: grade.score,
         notes: grade.notes ?? '',
-        updatedAt: grade.updatedAt
+        updatedAt: grade.updatedAt,
+        isAbsent: grade.isAbsent ?? false,
+        invalidText: null
       };
     }
     return { ...student, editableGrades };
@@ -692,59 +794,69 @@ export class GradesComponent implements OnInit {
     this.selectedStudent = row;
   }
 
-  enableEditing(): void {
-    if (this.canEditGradebook) this.editingEnabled = true;
+  /** Editar el formato de la planilla: nombres, nota máxima, recuperaciones y fechas de cada instancia. */
+  openEditLayout(): void {
+    if (!this.detail || !this.canEditGradebook) return;
+    const gradebookId = this.detail.gradebook.id;
+    const withGrades = new Set<number>();
+    for (const student of this.detail.students)
+      for (const grade of student.grades) if (grade.revisionId != null) withGrades.add(grade.evaluationId);
+    const dialogRef = this.dialog.open(EvaluationSetupDialogComponent, {
+      width: '760px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: { evaluations: this.detail.evaluations, evaluationIdsWithGrades: [...withGrades] } as EvaluationSetupDialogData
+    });
+    dialogRef.afterClosed().pipe(observeOn(asyncScheduler)).subscribe((layout: GradebookEvaluationLayoutInput[] | null) => {
+      if (!layout) return;
+      this.isSaving = true;
+      this.errorMsg = '';
+      this.gradebookService.updateEvaluations(gradebookId, layout).subscribe({
+        next: detail => {
+          this.detail = detail;
+          this.rows = detail.students.map(student => this.toEditableRow(student));
+          this.selectedStudent = this.rows.find(r => r.enrollmentId === this.selectedStudent?.enrollmentId) ?? this.rows[0] ?? null;
+          this.isSaving = false;
+          this.successMsg = 'Instancias de la planilla actualizadas.';
+          this.cdr.detectChanges();
+          setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
+        },
+        error: err => {
+          this.isSaving = false;
+          this.errorMsg = this.readErrorMessage(err, 'No se pudieron actualizar las instancias.');
+          this.cdr.detectChanges();
+        }
+      });
+    });
   }
 
-  updateGradeScore(row: EditableRow, evaluationId: number, score: number | null): void {
-    const current = row.editableGrades[evaluationId] ?? {
-      evaluationId,
-      score: null,
-      notes: '',
-      updatedAt: null
+  updateGradeText(row: EditableRow, evaluation: GradebookEvaluation, text: string): void {
+    const current = row.editableGrades[evaluation.id] ?? {
+      evaluationId: evaluation.id, score: null, notes: '', updatedAt: null
     };
-    row.editableGrades[evaluationId] = { ...current, score };
+    const parsed = parseGradeInput(text, evaluation.maximumScore);
+    row.editableGrades[evaluation.id] = {
+      ...current,
+      score: parsed.kind === 'score' ? parsed.score : parsed.kind === 'absent' ? 0 : null,
+      isAbsent: parsed.kind === 'absent',
+      invalidText: parsed.kind === 'invalid' ? text : null
+    };
+  }
+
+  gradeHint(row: EditableRow, evaluation: GradebookEvaluation): string {
+    const text = row.editableGrades[evaluation.id]?.invalidText;
+    if (text == null) return `Nota de 0 a ${evaluation.maximumScore}, o A si estuvo ausente`;
+    const parsed = parseGradeInput(text, evaluation.maximumScore);
+    return parsed.kind === 'invalid' ? parsed.reason : '';
   }
 
   saveGrades(): void {
     if (!this.detail || !this.canEdit || this.isSaving || this.isSubmitting) return;
 
-    const missingEvaluations = this.evaluationGroups.filter(group =>
-      group.evaluation.id < 0 && this.rows.some(row => row.editableGrades[group.evaluation.id]?.score != null)
-    );
-
-    if (missingEvaluations.length > 0) {
-      this.isSaving = true;
-      this.errorMsg = '';
-      forkJoin(missingEvaluations.map(group => this.gradebookService.addEvaluation(this.detail!.gradebook.id, {
-        name: group.label,
-        weightPercentage: group.evaluation.weightPercentage,
-        maximumScore: group.evaluation.maximumScore,
-        isRecovery: group.evaluation.isRecovery
-      }))).subscribe({
-        next: createdEvaluations => {
-          for (const [index, created] of createdEvaluations.entries()) {
-            const temporaryId = missingEvaluations[index].evaluation.id;
-            for (const row of this.rows) {
-              const pendingGrade = row.editableGrades[temporaryId];
-              if (pendingGrade) {
-                row.editableGrades[created.id] = { ...pendingGrade, evaluationId: created.id };
-                delete row.editableGrades[temporaryId];
-              }
-            }
-          }
-          this.detail = {
-            ...this.detail!,
-            evaluations: [...this.detail!.evaluations, ...createdEvaluations]
-          };
-          this.persistGrades();
-        },
-        error: err => {
-          this.isSaving = false;
-          this.errorMsg = err.error?.msg || err.error?.message || err.message || 'Error al crear las nuevas instancias.';
-          this.cdr.detectChanges();
-        }
-      });
+    // No se guarda nada mientras haya celdas con valores que no son notas.
+    if (this.invalidGradeCount > 0) {
+      this.errorMsg = `Hay ${this.invalidGradeCount} nota(s) con valores inválidos (marcadas en rojo). Corríjalas antes de guardar.`;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -758,12 +870,13 @@ export class GradesComponent implements OnInit {
     for (const row of this.rows) {
       for (const evaluation of this.detail.evaluations) {
         const grade = row.editableGrades[evaluation.id];
-        if (grade?.score != null) {
+        if (grade?.score != null || grade?.isAbsent) {
           grades.push({
             evaluationId: evaluation.id,
             enrollmentId: row.enrollmentId,
-            score: grade.score,
-            notes: grade.notes.trim() || null
+            score: grade.isAbsent ? 0 : grade.score!,
+            notes: grade.notes.trim() || null,
+            isAbsent: grade.isAbsent ?? false
           });
         }
       }
@@ -790,7 +903,7 @@ export class GradesComponent implements OnInit {
       },
       error: (err) => {
         this.isSaving = false;
-        this.errorMsg = err.message || 'Error al guardar las notas.';
+        this.errorMsg = this.readErrorMessage(err, 'Error al guardar las notas.');
         this.cdr.detectChanges();
       }
     });
@@ -798,6 +911,10 @@ export class GradesComponent implements OnInit {
 
   submitGradebook(): void {
     if (!this.detail || this.isSubmitting) return;
+    if (this.invalidGradeCount > 0) {
+      this.errorMsg = `Hay ${this.invalidGradeCount} nota(s) con valores inválidos (marcadas en rojo). Corríjalas antes de enviar.`;
+      return;
+    }
     if (this.rows.length === 0) {
       this.errorMsg = 'Una planilla sin estudiantes inscriptos no puede enviarse.';
       return;
@@ -1330,13 +1447,14 @@ export class GradesComponent implements OnInit {
     return this.studentEvaluationGroups.map(group => group.label);
   }
 
-  myGradeForEvaluation(row: StudentGradeRow, group: EvaluationGroup): { score: number | null; updatedAt: string | null } | null {
+  myGradeForEvaluation(row: StudentGradeRow, group: EvaluationGroup): { score: string; date: string } | null {
     const gradebook = row.gradebook;
     if (!gradebook) return null;
     const evaluation = gradebook.evaluations.find(item => item.name === group.label);
     if (!evaluation) return null;
     const grade = gradebook.grades.find(item => item.evaluationId === evaluation.id);
-    return { score: grade?.score ?? null, updatedAt: grade?.updatedAt ?? null };
+    const score = grade?.isAbsent ? 'Ausente' : grade?.score != null ? String(grade.score).replace('.', ',') : '—';
+    return { score, date: this.evaluationDateLabel(evaluation) };
   }
 
   studentConditionLabel(status: string | null): string {
