@@ -34,7 +34,7 @@
         <mat-option [value]="null">Sin sede</mat-option>
         <mat-option *ngFor="let c of campuses" [value]="c.id">{{ c.name }}</mat-option>
       </mat-select>
-      <mat-hint *ngIf="campuses.length === 0">Las sedes se cargan en Configuración → Carreras.</mat-hint>
+      <mat-hint *ngIf="campuses.length === 0">Las sedes se cargan en Gestión de Carreras.</mat-hint>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
