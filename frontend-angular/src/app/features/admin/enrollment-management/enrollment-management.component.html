@@ -1,9 +1,9 @@
 <div class="em-container">
   <div class="em-header">
-    <h1>Períodos de inscripción</h1>
+    <h1>Gestión de Inscripciones</h1>
     <button mat-raised-button color="primary" (click)="showOpenForm = !showOpenForm">
       <mat-icon>add</mat-icon>
-      Abrir período de inscripción
+      Activar inscripción
     </button>
   </div>
 
@@ -68,7 +68,7 @@
               [disabled]="!canOpen() || isSubmitting"
               (click)="submitOpen()">
         <mat-spinner diameter="18" *ngIf="isSubmitting"></mat-spinner>
-        <span *ngIf="!isSubmitting">Abrir período</span>
+        <span *ngIf="!isSubmitting">Activar</span>
       </button>
     </mat-card-actions>
   </mat-card>
