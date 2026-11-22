@@ -9,6 +9,7 @@ import { AttendanceManagementComponent } from './attendance-management/attendanc
 import { TeacherManagementComponent } from './teacher-management/teacher-management.component';
 import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/teacher-course-assignment.component';
 import { StudentDocumentsReviewComponent } from './student-documents-review/student-documents-review.component';
+import { ReportsComponent } from './reports/reports.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
@@ -66,6 +67,12 @@ const routes: Routes = [
   {
     path: 'teacher-courses',
     component: TeacherCourseAssignmentComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'reports',
+    component: ReportsComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

@@ -13,6 +13,9 @@ public sealed class ExamTable
     public DateTime ExamDateUtc { get; set; }
     public DateTime RegistrationDeadlineUtc { get; set; }
     public string Location { get; set; } = string.Empty;
+    /// <summary>Libro y folio del acta de la mesa (los carga Administración; van al analítico).</summary>
+    public string? ActBook { get; set; }
+    public string? ActFolio { get; set; }
     public ExamTableStatus Status { get; set; } = ExamTableStatus.Open;
     public DateTime CreatedAt { get; set; }
     public long CreatedByUserId { get; set; }

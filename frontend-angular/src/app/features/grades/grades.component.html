@@ -207,6 +207,7 @@
         <datalist id="grade-options">
           <option *ngFor="let option of gradeOptions" [value]="option">{{ option === 'A' ? 'Ausente' : option }}</option>
         </datalist>
+        <p class="grades-help grades-help--import" *ngIf="importSummary">{{ importSummary }}</p>
         <p class="grades-help" *ngIf="canEdit">
           Escriba la nota o elíjala de la lista (admite decimales con coma, por ejemplo 7,5). Use <strong>A</strong> si el alumno estuvo ausente.
           <span *ngIf="invalidGradeCount > 0" class="grades-help--error">{{ invalidGradeCount }} nota(s) inválidas, marcadas en rojo.</span>
@@ -224,6 +225,16 @@
               Descargar resumen
               <mat-icon>file_download</mat-icon>
             </button>
+
+            <ng-container *ngIf="canEdit">
+              <button class="download-link" type="button" (click)="downloadGradesTemplate()" matTooltip="Excel con sus alumnos y una columna por instancia">
+                Plantilla de notas <mat-icon>table_view</mat-icon>
+              </button>
+              <input #gradesInput type="file" hidden accept=".xlsx" (change)="importGrades(gradesInput)">
+              <button class="download-link" type="button" (click)="gradesInput.click()">
+                Importar Excel <mat-icon>upload_file</mat-icon>
+              </button>
+            </ng-container>
 
             <button mat-raised-button color="primary" *ngIf="canEdit" [disabled]="isSaving || isTransitioning || isSubmitting" (click)="saveGrades()">
               <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>

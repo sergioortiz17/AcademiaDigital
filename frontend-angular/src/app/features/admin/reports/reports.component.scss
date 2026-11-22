@@ -1,0 +1,18 @@
+.reports-wrap { padding: 16px; h1 { color: #0d4f86; margin: 0 0 8px; } }
+.intro { color: #536575; margin: 0 0 12px; }
+.filters-card { padding: 16px; margin-bottom: 16px; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; mat-form-field { flex: 1 1 180px; } }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.msg--error { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: #fff3f0; color: #9d3222; }
+.loading { display: flex; justify-content: center; padding: 32px; }
+.count { font-weight: 600; color: #20384e; }
+.table-wrap { overflow-x: auto; }
+.preview {
+  width: 100%; border-collapse: collapse; background: #fff;
+  th, td { padding: 6px 10px; border-bottom: 1px solid #e3e8ed; text-align: left; white-space: nowrap; }
+  th { background: #eef3f7; color: #31536e; }
+}
+.more { color: #6b7a88; font-size: 0.85rem; }
+.section-title { color: #0d4f86; margin: 24px 0 8px; font-size: 1.2rem; }
+.file { color: #536575; margin: 8px 0 0; }
+.failures { margin: 4px 0 0; color: #9d3222; }

@@ -1,0 +1,92 @@
+<div class="reports-wrap">
+  <h1>Reportes</h1>
+  <p class="intro">Listados de alumnos, egresados y aspirantes con todos sus datos, para descargar en Excel.</p>
+
+  <mat-card class="filters-card">
+    <div class="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Listado</mat-label>
+        <mat-select [(ngModel)]="filter.kind">
+          <mat-option *ngFor="let k of kinds" [value]="k.value">{{ k.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" *ngIf="filter.kind === 'Students'">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="filter.status">
+          <mat-option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Carrera</mat-label>
+        <mat-select [(ngModel)]="filter.careerId">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ dateLabel }} desde</mat-label>
+        <input matInput type="date" [(ngModel)]="filter.from">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="filter.to">
+      </mat-form-field>
+    </div>
+    <div class="actions">
+      <button mat-raised-button color="primary" type="button" [disabled]="isLoading" (click)="search()">
+        <mat-icon>search</mat-icon> Ver listado
+      </button>
+      <button mat-stroked-button type="button" [disabled]="!loaded || rows.length === 0" (click)="download()">
+        <mat-icon>file_download</mat-icon> Descargar Excel
+      </button>
+    </div>
+  </mat-card>
+
+  <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
+  <div class="loading" *ngIf="isLoading"><mat-spinner diameter="40"></mat-spinner></div>
+
+  <ng-container *ngIf="loaded && !isLoading">
+    <p class="count">{{ rows.length }} persona(s). El Excel incluye además CUIL, domicilio, teléfonos, fechas, obra social, libro y folio.</p>
+    <div class="table-wrap" *ngIf="rows.length > 0">
+      <table class="preview">
+        <thead><tr><th *ngFor="let c of previewColumns">{{ c.header }}</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of rows | slice:0:50">
+            <td *ngFor="let c of previewColumns">{{ cell(row, c) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="more" *ngIf="rows.length > 50">Se muestran las primeras 50 filas; el Excel tiene todas.</p>
+    </div>
+  </ng-container>
+
+  <h2 class="section-title">Importar prematriculados</h2>
+  <mat-card class="filters-card">
+    <p class="intro">
+      Cargue el Excel de prematriculados (una fila por persona con DNI, Apellido, Nombre, Correo y Código de carrera).
+      Cada fila queda como aspirante pendiente de alta en <strong>Aspirantes</strong>. La persona entra después con
+      "¿Olvidaste tu contraseña?" o con Google.
+    </p>
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="downloadImportTemplate()">
+        <mat-icon>description</mat-icon> Descargar plantilla
+      </button>
+      <input #importInput type="file" hidden accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        (change)="onImportFile(importInput)">
+      <button mat-stroked-button type="button" (click)="importInput.click()">
+        <mat-icon>upload_file</mat-icon> Elegir Excel
+      </button>
+      <button mat-raised-button color="primary" type="button" [disabled]="importRows.length === 0 || isImporting" (click)="runImport()">
+        <mat-icon>group_add</mat-icon> Importar {{ importRows.length || '' }} fila(s)
+      </button>
+    </div>
+    <p class="file" *ngIf="importFileName">Archivo: {{ importFileName }} · {{ importRows.length }} fila(s) leídas.</p>
+    <div *ngIf="importError" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ importError }}</div>
+    <ng-container *ngIf="importResult as r">
+      <p class="count">{{ r.created }} aspirante(s) creado(s). {{ r.failed.length }} fila(s) con problemas.</p>
+      <ul class="failures" *ngIf="r.failed.length > 0">
+        <li *ngFor="let f of r.failed">Fila {{ f.rowNumber }}: {{ f.reason }}</li>
+      </ul>
+    </ng-container>
+  </mat-card>
+</div>

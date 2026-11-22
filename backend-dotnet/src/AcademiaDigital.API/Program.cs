@@ -54,6 +54,7 @@ builder.Services.AddScoped<ResetPasswordUseCase>();
 // Admin
 builder.Services.AddScoped<GetUsersUseCase>();
 builder.Services.AddScoped<UpdateUserRoleUseCase>();
+builder.Services.AddScoped<ImportApplicantsUseCase>();
 builder.Services.AddScoped<UpdateUserActiveStatusUseCase>();
 builder.Services.AddScoped<DeleteUserUseCase>();
 builder.Services.AddScoped<GetApplicantsUseCase>();
