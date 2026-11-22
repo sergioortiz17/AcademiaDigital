@@ -150,6 +150,10 @@ inputs = {
     # Requisitos de ingreso: bucket propio, una carpeta por alumno (DNI_Apellido_Nombre/REQUISITO/).
     Storage__StudentDocuments__Bucket = dependency.student_documents.outputs.bucket_name
 
+    # Iniciar sesión con Google (proyecto de Google Cloud "Academia Digital"). El Client ID es
+    # público (lo ve el navegador); el "client secret" no se usa. Vacío = botón oculto.
+    Authentication__Google__ClientId = "475175980125-ce5c6qpc1a9r6504nc1rvs311o28lgn5.apps.googleusercontent.com"
+
     # Correo saliente (recuperación de contraseña) por Amazon SES con el rol de la instancia.
     # Remitente: MAIL_FROM. Con la cuenta SES en sandbox solo llega a direcciones verificadas.
     Email__Provider = "Ses"
