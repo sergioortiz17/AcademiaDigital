@@ -249,7 +249,7 @@ public sealed record SubmitTeacherDocumentRequest(
     [Required, StringLength(1000, MinimumLength = 1)] string FileUrl,
     [Required, StringLength(255, MinimumLength = 1)] string OriginalFileName,
     [Required, StringLength(100, MinimumLength = 1)] string ContentType,
-    [Range(1, 10 * 1024 * 1024)] long FileSizeBytes,
+    [Range(1, 5 * 1024 * 1024)] long FileSizeBytes,
     DateOnly? ValidUntil);
 
 public sealed record ReviewTeacherDocumentRequest(

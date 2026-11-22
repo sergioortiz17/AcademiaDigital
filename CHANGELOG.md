@@ -17,10 +17,13 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 - **Asignar materia** (Administración → Docentes): pantalla nueva con arrastrar y soltar. Se elige la carrera y el ciclo; los docentes aparecen como píldoras (con la cantidad de comisiones que ya tienen) y las materias de todos los años como cuadros, cada uno con un desplegable de sus comisiones. Se sueltan los docentes sobre las materias, al tocar una materia se elige la división y el cargo de cada uno, y nada se escribe en la base hasta tocar "Guardar cambios" ("Descartar" deshace lo movido). Funciona con mouse y en pantallas táctiles.
 - **Comisiones** (Administración → Docentes): cada fila se despliega con la flecha y muestra los alumnos inscriptos en esa comisión (nombre, legajo y DNI) y cuántos son frente al cupo.
 - **Cargar asistencia**: el mes se muestra en castellano ("Noviembre 2026"); antes el selector del navegador lo mostraba en inglés.
+- **Archivos**: el tamaño máximo de los documentos que se suben (inscripción y legajo docente) pasa de 10 MB a 5 MB: alcanza para un PDF escaneado o una foto de celular y cuida la memoria del servidor.
 
 ### Corregido
 
 - **Calificaciones**: al enviar la planilla, las celdas vacías (incluidas recuperaciones e IEFI) se completaban con 0, y los alumnos quedaban libres por error. Ya no se completa nada.
+
+- **Archivos**: en producción no se podía subir ningún archivo de más de 1 MB (el nginx del frontend usaba su límite por defecto y respondía 413), aunque la pantalla aceptaba hasta 10 MB. Ahora nginx admite hasta 6 MB (el archivo más los datos del formulario) y la importación de planes de estudio por CSV tiene el mismo tope.
 
 - **Calendario**: el encabezado mostraba "11 Noviembre 2026" (número de mes delante del nombre) y parecía una fecha. Ahora dice "Noviembre 2026"; las flechas siguen pasando al mes anterior y al siguiente.
 

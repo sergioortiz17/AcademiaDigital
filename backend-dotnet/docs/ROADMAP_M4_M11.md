@@ -196,7 +196,7 @@ Segundo incremento funcional M5 al 2026-08-22:
 
 - Se exponen listado, alta y revisión Admin en `/api/v1/teachers/{id}/documents`, separados de `StudentDocument` y de documentos de admisión.
 - Cada tipo se normaliza y versiona de forma append-only; una nueva presentación expira la versión `Submitted` o `Approved` anterior dentro de una transacción serializable con lock del legajo.
-- Se aceptan referencias HTTPS o `storage://`, PDF/JPEG/PNG de hasta 10 MB y vigencia no vencida. La revisión sólo permite aprobar o rechazar desde `Submitted`; el rechazo exige observación y registra actor/fecha.
+- Se aceptan referencias HTTPS o `storage://`, PDF/JPEG/PNG de hasta 5 MB y vigencia no vencida. La revisión sólo permite aprobar o rechazar desde `Submitted`; el rechazo exige observación y registra actor/fecha.
 - La migración pendiente se consolidó posteriormente en `20260822214829_AddTeacherDocumentsPositionsAndAssignments`; para documentos crea dos FKs, un índice cronológico y unicidad por `teacher_id + document_type + version`.
 - E2E cubre 401/403, validación, aprobación, rechazo, segunda versión y expiración; 166/166 unit tests, M5 2/2, migración/backfill, ArchUnitNET 8/8 y regresión 27/27.
 
