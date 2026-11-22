@@ -1,9 +1,10 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Campus, CareerService } from '../../../core/services/career.service';
 
 /**
- * Sedes (escuelas) del instituto, dentro de Gestión de Carreras. Cada división se asigna a una
- * sede, y en Asignar materia se elige la sede para ver solo sus divisiones y comisiones.
+ * Escuelas (escuelas) del instituto, dentro de Gestión de Carreras. Cada curso se asigna a una
+ * escuela, y en Asignar materia se elige la escuela para ver solo sus cursos y comisiones.
  */
 @Component({
   selector: 'app-campus-management',
@@ -13,7 +14,7 @@ import { Campus, CareerService } from '../../../core/services/career.service';
 })
 export class CampusManagementComponent implements OnInit {
   campuses: Campus[] = [];
-  /** Sede en edición (null = alta de una nueva). */
+  /** Escuela en edición (null = alta de una nueva). */
   editingId: number | null = null;
   name = '';
   address = '';
@@ -21,7 +22,16 @@ export class CampusManagementComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
 
-  constructor(private readonly careerService: CareerService, private readonly cdr: ChangeDetectorRef) {}
+  /** true en la pantalla "Agregar escuelas" (menú); false dentro de Gestión de Carreras. */
+  readonly pageMode: boolean;
+
+  constructor(
+    private readonly careerService: CareerService,
+    private readonly cdr: ChangeDetectorRef,
+    route: ActivatedRoute
+  ) {
+    this.pageMode = !!route.snapshot.data['schoolsPage'];
+  }
 
   ngOnInit(): void {
     this.load();
@@ -30,7 +40,7 @@ export class CampusManagementComponent implements OnInit {
   load(): void {
     this.careerService.getCampuses(true).subscribe({
       next: campuses => { this.campuses = campuses; this.cdr.detectChanges(); },
-      error: err => this.fail(err, 'No se pudieron cargar las sedes.')
+      error: err => this.fail(err, 'No se pudieron cargar las escuelas.')
     });
   }
 
@@ -55,20 +65,20 @@ export class CampusManagementComponent implements OnInit {
     this.careerService.saveCampus(this.editingId, { name: this.name.trim(), address: this.address.trim() || null }).subscribe({
       next: () => {
         this.isSaving = false;
-        this.successMsg = isNew ? 'Sede creada.' : 'Sede actualizada.';
+        this.successMsg = isNew ? 'Escuela creada.' : 'Escuela actualizada.';
         this.cancel();
         this.load();
       },
-      error: err => { this.isSaving = false; this.fail(err, 'No se pudo guardar la sede.'); }
+      error: err => { this.isSaving = false; this.fail(err, 'No se pudo guardar la escuela.'); }
     });
   }
 
   deactivate(campus: Campus): void {
-    if (!confirm(`¿Dar de baja la sede "${campus.name}"?`)) return;
+    if (!confirm(`¿Dar de baja la escuela "${campus.name}"?`)) return;
     this.clearMessages();
     this.careerService.deactivateCampus(campus.id).subscribe({
-      next: () => { this.successMsg = `Sede ${campus.name} dada de baja.`; this.load(); },
-      error: err => this.fail(err, 'No se pudo dar de baja la sede.')
+      next: () => { this.successMsg = `Escuela ${campus.name} dada de baja.`; this.load(); },
+      error: err => this.fail(err, 'No se pudo dar de baja la escuela.')
     });
   }
 

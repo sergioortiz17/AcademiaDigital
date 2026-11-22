@@ -213,7 +213,7 @@ export class StudentService {
     );
   }
 
-  /** Asigna varios alumnos a una división; informa los asignados y el motivo de cada uno que falló. */
+  /** Asigna varios alumnos a un curso; informa los asignados y el motivo de cada uno que falló. */
   assignStudentsToDivision(careerId: number, divisionId: number, studentIds: number[], reason?: string | null):
     Observable<{ success: boolean; assigned: number[]; failed: { studentId: number; reason: string }[] }> {
     return this.http.post<{ success: boolean; assigned: number[]; failed: { studentId: number; reason: string }[] }>(

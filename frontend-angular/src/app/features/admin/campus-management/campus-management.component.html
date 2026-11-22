@@ -1,15 +1,25 @@
+<div class="page-header" *ngIf="pageMode">
+  <h1>Agregar escuelas</h1>
+  <p>Las escuelas (sedes) del instituto donde se dictan las carreras.</p>
+  <ol class="steps">
+    <li><strong>Agregue la escuela</strong> con su nombre y, si quiere, la dirección.</li>
+    <li><strong>Asigne cada curso a su escuela</strong> en Docentes → Cursos (botón editar de cada curso).</li>
+    <li><strong>Elija la escuela en Asignar materia</strong> para ver solo sus cursos y comisiones.</li>
+  </ol>
+</div>
+
 <mat-card class="campus-card">
   <mat-card-content>
-    <h2>Sedes</h2>
-    <p class="hint">Las escuelas donde se dictan las carreras. Cada división se asigna a una sede (Cursado → Divisiones).</p>
+    <h2>Escuelas</h2>
+    <p class="hint" *ngIf="!pageMode">Las escuelas donde se dictan las carreras. Cada curso se asigna a una escuela (Docentes → Cursos).</p>
 
     <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
     <div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
     <div class="campus-form">
       <mat-form-field appearance="outline">
-        <mat-label>Nombre de la sede</mat-label>
-        <input matInput [(ngModel)]="name" maxlength="100" placeholder="Ej: Sede Centro" (keyup.enter)="save()">
+        <mat-label>Nombre de la escuela</mat-label>
+        <input matInput [(ngModel)]="name" maxlength="100" placeholder="Ej: Escuela Centro" (keyup.enter)="save()">
       </mat-form-field>
       <mat-form-field appearance="outline" class="address">
         <mat-label>Dirección (opcional)</mat-label>
@@ -17,7 +27,7 @@
       </mat-form-field>
       <button mat-raised-button color="primary" [disabled]="!name.trim() || isSaving" (click)="save()">
         <mat-icon>{{ editingId == null ? 'add' : 'save' }}</mat-icon>
-        {{ editingId == null ? 'Agregar sede' : 'Guardar' }}
+        {{ editingId == null ? 'Agregar escuela' : 'Guardar' }}
       </button>
       <button mat-button *ngIf="editingId != null" (click)="cancel()">Cancelar</button>
     </div>
@@ -33,7 +43,7 @@
           <mat-icon>delete</mat-icon>
         </button>
       </li>
-      <li class="empty" *ngIf="campuses.length === 0">Todavía no hay sedes cargadas.</li>
+      <li class="empty" *ngIf="campuses.length === 0">Todavía no hay escuelas cargadas.</li>
     </ul>
   </mat-card-content>
 </mat-card>

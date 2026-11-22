@@ -283,7 +283,7 @@ export class AttendanceComponent implements OnInit {
 
     this.isLoading = true;
     this.errorMsg = '';
-    // Por comisión: la misma materia en otro cuatrimestre o división tiene su propia asistencia.
+    // Por comisión: la misma materia en otro cuatrimestre o curso tiene su propia asistencia.
     forkJoin({
       sessions: this.attendanceService.getSessions({
         courseSectionId: assignment.courseSectionId,
@@ -508,7 +508,7 @@ export class AttendanceComponent implements OnInit {
         ['Materia', assignment.courseName],
         ['Carrera', selectedCareer?.name ?? ''],
         ['Turno', ''],
-        ['Sede', ''],
+        ['Escuela', ''],
         ['Instituto', 'Instituto Técnico Superior Córdoba']
       ];
 

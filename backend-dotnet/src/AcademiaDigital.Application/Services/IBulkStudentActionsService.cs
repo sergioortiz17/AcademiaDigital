@@ -11,7 +11,7 @@ public interface IBulkStudentActionsService
     Task<BulkGraduateResult> GraduateAsync(IReadOnlyCollection<long> studentIds, DateOnly graduatedOn, string reason, long actorUserId, CancellationToken ct = default);
 
     /// <summary>
-    /// Inscribe a todos los alumnos asignados a la división en las materias del plan de su año
+    /// Inscribe a todos los alumnos asignados al curso en las materias del plan de su año
     /// para el cuatrimestre indicado (las anuales van con el 1.º). Saltea las inscripciones que ya existen.
     /// </summary>
     Task<BulkEnrollResult> EnrollDivisionAsync(int divisionId, int semester, CancellationToken ct = default);

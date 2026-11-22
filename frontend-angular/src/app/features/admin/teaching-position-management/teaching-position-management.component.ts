@@ -161,4 +161,9 @@ export class TeachingPositionManagementComponent implements OnInit {
       }
     });
   }
+
+  /** Cupos libres de la comisión: cupo menos inscriptos (nunca negativo). */
+  freeSeats(position: TeachingPosition): number {
+    return Math.max(0, position.maxStudents - (position.enrolledCount ?? 0));
+  }
 }

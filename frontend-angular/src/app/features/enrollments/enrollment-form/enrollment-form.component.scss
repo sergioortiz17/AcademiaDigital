@@ -502,3 +502,9 @@ mat-form-field{
         width: 100%;
     }
 }
+
+/* Inscripción ya enviada en el período abierto */
+.existing-enrollment { margin-top: 16px; padding: 16px; border-radius: 12px; background: #fff8e1; border: 1px solid #f0d58a; }
+.existing-head { display: flex; gap: 12px; align-items: flex-start; mat-icon { color: #a66b00; } p { margin: 4px 0 0; color: #5d4a1f; } }
+.existing-courses { margin: 10px 0 12px 36px; padding: 0; li { margin: 2px 0; } }
+.existing-actions { display: flex; justify-content: flex-end; }

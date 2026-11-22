@@ -61,8 +61,8 @@ public sealed class CreateEnrollmentCommandHandler(
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
         // Auto-match NIVEL 2 (por materia): para cada materia inscripta, buscar su CourseSection
-        // (sección de esa materia en este ciclo/cuatrimestre) SIN filtrar por división del alumno.
-        // Esto vincula al recursante — que cursa una materia fuera de su división — a la sección
+        // (sección de esa materia en este ciclo/cuatrimestre) SIN filtrar por curso del alumno.
+        // Esto vincula al recursante — que cursa una materia fuera de su curso — a la sección
         // correcta. Si hay exactamente una sección activa, se linkea; 0 o 2+ → queda sin sección
         // (manual), sin bloquear la inscripción.
         var sectionByStudyPlanCourseId = new Dictionary<int, int?>();

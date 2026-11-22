@@ -37,7 +37,7 @@ public class GetApplicantsUseCase(IUserRepository userRepository)
 
 /// <summary>
 /// Da de alta (en masa) a los aspirantes indicados: pasan a poder iniciar sesión y, si son
-/// docentes, su perfil queda activo para asignarles materias y divisiones.
+/// docentes, su perfil queda activo para asignarles materias y cursos.
 /// </summary>
 public class ApproveApplicantsUseCase(IUserRepository userRepository, ITeacherRepository teacherRepository)
 {

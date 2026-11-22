@@ -167,7 +167,7 @@ export class AttendanceService {
     let params = new HttpParams();
     if (filters.academicYear != null) params = params.set('academicYear', filters.academicYear);
     if (filters.courseId != null) params = params.set('courseId', filters.courseId);
-    // La API conserva `commissionId` como nombre público del filtro de división.
+    // La API conserva `commissionId` como nombre público del filtro de curso.
     if (filters.divisionId != null) params = params.set('commissionId', filters.divisionId);
     if (filters.courseSectionId != null) params = params.set('courseSectionId', filters.courseSectionId);
     return this.http.get<AttendanceSession[]>(`${this.base}v1/attendance/sessions`, { params });

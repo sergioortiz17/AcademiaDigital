@@ -13,7 +13,7 @@ const POSITION_TYPES = [
   { value: 'Assistant', label: 'Ayudante' }
 ];
 
-/** Docente soltado sobre una materia, a la espera de que se le elija la división. */
+/** Docente soltado sobre una materia, a la espera de que se le elija el curso. */
 interface PendingTeacher {
   teacher: Teacher;
   divisionId: number | null;
@@ -28,8 +28,8 @@ interface YearGroup {
 
 /**
  * Docentes → Asignar materia, con arrastrar y soltar: los docentes son píldoras que se sueltan
- * sobre el cuadro de una materia. Al abrir la materia se elige la división (y el cargo) de cada
- * docente soltado y se guarda. El servidor usa la comisión vacante de esa materia y división o
+ * sobre el cuadro de una materia. Al abrir la materia se elige el curso (y el cargo) de cada
+ * docente soltado y se guarda. El servidor usa la comisión vacante de esa materia y curso o
  * la crea si todavía no existe.
  */
 @Component({
@@ -42,7 +42,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
   readonly positionTypes = POSITION_TYPES;
 
   campuses: Campus[] = [];
-  /** Sede elegida; null = todas las sedes. */
+  /** Escuela elegida; null = todas las escuelas. */
   campusId: number | null = null;
   careers: Career[] = [];
   careerId: number | null = null;
@@ -54,14 +54,14 @@ export class TeacherCourseAssignmentComponent implements OnInit {
   private allDivisions: CareerDivision[] = [];
   years: YearGroup[] = [];
   private allSections: TeachingPosition[] = [];
-  /** Comisiones de la sede elegida (o de todas). */
+  /** Comisiones de la escuela elegida (o de todas). */
   private sections: TeachingPosition[] = [];
 
   /** Docentes pendientes por materia (courseId). */
   pending: Record<number, PendingTeacher[]> = {};
   /** Materias con la lista de comisiones desplegada. */
   expanded = new Set<number>();
-  /** Materia abierta para elegir divisiones. */
+  /** Materia abierta para elegir cursos. */
   openCourse: StudyPlanCourse | null = null;
 
   isLoading = false;
@@ -111,6 +111,16 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     return this.sections.filter(s => s.teacherId === t.id).length;
   }
 
+  /** Texto al pasar el mouse por un docente: sus materias en la carrera, ciclo y escuela elegidos. */
+  teacherCoursesTooltip(t: Teacher): string {
+    const own = this.sections.filter(s => s.teacherId === t.id)
+      .map(s => `• ${s.courseName}${s.divisionName ? ' (' + s.divisionName + ')' : ''}`)
+      .sort((a, b) => a.localeCompare(b, 'es'));
+    return own.length
+      ? `${this.teacherName(t)} · ${own.length} materia(s)\n${own.join('\n')}`
+      : `${this.teacherName(t)}\nSin materias asignadas en ${this.academicYear}.`;
+  }
+
   onCareerChange(): void {
     this.pending = {};
     this.expanded.clear();
@@ -158,7 +168,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     this.applyCampusFilter();
   }
 
-  /** Divisiones activas de la carrera en la sede elegida. */
+  /** Cursos activos de la carrera en la escuela elegida. */
   private get campusDivisions(): CareerDivision[] {
     return this.campusId == null ? this.allDivisions : this.allDivisions.filter(d => d.campusId === this.campusId);
   }
@@ -181,7 +191,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
       });
   }
 
-  /** Divisiones del ciclo elegido que cursan el año de la materia. */
+  /** Cursos del ciclo elegido que cursan el año de la materia. */
   divisionsFor(course: StudyPlanCourse): CareerDivision[] {
     return this.campusDivisions.filter(d => d.academicYear === this.academicYear && d.yearNumber === course.yearNumber);
   }
@@ -221,7 +231,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     const teacher = event.item.data as Teacher;
     const list = this.pending[course.courseId] ?? [];
     if (list.some(p => p.teacher.id === teacher.id)) return;
-    // Si la materia tiene una sola división ese año, ya queda elegida.
+    // Si la materia tiene un solo curso ese año, ya queda elegida.
     const divisions = this.divisionsFor(course);
     this.pending[course.courseId] = [...list, {
       teacher, divisionId: divisions.length === 1 ? divisions[0].id : null, positionType: 'Titular'
@@ -240,7 +250,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     return Object.values(this.pending).reduce((total, list) => total + list.length, 0);
   }
 
-  /** Pendientes a los que todavía les falta elegir la división. */
+  /** Pendientes a los que todavía les falta elegir el curso. */
   get missingDivisionCount(): number {
     return Object.values(this.pending).reduce((total, list) => total + list.filter(p => p.divisionId == null).length, 0);
   }
@@ -295,7 +305,7 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     });
   }
 
-  /** Hoy, o el 1 de marzo si el ciclo de la división es otro año. */
+  /** Hoy, o el 1 de marzo si el ciclo del curso es otro año. */
   private startDateFor(division: CareerDivision): string {
     const today = new Date();
     const date = today.getFullYear() === division.academicYear ? today : new Date(division.academicYear, 2, 1);

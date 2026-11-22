@@ -4,6 +4,28 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.16.0] - 2026-11-22
+
+Escuelas, cupos libres en Comisiones, inscripción ya enviada visible para el alumno y mejoras en Asignar materia. También corrige el menú de Administración de la 1.15.0.
+
+### Agregado
+
+- **Agregar escuelas**: ítem nuevo del menú de Administración con su pantalla para crear, editar y dar de baja escuelas, y los pasos para usarlas (asignar cada división a su escuela y elegirla en Asignar materia). La sección de escuelas sigue también en Gestión de Carreras.
+- **Inscripción a materias**: si el alumno ya se inscribió en el período abierto, al entrar ve esa inscripción (fecha, turno y materias) en lugar del formulario, con el aviso de que no puede volver a inscribirse en ese período. El botón "Dar de baja la inscripción" (con confirmación) la quita y vuelve a mostrar el formulario para inscribirse de nuevo.
+- **Asignar materia**: cada año de la carrera tiene un fondo de color distinto (1.º celeste, 2.º verde, 3.º amarillo). Al pasar el mouse por un docente se ven las materias que tiene asignadas (con su división) en la carrera, ciclo y escuela elegidos, en lugar del legajo y el correo.
+- **Comisiones**: la columna Estado muestra los cupos libres de cada comisión con docente ("29 cupos libres", o "Sin cupos" si está llena) en lugar de "Ocupado". Las comisiones sin docente siguen diciendo "Vacante". Los inscriptos se cuentan igual que en el desplegable de alumnos de la comisión.
+
+### Cambiado
+
+- **Cursos**: lo que se llamaba "División" (el grupo de alumnos de un año, turno y escuela) ahora se llama "Curso" en todas las pantallas, menús y mensajes, como en las planillas del instituto: "Divisiones" pasa a "Cursos", "Asignar división a alumnos" a "Asignar curso a alumnos" y el filtro "División" de Calificaciones y Asistencia a "Curso". La comisión sigue siendo una materia dictada a un curso, con su docente. Los mensajes de error de los cursos que decían "comisión" por herencia ahora dicen "curso". Solo cambian los textos; la base de datos no.
+- **Escuelas**: lo que se llamaba "Sede" ahora se llama "Escuela" en todas las pantallas y mensajes (Divisiones, Asignar materia, Gestión de Carreras y el filtro de planillas, que ahora muestra las escuelas reales en lugar de valores de ejemplo).
+
+### Corregido
+
+- **Menú de Administración**: la 1.15.0 había quitado ítems ("Asignaciones" y "Asignar división a alumnos"), había renombrado otros ("Gestión de Inscripciones", "Gestión de Usuarios", "Gestión de Carreras", "Acciones masivas", "Requisitos de ingreso", entre otros) y había reemplazado los desplegables por secciones fijas. Vuelven todos los ítems con su nombre de antes, agrupados en desplegables: Admisión (Aspirantes, Requisitos de ingreso, Gestión de Inscripciones), Alumnos (Alumnos, Asignar división a alumnos, Analíticos, Acciones masivas), Docentes (Listado de docentes, Comisiones, Divisiones, Asignar materia, Asignaciones), Registros Académicos, Certificados y Mesa de examen. El desplegable de la página actual se abre solo. Los títulos de las páginas vuelven a ser los de antes.
+- **Acciones masivas**: vuelve a mostrar el egreso y la inscripción por división en la misma pantalla. Desde el botón "Inscribir en materias" de Divisiones sigue abriendo solo la inscripción, con la carrera elegida.
+- **Gestión de Inscripciones**: vuelven el título y el botón "Activar inscripción". Se mantienen las mejoras de la 1.15.0: confirmación al cerrar, "Eliminar período" en un menú aparte y estado como etiqueta.
+
 ## [1.15.0] - 2026-11-22
 
 ### Cambiado

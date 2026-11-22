@@ -142,7 +142,7 @@ public sealed class TeachersController(
     }
 
     /// <summary>
-    /// Asigna varias materias de una división en un paso: usa la comisión vacante de cada materia o
+    /// Asigna varias materias de un curso en un paso: usa la comisión vacante de cada materia o
     /// la crea si no existe. Devuelve las asignaciones creadas y las materias que no se pudieron asignar.
     /// </summary>
     [HttpPost("{id:long}/assignments/bulk")]

@@ -2,9 +2,10 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { CareerService } from '../../../core/services/career.service';
 import { SubjectService } from '../../../core/services/subject.service';
-import { EnrollmentService, EnrollmentPeriodDto } from '../../../core/services/enrollment. service';
+import { EnrollmentService, EnrollmentPeriodDto, MyEnrollmentPeriodDto } from '../../../core/services/enrollment. service';
 import { EnrollmentSuccessDialogComponent } from './enrollment-success-dialog.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EligibleCourse, StudentService } from '../../../core/services/student.service';
@@ -65,6 +66,9 @@ export class EnrollmentFormComponent implements OnInit {
 
   selectedCareer: number | null = null;
   activePeriod: EnrollmentPeriodDto | null = null;
+  /** Inscripción que el alumno ya envió en el período abierto (si la hay, no se muestra el formulario). */
+  existingEnrollment: MyEnrollmentPeriodDto | null = null;
+  isCancelling = false;
   checkingPeriod = false;
 
   selectedYear: number | null = null;
@@ -133,6 +137,7 @@ export class EnrollmentFormComponent implements OnInit {
   onCareerChange(): void {
     this.errorMsg = '';
     this.activePeriod = null;
+    this.existingEnrollment = null;
     this.subjects = [];
     this.firstYearSubjects = [];
     this.secondYearSubjects = [];
@@ -146,11 +151,22 @@ export class EnrollmentFormComponent implements OnInit {
     this.enrollmentService.getActivePeriod(this.selectedCareer).subscribe({
       next: res => {
         this.activePeriod = res.data;
-        this.checkingPeriod = false;
-        if (this.activePeriod) {
-          this.loadStudyPlanCourses(this.activePeriod.studyPlanId);
+        if (!this.activePeriod) {
+          this.checkingPeriod = false;
+          this.cdr.detectChanges();
+          return;
         }
-        this.cdr.detectChanges();
+        const period = this.activePeriod;
+        // Si ya se inscribió en este período, se muestra esa inscripción en lugar del formulario.
+        this.enrollmentService.getMyEnrollments().pipe(
+          map(r => (r.data ?? []).find(e => e.periodId === period.id) ?? null),
+          catchError(() => of(null))
+        ).subscribe(existing => {
+          this.existingEnrollment = existing;
+          this.checkingPeriod = false;
+          if (!existing) this.loadStudyPlanCourses(period.studyPlanId);
+          this.cdr.detectChanges();
+        });
       },
       error: err => {
         this.errorMsg = this.enrollmentErrorMessage(err, 'No se pudo verificar el período de inscripción.');
@@ -275,6 +291,36 @@ export class EnrollmentFormComponent implements OnInit {
     if (this.selectedShift === 'Tarde')
       return this.activePeriod.quotasAfternoon - this.activePeriod.enrolledAfternoon;
     return this.activePeriod.quotasEvening - this.activePeriod.enrolledEvening;
+  }
+
+  /** Da de baja la inscripción del período abierto para poder inscribirse de nuevo. */
+  cancelExistingEnrollment(): void {
+    const existing = this.existingEnrollment;
+    if (!existing || this.isCancelling) return;
+    Swal.fire({
+      title: 'Dar de baja la inscripción',
+      text: `Se quitarán las ${existing.courseNames.length} materia(s) de esta inscripción. Después puede volver a inscribirse mientras el período siga abierto.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Sí, dar de baja',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.isCancelling = true;
+      this.cdr.detectChanges();
+      this.enrollmentService.cancelMyEnrollment(existing.periodId).subscribe({
+        next: () => {
+          this.isCancelling = false;
+          this.onCareerChange(); // vuelve a mostrar el formulario
+        },
+        error: err => {
+          this.isCancelling = false;
+          this.errorMsg = this.enrollmentErrorMessage(err, 'No se pudo dar de baja la inscripción.');
+          this.cdr.detectChanges();
+        }
+      });
+    });
   }
 
   submitEnrollment(): void {

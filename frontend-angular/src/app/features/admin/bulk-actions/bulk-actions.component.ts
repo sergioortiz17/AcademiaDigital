@@ -6,8 +6,9 @@ import { StudentListItem, StudentService } from '../../../core/services/student.
 import { BulkActionsService, BulkEnrollResult, BulkGraduateResult } from '../../../core/services/bulk-actions.service';
 
 /**
- * Egresos (menú Trámites y egreso) e inscripción de una división en las materias de su año (botón
- * "Inscribir en materias" de Divisiones, con ?accion=inscribir-division&careerId=). Misma ruta, dos modos.
+ * Acciones masivas: egresar alumnos con fecha e inscribir un curso en las materias de su año.
+ * Desde el botón "Inscribir en materias" de Cursos (?accion=inscribir-division&careerId=) muestra
+ * solo la inscripción, con la carrera ya elegida.
  */
 @Component({
   selector: 'app-bulk-actions',
@@ -30,7 +31,7 @@ export class BulkActionsComponent implements OnInit {
   graduating = false;
   graduateResult: BulkGraduateResult | null = null;
 
-  // --- Inscripción de una división ---
+  // --- Inscripción de un curso ---
   enrollCareerId: number | null = null;
   divisions: CareerDivision[] = [];
   divisionId: number | null = null;
@@ -48,12 +49,12 @@ export class BulkActionsComponent implements OnInit {
     private readonly route: ActivatedRoute
   ) {}
 
-  /** 'graduate' desde el menú (Egresos); 'enroll' desde el botón de Divisiones. */
-  mode: 'graduate' | 'enroll' = 'graduate';
+  /** 'all' desde el menú (egreso e inscripción por curso); 'enroll' desde el botón de Cursos. */
+  mode: 'all' | 'enroll' = 'all';
 
   ngOnInit(): void {
     const query = this.route.snapshot.queryParamMap;
-    this.mode = query.get('accion') === 'inscribir-division' ? 'enroll' : 'graduate';
+    this.mode = query.get('accion') === 'inscribir-division' ? 'enroll' : 'all';
     const presetCareerId = Number(query.get('careerId')) || null;
     this.careerService.getCareers().subscribe(careers => {
       this.careers = careers;
@@ -153,8 +154,8 @@ export class BulkActionsComponent implements OnInit {
     if (!division) return;
     const confirm = await Swal.fire({
       icon: 'question',
-      titleText: `¿Inscribir a la división ${division.code}?`,
-      text: `Todos los alumnos asignados a la división quedan inscriptos en las materias de ${division.yearNumber}.º año `
+      titleText: `¿Inscribir al curso ${division.code}?`,
+      text: `Todos los alumnos asignados al curso quedan inscriptos en las materias de ${division.yearNumber}.º año `
         + `del ${this.semester === 1 ? '1.er cuatrimestre (y las anuales)' : '2.º cuatrimestre'} de ${division.academicYear}. Las inscripciones que ya existen no se duplican.`,
       showCancelButton: true, confirmButtonText: 'Inscribir', cancelButtonText: 'Cancelar'
     });
@@ -168,7 +169,7 @@ export class BulkActionsComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: err => {
-        this.errorMsg = err?.message || 'No se pudo inscribir a la división.';
+        this.errorMsg = err?.message || 'No se pudo inscribir al curso.';
         this.enrolling = false;
         this.cdr.markForCheck();
       }

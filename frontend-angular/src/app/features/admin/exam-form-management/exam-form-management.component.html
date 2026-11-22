@@ -1,5 +1,4 @@
 <div class="exam-page" [attr.aria-busy]="loading">
-  <h1 class="page-title">Formulario de mesas</h1>
   <div class="scope-selectors">
     <label>Carrera<select [(ngModel)]="careerId" (ngModelChange)="changeCareer()" [disabled]="loading || dirty">
       <option [ngValue]="0">Seleccionar carrera</option><option *ngFor="let item of careers" [ngValue]="item.id">{{ item.name }}</option>
@@ -16,7 +15,7 @@
   <button *ngIf="!careers.length && !loading" type="button" class="text-link" (click)="loadCareers()">Cargar carreras</button>
 
   <section class="exam-plan">
-    <h2 class="section-tab">Inscripciones Mesa de Examen</h2>
+    <h1 class="section-tab">Inscripciones Mesa de Examen</h1>
     <div class="exam-panel plan-panel">
       <p class="intro">Complete el formulario de inscripci&#243;n para los ex&#225;menes de<br>{{ career?.name || 'la carrera seleccionada' }}.</p>
       <div class="edit-toolbar"><button type="button" class="edit-link" disabled aria-describedby="image-limitation">Editar &#9998;</button></div>

@@ -1,5 +1,5 @@
 <p class="hint">
-    Elige la división y marca las materias. Si la comisión de una materia no existe, se crea sola.
+    Elige el curso y marca las materias. Si la comisión de una materia no existe, se crea sola.
   </p>
 
   <div *ngIf="errorMsg" class="msg msg--error">{{ errorMsg }}</div>
@@ -18,13 +18,13 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>División</mat-label>
+      <mat-label>Curso</mat-label>
       <mat-select [(ngModel)]="divisionId" (selectionChange)="onDivisionChange()" [disabled]="!careerId">
         <mat-option *ngFor="let d of divisions" [value]="d.id">
           {{ d.code }} · {{ d.name }} ({{ d.academicYear }}, {{ d.yearNumber }}° año)
         </mat-option>
       </mat-select>
-      <mat-hint *ngIf="careerId && !isLoading && divisions.length === 0">No hay divisiones activas.</mat-hint>
+      <mat-hint *ngIf="careerId && !isLoading && divisions.length === 0">No hay cursos activos.</mat-hint>
     </mat-form-field>
 
     <mat-form-field appearance="outline" subscriptSizing="dynamic">

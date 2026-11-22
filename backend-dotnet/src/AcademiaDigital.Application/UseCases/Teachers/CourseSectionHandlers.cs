@@ -60,17 +60,24 @@ public sealed record CourseSectionDto(
     int? CareerId = null,
     int? YearNumber = null,
     string? Shift = null,
-    bool IsAnnual = false);
+    bool IsAnnual = false,
+    int EnrolledCount = 0);
 
 public sealed class GetCourseSectionsQueryHandler(ICourseSectionRepository repository)
 {
     public async Task<IReadOnlyList<CourseSectionDto>> Handle(
         GetCourseSectionsQuery query,
         CancellationToken ct = default)
-        => (await repository.GetAllAsync(
-                query.AcademicYear, query.Semester, query.IsVacant, query.IncludeInactive, ct))
-            .Select(CourseSectionMapper.Map)
+    {
+        var sections = await repository.GetAllAsync(
+            query.AcademicYear, query.Semester, query.IsVacant, query.IncludeInactive, ct);
+        // Inscriptos por comisión, para mostrar los cupos libres en el listado.
+        var enrolled = await repository.CountEnrolledAsync(sections, ct);
+        return sections
+            .Select(section => CourseSectionMapper.Map(section) with
+                { EnrolledCount = enrolled.TryGetValue(section.Id, out var count) ? count : 0 })
             .ToArray();
+    }
 }
 
 public sealed class GetCourseSectionByIdQueryHandler(ICourseSectionRepository repository)
@@ -125,7 +132,7 @@ public sealed class CreateCourseSectionCommandHandler(
         }, ct);
 
         // No se asignan Course/Division sobre `created`: es una entidad rastreada y la materia y la
-        // división vienen sin rastreo; EF las adjuntaría como modificadas y el próximo SaveChanges del
+        // curso vienen sin rastreo; EF las adjuntaría como modificadas y el próximo SaveChanges del
         // mismo request (p. ej. la asignación masiva de materias) fallaría por concurrencia.
         return CourseSectionMapper.Map(created, course, commission);
     }

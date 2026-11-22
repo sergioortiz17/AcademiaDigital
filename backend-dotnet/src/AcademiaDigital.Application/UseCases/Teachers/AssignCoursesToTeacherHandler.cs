@@ -20,8 +20,8 @@ public sealed record AssignCoursesToTeacherResult(
     IReadOnlyList<CourseAssignmentFailure> Failed);
 
 /// <summary>
-/// Asigna varias materias a un docente en un paso: para cada materia de la división busca la
-/// comisión (misma materia, división, año académico y cargo). Si existe y está vacante la usa; si no
+/// Asigna varias materias a un docente en un paso: para cada materia del curso busca la
+/// comisión (misma materia, curso, año académico y cargo). Si existe y está vacante la usa; si no
 /// existe la crea con el cuatrimestre (o anual) que indica el plan de estudios vigente de la carrera.
 /// Cada materia se resuelve por separado: un fallo no impide asignar las demás.
 /// </summary>
@@ -51,13 +51,13 @@ public sealed class AssignCoursesToTeacherHandler(
         if (!teacher.IsActive || !teacher.User.IsActive)
             throw new InvalidOperationException("El docente está inactivo.");
         var division = await divisions.FindByIdAsync(command.DivisionId, ct)
-            ?? throw new KeyNotFoundException("División no encontrada.");
+            ?? throw new KeyNotFoundException("Curso no encontrado.");
         if (!division.IsActive)
-            throw new InvalidOperationException("La división está inactiva.");
+            throw new InvalidOperationException("El curso está inactivo.");
         // Se valida antes de crear comisiones, para no dejar comisiones vacías si la asignación falla.
         if (command.StartedOn.Year != division.AcademicYear)
             throw new ArgumentException(
-                $"La fecha de inicio debe pertenecer al año académico de la división ({division.AcademicYear}).");
+                $"La fecha de inicio debe pertenecer al año académico del curso ({division.AcademicYear}).");
 
         var plan = await studyPlans.GetActiveByCareerIdAsync(division.CareerId, ct)
             ?? throw new InvalidOperationException("La carrera no tiene un plan de estudios vigente.");
@@ -113,8 +113,8 @@ public sealed class AssignCoursesToTeacherHandler(
         if (taken is not null)
         {
             if (taken.TeacherId == command.TeacherId)
-                throw new InvalidOperationException("El docente ya tiene asignada esta materia en la división.");
-            throw new InvalidOperationException("La comisión de esta materia en la división ya tiene otro docente.");
+                throw new InvalidOperationException("El docente ya tiene asignada esta materia en el curso.");
+            throw new InvalidOperationException("La comisión de esta materia en el curso ya tiene otro docente.");
         }
 
         var created = await createSection.Handle(new CreateCourseSectionCommand(

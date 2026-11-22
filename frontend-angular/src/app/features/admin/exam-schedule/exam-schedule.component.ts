@@ -38,7 +38,7 @@ export class ExamScheduleComponent implements OnInit {
   selectedYears = new Set<number>([1, 2, 3]);
   examTime = '18:00';
   deadlineDays = 3;
-  location = 'Sede central';
+  location = 'Escuela central';
   blockedText = '';
 
   exams: EditableExam[] = [];

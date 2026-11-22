@@ -5,8 +5,8 @@ using AcademiaDigital.Domain.Interfaces.Repositories;
 namespace AcademiaDigital.Application.UseCases.Students;
 
 /// <summary>
-/// Asigna varios alumnos a una misma división en un solo pedido (pantalla "Asignar división a
-/// alumno"). Para cada alumno toma su plan de estudios vigente en la carrera de la división y
+/// Asigna varios alumnos a una misma curso en un solo pedido (pantalla "Asignar curso a
+/// alumno"). Para cada alumno toma su plan de estudios vigente en la carrera del curso y
 /// reutiliza la asignación individual (<see cref="IStudentManagementService.AssignAcademicAsync"/>),
 /// con su misma validación y transacción. Un alumno que no puede asignarse no frena al resto:
 /// el resultado informa los asignados y el motivo de cada uno que falló.
@@ -30,9 +30,9 @@ public sealed class AssignDivisionToStudentsHandler(
 
         var division = await divisions.FindByIdAsync(divisionId, ct);
         if (division is null || division.CareerId != careerId)
-            throw new KeyNotFoundException("División no encontrada en esta carrera.");
+            throw new KeyNotFoundException("Curso no encontrado en esta carrera.");
         if (!division.IsActive)
-            throw new InvalidOperationException("La división está inactiva.");
+            throw new InvalidOperationException("El curso está inactivo.");
 
         var assigned = new List<long>();
         var failed = new List<BulkAssignmentFailure>();

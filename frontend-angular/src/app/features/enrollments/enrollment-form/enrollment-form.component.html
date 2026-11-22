@@ -50,8 +50,28 @@
     </div>
   </div>
 
+  <!-- Ya se inscribió en este período: se muestra su inscripción y la opción de darla de baja. -->
+  <div class="existing-enrollment" *ngIf="activePeriod && existingEnrollment as e">
+    <div class="existing-head">
+      <mat-icon>assignment_turned_in</mat-icon>
+      <div>
+        <strong>Ya envió su solicitud de inscripción para este período.</strong>
+        <p>Enviada el {{ e.enrollmentDate | date:'dd/MM/yyyy' }}<ng-container *ngIf="e.shift"> · Turno {{ e.shift }}</ng-container>.
+          No puede inscribirse de nuevo en este período (el detalle también está en "Ver mis inscripciones"). Si necesita cambiar materias o turno, dé de baja esta inscripción y vuelva a inscribirse.</p>
+      </div>
+    </div>
+    <ul class="existing-courses">
+      <li *ngFor="let c of e.courseNames">{{ c }}</li>
+    </ul>
+    <div class="existing-actions">
+      <button mat-stroked-button color="warn" type="button" [disabled]="isCancelling" (click)="cancelExistingEnrollment()">
+        <mat-icon>delete</mat-icon> Dar de baja la inscripción
+      </button>
+    </div>
+  </div>
+
   <!-- Rest of form only shown when period is active -->
-  <ng-container *ngIf="activePeriod">
+  <ng-container *ngIf="activePeriod && !existingEnrollment">
 
     <div class="filters">
       <div class="field">
@@ -150,7 +170,7 @@
 </div>
 
 <!-- Flotante: queda visible abajo mientras se recorre la lista de materias. -->
-<div class="submit-section">
+<div class="submit-section" *ngIf="!existingEnrollment">
   <button mat-raised-button class="save-btn"
     (click)="submitEnrollment()"
     [disabled]="!canSubmit() || isSubmitting">

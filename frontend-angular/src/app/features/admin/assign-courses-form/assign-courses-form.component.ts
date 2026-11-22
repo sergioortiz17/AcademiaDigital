@@ -27,7 +27,7 @@ const POSITION_TYPES = [
 ];
 
 /**
- * Formulario para asignar materias a un docente en un paso: carrera → división → se marcan las materias.
+ * Formulario para asignar materias a un docente en un paso: carrera → curso → se marcan las materias.
  * Lo usan el diálogo del legajo y la pantalla Docentes → Asignar materia.
  * El servidor usa la comisión vacante de cada materia o la crea si todavía no existe, así que no
  * hace falta crear las comisiones antes en "Comisiones".
@@ -145,7 +145,7 @@ export class AssignCoursesFormComponent implements OnInit, OnChanges {
     this.clearMessages();
     const division = this.division;
     if (!division) { this.rows = []; return; }
-    // La fecha de inicio tiene que caer en el año académico de la división.
+    // La fecha de inicio tiene que caer en el año académico del curso.
     if (this.startedOn.getFullYear() !== division.academicYear) {
       this.startedOn = new Date(division.academicYear, 2, 1);
     }

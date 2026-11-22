@@ -43,7 +43,7 @@ export class AttendanceManagementComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   careers: Career[] = [];
   selectedCareerId: number | null = null;
-  // No hay sedes cargadas en el sistema: se filtra por turno, que sí tienen las divisiones.
+  // No hay sedes cargadas en el sistema: se filtra por turno, que sí tienen los cursos.
   selectedShift: string | null = null;
   planYears = [
     { value: 1, label: 'Primero' },

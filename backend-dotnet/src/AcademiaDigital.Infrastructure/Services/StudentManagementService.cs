@@ -194,18 +194,18 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
         if (!Shifts.Contains(r.Shift, StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("Turno inválido.");
         Division item;
         if (id.HasValue) item = await db.Divisions.SingleOrDefaultAsync(x => x.Id == id && x.CareerId == careerId, ct)
-            ?? throw new KeyNotFoundException("Comisión no encontrada.");
+            ?? throw new KeyNotFoundException("Curso no encontrado.");
         else { item = new Division { CareerId = careerId }; db.Divisions.Add(item); }
         var code = r.Code.Trim();
         if (await db.Divisions.AnyAsync(x => x.Id != item.Id && x.CareerId == careerId &&
-            x.AcademicYear == r.AcademicYear && x.Code == code, ct)) throw new InvalidOperationException("El código de la comisión ya existe.");
+            x.AcademicYear == r.AcademicYear && x.Code == code, ct)) throw new InvalidOperationException("El código del curso ya existe para esta carrera y año.");
         var name = r.Name.Trim();
         if (await db.Divisions.AnyAsync(x => x.Id != item.Id && x.CareerId == careerId &&
-            x.AcademicYear == r.AcademicYear && x.Name == name, ct)) throw new InvalidOperationException("El nombre de la comisión ya existe para esta carrera y año.");
+            x.AcademicYear == r.AcademicYear && x.Name == name, ct)) throw new InvalidOperationException("El nombre del curso ya existe para esta carrera y año.");
         item.Code = code; item.Name = name; item.AcademicYear = r.AcademicYear;
         item.YearNumber = r.YearNumber; item.Shift = Shifts.Single(x => x.Equals(r.Shift, StringComparison.OrdinalIgnoreCase));
         if (r.CampusId.HasValue && !await db.Campuses.AnyAsync(x => x.Id == r.CampusId && x.IsActive, ct))
-            throw new ArgumentException("La sede no existe o está dada de baja.");
+            throw new ArgumentException("La escuela no existe o está dada de baja.");
         item.CampusId = r.CampusId;
         await db.SaveChangesAsync(ct);
         var campusName = item.CampusId.HasValue
@@ -216,9 +216,9 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
     public async Task DisableDivisionAsync(int careerId, int id, CancellationToken ct)
     {
         var item = await db.Divisions.SingleOrDefaultAsync(x => x.Id == id && x.CareerId == careerId, ct)
-            ?? throw new KeyNotFoundException("Comisión no encontrada.");
+            ?? throw new KeyNotFoundException("Curso no encontrado.");
         if (await db.StudentAcademicAssignments.AnyAsync(x => x.DivisionId == id && x.IsCurrent, ct))
-            throw new InvalidOperationException("La comisión tiene asignaciones vigentes.");
+            throw new InvalidOperationException("El curso tiene alumnos asignados: reasígnelos antes de darlo de baja.");
         item.IsActive = false; await db.SaveChangesAsync(ct);
     }
 
@@ -485,13 +485,13 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
     public async Task<CampusDto> SaveCampusAsync(int? id, UpsertCampusRequest r, CancellationToken ct)
     {
         var name = r.Name.Trim();
-        if (name.Length == 0) throw new ArgumentException("El nombre de la sede es obligatorio.");
+        if (name.Length == 0) throw new ArgumentException("El nombre de la escuela es obligatorio.");
         Campus item;
         if (id.HasValue) item = await db.Campuses.SingleOrDefaultAsync(x => x.Id == id, ct)
-            ?? throw new KeyNotFoundException("Sede no encontrada.");
+            ?? throw new KeyNotFoundException("Escuela no encontrada.");
         else { item = new Campus(); db.Campuses.Add(item); }
         if (await db.Campuses.AnyAsync(x => x.Id != item.Id && x.Name.ToLower() == name.ToLower(), ct))
-            throw new InvalidOperationException("Ya existe una sede con ese nombre.");
+            throw new InvalidOperationException("Ya existe una escuela con ese nombre.");
         item.Name = name;
         item.Address = string.IsNullOrWhiteSpace(r.Address) ? null : r.Address.Trim();
         item.IsActive = true;
@@ -502,9 +502,9 @@ public sealed class StudentManagementService(Persistence.AppDbContext db) : IStu
     public async Task DisableCampusAsync(int id, CancellationToken ct)
     {
         var item = await db.Campuses.SingleOrDefaultAsync(x => x.Id == id, ct)
-            ?? throw new KeyNotFoundException("Sede no encontrada.");
+            ?? throw new KeyNotFoundException("Escuela no encontrada.");
         if (await db.Divisions.AnyAsync(x => x.CampusId == id && x.IsActive, ct))
-            throw new InvalidOperationException("La sede tiene divisiones activas: cámbielas de sede o délas de baja primero.");
+            throw new InvalidOperationException("La escuela tiene cursos activos: cámbielos de escuela o délos de baja primero.");
         item.IsActive = false;
         await db.SaveChangesAsync(ct);
     }

@@ -21,3 +21,6 @@
 .campus-address { flex: 1; color: #536575; }
 .status { font-size: .8rem; color: #9d3222; }
 @media (max-width: 600px) { .campus-form mat-form-field { min-width: 0; width: 100%; } }
+
+.page-header { margin-bottom: 4px; h1 { margin: 0; } p { margin: 4px 0 8px; color: #536575; } }
+.steps { margin: 0 0 8px; padding-left: 20px; color: #31536e; li { margin: 4px 0; } }

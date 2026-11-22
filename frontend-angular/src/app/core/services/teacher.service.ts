@@ -70,7 +70,7 @@ export interface TeacherAssignment {
   endedByUserId: number | null;
   createdAt: string;
   endedAt: string | null;
-  /** Carrera de la división de la comisión (null si la comisión no tiene división). */
+  /** Carrera del curso de la comisión (null si la comisión no tiene curso). */
   careerId?: number | null;
   /** La comisión dura todo el año (si no, es del cuatrimestre `semester`). */
   isAnnual?: boolean;
@@ -140,7 +140,7 @@ export class TeacherService {
   }
 
   /**
-   * Asigna varias materias de una división en un paso. El servidor usa la comisión vacante de cada
+   * Asigna varias materias de un curso en un paso. El servidor usa la comisión vacante de cada
    * materia o la crea (con el cuatrimestre del plan vigente) si todavía no existe.
    */
   assignCourses(teacherId: number, request: AssignCoursesRequest): Observable<AssignCoursesResult> {
