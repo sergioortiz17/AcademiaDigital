@@ -9,6 +9,7 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 ### Agregado
 
 - **Agregar escuelas**: ítem nuevo del menú de Administración con su pantalla para crear, editar y dar de baja escuelas, y los pasos para usarlas (asignar cada división a su escuela y elegirla en Asignar materia). La sección de escuelas sigue también en Gestión de Carreras.
+- **Inscripción a materias**: si el alumno ya se inscribió en el período abierto, al entrar ve esa inscripción (fecha, turno y materias) en lugar del formulario, con el aviso de que no puede volver a inscribirse en ese período. El botón "Dar de baja la inscripción" (con confirmación) la quita y vuelve a mostrar el formulario para inscribirse de nuevo.
 - **Asignar materia**: cada año de la carrera tiene un fondo de color distinto (1.º celeste, 2.º verde, 3.º amarillo). Al pasar el mouse por un docente se ven las materias que tiene asignadas (con su división) en la carrera, ciclo y escuela elegidos, en lugar del legajo y el correo.
 - **Comisiones**: la columna Estado muestra los cupos libres de cada comisión con docente ("29 cupos libres", o "Sin cupos" si está llena) en lugar de "Ocupado". Las comisiones sin docente siguen diciendo "Vacante". Los inscriptos se cuentan igual que en el desplegable de alumnos de la comisión.
 
