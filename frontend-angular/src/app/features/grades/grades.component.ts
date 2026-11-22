@@ -265,7 +265,8 @@ export class GradesComponent implements OnInit {
       divisionCode: position.divisionCode,
       divisionName: position.divisionName,
       academicYear: position.academicYear,
-      semester: position.semester
+      semester: position.semester,
+      isAnnual: position.isAnnual
     };
   }
 
@@ -332,6 +333,23 @@ export class GradesComponent implements OnInit {
     if (grade.invalidText != null) return grade.invalidText;
     if (grade.isAbsent) return 'A';
     return grade.score == null ? '' : String(grade.score).replace('.', ',');
+  }
+
+  /**
+   * Nuevo esquema: el recuperatorio n.º k se habilita cuando el alumno desaprobó (4 o menos) o
+   * estuvo ausente en al menos k instancias. Si ya tiene nota cargada, se deja editar igual.
+   */
+  isRecoveryEnabled(row: EditableRow, evaluation: GradebookEvaluation): boolean {
+    if (!evaluation.isRecovery) return true;
+    const grade = row.editableGrades[evaluation.id];
+    if (grade?.score != null || grade?.isAbsent || grade?.invalidText != null) return true;
+    const recoveries = this.evaluationGroups.map(g => g.evaluation).filter(e => e.isRecovery);
+    const position = recoveries.findIndex(e => e.id === evaluation.id) + 1;
+    const failed = this.evaluationGroups.map(g => g.evaluation).filter(e => !e.isRecovery).filter(e => {
+      const g = row.editableGrades[e.id];
+      return g?.isAbsent || (g?.score != null && g.score / e.maximumScore * 10 <= 4);
+    }).length;
+    return failed >= position;
   }
 
   isGradeInvalid(row: EditableRow, evaluationId: number): boolean {
@@ -742,7 +760,8 @@ export class GradesComponent implements OnInit {
 
     const dialogRef = this.dialog.open(EvaluationSetupDialogComponent, {
       width: '600px',
-      disableClose: true
+      disableClose: true,
+      data: { isAnnual: assignment.isAnnual ?? true } as EvaluationSetupDialogData
     });
 
     dialogRef.afterClosed().pipe(observeOn(asyncScheduler)).subscribe((evaluations) => {
@@ -809,7 +828,11 @@ export class GradesComponent implements OnInit {
       width: '760px',
       maxWidth: '95vw',
       disableClose: true,
-      data: { evaluations: this.detail.evaluations, evaluationIdsWithGrades: [...withGrades] } as EvaluationSetupDialogData
+      data: {
+        evaluations: this.detail.evaluations,
+        evaluationIdsWithGrades: [...withGrades],
+        isAnnual: this.selectedAssignment?.isAnnual ?? true
+      } as EvaluationSetupDialogData
     });
     dialogRef.afterClosed().pipe(observeOn(asyncScheduler)).subscribe((layout: GradebookEvaluationLayoutInput[] | null) => {
       if (!layout) return;

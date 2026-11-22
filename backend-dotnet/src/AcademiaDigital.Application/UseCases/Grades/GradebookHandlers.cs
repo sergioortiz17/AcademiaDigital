@@ -265,6 +265,7 @@ public sealed class UpdateGradebookEvaluationsCommandHandler(
             }
             GradebookPolicy.DistributeEqualWeights(gradebook.Evaluations);
             policy.ValidateEvaluations(gradebook.Evaluations.ToArray());
+            GradebookPolicy.EnsureMinimumInstances(gradebook.CourseSection.IsAnnual, gradebook.Evaluations.ToArray());
             await repository.SaveAsync(gradebook, transactionCt);
             return true;
         }, ct);

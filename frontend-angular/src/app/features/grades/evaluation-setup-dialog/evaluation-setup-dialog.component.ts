@@ -19,9 +19,23 @@ interface EditableEvaluation {
 
 /** Si viene, el diálogo edita el formato de una planilla existente en vez de crear una. */
 export interface EvaluationSetupDialogData {
-  evaluations: GradebookEvaluation[];
-  evaluationIdsWithGrades: number[];
+  /** Al editar el formato: las instancias actuales. Vacío o ausente = crear planilla nueva. */
+  evaluations?: GradebookEvaluation[];
+  evaluationIdsWithGrades?: number[];
+  /** Materia anual (mínimo 4 instancias) o cuatrimestral (mínimo 2). */
+  isAnnual?: boolean;
 }
+
+/** Instancias regulares mínimas según el nuevo esquema de evaluación. */
+export const MINIMUM_INSTANCES = { annual: 4, semester: 2 };
+
+/** Formato sugerido para una materia cuatrimestral. */
+const SEMESTER_EVALUATIONS: EditableEvaluation[] = [
+  { name: '1er Parcial', maximumScore: 10, isRecovery: false },
+  { name: '2do Parcial', maximumScore: 10, isRecovery: false },
+  { name: 'Recuperatorio', maximumScore: 10, isRecovery: true },
+  { name: 'IEFI', maximumScore: 10, isRecovery: false }
+];
 
 const DEFAULT_EVALUATIONS: EditableEvaluation[] = [
   { name: '1era Instancia', maximumScore: 10, isRecovery: false },
@@ -53,6 +67,7 @@ export function distributeWeights(regularCount: number): number[] {
 export class EvaluationSetupDialogComponent {
   evaluations: EditableEvaluation[] = DEFAULT_EVALUATIONS.map(e => ({ ...e }));
   readonly isEdit: boolean;
+  readonly isAnnual: boolean;
 
   constructor(
     public dialogRef: MatDialogRef<EvaluationSetupDialogComponent>,
@@ -60,8 +75,11 @@ export class EvaluationSetupDialogComponent {
     @Optional() @Inject(MAT_DIALOG_DATA) data?: EvaluationSetupDialogData | null
   ) {
     this.isEdit = !!data?.evaluations?.length;
-    if (data && this.isEdit) {
-      const withGrades = new Set(data.evaluationIdsWithGrades);
+    // Sin dato se asume anual: es la regla más exigente.
+    this.isAnnual = data?.isAnnual ?? true;
+    if (!this.isEdit && !this.isAnnual) this.evaluations = SEMESTER_EVALUATIONS.map(e => ({ ...e }));
+    if (data?.evaluations && this.isEdit) {
+      const withGrades = new Set(data.evaluationIdsWithGrades ?? []);
       this.evaluations = [...data.evaluations]
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map(e => ({
@@ -96,6 +114,9 @@ export class EvaluationSetupDialogComponent {
     if (this.evaluations.length === 0) return 'Agregue al menos una instancia.';
     if (this.evaluations.length > 20) return 'Se permiten hasta 20 instancias.';
     if (this.regularCount === 0) return 'Debe haber al menos una instancia que no sea recuperación.';
+    const minimum = this.isAnnual ? MINIMUM_INSTANCES.annual : MINIMUM_INSTANCES.semester;
+    if (this.regularCount < minimum)
+      return `Una materia ${this.isAnnual ? 'anual' : 'cuatrimestral'} necesita al menos ${minimum} instancias (sin contar recuperatorios).`;
     if (this.evaluations.some(e => !e.name.trim())) return 'Todas las instancias necesitan un nombre.';
     if (this.evaluations.some(e => !(Number(e.maximumScore) > 0) || Number(e.maximumScore) > 100))
       return 'La nota máxima debe ser mayor que 0 y hasta 100.';
