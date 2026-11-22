@@ -14,6 +14,7 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 - **Calificaciones**: vaciar una celda que tenía nota y guardar borra esa nota.
 - **Cargar asistencia**: es una matriz con los alumnos de la materia en la primera columna (se ven aunque todavía no haya días cargados) y los días de clase del mes como columnas, con el día de la semana. Cada celda es un botón: un toque rota entre Presente, Ausente y Tarde, con colores. Cada día tiene "Todos presentes" para marcar P a los que faltan cargar.
 - **Cargar asistencia**: botón "Hoy" para agregar la clase del día con un toque ("Nuevo día" queda para otras fechas o clases por horas) y "Guardar" siempre visible arriba, con la cantidad de cambios sin guardar. Se guardan los cambios de cualquier mes.
+- **Comisiones** (Administración → Docentes): cada fila se despliega con la flecha y muestra los alumnos inscriptos en esa comisión (nombre, legajo y DNI) y cuántos son frente al cupo.
 - **Cargar asistencia**: el mes se muestra en castellano ("Noviembre 2026"); antes el selector del navegador lo mostraba en inglés.
 
 ### Corregido

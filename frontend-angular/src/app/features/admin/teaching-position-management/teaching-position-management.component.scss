@@ -75,3 +75,17 @@
 
   mat-icon { font-size: 48px; width: 48px; height: 48px; }
 }
+
+.expanded-row td { border-bottom: 0; background: #f4f8fc; }
+.students-row--hidden { display: none; }
+.students-row .students-cell { padding: 4px 16px 16px 56px; background: #f4f8fc; }
+.students-msg { display: flex; justify-content: center; padding: 12px; color: #6b7a88; }
+.students-title { margin: 4px 0 8px; font-size: .85rem; font-weight: 600; color: #31536e; }
+.students-table {
+  width: 100%;
+  max-width: 720px;
+  border-collapse: collapse;
+  font-size: .85rem;
+  th, td { padding: 6px 10px; border-bottom: 1px solid #dfe6ec; text-align: left; }
+  th { color: #31536e; font-weight: 600; }
+}

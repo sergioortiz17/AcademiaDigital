@@ -33,7 +33,42 @@
         <mat-spinner diameter="40"></mat-spinner>
       </div>
 
-      <table mat-table [dataSource]="positions" class="positions-table">
+      <table mat-table [dataSource]="positions" class="positions-table" multiTemplateDataRows>
+
+        <ng-container matColumnDef="expand">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let p">
+            <button mat-icon-button (click)="toggleStudents(p)"
+              [matTooltip]="expandedId === p.id ? 'Ocultar alumnos' : 'Ver alumnos'"
+              [attr.aria-expanded]="expandedId === p.id">
+              <mat-icon>{{ expandedId === p.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Fila desplegable con los alumnos inscriptos en la comisión. -->
+        <ng-container matColumnDef="students">
+          <td mat-cell *matCellDef="let p" [attr.colspan]="displayedColumns.length" class="students-cell">
+            <ng-container *ngIf="expandedId === p.id" [ngSwitch]="studentsState(p)">
+              <div *ngSwitchCase="'loading'" class="students-msg"><mat-spinner diameter="22"></mat-spinner></div>
+              <div *ngSwitchCase="'error'" class="students-msg">No se pudieron cargar los alumnos.</div>
+              <ng-container *ngSwitchDefault>
+                <div *ngIf="studentsOf(p).length === 0" class="students-msg">No hay alumnos inscriptos en esta comisión.</div>
+                <ng-container *ngIf="studentsOf(p).length > 0">
+                  <p class="students-title">{{ studentsOf(p).length }} alumno(s) inscripto(s) · cupo {{ p.maxStudents }}</p>
+                  <table class="students-table">
+                    <thead><tr><th>Alumno</th><th>Legajo</th><th>DNI</th></tr></thead>
+                    <tbody>
+                      <tr *ngFor="let st of studentsOf(p)">
+                        <td>{{ st.studentName }}</td><td>{{ st.legajoNumber || '—' }}</td><td>{{ st.dni || '—' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </ng-container>
+              </ng-container>
+            </ng-container>
+          </td>
+        </ng-container>
 
         <ng-container matColumnDef="course">
           <th mat-header-cell *matHeaderCellDef>Materia — Comisión</th>
@@ -86,7 +121,8 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class.expanded-row]="expandedId === row.id"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['students']" class="students-row" [class.students-row--hidden]="expandedId !== row.id"></tr>
       </table>
 
       <div class="empty-state" *ngIf="!isLoading && positions.length === 0">
