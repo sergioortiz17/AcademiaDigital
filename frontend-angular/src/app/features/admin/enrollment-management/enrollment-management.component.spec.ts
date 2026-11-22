@@ -36,7 +36,7 @@ describe('Enrollment activation feedback', () => {
     service.getCommissionCoverage.mockReturnValue(of({ success: true, data: { gaps: [{ yearNumber: 2, shift: 'Noche' }] } }));
     component.submitOpen();
     expect(Swal.fire).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-      icon: 'warning', titleText: 'Faltan divisiones', text: expect.stringContaining('Noche')
+      icon: 'warning', titleText: 'Faltan cursos', text: expect.stringContaining('Noche')
     }));
   });
 

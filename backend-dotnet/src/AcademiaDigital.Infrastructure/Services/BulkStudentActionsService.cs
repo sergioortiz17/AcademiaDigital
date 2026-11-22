@@ -44,14 +44,14 @@ public sealed class BulkStudentActionsService(AppDbContext db) : IBulkStudentAct
     {
         if (semester is not (1 or 2)) throw new ArgumentException("El cuatrimestre debe ser 1 o 2.");
         var division = await db.Divisions.AsNoTracking().SingleOrDefaultAsync(d => d.Id == divisionId, ct)
-            ?? throw new KeyNotFoundException("División no encontrada.");
+            ?? throw new KeyNotFoundException("Curso no encontrado.");
 
         var assignments = await db.StudentAcademicAssignments.AsNoTracking()
             .Where(a => a.DivisionId == divisionId && a.AcademicYear == division.AcademicYear && a.IsCurrent)
             .Select(a => new { a.StudentId, a.StudentCareerId, a.StudyPlanId })
             .ToListAsync(ct);
         if (assignments.Count == 0)
-            throw new InvalidOperationException("La división no tiene alumnos asignados para su año académico.");
+            throw new InvalidOperationException("El curso no tiene alumnos asignados para su año académico.");
 
         var planIds = assignments.Select(a => a.StudyPlanId).Distinct().ToArray();
         var planCourses = await db.StudyPlanCourses.AsNoTracking()

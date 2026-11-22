@@ -1,6 +1,6 @@
 <div class="page-header">
   <h1>Asignar materia</h1>
-  <p>Elija la escuela y la carrera, y arrastre cada docente hasta el cuadro de la materia. Después toque la materia para elegir la división y el cargo de cada docente, y al final use <strong>Guardar cambios</strong>.</p>
+  <p>Elija la escuela y la carrera, y arrastre cada docente hasta el cuadro de la materia. Después toque la materia para elegir el curso y el cargo de cada docente, y al final use <strong>Guardar cambios</strong>.</p>
 </div>
 
 <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
@@ -29,11 +29,11 @@
 
   <span class="spacer"></span>
   <span class="pending-note" *ngIf="pendingCount > 0">
-    {{ pendingCount }} cambio(s) sin guardar<ng-container *ngIf="missingDivisionCount > 0"> · {{ missingDivisionCount }} sin división</ng-container>
+    {{ pendingCount }} cambio(s) sin guardar<ng-container *ngIf="missingDivisionCount > 0"> · {{ missingDivisionCount }} sin curso</ng-container>
   </span>
   <button mat-stroked-button [disabled]="pendingCount === 0 || isSaving" (click)="discardAll()">Descartar</button>
   <button mat-raised-button color="primary" [disabled]="!canSave" (click)="save()"
-    [matTooltip]="missingDivisionCount > 0 ? 'Falta elegir la división de algunos docentes' : ''">
+    [matTooltip]="missingDivisionCount > 0 ? 'Falta elegir el curso de algunos docentes' : ''">
     <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
     <span *ngIf="!isSaving">Guardar cambios</span>
   </button>
@@ -80,19 +80,19 @@
 
           <ul class="sections" *ngIf="expanded.has(c.courseId)">
             <li *ngFor="let s of sectionsFor(c)">
-              <strong>{{ s.divisionName || 'Sin división' }}</strong>
+              <strong>{{ s.divisionName || 'Sin curso' }}</strong>
               <span>{{ s.teacherName || 'Vacante' }} · {{ positionLabel(s.positionType) }}</span>
             </li>
             <li *ngIf="sectionsFor(c).length === 0" class="muted">Sin comisiones en {{ academicYear }}.</li>
           </ul>
 
-          <!-- Detalle: división y cargo de cada docente soltado. -->
+          <!-- Detalle: curso y cargo de cada docente soltado. -->
           <div class="detail" *ngIf="openCourse?.courseId === c.courseId">
             <p class="muted" *ngIf="pendingFor(c).length === 0">Suelte aquí un docente para asignarlo a esta materia.</p>
             <div class="pending-row" *ngFor="let p of pendingFor(c)">
               <span class="pending-name">{{ teacherName(p.teacher) }}</span>
-              <select [(ngModel)]="p.divisionId" aria-label="División">
-                <option [ngValue]="null" disabled>División…</option>
+              <select [(ngModel)]="p.divisionId" aria-label="Curso">
+                <option [ngValue]="null" disabled>Curso…</option>
                 <option *ngFor="let d of divisionsFor(c)" [ngValue]="d.id">{{ d.name }}</option>
               </select>
               <select [(ngModel)]="p.positionType" aria-label="Cargo">
@@ -104,7 +104,7 @@
               <small class="row-error" *ngIf="p.error">{{ p.error }}</small>
             </div>
             <p class="muted" *ngIf="pendingFor(c).length > 0 && divisionsFor(c).length === 0">
-              No hay divisiones de {{ c.yearNumber }}° año en {{ academicYear }}{{ campusId != null ? ' en esta escuela' : '' }}. Créelas en Docentes → Divisiones.
+              No hay cursos de {{ c.yearNumber }}° año en {{ academicYear }}{{ campusId != null ? ' en esta escuela' : '' }}. Créelos en Docentes → Cursos.
             </p>
           </div>
         </div>

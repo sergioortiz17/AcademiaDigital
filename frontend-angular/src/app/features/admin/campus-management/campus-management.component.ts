@@ -3,8 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Campus, CareerService } from '../../../core/services/career.service';
 
 /**
- * Escuelas (escuelas) del instituto, dentro de Gestión de Carreras. Cada división se asigna a una
- * escuela, y en Asignar materia se elige la escuela para ver solo sus divisiones y comisiones.
+ * Escuelas (escuelas) del instituto, dentro de Gestión de Carreras. Cada curso se asigna a una
+ * escuela, y en Asignar materia se elige la escuela para ver solo sus cursos y comisiones.
  */
 @Component({
   selector: 'app-campus-management',

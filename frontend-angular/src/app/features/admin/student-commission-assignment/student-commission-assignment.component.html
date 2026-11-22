@@ -1,9 +1,9 @@
 <div class="assign-page">
-  <h1>Asignar división a alumnos</h1>
+  <h1>Asignar curso a alumnos</h1>
   <p class="subtitle">
-    Elige la carrera y la división, marca los alumnos y asígnalos de una vez. El plan de estudios,
-    el año académico y el año de la carrera se toman del plan vigente de cada alumno y de la división.
-    La inscripción a materias no asigna la división: un mismo año puede tener varias divisiones
+    Elige la carrera y el curso, marca los alumnos y asígnalos de una vez. El plan de estudios,
+    el año académico y el año de la carrera se toman del plan vigente de cada alumno y del curso.
+    La inscripción a materias no asigna el curso: un mismo año puede tener varios cursos
     (por ejemplo, una por turno), y aquí se decide en cuál cursa cada alumno.
   </p>
 
@@ -26,13 +26,13 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>División</mat-label>
+      <mat-label>Curso</mat-label>
       <mat-select [(ngModel)]="selectedDivisionId" [disabled]="!selectedCareerId">
         <mat-option *ngFor="let d of divisions" [value]="d.id">
           {{ d.code }} · {{ d.name }} (año {{ d.academicYear }}, {{ d.yearNumber }}° año)
         </mat-option>
       </mat-select>
-      <mat-hint *ngIf="selectedCareerId && divisions.length === 0">No hay divisiones activas en esta carrera.</mat-hint>
+      <mat-hint *ngIf="selectedCareerId && divisions.length === 0">No hay cursos activos en esta carrera.</mat-hint>
     </mat-form-field>
   </div>
 
@@ -43,7 +43,7 @@
         <input matInput [(ngModel)]="search" />
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
-      <mat-checkbox [(ngModel)]="onlyWithoutDivision">Solo sin división</mat-checkbox>
+      <mat-checkbox [(ngModel)]="onlyWithoutDivision">Solo sin curso</mat-checkbox>
     </div>
 
     <div class="select-bar" *ngIf="visibleStudents.length">
@@ -66,7 +66,7 @@
         </div>
         <span class="division-chip" [class.division-chip--same]="s.divisionId === selectedDivisionId"
               [class.division-chip--none]="!s.divisionId">
-          {{ s.divisionName || 'Sin división' }}
+          {{ s.divisionName || 'Sin curso' }}
         </span>
       </li>
     </ul>

@@ -132,7 +132,7 @@ public sealed class CreateCourseSectionCommandHandler(
         }, ct);
 
         // No se asignan Course/Division sobre `created`: es una entidad rastreada y la materia y la
-        // división vienen sin rastreo; EF las adjuntaría como modificadas y el próximo SaveChanges del
+        // curso vienen sin rastreo; EF las adjuntaría como modificadas y el próximo SaveChanges del
         // mismo request (p. ej. la asignación masiva de materias) fallaría por concurrencia.
         return CourseSectionMapper.Map(created, course, commission);
     }

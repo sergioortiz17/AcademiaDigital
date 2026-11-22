@@ -92,7 +92,7 @@ export class CommissionManagementComponent implements OnInit {
         this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => this.fail(err, 'Error al cargar las divisiones.')
+      error: (err) => this.fail(err, 'Error al cargar los cursos.')
     });
   }
 
@@ -105,8 +105,8 @@ export class CommissionManagementComponent implements OnInit {
     dialogRef.afterClosed().subscribe((request: UpsertCommissionRequest | null) => {
       if (!request) return;
       this.commissionService.createCommission(this.selectedCareerId!, request).subscribe({
-        next: () => this.succeed('División creada correctamente.'),
-        error: (err) => this.fail(err, 'Error al crear la división.')
+        next: () => this.succeed('Curso creado correctamente.'),
+        error: (err) => this.fail(err, 'Error al crear el curso.')
       });
     });
   }
@@ -120,8 +120,8 @@ export class CommissionManagementComponent implements OnInit {
     dialogRef.afterClosed().subscribe((request: UpsertCommissionRequest | null) => {
       if (!request) return;
       this.commissionService.updateCommission(this.selectedCareerId!, commission.id, request).subscribe({
-        next: () => this.succeed('División actualizada correctamente.'),
-        error: (err) => this.fail(err, 'Error al actualizar la división.')
+        next: () => this.succeed('Curso actualizado correctamente.'),
+        error: (err) => this.fail(err, 'Error al actualizar el curso.')
       });
     });
   }
@@ -130,13 +130,13 @@ export class CommissionManagementComponent implements OnInit {
     if (!this.selectedCareerId) return;
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '450px', disableClose: true,
-      data: { title: 'Dar de baja división', action: 'DAR DE BAJA', username: `${commission.code} · ${commission.name}` }
+      data: { title: 'Dar de baja curso', action: 'DAR DE BAJA', username: `${commission.code} · ${commission.name}` }
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) return;
       this.commissionService.deactivateCommission(this.selectedCareerId!, commission.id).subscribe({
-        next: () => this.succeed(`División ${commission.code} dada de baja.`),
-        error: (err) => this.fail(err, 'Error al dar de baja la división.')
+        next: () => this.succeed(`Curso ${commission.code} dado de baja.`),
+        error: (err) => this.fail(err, 'Error al dar de baja el curso.')
       });
     });
   }

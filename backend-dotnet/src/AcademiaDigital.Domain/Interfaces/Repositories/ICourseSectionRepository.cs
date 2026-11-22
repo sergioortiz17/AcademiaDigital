@@ -17,10 +17,10 @@ public interface ICourseSectionRepository
     Task<CourseSection?> FindByIdAsync(int id, CancellationToken ct = default);
 
     /// <summary>
-    /// Secciones ACTIVAS de una materia para un ciclo/cuatrimestre, SIN filtrar por división.
+    /// Secciones ACTIVAS de una materia para un ciclo/cuatrimestre, SIN filtrar por curso.
     /// Se usa en el auto-match de nivel 2 (Parte 6/14): la sección de una materia puntual se busca
-    /// contra cualquier división, para que un recursante (que cursa una materia de otro año, fuera
-    /// de su división) también quede vinculado. El término coincide por cuatrimestre, o por anual.
+    /// contra cualquier curso, para que un recursante (que cursa una materia de otro año, fuera
+    /// de su curso) también quede vinculado. El término coincide por cuatrimestre, o por anual.
     /// El llamador decide: exactamente una = clara; cero o 2+ = ambiguo.
     /// </summary>
     Task<IReadOnlyList<CourseSection>> FindActiveByCourseTermAsync(
@@ -29,7 +29,7 @@ public interface ICourseSectionRepository
     /// <summary>
     /// Alumnos inscriptos (no dados de baja) por comisión, con la misma regla que el listado de
     /// alumnos de la comisión: inscripción vinculada a la comisión, o sin vincular y con el alumno
-    /// asignado a la división de la comisión en ese ciclo. Clave: id de la comisión.
+    /// asignado al curso de la comisión en ese ciclo. Clave: id de la comisión.
     /// </summary>
     Task<IReadOnlyDictionary<int, int>> CountEnrolledAsync(
         IReadOnlyCollection<CourseSection> sections, CancellationToken ct = default);

@@ -17,6 +17,7 @@ Escuelas, cupos libres en Comisiones, inscripción ya enviada visible para el al
 
 ### Cambiado
 
+- **Cursos**: lo que se llamaba "División" (el grupo de alumnos de un año, turno y escuela) ahora se llama "Curso" en todas las pantallas, menús y mensajes, como en las planillas del instituto: "Divisiones" pasa a "Cursos", "Asignar división a alumnos" a "Asignar curso a alumnos" y el filtro "División" de Calificaciones y Asistencia a "Curso". La comisión sigue siendo una materia dictada a un curso, con su docente. Los mensajes de error de los cursos que decían "comisión" por herencia ahora dicen "curso". Solo cambian los textos; la base de datos no.
 - **Escuelas**: lo que se llamaba "Sede" ahora se llama "Escuela" en todas las pantallas y mensajes (Divisiones, Asignar materia, Gestión de Carreras y el filtro de planillas, que ahora muestra las escuelas reales en lugar de valores de ejemplo).
 
 ### Corregido

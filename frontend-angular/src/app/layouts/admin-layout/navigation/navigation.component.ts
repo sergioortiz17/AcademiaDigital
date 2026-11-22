@@ -57,14 +57,14 @@ const MENU_ADMIN: MenuItem[] = [
   ] },
   { id: 'students-group', title: 'Alumnos', icon: 'groups', children: [
     { id: 'students', permission: 'ManageGrades', title: 'Alumnos', url: '/app/admin/students-condition' },
-    { id: 'student-commission', permission: 'ManageStudents', title: 'Asignar división a alumnos', url: '/app/admin/student-commission-assignment' },
+    { id: 'student-commission', permission: 'ManageStudents', title: 'Asignar curso a alumnos', url: '/app/admin/student-commission-assignment' },
     { id: 'transcripts', permission: 'ManageStudents', title: 'Analíticos', url: '/app/admin/transcripts' },
     { id: 'bulk-actions', permission: 'ManageStudents', title: 'Acciones masivas', url: '/app/admin/bulk-actions' }
   ] },
   { id: 'teachers', title: 'Docentes', icon: 'co_present', children: [
     { id: 'teacher-list', permission: 'ManageTeachers', title: 'Listado de docentes', url: '/app/admin/teachers' },
     { id: 'teaching-positions', permission: 'ManageCareers', title: 'Comisiones', url: '/app/admin/teaching-positions' },
-    { id: 'commissions', permission: 'ManageCareers', title: 'Divisiones', url: '/app/admin/commissions' },
+    { id: 'commissions', permission: 'ManageCareers', title: 'Cursos', url: '/app/admin/commissions' },
     { id: 'teacher-courses', permission: 'ManageTeachers', title: 'Asignar materia', url: '/app/admin/teacher-courses' },
     { id: 'my-assignments', permission: 'ManageTeachers', title: 'Asignaciones', url: '/app/teachers' }
   ] },

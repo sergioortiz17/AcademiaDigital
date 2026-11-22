@@ -6,8 +6,8 @@ import { StudentListItem, StudentService } from '../../../core/services/student.
 import { BulkActionsService, BulkEnrollResult, BulkGraduateResult } from '../../../core/services/bulk-actions.service';
 
 /**
- * Acciones masivas: egresar alumnos con fecha e inscribir una división en las materias de su año.
- * Desde el botón "Inscribir en materias" de Divisiones (?accion=inscribir-division&careerId=) muestra
+ * Acciones masivas: egresar alumnos con fecha e inscribir un curso en las materias de su año.
+ * Desde el botón "Inscribir en materias" de Cursos (?accion=inscribir-division&careerId=) muestra
  * solo la inscripción, con la carrera ya elegida.
  */
 @Component({
@@ -31,7 +31,7 @@ export class BulkActionsComponent implements OnInit {
   graduating = false;
   graduateResult: BulkGraduateResult | null = null;
 
-  // --- Inscripción de una división ---
+  // --- Inscripción de un curso ---
   enrollCareerId: number | null = null;
   divisions: CareerDivision[] = [];
   divisionId: number | null = null;
@@ -49,7 +49,7 @@ export class BulkActionsComponent implements OnInit {
     private readonly route: ActivatedRoute
   ) {}
 
-  /** 'all' desde el menú (egreso e inscripción por división); 'enroll' desde el botón de Divisiones. */
+  /** 'all' desde el menú (egreso e inscripción por curso); 'enroll' desde el botón de Cursos. */
   mode: 'all' | 'enroll' = 'all';
 
   ngOnInit(): void {
@@ -154,8 +154,8 @@ export class BulkActionsComponent implements OnInit {
     if (!division) return;
     const confirm = await Swal.fire({
       icon: 'question',
-      titleText: `¿Inscribir a la división ${division.code}?`,
-      text: `Todos los alumnos asignados a la división quedan inscriptos en las materias de ${division.yearNumber}.º año `
+      titleText: `¿Inscribir al curso ${division.code}?`,
+      text: `Todos los alumnos asignados al curso quedan inscriptos en las materias de ${division.yearNumber}.º año `
         + `del ${this.semester === 1 ? '1.er cuatrimestre (y las anuales)' : '2.º cuatrimestre'} de ${division.academicYear}. Las inscripciones que ya existen no se duplican.`,
       showCancelButton: true, confirmButtonText: 'Inscribir', cancelButtonText: 'Cancelar'
     });
@@ -169,7 +169,7 @@ export class BulkActionsComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: err => {
-        this.errorMsg = err?.message || 'No se pudo inscribir a la división.';
+        this.errorMsg = err?.message || 'No se pudo inscribir al curso.';
         this.enrolling = false;
         this.cdr.markForCheck();
       }

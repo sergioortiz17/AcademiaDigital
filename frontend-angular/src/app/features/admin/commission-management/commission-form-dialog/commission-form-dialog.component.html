@@ -1,6 +1,6 @@
 <div class="dialog-header">
   <mat-icon>groups</mat-icon>
-  <span>{{ isEdit ? 'Editar división' : 'Nueva división' }}</span>
+  <span>{{ isEdit ? 'Editar curso' : 'Nuevo curso' }}</span>
 </div>
 
 <div class="dialog-body">
@@ -12,7 +12,7 @@
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Nombre</mat-label>
-    <input matInput [(ngModel)]="name" maxlength="200" placeholder="Ej: División A - Mañana" />
+    <input matInput [(ngModel)]="name" maxlength="200" placeholder="Ej: 1° A - Mañana" />
   </mat-form-field>
 
   <div class="form-grid">
@@ -25,7 +25,7 @@
     <mat-form-field appearance="outline">
       <mat-label>Año de la carrera</mat-label>
       <input matInput type="number" min="1" max="20" [(ngModel)]="yearNumber" />
-      <mat-hint>Qué año del plan de estudios cursa la división: 1, 2 o 3.</mat-hint>
+      <mat-hint>Qué año del plan de estudios cursa el curso: 1, 2 o 3.</mat-hint>
     </mat-form-field>
 
     <mat-form-field appearance="outline">

@@ -40,7 +40,7 @@ export class EnrollmentManagementComponent implements OnInit {
   coverageByPeriod: Record<number, CommissionCoverageGap[]> = {};
   // Años (del plan) tildados para el atajo "Crear automáticamente", por período.
   bulkYearsByPeriod: Record<number, Set<number>> = {};
-  // Aviso de divisiones faltantes: expandido/colapsado por período (colapsado por defecto).
+  // Aviso de cursos faltantes: expandido/colapsado por período (colapsado por defecto).
   private readonly expandedWarnings = new Set<number>();
   private readonly shiftLabels: Record<string, string> = { 'Mañana': 'Mañana', 'Tarde': 'Tarde', 'Noche': 'Noche' };
 
@@ -145,16 +145,16 @@ export class EnrollmentManagementComponent implements OnInit {
   }
 
   /**
-   * Atajo en bloque: crea TODAS las divisiones faltantes del período de una vez (una por gap),
+   * Atajo en bloque: crea TODAS los cursos faltantes del período de una vez (una por gap),
    * con código/nombre por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón
-   * manual por fila ni la pantalla "Gestionar divisiones" (que siguen para editar/borrar/agregar).
+   * manual por fila ni la pantalla "Gestionar cursos" (que siguen para editar/borrar/agregar).
    * Muestra una vista previa con confirm() antes de crear y refresca la cobertura al terminar.
    */
   /**
-   * Atajo en bloque: crea las divisiones faltantes del período POR AÑO del plan (el admin tilda
+   * Atajo en bloque: crea los cursos faltantes del período POR AÑO del plan (el admin tilda
    * qué años crear — ej. solo 2°). Una request por gap de los años tildados, con código/nombre
    * por defecto ({CARRERA}-{AÑOPLAN}-{TURNO}-{CICLO}). No reemplaza el botón manual por fila ni la
-   * pantalla "Gestionar divisiones". Muestra vista previa con confirm() y refresca la cobertura.
+   * pantalla "Gestionar cursos". Muestra vista previa con confirm() y refresca la cobertura.
    */
 
 createAllMissingDivisions(period: EnrollmentPeriodDto): void {
@@ -174,15 +174,15 @@ createAllMissingDivisions(period: EnrollmentPeriodDto): void {
     } as UpsertCommissionRequest
   }));
 
-  // Generamos el HTML con la lista de divisiones a crear
+  // Generamos el HTML con la lista de cursos a crear
   const previewHtml = specs
     .map(s => `<li><b>${s.request.code}</b> (${s.gap.yearNumber}° año / ${this.shiftLabel(s.gap.shift)})</li>`)
     .join('');
 
   Swal.fire({
-    title: '¿Confirmar creación de divisiones?',
+    title: '¿Confirmar creación de cursos?',
     html: `
-      <p>Se van a crear <b>${specs.length}</b> división(es) para <b>${period.careerName}</b>:</p>
+      <p>Se van a crear <b>${specs.length}</b> curso(s) para <b>${period.careerName}</b>:</p>
       <ul style="text-align: left; max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 12px 28px; border-radius: 6px; font-size: 14px;">
         ${previewHtml}
       </ul>
@@ -207,7 +207,7 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
   this.errorMsg = '';
   this.cdr.detectChanges();
 
-  // Una request por división. forkJoin espera a todas y no aborta el bloque si una falla.
+  // Una request por curso. forkJoin espera a todas y no aborta el bloque si una falla.
   forkJoin(
     specs.map(s => this.commissionService.createCommission(period.careerId, s.request).pipe(
       map(() => ({ code: s.request.code, ok: true })),
@@ -219,7 +219,7 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
       const created = results.filter(r => r.ok).length;
       const failed = results.filter(r => !r.ok);
       
-      this.successMsg = `${created}/${specs.length} división(es) creada(s) para ${period.careerName}.`;
+      this.successMsg = `${created}/${specs.length} curso(s) creado(s) para ${period.careerName}.`;
       if (failed.length > 0) {
         this.errorMsg = `No se pudieron crear: ${failed.map(f => f.code).join(', ')}.`;
       }
@@ -232,7 +232,7 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
     },
     error: () => {
       this.isSubmitting = false;
-      this.errorMsg = 'No se pudieron crear las divisiones.';
+      this.errorMsg = 'No se pudieron crear los cursos.';
       this.cdr.detectChanges();
     }
   });
@@ -257,7 +257,7 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
     if (checked) set.add(yearNumber); else set.delete(yearNumber);
   }
 
-  /** Total de divisiones que se crearían con los años actualmente tildados. */
+  /** Total de cursos que se crearían con los años actualmente tildados. */
   bulkSelectedCount(periodId: number): number {
     const selected = this.bulkYearsByPeriod[periodId];
     if (!selected || selected.size === 0) return 0;
@@ -277,14 +277,14 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
       if (!request) return;
       this.commissionService.createCommission(period.careerId, request).subscribe({
         next: () => {
-          this.successMsg = `División "${request.code}" creada para ${period.careerName}.`;
+          this.successMsg = `Curso "${request.code}" creado para ${period.careerName}.`;
           setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 4000);
           // Refrescar cobertura del período en el momento (sin recargar la página).
           this.loadCoverage(period.id);
           this.cdr.detectChanges();
         },
         error: (err) => {
-          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear la división.';
+          this.errorMsg = err.error?.msg || err.message || 'No se pudo crear el curso.';
           this.cdr.detectChanges();
         }
       });
@@ -324,7 +324,7 @@ private executeCreateCommissions(period: EnrollmentPeriodDto, specs: any[]): voi
         this.successMsg = '';
         this.errorMsg = '';
         this.loadPeriods();
-        // Chequeo inmediato: confirma la apertura y avisa en el momento si ya faltan divisiones.
+        // Chequeo inmediato: confirma la apertura y avisa en el momento si ya faltan cursos.
         if (res?.data?.id) this.checkCoverageNow(res.data, true);
         else Swal.fire({ icon: 'success', titleText: 'Período abierto', text: 'El período de inscripción quedó activo.' });
         this.cdr.detectChanges();
@@ -418,8 +418,8 @@ private checkCoverageNow(period: EnrollmentPeriodDto, confirmWhenComplete = fals
         const detalle = gaps.map(g => `${g.yearNumber}° año / ${this.shiftLabel(g.shift)}`).join(', ');
         Swal.fire({
           icon: 'warning',
-          titleText: 'Faltan divisiones',
-          text: `El período quedó activo, pero faltan divisiones para: ${detalle}. Los alumnos que se inscriban en esos turnos quedarán sin división hasta que se creen o se asignen a mano.`,
+          titleText: 'Faltan cursos',
+          text: `El período quedó activo, pero faltan cursos para: ${detalle}. Los alumnos que se inscriban en esos turnos quedarán sin curso hasta que se creen o se asignen a mano.`,
           confirmButtonText: 'Entendido'
         });
       } else if (confirmWhenComplete) {
@@ -428,12 +428,12 @@ private checkCoverageNow(period: EnrollmentPeriodDto, confirmWhenComplete = fals
       this.cdr.detectChanges();
     },
     error: () => {
-      // La apertura ya se hizo: solo falló la verificación de divisiones.
+      // La apertura ya se hizo: solo falló la verificación de cursos.
       if (!confirmWhenComplete) return;
       Swal.fire({
         icon: 'warning',
         titleText: 'Período abierto',
-        text: 'El período quedó activo, pero no se pudo verificar si faltan divisiones. Revíselo en la lista de períodos.'
+        text: 'El período quedó activo, pero no se pudo verificar si faltan cursos. Revíselo en la lista de períodos.'
       });
     }
   });

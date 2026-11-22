@@ -1,8 +1,8 @@
 namespace AcademiaDigital.Domain.Entities;
 
 /// <summary>
-/// Escuela (escuela) del instituto. Cada división se dicta en una escuela; la misma carrera puede tener
-/// divisiones en varias escuelas. Las divisiones creadas antes de que existieran las escuelas quedan sin escuela.
+/// Escuela (sede) del instituto. Cada curso se dicta en una escuela; la misma carrera puede tener
+/// cursos en varias escuelas. Los cursos creados antes de que existieran las escuelas quedan sin escuela.
 /// </summary>
 public class Campus
 {

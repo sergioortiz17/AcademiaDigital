@@ -295,7 +295,7 @@ export class GradesComponent implements OnInit {
   readonly gradeOptions = GRADE_OPTIONS;
 
   /**
-   * El docente entra directo a su carrera, año, división y materia. Se hace una sola vez,
+   * El docente entra directo a su carrera, año, curso y materia. Se hace una sola vez,
    * cuando ya llegaron las carreras y sus asignaciones.
    */
   private autoSelectPending = true;
@@ -309,7 +309,7 @@ export class GradesComponent implements OnInit {
     this.onCareerChange();
   }
 
-  /** Con el plan cargado, elige el año, la división y la primera materia del docente. */
+  /** Con el plan cargado, elige el año, el curso y la primera materia del docente. */
   private preselectTeacherCourse(): void {
     if (!this.autoSelectPending) return;
     this.autoSelectPending = false;
@@ -569,7 +569,7 @@ export class GradesComponent implements OnInit {
         },
         error: err => {
           if (this.selectedCareerId !== careerId) return;
-          this.errorMsg = this.readErrorMessage(err, 'No se pudieron cargar las divisiones de la carrera.');
+          this.errorMsg = this.readErrorMessage(err, 'No se pudieron cargar los cursos de la carrera.');
           this.cdr.detectChanges();
         }
       });

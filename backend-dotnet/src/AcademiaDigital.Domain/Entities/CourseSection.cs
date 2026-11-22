@@ -4,7 +4,7 @@ namespace AcademiaDigital.Domain.Entities;
 
 /// <summary>
 /// Comisión de una materia: la sección real donde el profesor dicta y carga notas/asistencia.
-/// Se asocia a una materia (CourseId), a una División/grupo de cursada (DivisionId), a un docente,
+/// Se asocia a una materia (CourseId), a un curso o grupo de cursada (DivisionId), a un docente,
 /// y a un cuatrimestre-año (AcademicYear + Semester, o IsAnnual=true para materias anuales).
 /// </summary>
 public class CourseSection

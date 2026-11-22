@@ -34,15 +34,15 @@
         </div>
 
         <div class="filter-control filter-control--small">
-          <label class="filter-label" for="teacher-division">División:</label>
+          <label class="filter-label" for="teacher-division">Curso:</label>
           <mat-form-field appearance="outline" class="filter-field">
-            <mat-select id="teacher-division" aria-label="División" [(ngModel)]="selectedDivisionId" [disabled]="selectedCareerYear == null" (selectionChange)="onDivisionChange()">
+            <mat-select id="teacher-division" aria-label="Curso" [(ngModel)]="selectedDivisionId" [disabled]="selectedCareerYear == null" (selectionChange)="onDivisionChange()">
               <mat-option *ngFor="let a of professorDivisions; trackBy: trackProfessorDivision" [value]="a.divisionId">
                 {{ a.divisionName }}{{ a.divisionCode ? ' [' + a.divisionCode + ']' : '' }}
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="selectedCareerYear == null">Elegí el año de cursada primero.</mat-hint>
-            <mat-hint *ngIf="selectedCareerYear != null && professorDivisions.length === 0">No hay divisiones asignadas para este año de cursada.</mat-hint>
+            <mat-hint *ngIf="selectedCareerYear != null && professorDivisions.length === 0">No hay cursos asignados para este año de cursada.</mat-hint>
           </mat-form-field>
         </div>
 
@@ -54,9 +54,9 @@
                 {{ professorCourseLabel(course) }}
               </mat-option>
             </mat-select>
-            <mat-hint *ngIf="selectedDivisionId == null">Elegí una división para ver las materias.</mat-hint>
-            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length === 0">{{ staffView ? 'No hay secciones docentes para esta división.' : 'No tenés materias asignadas en esta división.' }}</mat-hint>
-            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length > 0">{{ staffView ? 'Se muestran las secciones docentes de esta división.' : 'Se muestran únicamente las materias asignadas a tu usuario.' }}</mat-hint>
+            <mat-hint *ngIf="selectedDivisionId == null">Elegí un curso para ver las materias.</mat-hint>
+            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length === 0">{{ staffView ? 'No hay secciones docentes para este curso.' : 'No tenés materias asignadas en este curso.' }}</mat-hint>
+            <mat-hint *ngIf="selectedDivisionId != null && professorCourses.length > 0">{{ staffView ? 'Se muestran las secciones docentes de este curso.' : 'Se muestran únicamente las materias asignadas a tu usuario.' }}</mat-hint>
           </mat-form-field>
         </div>
 
@@ -76,13 +76,13 @@
         <mat-icon>fact_check</mat-icon>
         <p *ngIf="selectedCareerId == null">Seleccioná una carrera para cargar su plan de estudios.</p>
         <p *ngIf="selectedCareerId != null && selectedCareerYear == null">Elegí el año de cursada para continuar.</p>
-        <p *ngIf="selectedCareerYear != null && selectedDivisionId == null">Seleccioná una división para ver todas las materias del año.</p>
+        <p *ngIf="selectedCareerYear != null && selectedDivisionId == null">Seleccioná un curso para ver todas las materias del año.</p>
         <p *ngIf="selectedDivisionId != null && selectedCourseKey == null">Elegí una materia para consultar su planilla o crearla si todavía no existe.</p>
       </div>
 
       <div class="empty-gradebook" *ngIf="!isLoading && noTeachingSection">
         <mat-icon>info</mat-icon>
-        <p>{{ selectedProfessorCourse?.courseName }} pertenece al plan de estudios, pero no hay una sección docente asignada en esta división. No se puede crear una planilla sin una sección.</p>
+        <p>{{ selectedProfessorCourse?.courseName }} pertenece al plan de estudios, pero no hay una sección docente asignada en este curso. No se puede crear una planilla sin una sección.</p>
       </div>
 
       <!-- Sin planilla creada todavía -->

@@ -22,7 +22,7 @@ export interface UpsertCommissionRequest {
   academicYear: number;
   yearNumber: number;
   shift: string;
-  /** Escuela de la división; null = sin escuela. */
+  /** Escuela del curso; null = sin escuela. */
   campusId?: number | null;
 }
 

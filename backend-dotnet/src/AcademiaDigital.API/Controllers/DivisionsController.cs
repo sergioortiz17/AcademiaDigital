@@ -34,7 +34,7 @@ public class DivisionsController(
     { var g = Admin(); if (g is not null) return g; await service.DisableDivisionAsync(careerId, id, ct); return NoContent(); }
 
     // POST /api/v1/careers/{careerId}/divisions/{id}/students  { "studentIds": [1, 2], "reason": "..." }
-    // Asigna varios alumnos a la división; devuelve los asignados y el motivo de cada uno que falló.
+    // Asigna varios alumnos al curso; devuelve los asignados y el motivo de cada uno que falló.
     [HttpPost("{id:int}/students")]
     public async Task<IActionResult> AssignStudents(int careerId, int id, AssignStudentsToDivisionRequest request, CancellationToken ct)
     {

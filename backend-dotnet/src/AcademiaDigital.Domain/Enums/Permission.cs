@@ -5,7 +5,7 @@ public enum Permission
 {
     /// <summary>Usuarios y roles.</summary>
     ManageUsers,
-    /// <summary>Carreras, planes, reglas de aprobación, divisiones y comisiones.</summary>
+    /// <summary>Carreras, planes, reglas de aprobación, cursos y comisiones.</summary>
     ManageCareers,
     /// <summary>Consultar alumnos y sus fichas.</summary>
     ViewStudents,

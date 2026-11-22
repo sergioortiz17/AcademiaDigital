@@ -1,5 +1,5 @@
 <div class="bulk-wrap">
-  <h1>{{ mode === 'enroll' ? 'Inscribir una división en sus materias' : 'Acciones masivas' }}</h1>
+  <h1>{{ mode === 'enroll' ? 'Inscribir un curso en sus materias' : 'Acciones masivas' }}</h1>
   <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}
     <button mat-icon-button type="button" (click)="errorMsg = ''" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
   </div>
@@ -57,8 +57,8 @@
   </mat-card>
 
   <mat-card class="card">
-    <h2 *ngIf="mode === 'all'"><mat-icon>playlist_add_check</mat-icon> Inscribir una división en sus materias</h2>
-    <p class="intro">Inscribe de una vez a todos los alumnos asignados a la división en las materias del plan de su año y cuatrimestre.</p>
+    <h2 *ngIf="mode === 'all'"><mat-icon>playlist_add_check</mat-icon> Inscribir un curso en sus materias</h2>
+    <p class="intro">Inscribe de una vez a todos los alumnos asignados al curso en las materias del plan de su año y cuatrimestre.</p>
     <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Carrera</mat-label>
@@ -67,7 +67,7 @@
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline" class="grow">
-        <mat-label>División</mat-label>
+        <mat-label>Curso</mat-label>
         <mat-select [(ngModel)]="divisionId" [disabled]="divisions.length === 0">
           <mat-option *ngFor="let d of divisions" [value]="d.id">{{ d.code }} · {{ d.name }} ({{ d.academicYear }}, {{ d.yearNumber }}.º año, {{ d.shift }})</mat-option>
         </mat-select>
@@ -81,7 +81,7 @@
       </mat-form-field>
     </div>
     <button mat-raised-button color="primary" type="button" [disabled]="divisionId == null || enrolling" (click)="enroll()">
-      <mat-icon>how_to_reg</mat-icon> Inscribir división
+      <mat-icon>how_to_reg</mat-icon> Inscribir curso
     </button>
     <ng-container *ngIf="enrollResult as r">
       <p class="result">{{ r.students }} alumno(s): {{ r.created }} inscripción(es) nuevas, {{ r.alreadyEnrolled }} ya existían.</p>

@@ -25,7 +25,7 @@ public class Division
     public int AcademicYear { get; set; }
     public int YearNumber { get; set; }
     public string Shift { get; set; } = string.Empty;
-    /// <summary>Escuela donde se dicta; null en las divisiones anteriores a las escuelas.</summary>
+    /// <summary>Escuela donde se dicta; null en los cursos anteriores a las escuelas.</summary>
     public int? CampusId { get; set; }
     public Campus? Campus { get; set; }
     public bool IsActive { get; set; } = true;

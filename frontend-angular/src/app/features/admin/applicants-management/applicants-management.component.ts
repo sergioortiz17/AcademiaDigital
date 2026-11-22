@@ -10,7 +10,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 /**
  * Sección "Aspirantes": cuentas del registro público. Las pendientes no pueden iniciar sesión
  * hasta que un Admin las da de alta (de a una o en masa). Los docentes (email del dominio
- * institucional) quedan activos para asignarles materias y divisiones.
+ * institucional) quedan activos para asignarles materias y cursos.
  * Reutiliza el layout y los estilos de Gestión de Usuarios.
  */
 @Component({

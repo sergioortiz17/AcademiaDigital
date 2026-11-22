@@ -4,9 +4,9 @@ import { CommissionService, Commission } from '../../../core/services/commission
 import { StudentService, StudentListItem } from '../../../core/services/student.service';
 
 /**
- * Asignar alumnos a una división, de a varios: se elige carrera y división, se marcan los alumnos
+ * Asignar alumnos a un curso, de a varios: se elige carrera y curso, se marcan los alumnos
  * (con búsqueda y "Seleccionar todos") y se asignan en un solo paso. El plan de estudios, el año
- * académico y el año del plan los toma el servidor del plan vigente de cada alumno y de la división.
+ * académico y el año del plan los toma el servidor del plan vigente de cada alumno y del curso.
  */
 @Component({
   selector: 'app-student-commission-assignment',
@@ -51,7 +51,7 @@ export class StudentCommissionAssignmentComponent implements OnInit {
     return this.divisions.find(d => d.id === this.selectedDivisionId);
   }
 
-  /** Alumnos visibles según la búsqueda y el filtro "solo sin división". */
+  /** Alumnos visibles según la búsqueda y el filtro "solo sin curso". */
   get visibleStudents(): StudentListItem[] {
     const term = this.search.trim().toLowerCase();
     return this.students.filter(s =>
@@ -124,7 +124,7 @@ export class StudentCommissionAssignmentComponent implements OnInit {
           if (s) { s.divisionId = division.id; s.divisionName = division.name; }
         }
         this.successMsg = res.assigned.length
-          ? `${res.assigned.length} alumno(s) asignado(s) a la división ${division.code} (año ${division.academicYear}, ${division.yearNumber}° año del plan).`
+          ? `${res.assigned.length} alumno(s) asignado(s) al curso ${division.code} (año ${division.academicYear}, ${division.yearNumber}° año del plan).`
           : '';
         this.failures = res.failed.map(f => ({ name: names.get(f.studentId) ?? `Alumno ${f.studentId}`, reason: f.reason }));
         this.cdr.detectChanges();
