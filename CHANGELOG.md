@@ -4,6 +4,12 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.13.1] - 2026-11-22
+
+### Corregido
+
+- **Calendario**: el encabezado mostraba "11 Noviembre 2026" (número de mes delante del nombre) y parecía una fecha. Ahora dice "Noviembre 2026"; las flechas siguen pasando al mes anterior y al siguiente.
+
 ## [1.13.0] - 2026-11-22
 
 ### Agregado

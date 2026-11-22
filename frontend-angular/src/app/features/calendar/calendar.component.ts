@@ -71,7 +71,8 @@ export class CalendarComponent implements OnInit {
   }
 
   get monthLabel(): string {
-    return `${String(this.currentMonth).padStart(2, '0')} ${this.monthNames[this.currentMonth - 1]} ${this.currentYear}`;
+    // Solo mes y año: el número de mes delante ("11 Noviembre") se leía como si fuera un día.
+    return `${this.monthNames[this.currentMonth - 1]} ${this.currentYear}`;
   }
 
   prevMonth(): void {
