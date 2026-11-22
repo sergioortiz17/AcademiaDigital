@@ -1,0 +1,19 @@
+.tr-wrap { padding: 16px; h1 { color: #0d4f86; margin: 0 0 8px; } }
+.intro { color: #536575; margin: 0 0 12px; }
+.layout { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.picker { padding: 12px; display: flex; flex-direction: column; max-height: 75vh; overflow-y: auto; }
+.student { text-align: left; border: 0; background: transparent; padding: 6px 8px; border-radius: 6px; cursor: pointer;
+  small { color: #6b7a88; margin-left: 4px; } &:hover { background: #eef3f7; } &.active { background: #dcebf8; font-weight: 600; } }
+.detail { padding: 16px; position: relative; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; h2 { margin: 0; color: #20384e; } p { margin: 2px 0; color: #536575; } }
+.registry { display: flex; gap: 8px; mat-form-field { width: 130px; } }
+.courses { width: 100%; border-collapse: collapse; margin-top: 8px;
+  th, td { border-bottom: 1px solid #e3e8ed; padding: 5px 8px; text-align: left; } th { background: #eef3f7; color: #31536e; }
+  tr.year td { background: #f6f8fa; font-weight: 700; color: #20384e; } tr.approved td:first-child { font-weight: 600; } .n { text-align: center; }
+  .act { width: 70px; border: 1px solid #c9d7d1; border-radius: 4px; padding: 3px 5px; } }
+.summary { font-weight: 600; color: #20384e; } .hint { color: #6b7a88; font-size: 0.85rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.loading { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,.6); }
+.msg { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px;
+  &--success { background: #eff8f1; color: #23683c; } &--error { background: #fff3f0; color: #9d3222; } }

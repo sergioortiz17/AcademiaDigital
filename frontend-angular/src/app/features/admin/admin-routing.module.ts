@@ -11,6 +11,7 @@ import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/te
 import { StudentDocumentsReviewComponent } from './student-documents-review/student-documents-review.component';
 import { ReportsComponent } from './reports/reports.component';
 import { BulkActionsComponent } from './bulk-actions/bulk-actions.component';
+import { TranscriptsComponent } from './transcripts/transcripts.component';
 import { TeacherDetailComponent } from './teacher-detail/teacher-detail.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
 import { GradebookManagementComponent } from './gradebook-management/gradebook-management.component';
@@ -80,6 +81,12 @@ const routes: Routes = [
   {
     path: 'bulk-actions',
     component: BulkActionsComponent,
+    canActivate: [RoleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
+  {
+    path: 'transcripts',
+    component: TranscriptsComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.Admin] }
   },

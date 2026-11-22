@@ -21,6 +21,7 @@ import { TeacherCourseAssignmentComponent } from './teacher-course-assignment/te
 import { StudentDocumentsReviewComponent } from './student-documents-review/student-documents-review.component';
 import { ReportsComponent } from './reports/reports.component';
 import { BulkActionsComponent } from './bulk-actions/bulk-actions.component';
+import { TranscriptsComponent } from './transcripts/transcripts.component';
 import { AssignPositionDialogComponent } from './teacher-detail/assign-position-dialog/assign-position-dialog.component';
 import { EndAssignmentDialogComponent } from './teacher-detail/end-assignment-dialog/end-assignment-dialog.component';
 import { TeachingPositionManagementComponent } from './teaching-position-management/teaching-position-management.component';
@@ -62,6 +63,7 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
     StudentDocumentsReviewComponent,
     ReportsComponent,
     BulkActionsComponent,
+    TranscriptsComponent,
     EndAssignmentDialogComponent,
     TeachingPositionManagementComponent,
     TeachingPositionFormDialogComponent,
