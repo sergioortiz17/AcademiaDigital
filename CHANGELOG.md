@@ -4,6 +4,45 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.11.0] - 2026-11-21
+
+Correcciones y mejoras que surgieron de las pruebas por rol (docente, estudiante y administrador) de la versión 1.10.0.
+
+### Agregado
+
+- **Requisitos de ingreso**: el alumno sube el analítico y los demás documentos (PDF, JPG o PNG de hasta 10 MB) y ve si están en revisión, aprobados o rechazados (con el motivo). Administración tiene una bandeja para descargarlos, aprobarlos o rechazarlos. Se crea el requisito "Analítico de nivel secundario" si la institución no tenía ninguno. El enlace a la prematriculación del ministerio se muestra cuando se configura su dirección (`environment.preEnrollmentUrl`).
+- **Datos de contacto en el perfil** (alumnos y docentes): domicilio, contacto de emergencia y obra social.
+- **Editar el formato de la planilla** en borrador: nombre, nota máxima, recuperación y **fecha** de cada instancia; agregar y quitar instancias (las que no tienen notas).
+- **Ausente** en las notas: se escribe "A" y cuenta como nota 0 para la condición.
+- Edición de eventos propios en el calendario.
+- Al entrar a Calificaciones y Asistencia, el docente ya tiene elegidas su carrera y su primera materia.
+- Pipeline de GitHub Actions `Tests unitarios`: verificación de versión, tests del backend (dominio, aplicación y arquitectura), compilación de Finance, tests del frontend y build de producción en cada push.
+
+### Cambiado
+
+- La planilla ya no pide "Peso (%)": el 100% se reparte en partes iguales entre las instancias regulares.
+- Las notas se escriben directamente en borrador (sin tocar el lápiz); el lápiz ahora edita el formato. Desplegable de notas, decimales con coma y celdas inválidas marcadas en rojo.
+- Las materias se muestran sin el código interno y con su cuatrimestre o "Anual".
+- Asistencia de Administración: Carrera, Año de la carrera y Turno filtran de verdad (el filtro Sede tenía valores fijos y no hay sedes cargadas en el sistema). Selector de mes y año, y leyenda P/T/A/J.
+- Textos: "Plan de estudios" en lugar de "Carreras" para alumnos y docentes, "Listado de docentes", "Materias del plan", "Año de la carrera" con ayuda, "Cargar calificaciones", "Algún carácter especial" y la consigna de Mesa de examen.
+- Los errores de validación muestran el detalle del campo en lugar de "Se produjo uno o más errores de validación".
+- Se quita el workflow `backend.yml`, que aplicaba migraciones a una base de Azure que ya no se usa.
+
+### Corregido
+
+- **La página se declaraba en inglés** (`lang="en"`) y Chrome la traducía: de ahí salían "Algún personaje especial", "Área de código" y "los solicitudes". Ahora se declara en español y sin traducción automática.
+- Una cuenta pasada a Profesor sin perfil docente veía las pantallas de docente con "Perfil de docente no encontrado" (así se veía la cuenta de prueba "estudiante"). Ahora el perfil se crea al cambiar el rol, y pasar a Alumno sin ficha se rechaza con un mensaje.
+- El docente no podía descargar su constancia de actividad aprobada ("No tenés permiso").
+- Calendario: al abrir "Nuevo evento" aparecía un error técnico de autenticación; ahora responde con un mensaje legible.
+- "Próximos eventos" y el selector de materias del calendario se quedaban cargando.
+- Asistencia: dos comisiones de la misma materia (por ejemplo, 1.er y 2.º cuatrimestre) compartían los días cargados; el docente no veía sus materias al elegir la carrera; al cargar un día anterior al inicio de la asignación decía "no es su materia" (ahora indica la fecha de inicio); no se validaba la fecha escrita a mano.
+- La constancia de inscripción salía con caracteres rotos ("InscripciÃ³n", "MaÃ±ana"); los CSV ahora abren bien en Excel.
+- Inscripción a materias: decía "Correlativa no regularizada" para materias ya inscriptas o aprobadas.
+- Calificaciones: aceptaba notas fuera de rango sin avisar; el panel del alumno no cambiaba al escribir en otra fila; el lápiz se veía activo con la planilla enviada; los filtros se rompían en el celular.
+- Perfil: el teléfono aceptaba cualquier cantidad de dígitos y el CUIL aceptaba letras y mostraba formatos distintos (validado también en el servidor).
+- La pestaña y el panel de Plan de estudios y Mesa de examen no coincidían con Figma.
+- 10 tests del frontend que fallaban (desactualizados respecto del código).
+
 ## [1.10.1] - 2026-11-20
 
 Pantallas del docente: "Mis asignaciones" y "Alumnos".
