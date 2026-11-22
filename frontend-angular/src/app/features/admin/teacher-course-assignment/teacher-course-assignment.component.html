@@ -1,49 +1,107 @@
-<div class="page">
+<div class="page-header">
   <h1>Asignar materia</h1>
-  <p class="subtitle">
-    Elige el docente, la división y marca las materias. Si la comisión de una materia todavía no existe,
-    se crea sola.
-  </p>
+  <p>Arrastre cada docente hasta el cuadro de la materia. Después toque la materia para elegir la división y el cargo de cada docente, y al final use <strong>Guardar cambios</strong>.</p>
+</div>
 
-  <div *ngIf="errorMsg" class="msg msg--error">{{ errorMsg }}</div>
+<div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>
+<div *ngIf="errorMsg" class="msg msg--error"><mat-icon>error</mat-icon> {{ errorMsg }}</div>
 
-  <mat-form-field appearance="outline" class="teacher-field" subscriptSizing="dynamic">
-    <mat-label>Docente</mat-label>
-    <mat-select [(ngModel)]="teacherId" (selectionChange)="onTeacherChange()">
-      <mat-option>
-        <ngx-mat-select-search [(ngModel)]="teacherSearch" placeholderLabel="Buscar por nombre, legajo o email"
-                               noEntriesFoundLabel="No hay docentes que coincidan"></ngx-mat-select-search>
-      </mat-option>
-      <mat-option *ngFor="let t of filteredTeachers" [value]="t.id">
-        {{ t.lastName }}, {{ t.firstName }} · {{ t.employeeNumber }}
-      </mat-option>
+<div class="filters">
+  <mat-form-field appearance="outline">
+    <mat-label>Carrera</mat-label>
+    <mat-select [(ngModel)]="careerId" (selectionChange)="onCareerChange()">
+      <mat-option *ngFor="let c of careers" [value]="c.id">{{ c.name }}</mat-option>
     </mat-select>
-    <mat-hint *ngIf="!teachers.length">No hay docentes activos. Se crean en Docentes → Legajos.</mat-hint>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="cycle-field">
+    <mat-label>Ciclo lectivo</mat-label>
+    <mat-select [(ngModel)]="academicYear" (selectionChange)="onAcademicYearChange()">
+      <mat-option *ngFor="let y of academicYears" [value]="y">{{ y }}</mat-option>
+    </mat-select>
   </mat-form-field>
 
-  <ng-container *ngIf="selectedTeacher as teacher">
-    <section class="card">
-      <h2>Materias actuales de {{ teacher.firstName }} {{ teacher.lastName }}</h2>
-      <div class="loading" *ngIf="isLoadingAssignments"><mat-spinner diameter="24"></mat-spinner></div>
-      <ng-container *ngIf="!isLoadingAssignments">
-        <ul class="current" *ngIf="assignments.length; else noAssignments">
-          <li *ngFor="let a of assignments">
-            <span class="name">{{ a.courseName }}</span>
-            <span class="meta">
-              {{ a.divisionCode || 'Sin división' }} · {{ a.academicYear }} · {{ positionLabel(a.positionType) }}
-            </span>
-          </li>
-        </ul>
-        <ng-template #noAssignments><p class="empty">Todavía no tiene materias asignadas.</p></ng-template>
-      </ng-container>
-      <a mat-button color="primary" [routerLink]="['/app/admin/teachers', teacher.id]">
-        <mat-icon>badge</mat-icon> Ver legajo
-      </a>
-    </section>
+  <span class="spacer"></span>
+  <span class="pending-note" *ngIf="pendingCount > 0">
+    {{ pendingCount }} cambio(s) sin guardar<ng-container *ngIf="missingDivisionCount > 0"> · {{ missingDivisionCount }} sin división</ng-container>
+  </span>
+  <button mat-stroked-button [disabled]="pendingCount === 0 || isSaving" (click)="discardAll()">Descartar</button>
+  <button mat-raised-button color="primary" [disabled]="!canSave" (click)="save()"
+    [matTooltip]="missingDivisionCount > 0 ? 'Falta elegir la división de algunos docentes' : ''">
+    <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
+    <span *ngIf="!isSaving">Guardar cambios</span>
+  </button>
+</div>
 
-    <section class="card">
-      <h2>Asignar materias nuevas</h2>
-      <app-assign-courses-form [teacherId]="teacher.id" (submitted)="onSubmitted($event)"></app-assign-courses-form>
-    </section>
-  </ng-container>
+<div class="board" cdkDropListGroup>
+  <!-- Docentes: píldoras que se arrastran (se copian, no se mueven). -->
+  <aside class="teachers-panel">
+    <mat-form-field appearance="outline" class="search">
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [(ngModel)]="teacherSearch" placeholder="Buscar docente" aria-label="Buscar docente">
+    </mat-form-field>
+    <div class="pills" cdkDropList cdkDropListSortingDisabled [cdkDropListEnterPredicate]="noDropBack">
+      <div class="pill" *ngFor="let t of filteredTeachers" cdkDrag [cdkDragData]="t"
+        [matTooltip]="t.employeeNumber + ' · ' + t.email">
+        <mat-icon>drag_indicator</mat-icon>
+        <span class="pill-name">{{ teacherName(t) }}</span>
+        <span class="pill-load" *ngIf="teacherLoad(t) > 0">{{ teacherLoad(t) }}</span>
+        <div class="pill pill--preview" *cdkDragPreview>{{ teacherName(t) }}</div>
+      </div>
+      <p class="hint" *ngIf="teachers.length === 0">No hay docentes activos. Se crean en Docentes → Listado de docentes.</p>
+    </div>
+  </aside>
+
+  <section class="courses-panel">
+    <div class="loading" *ngIf="isLoading"><mat-spinner diameter="36"></mat-spinner></div>
+
+    <div class="year-group" *ngFor="let year of years">
+      <h2>{{ year.yearNumber }}° año</h2>
+      <div class="course-grid">
+        <div class="course-box" *ngFor="let c of year.courses"
+          cdkDropList [cdkDropListData]="c" (cdkDropListDropped)="onDrop($event, c)"
+          [class.course-box--open]="openCourse?.courseId === c.courseId"
+          [class.course-box--pending]="pendingFor(c).length > 0">
+          <button type="button" class="course-head" (click)="open(c)">
+            <span class="course-name">{{ c.courseName }}</span>
+            <span class="course-meta">{{ semesterLabel(c) }} · {{ sectionsFor(c).length }} comisión(es)</span>
+            <span class="pending-badge" *ngIf="pendingFor(c).length > 0">+{{ pendingFor(c).length }}</span>
+          </button>
+          <button type="button" class="expander" (click)="toggleExpanded(c, $event)"
+            [matTooltip]="expanded.has(c.courseId) ? 'Ocultar comisiones' : 'Ver comisiones'">
+            <mat-icon>{{ expanded.has(c.courseId) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+
+          <ul class="sections" *ngIf="expanded.has(c.courseId)">
+            <li *ngFor="let s of sectionsFor(c)">
+              <strong>{{ s.divisionName || 'Sin división' }}</strong>
+              <span>{{ s.teacherName || 'Vacante' }} · {{ positionLabel(s.positionType) }}</span>
+            </li>
+            <li *ngIf="sectionsFor(c).length === 0" class="muted">Sin comisiones en {{ academicYear }}.</li>
+          </ul>
+
+          <!-- Detalle: división y cargo de cada docente soltado. -->
+          <div class="detail" *ngIf="openCourse?.courseId === c.courseId">
+            <p class="muted" *ngIf="pendingFor(c).length === 0">Suelte aquí un docente para asignarlo a esta materia.</p>
+            <div class="pending-row" *ngFor="let p of pendingFor(c)">
+              <span class="pending-name">{{ teacherName(p.teacher) }}</span>
+              <select [(ngModel)]="p.divisionId" aria-label="División">
+                <option [ngValue]="null" disabled>División…</option>
+                <option *ngFor="let d of divisionsFor(c)" [ngValue]="d.id">{{ d.name }}</option>
+              </select>
+              <select [(ngModel)]="p.positionType" aria-label="Cargo">
+                <option *ngFor="let t of positionTypes" [ngValue]="t.value">{{ t.label }}</option>
+              </select>
+              <button mat-icon-button type="button" matTooltip="Quitar" (click)="removePending(c, p)">
+                <mat-icon>close</mat-icon>
+              </button>
+              <small class="row-error" *ngIf="p.error">{{ p.error }}</small>
+            </div>
+            <p class="muted" *ngIf="pendingFor(c).length > 0 && divisionsFor(c).length === 0">
+              No hay divisiones de {{ c.yearNumber }}° año en {{ academicYear }}. Créelas en Docentes → Divisiones.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

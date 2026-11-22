@@ -1,3 +1,4 @@
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -83,6 +84,6 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
     CommissionManagementComponent,
     CommissionFormDialogComponent
   ],
-  imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule, ReactiveFormsModule, NgxMatSelectSearchModule],
+  imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule, ReactiveFormsModule, NgxMatSelectSearchModule, DragDropModule],
 })
 export class AdminModule {}
