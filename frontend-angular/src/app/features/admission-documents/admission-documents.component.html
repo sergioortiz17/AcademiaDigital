@@ -41,23 +41,48 @@
       </div>
 
       <div class="document" *ngIf="row.latest as doc">
-        <button mat-button type="button" (click)="download(doc)">
-          <mat-icon>description</mat-icon> {{ doc.originalFileName }}
-        </button>
+        <mat-icon class="doc-icon">description</mat-icon>
+        <span class="doc-name">{{ doc.originalFileName }}</span>
         <span class="sent-at">Enviado el {{ doc.submittedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        <button mat-button type="button" color="primary" [disabled]="loadingViewId === row.requirement.id" (click)="toggleView(row)">
+          <mat-icon>{{ viewing[row.requirement.id] ? 'visibility_off' : 'visibility' }}</mat-icon>
+          {{ viewing[row.requirement.id] ? 'Ocultar' : 'Ver' }}
+        </button>
+        <button mat-button type="button" (click)="download(doc)"><mat-icon>download</mat-icon> Descargar</button>
         <p class="observation" *ngIf="doc.status === 'Rejected' && doc.observation">
           <mat-icon>feedback</mat-icon> Motivo del rechazo: {{ doc.observation }}
         </p>
       </div>
 
-      <div class="actions" *ngIf="canUpload(row)">
+      <!-- Documento enviado: vista en pantalla -->
+      <div class="preview" *ngIf="viewing[row.requirement.id] as v">
+        <iframe *ngIf="v.isPdf" [src]="v.safeUrl" title="Vista del documento enviado"></iframe>
+        <img *ngIf="!v.isPdf" [src]="v.safeUrl" alt="Vista del documento enviado">
+      </div>
+
+      <!-- Archivo elegido: vista previa y confirmación antes de enviar -->
+      <div class="pending" *ngIf="pending[row.requirement.id] as p">
+        <p class="pending-title">
+          <mat-icon>preview</mat-icon> Vista previa: <strong>{{ p.name }}</strong> ({{ p.sizeLabel }}). Revise que se lea bien antes de enviarlo.
+        </p>
+        <div class="preview">
+          <iframe *ngIf="p.isPdf" [src]="p.safeUrl" title="Vista previa del archivo elegido"></iframe>
+          <img *ngIf="!p.isPdf" [src]="p.safeUrl" alt="Vista previa del archivo elegido">
+        </div>
+        <div class="pending-actions">
+          <button mat-raised-button color="primary" type="button" [disabled]="uploadingId !== null" (click)="send(row)">
+            <mat-spinner diameter="18" *ngIf="uploadingId === row.requirement.id"></mat-spinner>
+            <ng-container *ngIf="uploadingId !== row.requirement.id"><mat-icon>send</mat-icon> Enviar</ng-container>
+          </button>
+          <button mat-stroked-button type="button" [disabled]="uploadingId !== null" (click)="cancelPending(row)">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="actions" *ngIf="canUpload(row) && !pending[row.requirement.id]">
         <input #fileInput type="file" hidden accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
           (change)="onFileSelected(row, fileInput)">
         <button mat-raised-button color="primary" type="button" [disabled]="uploadingId !== null" (click)="fileInput.click()">
-          <mat-spinner diameter="18" *ngIf="uploadingId === row.requirement.id"></mat-spinner>
-          <ng-container *ngIf="uploadingId !== row.requirement.id">
-            <mat-icon>upload_file</mat-icon> {{ row.latest ? 'Reemplazar archivo' : 'Subir archivo' }}
-          </ng-container>
+          <mat-icon>upload_file</mat-icon> {{ row.latest ? 'Elegir otro archivo' : 'Elegir archivo' }}
         </button>
       </div>
     </mat-card>
