@@ -35,8 +35,16 @@
 .hint, .muted { color: #6b7a88; font-size: .85rem; margin: 6px 0; }
 
 .loading { display: flex; justify-content: center; padding: 24px; }
-.year-group h2 { margin: 8px 0; font-size: 1.1rem; color: #31536e; }
-.course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.year-group {
+  margin-bottom: 14px; padding: 6px 12px 2px; border-radius: 14px;
+  h2 { margin: 6px 0 8px; font-size: 1.1rem; color: #31536e; }
+  // Un fondo suave por año de la carrera, para distinguirlos de un vistazo.
+  &--1 { background: #e8f1fb; }
+  &--2 { background: #eaf6ec; }
+  &--3 { background: #fdf3e1; }
+  &--4 { background: #f3ecfa; }
+}
+.course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 10px; }
 
 .course-box {
   position: relative; padding: 10px; border-radius: 12px; background: #fff; border: 2px dashed #c9d6e2;

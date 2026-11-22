@@ -48,7 +48,7 @@
     </mat-form-field>
     <div class="pills" cdkDropList cdkDropListSortingDisabled [cdkDropListEnterPredicate]="noDropBack">
       <div class="pill" *ngFor="let t of filteredTeachers" cdkDrag [cdkDragData]="t"
-        [matTooltip]="t.employeeNumber + ' · ' + t.email">
+        [matTooltip]="teacherCoursesTooltip(t)" matTooltipClass="multiline-tooltip" matTooltipPosition="right">
         <mat-icon>drag_indicator</mat-icon>
         <span class="pill-name">{{ teacherName(t) }}</span>
         <span class="pill-load" *ngIf="teacherLoad(t) > 0">{{ teacherLoad(t) }}</span>
@@ -61,7 +61,7 @@
   <section class="courses-panel">
     <div class="loading" *ngIf="isLoading"><mat-spinner diameter="36"></mat-spinner></div>
 
-    <div class="year-group" *ngFor="let year of years">
+    <div class="year-group" *ngFor="let year of years" [ngClass]="'year-group--' + ((year.yearNumber - 1) % 4 + 1)">
       <h2>{{ year.yearNumber }}° año</h2>
       <div class="course-grid">
         <div class="course-box" *ngFor="let c of year.courses"

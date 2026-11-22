@@ -592,3 +592,10 @@ html, body {
     padding-left: 0;
   }
 }
+
+/* Tooltip de varias líneas (por ejemplo, las materias de un docente en Asignar materia). */
+.multiline-tooltip .mdc-tooltip__surface {
+  white-space: pre-line;
+  text-align: left;
+  max-width: 460px;
+}

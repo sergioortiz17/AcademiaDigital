@@ -111,6 +111,16 @@ export class TeacherCourseAssignmentComponent implements OnInit {
     return this.sections.filter(s => s.teacherId === t.id).length;
   }
 
+  /** Texto al pasar el mouse por un docente: sus materias en la carrera, ciclo y escuela elegidos. */
+  teacherCoursesTooltip(t: Teacher): string {
+    const own = this.sections.filter(s => s.teacherId === t.id)
+      .map(s => `• ${s.courseName}${s.divisionName ? ' (' + s.divisionName + ')' : ''}`)
+      .sort((a, b) => a.localeCompare(b, 'es'));
+    return own.length
+      ? `${this.teacherName(t)} · ${own.length} materia(s)\n${own.join('\n')}`
+      : `${this.teacherName(t)}\nSin materias asignadas en ${this.academicYear}.`;
+  }
+
   onCareerChange(): void {
     this.pending = {};
     this.expanded.clear();
