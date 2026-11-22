@@ -118,6 +118,8 @@ export interface SaveGradeEntryInput {
   score: number;
   notes?: string | null;
   isAbsent?: boolean;
+  /** Borra la nota guardada (el historial la conserva). */
+  clear?: boolean;
 }
 
 /** Instancia al editar el formato de la planilla: sin id es nueva; las que no se envían se quitan. */

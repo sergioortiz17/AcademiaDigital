@@ -7,7 +7,8 @@ using AcademiaDigital.Domain.Services;
 namespace AcademiaDigital.Application.UseCases.Grades;
 
 public sealed record GradebookEvaluationInput(string Name, decimal WeightPercentage, decimal MaximumScore = 10m, bool IsRecovery = false);
-public sealed record GradeEntryInput(long EvaluationId, long EnrollmentId, decimal Score, string? Notes, bool IsAbsent = false);
+/// <summary>Una nota a guardar. Con <c>Clear</c> se borra la nota actual (queda en el historial).</summary>
+public sealed record GradeEntryInput(long EvaluationId, long EnrollmentId, decimal Score, string? Notes, bool IsAbsent = false, bool Clear = false);
 /// <summary>Instancia de la planilla al editar su formato: sin Id es nueva; las que faltan se eliminan.</summary>
 public sealed record GradebookEvaluationLayoutInput(long? Id, string Name, decimal MaximumScore, bool IsRecovery, DateOnly? EvaluationDate);
 public sealed record UpdateGradebookEvaluationsCommand(
@@ -192,10 +193,16 @@ public sealed class SaveGradeEntriesCommandHandler(
             if (command.Grades.Any(item => !evaluations.ContainsKey(item.EvaluationId)))
                 throw new ArgumentException("Todas las notas deben pertenecer a una evaluación configurada.");
             // Ausente se guarda como 0: así cuenta como instancia desaprobada al calcular la condición.
-            foreach (var input in command.Grades.Where(item => !item.IsAbsent))
+            foreach (var input in command.Grades.Where(item => !item.IsAbsent && !item.Clear))
                 policy.EnsureScoreIsValid(evaluations[input.EvaluationId], input.Score);
+            var cleared = command.Grades.Where(item => item.Clear)
+                .Select(item => (item.EvaluationId, item.EnrollmentId)).ToArray();
+            if (cleared.Length > 0)
+                await repository.ClearCurrentGradesAsync(gradebook.Id, cleared, transactionCt);
             var now = timeProvider.GetUtcNow().UtcDateTime;
-            await repository.SaveGradeRevisionsAsync(command.Grades.Select(input => new GradeEntryRevision
+            var toSave = command.Grades.Where(item => !item.Clear).ToArray();
+            if (toSave.Length > 0)
+            await repository.SaveGradeRevisionsAsync(toSave.Select(input => new GradeEntryRevision
             {
                 GradebookId = gradebook.Id,
                 EvaluationId = input.EvaluationId,
@@ -288,7 +295,10 @@ public sealed class SubmitGradebookCommandHandler(
                 ?? throw new KeyNotFoundException("Planilla no encontrada.");
             var roster = await repository.GetRosterAsync(gradebook, transactionCt);
             policy.EnsureCanSubmit(gradebook, roster.Count);
-            gradebook.Status = GradebookStatus.Submitted;
+            // Reenviar no cambia el estado: una planilla aprobada o publicada sigue así y solo se
+            // actualiza la fecha del último envío, para que Secretaría vea que hubo cambios.
+            if (gradebook.Status == GradebookStatus.Draft)
+                gradebook.Status = GradebookStatus.Submitted;
             gradebook.SubmittedAt = timeProvider.GetUtcNow().UtcDateTime;
             gradebook.SubmittedByUserId = command.ActorUserId;
             await repository.SaveAsync(gradebook, transactionCt);
@@ -344,6 +354,8 @@ public sealed class CloseGradebookCommandHandler(
             var gradebook = await repository.FindForUpdateAsync(command.GradebookId, transactionCt)
                 ?? throw new KeyNotFoundException("Planilla no encontrada.");
             policy.EnsureCanClose(gradebook);
+            var roster = await repository.GetRosterAsync(gradebook, transactionCt);
+            policy.EnsureGradesComplete(gradebook, roster.Count);
             var currentByEnrollment = gradebook.GradeRevisions.Where(item => item.IsCurrent)
                 .GroupBy(item => item.EnrollmentId);
             var results = currentByEnrollment
@@ -358,7 +370,7 @@ public sealed class CloseGradebookCommandHandler(
                             evaluation.MaximumScore, evaluation.WeightPercentage);
                     }).ToArray();
                     var result = policy.CalculateResult(scores, group.First().Enrollment.StudyPlanCourse?.ApprovalRule);
-                    // Al cerrar, EnsureCanSubmit ya garantizó nota en todas las instancias regulares, así
+                    // EnsureGradesComplete ya garantizó nota en todas las instancias regulares, así
                     // que no debería haber pendientes; si lo hubiera, se cierra conservadoramente como Libre.
                     return new EnrollmentGradebookResult(
                         group.Key, result.Average ?? 0m, result.Status ?? EnrollmentStatus.Failed);

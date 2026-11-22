@@ -218,6 +218,7 @@ public sealed class GradebookHandlersTests
         ];
         repository.FindForUpdateAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
         repository.FindAsync(10, Arg.Any<CancellationToken>()).Returns(gradebook);
+        repository.GetRosterAsync(gradebook, Arg.Any<CancellationToken>()).Returns([Roster()]);
         var handler = new CloseGradebookCommandHandler(
             repository, new GradebookPolicy(), new ImmediateUnitOfWork(), new FixedTimeProvider(Now));
 

@@ -4,9 +4,18 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
-## [1.13.1] - 2026-11-22
+## [1.14.0] - 2026-11-22
+
+### Cambiado
+
+- **Calificaciones**: el docente carga y corrige notas en cualquier estado de la planilla (borrador, enviada, aprobada o publicada) y la planilla conserva su estado; cada cambio queda en el historial de revisiones. Solo una planilla cerrada queda bloqueada (Secretaría puede reabrirla).
+- **Calificaciones**: el botón de envío está siempre visible mientras la planilla no esté cerrada; si ya se envió, dice "Reenviar a Secretaría" y actualiza la fecha del último envío.
+- **Calificaciones**: se puede enviar la planilla con instancias sin nota (envío parcial). La nota completa (o ausente) en todas las instancias regulares se exige recién al cerrar.
+- **Calificaciones**: vaciar una celda que tenía nota y guardar borra esa nota.
 
 ### Corregido
+
+- **Calificaciones**: al enviar la planilla, las celdas vacías (incluidas recuperaciones e IEFI) se completaban con 0, y los alumnos quedaban libres por error. Ya no se completa nada.
 
 - **Calendario**: el encabezado mostraba "11 Noviembre 2026" (número de mes delante del nombre) y parecía una fecha. Ahora dice "Noviembre 2026"; las flechas siguen pasando al mes anterior y al siguiente.
 
