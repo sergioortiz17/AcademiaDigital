@@ -4,6 +4,17 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.17.0] - 2026-11-23
+
+### Agregado
+
+- **Tour guiado para la demo (alumno)**: las cuentas con correo `@demo.com` ven un recorrido interactivo que resalta cada parte del sistema, oscurece el resto y explica para qué sirve, con Anterior/Siguiente, contador de pasos y botón para cerrar. El tour del alumno tiene 15 pasos (inicio, menú, accesos rápidos, plan de estudios, requisitos de ingreso, prematrícula, inscripción a materias, mis inscripciones, mesas de examen, calificaciones, asistencias, historial académico, certificados y calendario) y navega solo entre las pantallas.
+  - Arranca solo la primera vez que entra una cuenta de demo; después se relanza con el botón "Ver tour" de la barra superior o con `?tour=student` en la URL.
+  - Se maneja con el teclado (flechas para avanzar o retroceder, Esc para cerrar). Si un elemento no aparece (por ejemplo, porque no hay datos), ese paso se saltea.
+  - En el celular, el paso del menú señala el botón que lo abre.
+  - Las demás cuentas no ven nada. Los pasos de cada rol están en archivos de configuración propios (`core/tour/tours/`), para sumar después los de docente y administración.
+  - Usa la librería `ngx-ui-tour-md-menu` 16.0.0 (compatible con Angular 21; la 17 ya pide Angular 22).
+
 ## [1.16.0] - 2026-11-22
 
 Escuelas, cupos libres en Comisiones, inscripción ya enviada visible para el alumno y mejoras en Asignar materia. También corrige el menú de Administración de la 1.15.0.
