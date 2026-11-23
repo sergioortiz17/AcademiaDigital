@@ -4,6 +4,19 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ## [Sin publicar]
 
+## [1.17.0] - 2026-11-23
+
+### Agregado
+
+- **Tours guiados por rol**: el botón de la barra superior ("Tour estudiante", "Tour docente" o "Tour admin", según el rol) abre un recorrido interactivo que resalta cada parte del sistema, oscurece el resto y explica para qué sirve, con Anterior/Siguiente, contador de pasos y botón para cerrar. Navega solo entre las pantallas y nunca arranca por su cuenta: solo cuando se toca el botón.
+  - **Alumno** (15 pasos): inicio, menú, accesos rápidos, plan de estudios, requisitos de ingreso, prematrícula, inscripción a materias, mis inscripciones, mesas de examen, calificaciones, asistencias, historial académico, certificados y calendario.
+  - **Docente** (11 pasos): inicio, menú, accesos rápidos, mis asignaciones, cargar calificaciones, cargar asistencia, alumnos, plan de estudios, certificados y calendario.
+  - **Administración** (24 pasos): recorre el menú en orden (Admisión, Alumnos, Docentes, Registros académicos, Certificados, Mesa de examen, Reportes, Usuarios, Carreras, Escuelas y Reglas de aprobación); el desplegable de cada pantalla se abre solo.
+  - Los roles de gestión sin tour propio (Secretaría, Coordinación, Preceptoría y Cooperadora) todavía no ven el botón.
+  - El foco que resalta cada elemento tiene las esquinas redondeadas (copia la curva del elemento, o 12 px si es recto; en los títulos se ajusta al texto) y se desplaza con una animación suave entre pasos.
+  - Se maneja con el teclado (flechas para avanzar o retroceder, Esc para cerrar). Si un elemento no aparece (por ejemplo, porque no hay datos), ese paso se saltea. En el celular, el paso del menú señala el botón que lo abre.
+  - Los pasos de cada rol están en archivos de configuración propios (`core/tour/tours/`). Usa la librería `ngx-ui-tour-md-menu` 16.0.0 (compatible con Angular 21; la 17 ya pide Angular 22).
+
 ## [1.16.0] - 2026-11-22
 
 Escuelas, cupos libres en Comisiones, inscripción ya enviada visible para el alumno y mejoras en Asignar materia. También corrige el menú de Administración de la 1.15.0.

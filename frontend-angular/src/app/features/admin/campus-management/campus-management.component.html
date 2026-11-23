@@ -1,5 +1,5 @@
 <div class="page-header" *ngIf="pageMode">
-  <h1>Agregar escuelas</h1>
+  <h1 tourAnchor="admin.schools">Agregar escuelas</h1>
   <p>Las escuelas (sedes) del instituto donde se dictan las carreras.</p>
   <ol class="steps">
     <li><strong>Agregue la escuela</strong> con su nombre y, si quiere, la dirección.</li>
@@ -10,7 +10,7 @@
 
 <mat-card class="campus-card">
   <mat-card-content>
-    <h2>Escuelas</h2>
+    <h2 [class.page-gap]="pageMode">Escuelas</h2>
     <p class="hint" *ngIf="!pageMode">Las escuelas donde se dictan las carreras. Cada curso se asigna a una escuela (Docentes → Cursos).</p>
 
     <div *ngIf="successMsg" class="msg msg--success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div>

@@ -5,9 +5,10 @@ import { MaterialModule } from '../../shared/material.module';
 import { CalendarRoutingModule } from './calendar-routing.module';
 import { CalendarComponent } from './calendar.component';
 import { CreateEventDialogComponent } from './create-event-dialog/create-event-dialog.component';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [CalendarComponent, CreateEventDialogComponent],
-  imports: [CommonModule, FormsModule, MaterialModule, CalendarRoutingModule]
+  imports: [TourAnchorMatMenuDirective, CommonModule, FormsModule, MaterialModule, CalendarRoutingModule]
 })
 export class CalendarModule {}

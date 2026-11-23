@@ -5,10 +5,11 @@ import { MaterialModule } from '../../shared/material.module';
 import { RoleGuard } from '../../core/guards/role.guard';
 import { UserRole } from '../../store/account/account.actions';
 import { AdmissionDocumentsComponent } from './admission-documents.component';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [AdmissionDocumentsComponent],
-  imports: [
+  imports: [TourAnchorMatMenuDirective, 
     CommonModule,
     MaterialModule,
     RouterModule.forChild([

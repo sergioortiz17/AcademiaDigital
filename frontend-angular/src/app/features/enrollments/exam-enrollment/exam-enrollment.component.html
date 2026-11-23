@@ -11,7 +11,7 @@
 
   <ng-container *ngIf="!showMyEnrollments; else myEnrollments">
     <section class="exam-plan" aria-labelledby="exam-title">
-      <h1 id="exam-title" class="section-tab">Inscripciones Mesa de Examen</h1>
+      <h1 id="exam-title" class="section-tab" tourAnchor="student.exam">Inscripciones Mesa de Examen</h1>
       <div class="exam-panel plan-panel">
         <p class="intro">Complete el formulario para inscribirse en una mesa de examen de<br>
           {{ progress?.careerName || 'su carrera' }}.</p>

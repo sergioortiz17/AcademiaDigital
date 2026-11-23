@@ -5,9 +5,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MaterialModule } from '../../shared/material.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 @NgModule({
   declarations: [DashboardComponent],
-  imports: [
+  imports: [TourAnchorMatMenuDirective, 
     CommonModule,
     RouterModule,
     TranslateModule,

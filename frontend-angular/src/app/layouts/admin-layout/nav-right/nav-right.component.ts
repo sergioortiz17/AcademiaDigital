@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { TimeTravelService, TimeTravelStatus } from '../../../core/services/time-travel.service';
 import { selectToken, selectUser } from '../../../store/account/account.selectors';
+import { GuidedTourService } from '../../../core/tour/guided-tour.service';
 import { take } from 'rxjs/operators';
 
 @Component({
@@ -25,7 +26,11 @@ export class NavRightComponent implements OnInit, OnDestroy {
   private timeSub?: Subscription;
   private tickSub?: Subscription;
 
+  /** Texto del botón del tour según el rol; null si el rol no tiene tour (no se muestra). */
+  get tourLabel$() { return this.guidedTour.label$; }
+
   constructor(
+    private readonly guidedTour: GuidedTourService,
     private readonly store: Store,
     private readonly router: Router,
     private readonly authService: AuthService,
@@ -82,5 +87,9 @@ export class NavRightComponent implements OnInit, OnDestroy {
 
   closeAll(): void {
     this.profileOpen = false;
+  }
+
+  startTour(): void {
+    this.guidedTour.start();
   }
 }

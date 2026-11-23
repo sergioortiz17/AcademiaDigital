@@ -13,6 +13,12 @@
   <span class="session-user-dni" *ngIf="user.dni">DNI {{ user.dni }}</span>
 </div>
 
+<!-- Tour guiado del rol (alumno, docente y administración) -->
+<button mat-stroked-button class="tour-btn" *ngIf="tourLabel$ | async as tourLabel" (click)="startTour()"
+  tourAnchor="header.tour-button" [attr.aria-label]="tourLabel + ': recorrido guiado'">
+  <mat-icon>tour</mat-icon> {{ tourLabel }}
+</button>
+
 <!-- User menu -->
 <button mat-icon-button class="action-btn profile-btn" [matMenuTriggerFor]="userMenu" matTooltip="Mi cuenta">
   <mat-icon>account_circle</mat-icon>

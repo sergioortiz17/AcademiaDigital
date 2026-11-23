@@ -1,6 +1,6 @@
 {
   "name": "frontend-angular",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -44,6 +44,7 @@
     "exceljs": "^4.4.0",
     "lottie-web": "5.13.0",
     "ngx-mat-select-search": "^9.0.0",
+    "ngx-ui-tour-md-menu": "16.0.0",
     "rxjs": "~7.8.0",
     "sass": "^1.99.0",
     "sweetalert2": "^11.26.25",

@@ -6,10 +6,11 @@ import { EnrollmentsRoutingModule } from './enrollments-routing.module';
 import { EnrollmentsComponent } from './enrollments.component';
 import { EnrollmentFormComponent } from './enrollment-form/enrollment-form.component';
 import { EnrollmentSuccessDialogComponent } from './enrollment-form/enrollment-success-dialog.component';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [EnrollmentsComponent, EnrollmentFormComponent, EnrollmentSuccessDialogComponent],
-  imports: [
+  imports: [TourAnchorMatMenuDirective, 
     CommonModule,
     TranslateModule,
     MaterialModule,

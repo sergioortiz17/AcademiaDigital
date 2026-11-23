@@ -8,6 +8,7 @@ import { AdminLayoutComponent } from './admin-layout.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { NavRightComponent } from './nav-right/nav-right.component';
 import { NavigationComponent } from './navigation/navigation.component';
+import { TourAnchorMatMenuDirective, TourStepTemplateComponent } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,7 @@ import { NavigationComponent } from './navigation/navigation.component';
     NavRightComponent,
     NavigationComponent
   ],
-  imports: [
+  imports: [TourAnchorMatMenuDirective, TourStepTemplateComponent, 
     CommonModule,
     RouterModule,
     TranslateModule,

@@ -1,5 +1,5 @@
 <div class="bulk-wrap">
-  <h1>{{ mode === 'enroll' ? 'Inscribir un curso en sus materias' : 'Acciones masivas' }}</h1>
+  <h1 tourAnchor="admin.bulk-actions">{{ mode === 'enroll' ? 'Inscribir un curso en sus materias' : 'Acciones masivas' }}</h1>
   <div *ngIf="errorMsg" class="msg msg--error" role="alert"><mat-icon>error</mat-icon> {{ errorMsg }}
     <button mat-icon-button type="button" (click)="errorMsg = ''" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
   </div>

@@ -599,3 +599,13 @@ html, body {
   text-align: left;
   max-width: 460px;
 }
+
+/* Tour guiado de la demo: foco con esquinas redondeadas que oscurece el resto de la pantalla.
+   Queda por debajo del globo (capa de overlays de Material, z-index 1000). */
+.tour-spotlight {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .6), 0 0 0 3px rgba(255, 255, 255, .85) inset;
+  transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease, border-radius .25s ease;
+}

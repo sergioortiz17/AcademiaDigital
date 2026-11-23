@@ -1,7 +1,7 @@
 <div class="dashboard-content">
   <div class="date-text">{{ today | date:'fullDate':'':'es' }}</div>
 
-  <section class="welcome-card">
+  <section class="welcome-card" tourAnchor="dashboard.welcome">
     <div class="welcome-content">
       <h1>¡Hola, {{ (user$ | async)?.username || 'Usuario' }}!</h1>
     </div>
@@ -11,7 +11,7 @@
   <ng-container *ngIf="userRole$ | async as role">
 
     <!-- ALUMNO -->
-    <div class="quick-access-grid" *ngIf="role === UserRole.Alumno">
+    <div class="quick-access-grid" *ngIf="role === UserRole.Alumno" tourAnchor="dashboard.quick-access">
       <a mat-card routerLink="/app/certificates" class="quick-card quick-card--teal">
         <mat-icon>military_tech</mat-icon>
         <span>Mis Certificados</span>
@@ -35,7 +35,7 @@
     </div>
 
     <!-- PROFESOR -->
-    <div class="quick-access-grid" *ngIf="role === UserRole.Profesor">
+    <div class="quick-access-grid" *ngIf="role === UserRole.Profesor" tourAnchor="dashboard.quick-access">
       <a mat-card routerLink="/app/grades" class="quick-card quick-card--teal">
         <mat-icon>grade</mat-icon>
         <span>Cargar calificaciones</span>
@@ -59,7 +59,7 @@
     </div>
 
     <!-- ADMIN -->
-    <div class="quick-access-grid" *ngIf="isStaffRole(role)">
+    <div class="quick-access-grid" *ngIf="isStaffRole(role)" tourAnchor="dashboard.quick-access">
       <a mat-card routerLink="/app/admin/users" class="quick-card quick-card--teal">
         <mat-icon>manage_accounts</mat-icon>
         <span>Gestión de Usuarios</span>
