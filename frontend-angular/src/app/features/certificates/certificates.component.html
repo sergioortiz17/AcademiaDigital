@@ -78,7 +78,7 @@
 </ng-container>
 -->
 <div class="certificates-card">
-    <h2 tourAnchor="student.certificates">¿Qué certificado desea solicitar?</h2>
+    <h2 tourAnchor="certificates.request">¿Qué certificado desea solicitar?</h2>
     <p class="subtitle">
       Seleccione una opción para continuar.
     </p>
@@ -305,7 +305,7 @@
     <mat-card class="table-card">
         <mat-card-content>
             <!-- Pills -->
-            <div class="role-pills">
+            <div class="role-pills" tourAnchor="certificates.staff">
                 <button *ngFor="let f of statusFilters" class="role-pill"
                     [ngClass]="{
                         'role-pill--active': selectedStatus === f.value,

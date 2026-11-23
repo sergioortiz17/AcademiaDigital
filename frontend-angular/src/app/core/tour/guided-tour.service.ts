@@ -6,8 +6,7 @@ import { Observable } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { UserModel, UserRole } from '../../store/account/account.actions';
 import { selectUser } from '../../store/account/account.selectors';
-import { isDemoUser } from './demo-user';
-import { TOUR_KEYS, TOURS_BY_ROLE } from './tours';
+import { TOURS_BY_ROLE } from './tours';
 
 /** Valores comunes a todos los pasos (en español y con el fondo oscurecido). */
 const STEP_DEFAULTS: IStepOption = {
@@ -28,11 +27,8 @@ const STEP_DEFAULTS: IStepOption = {
 };
 
 /**
- * Tours guiados de la demo. Solo para cuentas @demo.com y para los roles que tienen tour.
- * - La primera vez que una cuenta de demo entra, el tour de su rol arranca solo.
- * - "Ver tour" (barra superior) lo relanza cuando se quiera.
- * - ?tour=student en cualquier URL lo lanza directamente (si el usuario es de demo y alumno).
- * Que el tour se completó se guarda en el navegador, por cuenta y rol.
+ * Tours guiados por rol. Los ve cualquier usuario cuyo rol tenga tour (alumno, docente y
+ * administración) y se abren solo con el botón "Ver tour" de la barra superior.
  */
 @Injectable({ providedIn: 'root' })
 export class GuidedTourService {
@@ -40,57 +36,32 @@ export class GuidedTourService {
   private readonly store = inject(Store);
   private readonly breakpoints = inject(BreakpointObserver);
   private readonly document = inject(DOCUMENT);
+  private initialized = false;
   /** Recuadro que resalta el elemento con esquinas redondeadas y oscurece el resto. */
   private spotlight: HTMLElement | null = null;
   private spotlightTarget: HTMLElement | null = null;
   private readonly reposition = () => requestAnimationFrame(() => this.placeSpotlight());
-  private initialized = false;
-  /** Usuario que está haciendo el tour (para guardar que lo terminó). */
-  private activeUser: UserModel | null = null;
 
-  /** Si el usuario actual tiene un tour disponible (cuenta de demo y rol con tour). */
+  /** Si el usuario actual tiene un tour (para mostrar el botón "Ver tour"). */
   readonly available$: Observable<boolean> = this.store.select(selectUser).pipe(
-    map(user => this.canTour(user))
+    map(user => !!user && !!TOURS_BY_ROLE[user.role as UserRole])
   );
 
-  canTour(user: UserModel | null | undefined): boolean {
-    return !!user && isDemoUser(user.email) && !!TOURS_BY_ROLE[user.role as UserRole];
-  }
-
-  /** Lanza el tour del usuario actual (botón "Ver tour"). */
+  /** Abre el tour del rol del usuario actual. */
   start(): void {
-    this.currentUser(user => this.startFor(user));
-  }
-
-  /**
-   * Al entrar a la app: arranca el tour si la URL lo pide (?tour=student) o si la cuenta de demo
-   * todavía no lo vio.
-   */
-  autoStart(requestedTour: string | null): void {
-    this.currentUser(user => {
-      if (!this.canTour(user)) return;
-      const requestedRole = requestedTour ? TOUR_KEYS[requestedTour] : undefined;
-      if (requestedTour && requestedRole === user.role) this.startFor(user);
-      else if (!requestedTour && !this.isDone(user)) this.startFor(user);
+    this.store.select(selectUser).pipe(filter((u): u is UserModel => !!u), take(1)).subscribe(user => {
+      const steps = TOURS_BY_ROLE[user.role as UserRole];
+      if (!steps) return;
+      if (!this.initialized) {
+        this.tourService.end$.subscribe(() => this.removeSpotlight());
+        this.tourService.stepShow$.subscribe(({ step }) => this.showSpotlight(step.anchorId));
+        this.tourService.stepHide$.subscribe(() => this.hideSpotlight());
+        this.tourService.enableHotkeys(); // Esc cierra, flechas avanzan y retroceden
+        this.initialized = true;
+      }
+      this.tourService.initialize(this.forDevice(steps), STEP_DEFAULTS);
+      this.tourService.start();
     });
-  }
-
-  private startFor(user: UserModel): void {
-    const steps = TOURS_BY_ROLE[user.role as UserRole];
-    if (!steps || !this.canTour(user)) return;
-    this.activeUser = user;
-    if (!this.initialized) {
-      this.tourService.end$.subscribe(() => {
-        if (this.activeUser) this.markDone(this.activeUser);
-        this.removeSpotlight();
-      });
-      this.tourService.stepShow$.subscribe(({ step }) => this.showSpotlight(step.anchorId));
-      this.tourService.stepHide$.subscribe(() => this.hideSpotlight());
-      this.tourService.enableHotkeys(); // Esc cierra, flechas avanzan y retroceden
-      this.initialized = true;
-    }
-    this.tourService.initialize(this.forDevice(steps), STEP_DEFAULTS);
-    this.tourService.start();
   }
 
   /** En el celular el menú lateral está oculto: ese paso señala el botón que lo abre. */
@@ -100,22 +71,6 @@ export class GuidedTourService {
     return steps.map(step => step.anchorId === 'nav.menu'
       ? { ...step, anchorId: 'header.menu-button', content: 'Con este botón abre el menú, desde donde entra a todas las secciones del sistema.' }
       : step);
-  }
-
-  private currentUser(action: (user: UserModel) => void): void {
-    this.store.select(selectUser).pipe(filter((u): u is UserModel => !!u), take(1)).subscribe(action);
-  }
-
-  private storageKey(user: UserModel): string {
-    return `ad.tour.done.${user.role}.${user.email.toLowerCase()}`;
-  }
-
-  private isDone(user: UserModel): boolean {
-    try { return localStorage.getItem(this.storageKey(user)) === '1'; } catch { return false; }
-  }
-
-  private markDone(user: UserModel): void {
-    try { localStorage.setItem(this.storageKey(user), '1'); } catch { /* sin almacenamiento: se vuelve a mostrar */ }
   }
 
   // ---------- Foco redondeado ----------
@@ -140,7 +95,15 @@ export class GuidedTourService {
   private placeSpotlight(): void {
     if (!this.spotlight || !this.spotlightTarget) return;
     const margin = 6;
-    const rect = this.spotlightTarget.getBoundingClientRect();
+    // En los títulos (bloques de todo el ancho) el foco se ajusta al texto.
+    const isHeading = /^H[1-3]$/.test(this.spotlightTarget.tagName);
+    let rect = this.spotlightTarget.getBoundingClientRect();
+    if (isHeading) {
+      const range = this.document.createRange();
+      range.selectNodeContents(this.spotlightTarget);
+      const text = range.getBoundingClientRect();
+      if (text.width > 0) rect = new DOMRect(text.left, rect.top, text.width, rect.height);
+    }
     const radius = parseFloat(getComputedStyle(this.spotlightTarget).borderTopLeftRadius) || 12;
     Object.assign(this.spotlight.style, {
       top: `${rect.top - margin}px`,

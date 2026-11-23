@@ -43,6 +43,7 @@ import { CommissionManagementComponent } from './commission-management/commissio
 import { CommissionFormDialogComponent } from './commission-management/commission-form-dialog/commission-form-dialog.component';
 import { SumCountPipe } from '../../shared/pipes/sum-count.pipe';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [
@@ -86,6 +87,6 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
     CommissionManagementComponent,
     CommissionFormDialogComponent
   ],
-  imports: [CommonModule, FormsModule, MaterialModule, AdminRoutingModule, ReactiveFormsModule, NgxMatSelectSearchModule, DragDropModule],
+  imports: [TourAnchorMatMenuDirective, CommonModule, FormsModule, MaterialModule, AdminRoutingModule, ReactiveFormsModule, NgxMatSelectSearchModule, DragDropModule],
 })
 export class AdminModule {}

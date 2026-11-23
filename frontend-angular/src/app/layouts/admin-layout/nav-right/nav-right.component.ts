@@ -26,7 +26,7 @@ export class NavRightComponent implements OnInit, OnDestroy {
   private timeSub?: Subscription;
   private tickSub?: Subscription;
 
-  /** El botón 'Ver tour' solo aparece para cuentas de demo con tour en su rol. */
+  /** El botón 'Ver tour' aparece para los roles que tienen tour. */
   get tourAvailable$() { return this.guidedTour.available$; }
 
   constructor(

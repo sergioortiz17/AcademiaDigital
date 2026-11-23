@@ -13,7 +13,7 @@
   <span class="session-user-dni" *ngIf="user.dni">DNI {{ user.dni }}</span>
 </div>
 
-<!-- Tour guiado de la demo (solo cuentas @demo.com) -->
+<!-- Tour guiado del rol (alumno, docente y administración) -->
 <button mat-stroked-button class="tour-btn" *ngIf="tourAvailable$ | async" (click)="startTour()"
   tourAnchor="header.tour-button" aria-label="Ver el recorrido guiado">
   <mat-icon>tour</mat-icon> Ver tour

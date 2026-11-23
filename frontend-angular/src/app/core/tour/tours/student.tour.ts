@@ -7,7 +7,7 @@ import { IStepOption } from 'ngx-ui-tour-md-menu';
  */
 export const STUDENT_TOUR: IStepOption[] = [
   {
-    anchorId: 'student.welcome',
+    anchorId: 'dashboard.welcome',
     route: '/app/dashboard/default',
     title: 'Le damos la bienvenida',
     content: 'Este recorrido le muestra para qué sirve cada parte del sistema. Use <b>Siguiente</b> y <b>Anterior</b>, '
@@ -20,14 +20,14 @@ export const STUDENT_TOUR: IStepOption[] = [
       + 'asistencias, certificados y más. La sección en la que está queda resaltada.'
   },
   {
-    anchorId: 'student.quick-access',
+    anchorId: 'dashboard.quick-access',
     route: '/app/dashboard/default',
     title: 'Accesos rápidos',
     content: 'Atajos a lo que más se usa: pedir certificados, inscribirse, ver el plan de estudios, el calendario '
       + 'y Google Classroom.'
   },
   {
-    anchorId: 'student.plan',
+    anchorId: 'courses.plan',
     route: '/app/courses',
     title: 'Plan de estudios',
     content: 'Las materias de su carrera, año por año, y las correlatividades: para cursar una materia tiene que '
@@ -87,14 +87,14 @@ export const STUDENT_TOUR: IStepOption[] = [
     content: 'Todas las materias de su plan con su estado: aprobadas, en curso o pendientes.'
   },
   {
-    anchorId: 'student.certificates',
+    anchorId: 'certificates.request',
     route: '/app/certificates',
     title: 'Certificados',
     content: 'Aquí pide certificados, por ejemplo el de alumno regular. En "Ver mis solicitudes" sigue su estado '
       + 'y descarga los que ya están aprobados.'
   },
   {
-    anchorId: 'student.calendar',
+    anchorId: 'calendar.header',
     route: '/app/calendar',
     title: 'Calendario',
     content: 'Feriados, fechas de mesas de examen y eventos del instituto. Toque un día para ver el detalle.'

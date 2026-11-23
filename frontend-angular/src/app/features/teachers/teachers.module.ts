@@ -6,10 +6,11 @@ import { TeachersComponent } from './teachers.component';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [TeachersComponent],
-  imports: [
+  imports: [TourAnchorMatMenuDirective, 
     CommonModule,
     FormsModule,
     MatIconModule,
