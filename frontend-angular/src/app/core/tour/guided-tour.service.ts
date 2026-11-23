@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { UserModel, UserRole } from '../../store/account/account.actions';
 import { selectUser } from '../../store/account/account.selectors';
-import { TOURS_BY_ROLE } from './tours';
+import { TOUR_LABELS, TOURS_BY_ROLE } from './tours';
 
 /** Valores comunes a todos los pasos (en español y con el fondo oscurecido). */
 const STEP_DEFAULTS: IStepOption = {
@@ -28,7 +28,7 @@ const STEP_DEFAULTS: IStepOption = {
 
 /**
  * Tours guiados por rol. Los ve cualquier usuario cuyo rol tenga tour (alumno, docente y
- * administración) y se abren solo con el botón "Ver tour" de la barra superior.
+ * administración) y se abren solo con el botón del tour de la barra superior ("Tour estudiante", "Tour docente" o "Tour admin").
  */
 @Injectable({ providedIn: 'root' })
 export class GuidedTourService {
@@ -42,9 +42,9 @@ export class GuidedTourService {
   private spotlightTarget: HTMLElement | null = null;
   private readonly reposition = () => requestAnimationFrame(() => this.placeSpotlight());
 
-  /** Si el usuario actual tiene un tour (para mostrar el botón "Ver tour"). */
-  readonly available$: Observable<boolean> = this.store.select(selectUser).pipe(
-    map(user => !!user && !!TOURS_BY_ROLE[user.role as UserRole])
+  /** Texto del botón del tour para el rol actual ("Tour estudiante", "Tour docente", "Tour admin"), o null si no tiene. */
+  readonly label$: Observable<string | null> = this.store.select(selectUser).pipe(
+    map(user => (user && TOURS_BY_ROLE[user.role as UserRole] ? TOUR_LABELS[user.role as UserRole] ?? 'Ver tour' : null))
   );
 
   /** Abre el tour del rol del usuario actual. */

@@ -14,9 +14,9 @@
 </div>
 
 <!-- Tour guiado del rol (alumno, docente y administración) -->
-<button mat-stroked-button class="tour-btn" *ngIf="tourAvailable$ | async" (click)="startTour()"
-  tourAnchor="header.tour-button" aria-label="Ver el recorrido guiado">
-  <mat-icon>tour</mat-icon> Ver tour
+<button mat-stroked-button class="tour-btn" *ngIf="tourLabel$ | async as tourLabel" (click)="startTour()"
+  tourAnchor="header.tour-button" [attr.aria-label]="tourLabel + ': recorrido guiado'">
+  <mat-icon>tour</mat-icon> {{ tourLabel }}
 </button>
 
 <!-- User menu -->

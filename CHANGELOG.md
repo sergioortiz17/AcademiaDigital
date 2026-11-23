@@ -8,7 +8,7 @@ Cambios relevantes de AcademiaDigital por versión. El formato sigue [Keep a Cha
 
 ### Agregado
 
-- **Tours guiados por rol**: el botón "Ver tour" de la barra superior abre un recorrido interactivo que resalta cada parte del sistema, oscurece el resto y explica para qué sirve, con Anterior/Siguiente, contador de pasos y botón para cerrar. Navega solo entre las pantallas y nunca arranca por su cuenta: solo cuando se toca el botón.
+- **Tours guiados por rol**: el botón de la barra superior ("Tour estudiante", "Tour docente" o "Tour admin", según el rol) abre un recorrido interactivo que resalta cada parte del sistema, oscurece el resto y explica para qué sirve, con Anterior/Siguiente, contador de pasos y botón para cerrar. Navega solo entre las pantallas y nunca arranca por su cuenta: solo cuando se toca el botón.
   - **Alumno** (15 pasos): inicio, menú, accesos rápidos, plan de estudios, requisitos de ingreso, prematrícula, inscripción a materias, mis inscripciones, mesas de examen, calificaciones, asistencias, historial académico, certificados y calendario.
   - **Docente** (11 pasos): inicio, menú, accesos rápidos, mis asignaciones, cargar calificaciones, cargar asistencia, alumnos, plan de estudios, certificados y calendario.
   - **Administración** (24 pasos): recorre el menú en orden (Admisión, Alumnos, Docentes, Registros académicos, Certificados, Mesa de examen, Reportes, Usuarios, Carreras, Escuelas y Reglas de aprobación); el desplegable de cada pantalla se abre solo.

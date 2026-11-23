@@ -26,8 +26,8 @@ export class NavRightComponent implements OnInit, OnDestroy {
   private timeSub?: Subscription;
   private tickSub?: Subscription;
 
-  /** El botón 'Ver tour' aparece para los roles que tienen tour. */
-  get tourAvailable$() { return this.guidedTour.available$; }
+  /** Texto del botón del tour según el rol; null si el rol no tiene tour (no se muestra). */
+  get tourLabel$() { return this.guidedTour.label$; }
 
   constructor(
     private readonly guidedTour: GuidedTourService,
