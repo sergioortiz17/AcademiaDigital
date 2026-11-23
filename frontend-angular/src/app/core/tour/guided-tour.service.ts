@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { DOCUMENT, Injectable, inject } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Store } from '@ngrx/store';
 import { IStepOption, TourService } from 'ngx-ui-tour-md-menu';
@@ -12,6 +12,8 @@ import { TOUR_KEYS, TOURS_BY_ROLE } from './tours';
 /** Valores comunes a todos los pasos (en español y con el fondo oscurecido). */
 const STEP_DEFAULTS: IStepOption = {
   enableBackdrop: true,
+  // El fondo de la librería solo bloquea los clics; el oscurecido lo dibuja el foco redondeado.
+  backdropConfig: { backgroundColor: 'transparent' },
   showProgress: true,
   prevBtnTitle: 'Anterior',
   nextBtnTitle: 'Siguiente',
@@ -37,6 +39,11 @@ export class GuidedTourService {
   private readonly tourService = inject(TourService);
   private readonly store = inject(Store);
   private readonly breakpoints = inject(BreakpointObserver);
+  private readonly document = inject(DOCUMENT);
+  /** Recuadro que resalta el elemento con esquinas redondeadas y oscurece el resto. */
+  private spotlight: HTMLElement | null = null;
+  private spotlightTarget: HTMLElement | null = null;
+  private readonly reposition = () => requestAnimationFrame(() => this.placeSpotlight());
   private initialized = false;
   /** Usuario que está haciendo el tour (para guardar que lo terminó). */
   private activeUser: UserModel | null = null;
@@ -73,7 +80,12 @@ export class GuidedTourService {
     if (!steps || !this.canTour(user)) return;
     this.activeUser = user;
     if (!this.initialized) {
-      this.tourService.end$.subscribe(() => { if (this.activeUser) this.markDone(this.activeUser); });
+      this.tourService.end$.subscribe(() => {
+        if (this.activeUser) this.markDone(this.activeUser);
+        this.removeSpotlight();
+      });
+      this.tourService.stepShow$.subscribe(({ step }) => this.showSpotlight(step.anchorId));
+      this.tourService.stepHide$.subscribe(() => this.hideSpotlight());
       this.tourService.enableHotkeys(); // Esc cierra, flechas avanzan y retroceden
       this.initialized = true;
     }
@@ -104,5 +116,51 @@ export class GuidedTourService {
 
   private markDone(user: UserModel): void {
     try { localStorage.setItem(this.storageKey(user), '1'); } catch { /* sin almacenamiento: se vuelve a mostrar */ }
+  }
+
+  // ---------- Foco redondeado ----------
+
+  private showSpotlight(anchorId: string | undefined): void {
+    const anchor = anchorId ? this.tourService.anchors[anchorId] as unknown as { element?: { nativeElement?: HTMLElement } } : undefined;
+    this.spotlightTarget = anchor?.element?.nativeElement ?? null;
+    if (!this.spotlightTarget) return;
+    if (!this.spotlight) {
+      this.spotlight = this.document.createElement('div');
+      this.spotlight.className = 'tour-spotlight';
+      this.spotlight.setAttribute('aria-hidden', 'true');
+      this.document.body.appendChild(this.spotlight);
+      window.addEventListener('scroll', this.reposition, true);
+      window.addEventListener('resize', this.reposition);
+    }
+    this.spotlight.style.display = 'block';
+    this.placeSpotlight();
+  }
+
+  /** Ubica el foco sobre el elemento, con un margen y las mismas esquinas (12 px si es recto). */
+  private placeSpotlight(): void {
+    if (!this.spotlight || !this.spotlightTarget) return;
+    const margin = 6;
+    const rect = this.spotlightTarget.getBoundingClientRect();
+    const radius = parseFloat(getComputedStyle(this.spotlightTarget).borderTopLeftRadius) || 12;
+    Object.assign(this.spotlight.style, {
+      top: `${rect.top - margin}px`,
+      left: `${rect.left - margin}px`,
+      width: `${rect.width + margin * 2}px`,
+      height: `${rect.height + margin * 2}px`,
+      borderRadius: `${radius + margin}px`
+    });
+  }
+
+  private hideSpotlight(): void {
+    if (this.spotlight) this.spotlight.style.display = 'none';
+    this.spotlightTarget = null;
+  }
+
+  private removeSpotlight(): void {
+    window.removeEventListener('scroll', this.reposition, true);
+    window.removeEventListener('resize', this.reposition);
+    this.spotlight?.remove();
+    this.spotlight = null;
+    this.spotlightTarget = null;
   }
 }
