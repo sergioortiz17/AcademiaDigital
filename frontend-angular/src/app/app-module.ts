@@ -1,4 +1,5 @@
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideUiTour } from 'ngx-ui-tour-md-menu';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // required by Angular Material
 import { HttpClientModule } from '@angular/common/http';
@@ -55,6 +56,7 @@ registerLocaleData(localeEs);
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideUiTour(),
     { provide: MAT_DATE_LOCALE, useValue: 'es-AR' },
     ...provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' })
   ],

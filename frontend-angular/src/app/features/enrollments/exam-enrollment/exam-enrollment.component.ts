@@ -4,6 +4,7 @@ import { Subject, catchError, concatMap, firstValueFrom, forkJoin, from, map, of
 import Swal from 'sweetalert2';
 import { ExamTableService, StudentExamTable } from '../../../core/services/exam-table.service';
 import { StudentAcademicProgress, StudentService } from '../../../core/services/student.service';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 interface ExamOption extends StudentExamTable {
   enrollmentId: number | null;
@@ -14,7 +15,7 @@ interface ExamYear { year: number; subjects: ExamOption[]; }
 @Component({
   selector: 'app-exam-enrollment',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TourAnchorMatMenuDirective],
   templateUrl: './exam-enrollment.component.html',
   styleUrl: './exam-enrollment.component.scss'
 })

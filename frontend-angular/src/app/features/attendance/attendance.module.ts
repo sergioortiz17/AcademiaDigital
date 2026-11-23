@@ -6,9 +6,10 @@ import { AttendanceRoutingModule } from './attendance-routing.module';
 import { AttendanceComponent } from './attendance.component';
 import { NewSessionDialogComponent } from './new-session-dialog/new-session-dialog.component';
 import { MyAttendanceComponent } from './my-attendance/my-attendance.component';
+import { TourAnchorMatMenuDirective } from 'ngx-ui-tour-md-menu';
 
 @NgModule({
   declarations: [AttendanceComponent, NewSessionDialogComponent, MyAttendanceComponent],
-  imports: [CommonModule, FormsModule, MaterialModule, AttendanceRoutingModule]
+  imports: [TourAnchorMatMenuDirective, CommonModule, FormsModule, MaterialModule, AttendanceRoutingModule]
 })
 export class AttendanceModule {}
